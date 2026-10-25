@@ -186,7 +186,7 @@ T.character((0.35, -0.55, 0), rot_z=-15)
 cams = [
     T.camera("CAM_01_wide_kamer", (0.9, -3.3, 1.55), (-0.6, 0.6, 0.85), lens=20),
     T.camera("CAM_02_bed", (0.2, -0.9, 1.15), (-1.45, 0.95, 0.75), lens=26),
-    T.camera("CAM_03_bureau", (0.1, -0.9, 1.35), (1.8, 0.35, 0.95), lens=28),
+    T.camera("CAM_03_bureau", (1.0, -1.35, 1.4), (1.8, 0.35, 0.95), lens=24),
     T.camera("CAM_04_naar_raam", (-1.0, -1.4, 1.3), (0.9, 1.9, 1.5), lens=24),
 ]
 blend, renders = T.finish(OUT, "slaapkamer_" + MOOD, cams)

@@ -102,7 +102,7 @@ T.use_collection(None)
 T.character((0.4, -4.5, 9.15), rot_z=180)  # staat op de nok van het dak
 T.character((0.6, 6.0, 0.0), rot_z=200, coll_name="Hoofdpersonage (tuin)")
 cams = [
-    T.camera("CAM_01_tuin_wide", (-2.2, 13.2, 2.0), (0.5, 1.0, 2.6), lens=20),
+    T.camera("CAM_01_tuin_wide", (0.3, 13.6, 3.3), (-0.3, 1.0, 2.0), lens=20),
     T.camera("CAM_02_dak", (-3.5, 3.5, 9.6), (0.4, -4.5, 9.9), lens=26),
     T.camera("CAM_03_vanaf_dak", (0.4, -3.6, 10.8), (0.5, 14, 1.0), lens=24),
 ]

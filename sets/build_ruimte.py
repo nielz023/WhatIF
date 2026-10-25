@@ -166,8 +166,8 @@ else:
     mug("Mok_gelijmd", (0, -0.6, 400.0), rot=(12, -18, 25), scale=1.0)
     T.use_collection(None)
     T.character((0, 0, 398.5), rot_z=0)
-    cams = [T.camera("CAM_01_aarde_kromming", (0, -6, 401), (0, 600, 30), lens=24),
-            T.camera("CAM_02_zonsopkomst", (-3, -2, 400), (2000, 300, -900), lens=28),
+    cams = [T.camera("CAM_01_aarde_kromming", (0, -6, 401), (0, 600, 121), lens=24),
+            T.camera("CAM_02_zonsopkomst", (3, -4, 399.5), (2000, 300, -900), lens=28),
             T.camera("CAM_03_mok_voor_aarde", (0.05, -0.95, 400.08), (0, -0.6, 400.03), lens=50),
             T.camera("CAM_04_wolken_stratosfeer", (0, -40, 30), (0, 800, -60), lens=24)]
     for c in cams:

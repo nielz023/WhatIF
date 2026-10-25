@@ -181,9 +181,9 @@ cams = {
               T.camera("CAM_02_springkussen", (-1.5, 4.5, 1.6), (-6, 10.5, 1.2), lens=26)],
     "scherven": [T.camera("CAM_01_na_de_nies", (-22, -1.5, 2.0), (2, 7, 3.0), lens=24),
                  T.camera("CAM_02_scherven_laag", (-4, 6.8, 0.5), (2, 9.5, 1.2), lens=22)],
-    "konvooi": [T.camera("CAM_01_konvooi_wide", (-42, 8.5, 4.5), (0, 0, 3.0), lens=24),
-                T.camera("CAM_02_helikopter", (-6, 5.8, 1.6), (8, 2, 28), lens=22),
-                T.camera("CAM_03_gezinsauto", (-2.5, -1.0, 1.4), (3.5, -1.2, 1.0), lens=30)],
+    "konvooi": [T.camera("CAM_01_konvooi_wide", (-38, 5.0, 4.0), (0, 0, 2.0), lens=24),
+                T.camera("CAM_02_helikopter", (2, 4.9, 1.5), (8, 2, 30), lens=22),
+                T.camera("CAM_03_gezinsauto", (-0.8, -1.4, 1.5), (3.5, -1.2, 1.1), lens=30)],
 }[VAR]
 blend, renders = T.finish(OUT, "straat_" + VAR, cams)
 print("KLAAR", blend, renders)

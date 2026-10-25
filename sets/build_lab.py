@@ -114,7 +114,7 @@ T.character((0.0, 3.5, 1.05), rot_z=180)  # op de perstafel
 cams = [
     T.camera("CAM_01_pers_wide", (5.5, -5.0, 2.6), (0, 3.5, 2.0), lens=22),
     T.camera("CAM_02_gang", (0, gy0 - GL + 1.0, 1.6), (0, gy0 + 2, 1.4), lens=28),
-    T.camera("CAM_03_glazen_wand", (-3.0, 0.5, 1.6), (-W / 2 - 1.5, 6, 1.5), lens=24),
+    T.camera("CAM_03_glazen_wand", (-W / 2 + 0.6, -1.5, 1.7), (0, 3.5, 1.5), lens=24),
     T.camera("CAM_04_monitoren", (2.5, 4.5, 1.6), (4.3, D / 2 + 1.0, 1.6), lens=30),
 ]
 blend, renders = T.finish(OUT, "lab", cams)

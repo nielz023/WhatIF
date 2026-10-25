@@ -118,8 +118,9 @@ for r in range(3):
     ctr.append(T.box(f"Schoenenplank_{r}", (0, 1.3, 0.45 + r * 0.55), (5.0, 0.4, 0.04), P.m("hout"), bevel=0, ol=0))
 ctr.append(T.box("Schoenenkast", (0, 1.5, 0), (5.2, 0.1, 2.3), T.toon("kast_donker", (0.12, 0.10, 0.20)), bevel=0, ol=0))
 cto = T.merge("Schoenenbalie", ctr, ol=0.01)
-cto.location = (W / 2 - 3.5, -D / 2 + 3.0, 0)
-T.text("Balie_bord", "SHOES", (W / 2 - 3.5, -D / 2 + 4.2, 2.6), 0.5, T.glow("neon_roze", (1.0, 0.3, 0.75), 6), extrude=0.03)
+cto.location = (W / 2 - 3.5, -D / 2 + 2.0, 0)
+cto.rotation_euler.z = math.pi  # schoenenkast tegen de muur, balie naar de banen
+T.text("Balie_bord", "SHOES", (W / 2 - 3.5, -D / 2 + 0.4, 2.5), 0.5, T.glow("neon_roze", (1.0, 0.3, 0.75), 6), rot=(90, 0, 180), extrude=0.03)
 for k, x in enumerate((x0 + PITCH * 2.5, x0 + PITCH * 3.5)):
     for o in S.balloons(f"Verjaardagsballonnen_{k}", (x, Y0 - 3.2, 0.9), n=6, seed=k + 4, height=1.2):
         pass
@@ -140,7 +141,7 @@ T.area_light("Banen_licht", (0, (Y0 + Y1) / 2, H - 0.2), (0, (Y0 + Y1) / 2, 0), 
 T.use_collection(None)
 T.character((x0 + PITCH * 3, Y0 - 0.6, 0), rot_z=180)
 cams = [
-    T.camera("CAM_01_banen_wide", (x0 + PITCH * 6.3, Y0 - 5.2, 2.2), (x0 + PITCH * 2.5, Y1, 0.6), lens=22),
+    T.camera("CAM_01_banen_wide", (x0 + PITCH * 4.5, Y0 - 5.5, 2.4), (x0 + PITCH * 2.5, Y1, 0.6), lens=22),
     T.camera("CAM_02_kegels", (x0 + PITCH * 3, Y1 - 4.0, 0.35), (x0 + PITCH * 3, Y1 - 0.5, 0.25), lens=35),
     T.camera("CAM_03_balie", (W / 2 - 6.5, -D / 2 + 7.5, 1.6), (W / 2 - 3.5, -D / 2 + 3.5, 1.3), lens=26),
 ]

@@ -153,7 +153,7 @@ def base(lights_on=False, dusk=False):
           T.box("Whiteboard_poot_r", (1.1, 0, 0), (0.05, 0.6, 1.1), P.m("metaal"), bevel=0, ol=0)]
     wbo = T.merge("Whiteboard_formules", wb, ol=0.01)
     wbo.location = (13, 14, 0)
-    wbo.rotation_euler.z = math.radians(200)
+    wbo.rotation_euler.z = math.radians(20)
     for k, line in enumerate(["F = m x a", "2^n", "g = 9.81", "v = ?"]):
         t = T.text(f"Formule_{k}", line, (0, -0.03, 2.0 - k * 0.25), 0.16, T.toon("stift_blauw", (0.1, 0.25, 0.8)), extrude=0.002)
         t.parent = wbo
@@ -204,7 +204,7 @@ if VAR == "bunker":
     T.character((-0.9, -0.6, 0), rot_z=-150)
     cams = [T.camera("CAM_01_bunker_wide", (1.8, -2.9, 1.7), (-0.8, 0.8, 0.7), lens=20),
             T.camera("CAM_02_telefoon_vloer", (-0.2, -1.6, 0.25), (-0.6, -1.1, 0.0), lens=35),
-            T.camera("CAM_03_deur", (-1.5, -1.5, 1.4), (0.1, D / 2, 1.1), lens=26)]
+            T.camera("CAM_03_deur", (1.2, -1.6, 1.5), (0.1, D / 2, 1.1), lens=26)]
 
 elif VAR in ("basis_dag", "basis_schemer", "testterrein"):
     mood = dict(DESERT_DAY)
@@ -232,13 +232,13 @@ elif VAR in ("basis_dag", "basis_schemer", "testterrein"):
         sg = [T.box("Seismograaf_tafel", (0, 0, 0.0), (1.4, 0.7, 0.75), T.toon("tafel_klap", (0.85, 0.85, 0.82)), bevel=0.01, ol=0),
               T.box("Seismograaf", (0, 0, 0.75), (0.6, 0.4, 0.25), T.toon("apparaat", (0.25, 0.28, 0.32)), bevel=0.02, ol=0),
               T.box("Seismograaf_papier", (0, -0.25, 0.78), (0.5, 0.25, 0.01), P.m("wit"), rot=(10, 0, 0), bevel=0, ol=0)]
-        T.merge("Seismograaf_opstelling", sg, ol=0.008).location = (-6, 6, 0)
+        T.merge("Seismograaf_opstelling", sg, ol=0.008).location = (-5.5, 2.8, 0)
         jeep("Jeep_test", (-12, 2, 0), rot=60)
         T.use_collection(None)
         T.character((0, 0, 0), rot_z=-90)
         cams = [T.camera("CAM_01_testterrein_wide", (-14, -16, 3.0), (20, 5, 1.0), lens=24),
                 T.camera("CAM_02_sensor", (17, -4, 2.0), (20, 2, 2.0), lens=30),
-                T.camera("CAM_03_seismograaf", (-4.5, 4.4, 1.4), (-6, 6, 0.9), lens=30)]
+                T.camera("CAM_03_seismograaf", (-4.0, 1.0, 1.5), (-5.5, 2.8, 0.9), lens=30)]
     else:
         base(lights_on=VAR == "basis_schemer", dusk=VAR == "basis_schemer")
         T.use_collection(None)

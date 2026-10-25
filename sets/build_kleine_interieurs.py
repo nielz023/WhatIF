@@ -159,7 +159,7 @@ elif VAR == "dokter":
     T.character((-0.35, -0.4, 0), rot_z=-160)
     cams = [T.camera("CAM_01_praktijk_wide", (0.9, -3.7, 1.6), (-0.6, 0.9, 1.0), lens=20),
             T.camera("CAM_02_naalden_close", (0.55, D / 2 - 0.85, 1.25), (0.55, D / 2 - 0.35, 0.93), lens=45),
-            T.camera("CAM_03_onderzoekstafel", (0.6, -0.6, 1.3), (-1.1, 0.8, 0.85), lens=26)]
+            T.camera("CAM_03_onderzoekstafel", (0.9, 0.2, 1.4), (-1.1, 0.9, 0.85), lens=26)]
 
 else:  # kelder
     mood = dict(T.MOODS["nacht"])
@@ -224,7 +224,7 @@ else:  # kelder
     T.use_collection(None)
     T.character((-0.5, 0.4, 0), rot_z=-160)
     cams = [T.camera("CAM_01_kelder_wide", (1.0, -2.6, 1.4), (-0.6, 0.8, 1.0), lens=20),
-            T.camera("CAM_02_gaten_plafond", (0.2, -1.0, 0.6), (-0.1, 0.4, H), lens=22)]
+            T.camera("CAM_02_gaten_plafond", (1.0, -0.6, 1.1), (-0.05, 0.35, H), lens=20)]
 
 blend, renders = T.finish(OUT, VAR, cams)
 print("KLAAR", blend, renders)
