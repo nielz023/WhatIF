@@ -2,11 +2,14 @@
 
 Gebruik (Blender 5.2):
     blender -b -P anim/edit/montage.py -- s01 [--frames out/s01/frames] [--out out/s01/S01_cold_open.mp4]
+    blender -b -P anim/edit/montage.py -- s02        (leest out/s02/montage.json van het scènescript)
 
-Elke scène heeft hieronder een lijst met geluiden (tijd in seconden), teksten en effecten.
+S01 staat hieronder uitgeschreven; vanaf S02 schrijft elk scènescript zijn eigen montage.json
+(stemmen, muziek met ducking onder de stem, geluid, HUD, titelkaarten).
 """
 import argparse
 import glob
+import json
 import os
 import sys
 
@@ -109,23 +112,56 @@ def text(sed, body, t0, t1, loc, size, color, channel, anchor=("LEFT", "TOP")):
     return s
 
 
-def main():
-    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    ap = argparse.ArgumentParser()
-    ap.add_argument("scene", default="s01", nargs="?")
-    ap.add_argument("--frames", default=None)
-    ap.add_argument("--out", default=None)
-    a = ap.parse_args(argv)
-    spec, base = SCENES[a.scene]
-    frames_dir = os.path.abspath(a.frames or os.path.join(REPO, "out", a.scene, "frames"))
-    out = os.path.abspath(a.out or os.path.join(REPO, "out", a.scene, base + ".mp4"))
+def _pack(used, base, f0, f1):
+    """Eerste vrije kanaal vanaf base waar [f0, f1) niet overlapt."""
+    ch = base
+    while True:
+        if all(f1 <= a or f0 >= b for a, b in used.get(ch, [])):
+            used.setdefault(ch, []).append((f0, f1))
+            return ch
+        ch += 1
 
+
+def _alen(path):
+    import aud
+    s = aud.Sound(path)
+    return s.length / s.specs[0]
+
+
+def _legacy(spec):
+    """Oude S01-notatie -> nieuwe notatie."""
+    out = dict(length=spec["length"], picture_end=spec["picture_end"], voice=[(v + ".mp3", t) for v, t in spec["voice"]],
+               sounds=[], texts=[], cards=[], sim=spec.get("sim"), title=spec.get("title"))
+    for name, t, vol, cut, keys in spec["sounds"]:
+        out["sounds"].append(dict(file=name, t=t, vol=vol, cut=cut, keys=keys, loop_to=None, duck=False))
+    for body, h0, h1, loc, size, col in spec["hud"]:
+        out["texts"].append(dict(body=body, t0=h0, t1=h1, loc=loc, size=size, color=col, anchor=("LEFT", "TOP"), pop=False))
+    return out
+
+
+def _fade(s, f0, f1, pop=True, out=True):
+    if not pop:
+        return
+    s.blend_alpha = 0.0
+    s.keyframe_insert("blend_alpha", frame=f0)
+    s.blend_alpha = 1.0
+    s.keyframe_insert("blend_alpha", frame=f0 + 4)
+    if out and f1 - f0 > 10:
+        s.keyframe_insert("blend_alpha", frame=f1 - 4)
+        s.blend_alpha = 0.0
+        s.keyframe_insert("blend_alpha", frame=f1)
+
+
+def build(spec, frames_dir, out, render=True):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
-    sc.name = base + "_montage"
+    sc.name = os.path.basename(os.path.splitext(out)[0]) + "_montage"
     sc.render.fps = FPS
-    sc.frame_start, sc.frame_end = 1, int(round(spec["length"] * FPS))
+    length = spec["length"]
+    pic_end = spec.get("picture_end") or length
+    sc.frame_start, sc.frame_end = 1, int(round(length * FPS))
     sed = sc.sequence_editor_create()
+    used = {}
 
     files = sorted(glob.glob(os.path.join(frames_dir, "*.png")))
     if not files:
@@ -139,51 +175,133 @@ def main():
     pic = new_strip("image", sed, "beeld", 2, 1, filepath=files[0])
     for f in files[1:]:
         pic.elements.append(os.path.basename(f))
-    pic.frame_final_end = min(pic.frame_final_end, F(spec["picture_end"]))
+    pic.frame_final_end = min(pic.frame_final_end, F(pic_end))
     black = new_strip("effect", sed, "zwart", 1, 1, type="COLOR", length=sc.frame_end)
     black.color = (0, 0, 0)
 
-    # simulatie: blauw en ontkleurd, met een label
-    t0, t1 = spec["sim"]
-    adj = new_strip("effect", sed, "simulatie", 3, F(t0), type="ADJUSTMENT", length=F(t1) - F(t0))
-    adj.color_saturation = 0.35
-    adj.color_multiply = 1.05
-    cb = adj.modifiers.new("blauw", "COLOR_BALANCE")
-    cb.color_balance.gain = (0.78, 0.98, 1.30)
-    cb.color_balance.lift = (0.95, 1.0, 1.08)
-    text(sed, "SIMULATION", t0 + 0.15, t1, (0.965, 0.94), 56, (0.35, 0.95, 1.0, 1), 6, anchor=("RIGHT", "TOP"))
+    # simulatie (alleen S01): blauw en ontkleurd, met een label
+    if spec.get("sim"):
+        t0, t1 = spec["sim"]
+        adj = new_strip("effect", sed, "simulatie", 3, F(t0), type="ADJUSTMENT", length=F(t1) - F(t0))
+        adj.color_saturation = 0.35
+        adj.color_multiply = 1.05
+        cb = adj.modifiers.new("blauw", "COLOR_BALANCE")
+        cb.color_balance.gain = (0.78, 0.98, 1.30)
+        cb.color_balance.lift = (0.95, 1.0, 1.08)
+        text(sed, "SIMULATION", t0 + 0.15, t1, (0.965, 0.94), 56, (0.35, 0.95, 1.0, 1), 6, anchor=("RIGHT", "TOP"))
 
-    # HUD
-    for k, (body, h0, h1, loc, size, col) in enumerate(spec["hud"]):
-        text(sed, body, h0, h1, loc, size, col, 4 + k)
+    # titelkaarten: verdonkerde achtergrond + grote tekst
+    for c in spec.get("cards", []):
+        f0, f1 = F(c["t0"]), F(c["t1"])
+        dim = new_strip("effect", sed, "dim", _pack(used, 20, f0, f1), f0, type="COLOR", length=f1 - f0)
+        dim.color = (0.02, 0.02, 0.05)
+        dim.blend_type = "ALPHA_OVER"
+        dim.blend_alpha = 0.0
+        dim.keyframe_insert("blend_alpha", frame=f0)
+        dim.blend_alpha = c["dim"]
+        dim.keyframe_insert("blend_alpha", frame=f0 + 5)
+        dim.keyframe_insert("blend_alpha", frame=f1 - 5)
+        dim.blend_alpha = 0.0
+        dim.keyframe_insert("blend_alpha", frame=f1)
+        s = text(sed, c["body"], c["t0"], c["t1"], (0.5, 0.54), c["size"], tuple(c["color"]), _pack(used, 20, f0, f1),
+                 anchor=("CENTER", "CENTER"))
+        _fade(s, f0, f1)
+        if c.get("sub"):
+            s2 = text(sed, c["sub"], c["t0"] + 0.3, c["t1"], (0.5, 0.40), int(c["size"] * 0.45), (1.0, 0.82, 0.18, 1),
+                      _pack(used, 20, F(c["t0"] + 0.3), f1), anchor=("CENTER", "CENTER"))
+            _fade(s2, F(c["t0"] + 0.3), f1)
 
-    # titelkaart
-    body, h0, h1 = spec["title"]
-    title = text(sed, body, h0, h1, (0.5, 0.5), 140, (1, 1, 1, 1), 7, anchor=("CENTER", "CENTER"))
-    title.blend_alpha = 0.0
-    title.keyframe_insert("blend_alpha", frame=F(h0))
-    title.blend_alpha = 1.0
-    title.keyframe_insert("blend_alpha", frame=F(h0) + 4)
+    # HUD en andere teksten
+    for x in spec.get("texts", []):
+        t1 = x["t1"] if x["t1"] is not None else pic_end
+        f0, f1 = F(x["t0"]), F(t1)
+        s = text(sed, x["body"], x["t0"], t1, tuple(x["loc"]), x["size"], tuple(x["color"]), _pack(used, 40, f0, f1),
+                 anchor=tuple(x["anchor"]))
+        _fade(s, f0, f1, x.get("pop", True), out=x["t1"] is not None)
+
+    # titel (S01: "16 DAYS EARLIER")
+    if spec.get("title"):
+        body, h0, h1 = spec["title"]
+        title = text(sed, body, h0, h1, (0.5, 0.5), 140, (1, 1, 1, 1), _pack(used, 20, F(h0), F(h1)), anchor=("CENTER", "CENTER"))
+        title.blend_alpha = 0.0
+        title.keyframe_insert("blend_alpha", frame=F(h0))
+        title.blend_alpha = 1.0
+        title.keyframe_insert("blend_alpha", frame=F(h0) + 4)
 
     # stem
-    ch = 10
+    vint = []
     for name, t in spec["voice"]:
-        s = new_strip("sound", sed, name.split("/")[-1], ch, F(t), filepath=os.path.join(AUDIO, name + ".mp3"))
+        path = os.path.join(AUDIO, name)
+        d = _alen(path)
+        f0 = F(t)
+        s = new_strip("sound", sed, os.path.basename(name)[:30], _pack(used, 60, f0, f0 + int(d * FPS) + 2), f0, filepath=path)
         s.volume = 1.0
-        ch = 10 if ch == 11 else 11
-    # geluid en muziek
-    for k, (name, t, vol, cut, keys) in enumerate(spec["sounds"]):
-        s = new_strip("sound", sed, name.split("/")[-1], 12 + k % 12, F(t), filepath=os.path.join(AUDIO, name + ".mp3"))
-        if cut:
-            start = s.frame_start
-            s.frame_final_end = int(start + cut[1] * FPS)
-            s.frame_final_start = int(start + cut[0] * FPS)
-        s.volume = vol
-        for tk, v in keys or []:
-            s.volume = v
-            s.keyframe_insert("volume", frame=F(tk))
-        if s.frame_final_end > F(spec["picture_end"]) and "titel" not in name:
-            s.frame_final_end = F(spec["picture_end"])
+        vint.append((t, t + d))
+
+    def duck_at(t):
+        d = 0.0
+        for a, b in vint:
+            if a - 0.3 <= t <= b + 0.5:
+                w = min(1.0, (t - (a - 0.3)) / 0.25, ((b + 0.5) - t) / 0.35)
+                d = max(d, max(0.0, w))
+        return d
+
+    # geluid en muziek (met lussen, faden en ducking onder de stem)
+    for snd in spec["sounds"]:
+        path = os.path.join(AUDIO, snd["file"] + ("" if snd["file"].endswith(".mp3") else ".mp3"))
+        if not os.path.exists(path):
+            print("LET OP: geluid ontbreekt", path)
+            continue
+        flen = _alen(path)
+        cut = snd.get("cut") or (0.0, None)
+        c0 = cut[0] or 0.0
+        c1 = cut[1] if cut[1] is not None else flen
+        piece = max(0.05, c1 - c0)
+        t_start = snd["t"]
+        t_end = snd.get("loop_to") or (t_start + piece)
+        t_end = min(t_end, length if "titel" in snd["file"] else pic_end)
+        fi, fo = snd.get("fade_in", 0.0), snd.get("fade_out", 0.0)
+        base = snd["vol"]
+        keys = snd.get("keys")
+        tt = t_start
+        first = True
+        while tt < t_end - 0.05:
+            seg = min(piece if first else (flen if cut[1] is None else piece), t_end - tt)
+            src0 = c0 if first else (0.0 if cut[1] is None and c0 > 0 else c0)
+            f0 = F(tt)
+            nframes = max(1, int(round(seg * FPS)))
+            ch = _pack(used, 80, f0, f0 + nframes)
+            s = new_strip("sound", sed, os.path.basename(snd["file"])[:30], ch, f0 - int(round(src0 * FPS)), filepath=path)
+            s.frame_final_start = f0
+            s.frame_final_end = f0 + nframes
+            if keys:
+                for tk, v in keys:
+                    s.volume = v
+                    s.keyframe_insert("volume", frame=F(tk))
+            elif fi or fo or snd.get("duck"):
+                pts = {tt, tt + seg}
+                if fi:
+                    pts |= {t_start, t_start + fi}
+                if fo:
+                    pts |= {t_end - fo, t_end}
+                if snd.get("duck"):
+                    for a, b in vint:
+                        pts |= {a - 0.3, a - 0.05, b + 0.15, b + 0.5}
+                for p in sorted(pts):
+                    if tt - 0.01 <= p <= tt + seg + 0.01:
+                        v = base
+                        if fi:
+                            v *= min(1.0, max(0.0, (p - t_start) / fi))
+                        if fo:
+                            v *= min(1.0, max(0.0, (t_end - p) / fo))
+                        if snd.get("duck"):
+                            v *= 1.0 - 0.72 * duck_at(p)
+                        s.volume = v
+                        s.keyframe_insert("volume", frame=F(p))
+            else:
+                s.volume = base
+            tt += seg
+            first = False
 
     # uitvoer: H.264 + AAC
     r = sc.render
@@ -202,8 +320,30 @@ def main():
     r.filepath = out
     os.makedirs(os.path.dirname(out), exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.splitext(out)[0] + "_montage.blend", relative_remap=False)
-    bpy.ops.render.render(animation=True)
-    print("KLAAR", out)
+    if render:
+        bpy.ops.render.render(animation=True)
+        print("KLAAR", out)
+
+
+def main():
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    ap = argparse.ArgumentParser()
+    ap.add_argument("scene", default="s01", nargs="?")
+    ap.add_argument("--frames", default=None)
+    ap.add_argument("--out", default=None)
+    ap.add_argument("--norender", action="store_true")
+    a = ap.parse_args(argv)
+    sdir = os.path.join(REPO, "out", a.scene)
+    if a.scene in SCENES:
+        spec, base = SCENES[a.scene]
+        spec = _legacy(spec)
+    else:
+        with open(os.path.join(sdir, "montage.json")) as fh:
+            spec = json.load(fh)
+        base = a.scene.upper()
+    frames_dir = os.path.abspath(a.frames or os.path.join(sdir, "frames"))
+    out = os.path.abspath(a.out or os.path.join(sdir, base + ".mp4"))
+    build(spec, frames_dir, out, render=not a.norender)
 
 
 main()
