@@ -332,7 +332,7 @@ S.cam(SAW - 0.2, ((0.3, 1.0, 2.0), (2.9, 3.1, 1.3), 28), ((0.5, 1.2, 1.95), (2.9
 # 14 · de klas ontspant, over zijn schouder
 S.cam(l6[1] + 0.2, ((4.0, 3.0, 2.0), (-1.5, -1.0, 0.85), 26), ((3.9, 2.9, 1.95), (-1.5, -1.0, 0.85), 28))
 # 15 · 'The guy who took your lunch money...' samen in beeld
-S.cam(l7[0] + 0.2, S.shot(held, l7[0] + 0.8, "mcu", az=-25, lens=32), S.shot(held, OUT, "mcu", az=-22, lens=35))
+S.cam(l7[0] + 0.2, S.shot(held, l7[0] + 0.8, "mcu", az=40, lens=30), S.shot(held, OUT, "mcu", az=36, lens=33))      # niet achter de pestkop langs
 # 16 · buiten: ze lopen samen naar buiten, de klas kijkt
 S.cam(OUT + 0.6, ((6.0, 12.8, 1.8), (2.3, 5.0, 1.2), 26), ((5.6, 12.4, 1.7), (2.3, 6.5, 1.2), 28))
 # 17 · 'You still owe me lunch.'
