@@ -115,7 +115,7 @@ for k, t in enumerate(frange(BUMP - 0.1, QUEUE, 0.22)):
 # het bordje
 sign_m = S.mat("bord_wit_b", (0.97, 0.96, 0.92))
 red_m = S.mat("bord_rood_b", (0.85, 0.12, 0.10))
-SIGN = V(28.55, -2.25, 0)
+SIGN = V(28.25, -2.4, 0)
 T.cyl("Bord_paal", tuple(SIGN), 0.04, 1.3, S.mat("paal_grijs", (0.5, 0.5, 0.55)), seg=8)
 T.box("Bord_rand", tuple(SIGN + V(0, 0, 1.25)), (1.25, 0.05, 0.8), red_m, bevel=0.03)
 T.box("Bord_vlak", tuple(SIGN + V(0, 0.01, 1.3)), (1.12, 0.05, 0.7), sign_m, bevel=0.02, ol=0)
@@ -154,9 +154,9 @@ for k, t in enumerate(frange(BUMP, QUEUE, 0.3)):
 
 # ---------------------------------------------------------------- de rij voor de Titan: pestkop en zusje
 BULLY = V(-9.1, -20.7, 0)
-SIS = V(-9.8, -20.65, 0)
-pest = S.actor("pestkop", BULLY, -90, energy=1.0)
-zus = S.actor("zusje_pestkop", SIS, -90, energy=1.3)
+SIS = V(-8.75, -21.05, 0)
+pest = S.actor("pestkop", BULLY, 70, energy=1.0)
+zus = S.actor("zusje_pestkop", SIS, 75, energy=1.3)
 S.beat(pest, 0.0, "armen_over", face="neutraal", face_amt=0.6, look=(0, 0.3))
 S.beat(pest, QUEUE + 0.7, "armen_over", face="neutraal", face_amt=0.6, at=V(-2.0, -27.0, 1.3))
 S.beat(pest, QUEUE + 1.4, "armen_over", face="grijns", face_amt=0.9, at=V(-2.0, -27.0, 1.3), wenkbrauw_op=0.4)
@@ -169,10 +169,10 @@ for k, t in enumerate(frange(QUEUE - 0.3, END, 0.4)):
 
 # ---------------------------------------------------------------- camera
 fam = lambda t: S.frame_of(held, t)[0]
-S.cam(0.0, ((22.0, -38.5, 9.0), (-40.0, -6.0, 20.0), 24), ((21.0, -37.6, 4.6), (-40.0, -6.0, 18.0), 24))
+S.cam(0.0, ((22.0, -38.5, 5.2), (-40.0, -6.0, 11.0), 24), ((21.0, -37.6, 3.4), (-40.0, -6.0, 10.0), 24))
 S.cam(PERFECT - 0.1, None, fn=lambda t: (fam(t) + V(-3.4, -0.9, 1.35), fam(t) + V(0.0, 0.25, 1.05), 30))
-S.cam(CANDY - 0.1, None, fn=lambda t: (fam(t) + V(-1.25, 0.45, 1.0), fam(t) + V(-0.15, -0.02, 1.08), 42), dof=2.8)
-S.cam(BUMP - 0.1, ((27.7, 0.1, 1.05), (26.9, -3.1, 1.2), 28), ((27.5, -0.2, 1.05), (26.9, -3.1, 1.25), 32))
+S.cam(CANDY - 0.1, None, fn=lambda t: (fam(t) + V(-1.65, 0.5, 1.22), fam(t) + V(-0.15, -0.02, 1.2), 38), dof=2.8)
+S.cam(BUMP - 0.1, ((27.7, 3.3, 1.3), (26.9, -3.1, 1.15), 34), ((27.6, 3.0, 1.3), (26.9, -3.1, 1.2), 38))
 S.cam(QUEUE, ((-5.6, -23.4, 1.25), (-9.3, -20.6, 1.15), 34), ((-6.0, -23.0, 1.25), (-9.3, -20.6, 1.2), 38))
 
 S.finish(length=END)

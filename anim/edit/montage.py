@@ -74,6 +74,14 @@ SFX_DB = -26.0          # luidste 0,4 s van een effect bij vol 1.0
 MUSIC_DB = -31.0        # gemiddeld niveau van muziek bij vol 0.3
 AMB_DB = -38.0          # gemiddeld niveau van sfeergeluid bij vol 0.2
 DUCK = dict(voice=1.0, sfx=0.45, music=0.32, amb=0.45)   # factor zolang er iemand praat
+
+# niels (2026-10-26): de speelse muziek klonk te kinderlijk. Deze tracks worden bij de montage vervangen door
+# serieuzere, filmische muziek; de scènescripts en beelden blijven zoals ze zijn.
+MUSIC_SWAP = {
+    "speels": "strijkers_warm", "funky": "drums_build", "retrofunk": "drums_build", "pizz_spanning": "cello",
+    "ochtend": "piano_warm", "fiets": "opbouw_vliegen", "mall": "piano_hol", "mok_thema": "strijkers_emo",
+    "lofi": "subbas", "kermis_wals": "drone", "jingle": "strijk_noot", "lente": "piano_zacht", "werkplaats": "drone",
+}
 _LEVELS = {}
 
 
@@ -311,6 +319,8 @@ def build(spec, frames_dir, out, render=True):
 
     # geluid en muziek: elk bestand op een vast niveau onder de stem, en alles duikt weg zodra er gesproken wordt
     for snd in spec["sounds"]:
+        if snd["file"].startswith("muziek/"):
+            snd["file"] = "muziek/" + MUSIC_SWAP.get(snd["file"][7:], snd["file"][7:])
         path = os.path.join(AUDIO, snd["file"] + ("" if snd["file"].endswith(".mp3") else ".mp3"))
         if not os.path.exists(path):
             print("LET OP: geluid ontbreekt", path)
