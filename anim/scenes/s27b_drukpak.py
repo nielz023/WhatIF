@@ -61,9 +61,9 @@ S.beat(prof, END - 0.3, "staan", face="verdrietig", face_amt=0.6, look=(0, -0.5)
 # ---------------------------------------------------------------- camera
 S.cam(0.0, ((8.0, -12.0, 3.5), (-1.0, 4.0, 1.6), 24), ((7.4, -11.0, 3.2), (-1.0, 4.0, 1.5), 26))
 S.cam(PSUIT - 0.15, ((0.6, 3.0, 1.75), (0.0, 6.0, 1.75), 32), ((0.5, 3.4, 1.8), (0.0, 6.0, 1.8), 36))
-S.cam(OXY + 0.6, S.shot(held, OXY + 1.2, "mcu", az=-30, lens=34), S.shot(held, l6[1], "mcu", az=-26, lens=37))
+S.cam(OXY + 0.6, S.shot(held, OXY + 1.2, "mcu", az=62, lens=28), S.shot(held, l6[1], "mcu", az=60, lens=30))      # + = weg van het pak
 S.cam(l7[0] - 0.15, S.shot(prof, l7[0] + 0.5, "mcu", az=20, lens=34), S.shot(prof, NOBODY, "mcu", az=16, lens=37))
-S.cam(NOBODY + 0.9, S.shot(held, NOBODY + 1.2, "mcu", az=-25, lens=34), S.shot(held, UNTIL, "mcu", az=-22, lens=37))
-S.cam(l7[1] + 0.2, ((-3.2, 3.2, 1.55), (-0.35, 5.3, 1.25), 28), ((-3.0, 3.35, 1.55), (-0.35, 5.3, 1.25), 30))
+S.cam(NOBODY + 0.9, S.shot(held, NOBODY + 1.2, "mcu", az=64, lens=28), S.shot(held, UNTIL, "mcu", az=62, lens=30))
+S.cam(l7[1] + 0.2, ((-2.4, 6.6, 2.3), (-0.4, 5.5, 1.2), 28), ((-2.25, 6.55, 2.2), (-0.4, 5.5, 1.2), 30))      # van opzij-voor: zijn gezicht en de handschoen
 
 S.finish(length=END)
