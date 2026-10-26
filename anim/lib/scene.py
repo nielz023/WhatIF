@@ -86,8 +86,8 @@ def voice_file(line_id):
 
 def heading(frm, to):
     """rot_z (graden) zodat een figuur op `frm` naar `to` kijkt (figuren kijken naar -y bij 0)."""
-    d = Vector(to) - Vector(frm)
-    return math.degrees(math.atan2(d.x, -d.y))
+    dx, dy = to[0] - frm[0], to[1] - frm[1]
+    return math.degrees(math.atan2(dx, -dy))
 
 
 def fmt(n):
@@ -178,6 +178,27 @@ def show(obj, t0, t1=None):
         visible(obj, t1, False)
 
 
+# Figuranten: castfiguren met andere kleren (zelfde ontwerpen als in de cold open)
+EXTRAS = [
+    dict(label="figurant_a", cast="gymleraar", drop=("fluitje", "koord", "rits"),
+         outfit=dict(shirt=(0.85, 0.20, 0.15), broek=(0.15, 0.15, 0.20), haar=(0.10, 0.07, 0.05))),
+    dict(label="figurant_b", cast="nieuwslezeres", drop=("microfoon", "oorbel"),
+         outfit=dict(shirt=(0.98, 0.75, 0.10), broek=(0.20, 0.30, 0.60), haar=(0.55, 0.30, 0.12))),
+    dict(label="figurant_c", cast="wetenschapper", drop=("klembord", "pen", "pasje", "bril", "labjas_zakje"),
+         outfit=dict(shirt=(0.30, 0.70, 0.35), broek=(0.25, 0.22, 0.20), haar=(0.60, 0.45, 0.20))),
+    dict(label="figurant_d", cast="mama", drop=("oorbel",),
+         outfit=dict(shirt=(0.85, 0.35, 0.65), broek=(0.15, 0.15, 0.18), haar=(0.08, 0.06, 0.05))),
+    dict(label="figurant_e", cast="papa", drop=(),
+         outfit=dict(shirt=(0.95, 0.50, 0.10), broek=(0.30, 0.25, 0.20))),
+    dict(label="figurant_f", cast="gymleraar", drop=("fluitje", "koord", "rits"),
+         outfit=dict(shirt=(0.10, 0.60, 0.60), broek=(0.20, 0.20, 0.25), haar=(0.70, 0.50, 0.25))),
+    dict(label="figurant_g", cast="nieuwslezeres", drop=("microfoon", "oorbel"),
+         outfit=dict(shirt=(0.55, 0.30, 0.75), broek=(0.30, 0.30, 0.35), haar=(0.15, 0.10, 0.07))),
+    dict(label="figurant_h", cast="wetenschapper", drop=("klembord", "pen", "pasje", "bril", "labjas_zakje"),
+         outfit=dict(shirt=(0.20, 0.50, 0.95), broek=(0.90, 0.85, 0.75), haar=(0.08, 0.06, 0.05))),
+]
+
+
 # ---------------------------------------------------------------------------
 # De scène
 # ---------------------------------------------------------------------------
@@ -266,6 +287,11 @@ class Scene:
         self.cast.append(ch)
         A.place(ch, 1, tuple(loc), rot)
         return ch
+
+    def extra(self, k, loc=(0, 0, 0), rot=0.0, energy=1.0):
+        """Figurant k (castfiguur met andere kleren), voor klasgenoten, publiek, voorbijgangers."""
+        d = EXTRAS[k % len(EXTRAS)]
+        return self.actor(d["cast"], loc, rot, energy, label=f"{d['label']}_{len(self.cast)}", outfit=d.get("outfit"), drop=d["drop"])
 
     def head(self, ch, t=None, up=0.0):
         """Wereldpositie van het midden van het hoofd (rustpose; snel)."""
@@ -377,6 +403,12 @@ class Scene:
         ch.rig.location = loc
         ch.rig.rotation_euler = rq.to_euler()
         A.hand_ik(ch, F(t), side, inf, Vector(target) if target is not None else None, rot)
+
+    def teleport(self, ch, t, loc, rot=None):
+        """Harde verplaatsing op een snede: houdt de oude stand vast tot vlak voor t."""
+        M = self._root_matrix(ch, t - 1.0 / FPS)
+        A.place(ch, F(t) - 1, tuple(M.translation), math.degrees(self._rot_now(ch, t - 1.0 / FPS)))
+        A.place(ch, F(t), tuple(loc), rot if rot is not None else math.degrees(self._rot_now(ch, t - 1.0 / FPS)))
 
     def turn(self, ch, t0, t1, rot, loc=None):
         """Ter plekke omdraaien (met twee stapjes) van t0 tot t1."""
@@ -534,19 +566,27 @@ class Scene:
         R3 = M.to_3x3().normalized()
         return M.translation.copy(), R3 @ Vector((0, -1, 0)), R3 @ Vector((1, 0, 0))
 
+    def headpos(self, ch, t):
+        """Echte wereldpositie van het midden van het hoofd op tijd t (met houding)."""
+        hb = self.bone_world(ch, "head", t, tail=False)
+        return hb + Vector((0, 0, (ch.J["head_c"].z - ch.J["neck_top"].z) * ch.rig.scale.z))
+
     def shot(self, ch, t=0.0, size="med", az=25.0, lens=35, h=0.0, lr=0.0, up=0.0, dist=None):
         """Kader een figuur: size = ecu/cu/mcu/med/full/wide/xwide of framehoogte in meters,
         az = graden vanaf zijn neus (+ = naar zijn linkerkant), h = camera hoger/lager dan het doel,
         lr = doel opzij (m, + = zijn links; zet hem dan rechts in beeld), up = doel omhoog."""
         pos, fwd, left = self.frame_of(ch, t)
         sc = ch.rig.scale.z
-        top = ch.J["head_top"].z * sc
         fh = self.SIZES[size] if isinstance(size, str) else size
+        # echte hoofdpositie (zitten, bukken, voorover leunen)
+        hc = self.headpos(ch, t)
+        top = hc.z + ch.J["head_r"].z * sc
         if size == "ecu":
-            tz = ch.J["head_c"].z * sc + 0.03
+            tz = hc.z + 0.03
         else:
             tz = top - fh * 0.5 + fh * 0.07
-        tgt = pos + Vector((0, 0, max(tz, fh * 0.42) + up)) + left * lr
+        base = Vector((hc.x, hc.y, pos.z)) if fh < 1.5 else pos
+        tgt = Vector((base.x, base.y, max(tz, pos.z + fh * 0.42) + up)) + left * lr
         d = dist or fh * lens / 20.25
         a = math.radians(az)
         cam = tgt + (fwd * math.cos(a) + left * math.sin(a)) * d + Vector((0, 0, h))
