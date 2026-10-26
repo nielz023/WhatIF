@@ -254,15 +254,18 @@ def build(spec, frames_dir, out, render=True):
     for c in spec.get("cards", []):
         f0, f1 = F(c["t0"]), F(c["t1"])
         dim = new_strip("effect", sed, "dim", _pack(used, 20, f0, f1), f0, type="COLOR", length=f1 - f0)
-        dim.color = (0.02, 0.02, 0.05)
+        dim.color = tuple(c.get("bg") or (0.02, 0.02, 0.05))
         dim.blend_type = "ALPHA_OVER"
+        fin, fout = c.get("fin", 5), c.get("fout", 5)
         dim.blend_alpha = 0.0
         dim.keyframe_insert("blend_alpha", frame=f0)
         dim.blend_alpha = c["dim"]
-        dim.keyframe_insert("blend_alpha", frame=f0 + 5)
-        dim.keyframe_insert("blend_alpha", frame=f1 - 5)
+        dim.keyframe_insert("blend_alpha", frame=f0 + fin)
+        dim.keyframe_insert("blend_alpha", frame=f1 - fout)
         dim.blend_alpha = 0.0
         dim.keyframe_insert("blend_alpha", frame=f1)
+        if not c["body"].strip():
+            continue
         s = text(sed, c["body"], c["t0"], c["t1"], (0.5, 0.54), c["size"], tuple(c["color"]), _pack(used, 20, f0, f1),
                  anchor=("CENTER", "CENTER"))
         _fade(s, f0, f1)

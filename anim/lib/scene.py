@@ -63,6 +63,16 @@ def vlerp(a, b, w):
     return Vector(a).lerp(Vector(b), w)
 
 
+def frange(a, b, step):
+    """Tijden van a tot (niet t/m) b met stap step."""
+    out = []
+    t = a
+    while t < b - 1e-6:
+        out.append(t)
+        t += step
+    return out
+
+
 def V(*a):
     return Vector(a[0] if len(a) == 1 else a)
 
@@ -361,10 +371,11 @@ class Scene:
             A.pose(ch, f, s["pose"], amount=s["amount"], extra=body)
             if s["arms"]:
                 s["arms"](ch, f)
-            A.crouch(ch, f, *s["crouch"])
-            fl, fr = s["feet"] or ((0, 0, 0), (0, 0, 0))
-            A.foot(ch, f, "L", fl)
-            A.foot(ch, f, "R", fr)
+            if s["feet"] != "keep":                      # "keep": tijdens walk() de benen niet aanraken
+                A.crouch(ch, f, *s["crouch"])
+                fl, fr = s["feet"] or ((0, 0, 0), (0, 0, 0))
+                A.foot(ch, f, "L", fl)
+                A.foot(ch, f, "R", fr)
         if s["face"]:
             A.expr(ch, f, s["face"], amount=s["face_amt"], look=look, **s["extra"])
         elif look:
@@ -477,9 +488,10 @@ class Scene:
                     y = stride * (-0.5 + w) * 0.5
                     z = math.sin(w * math.pi) * 0.09
                 A.foot(ch, f, side, (0, y * env, z * env), (-20 * math.sin(q * 2 * math.pi) * env, 0, 0))
-            sw = math.sin(ph * 2 * math.pi) * arms * env
-            A.aim_arm(ch, f, "L", (0.18, 0.30 * sw, -0.95), (0.08, 0.15 + 0.35 * max(0, sw), -0.9))
-            A.aim_arm(ch, f, "R", (0.18, -0.30 * sw, -0.95), (0.08, 0.15 + 0.35 * max(0, -sw), -0.9))
+            sw = math.sin(ph * 2 * math.pi) * (arms or 0.0) * env
+            if arms is not None:                         # arms=None: armen vrij voor beat(..., feet="keep")
+                A.aim_arm(ch, f, "L", (0.18, 0.30 * sw, -0.95), (0.08, 0.15 + 0.35 * max(0, sw), -0.9))
+                A.aim_arm(ch, f, "R", (0.18, -0.30 * sw, -0.95), (0.08, 0.15 + 0.35 * max(0, -sw), -0.9))
             bob = abs(math.cos(ph * 2 * math.pi)) * 0.025 * env
             A.crouch(ch, f, 0.02 + bob, 3 * env)
             ch.pb["spine"].rotation_euler = Euler((math.radians(3 * env), math.radians(4 * sw), 0))
@@ -547,9 +559,10 @@ class Scene:
         self.texts.append(dict(body="THIS PART IS REAL", t0=t0, t1=t1, loc=(0.965, 0.07), size=44, color=CYAN,
                                anchor=("RIGHT", "BOTTOM"), pop=True))
 
-    def card(self, body, t0, t1, size=110, dim=0.65, color=WHITE, sub=None):
-        """Titelkaart midden in beeld, met verdonkerde achtergrond."""
-        self.cards.append(dict(body=body, t0=t0, t1=t1, size=size, dim=dim, color=color, sub=sub))
+    def card(self, body, t0, t1, size=110, dim=0.65, color=WHITE, sub=None, bg=None, fin=5, fout=5):
+        """Titelkaart midden in beeld, met verdonkerde achtergrond. bg = kleur van het vlak (wit voor een flits),
+        fin/fout = in- en uitfaden in frames. Lege body: alleen het vlak."""
+        self.cards.append(dict(body=body, t0=t0, t1=t1, size=size, dim=dim, color=color, sub=sub, bg=bg, fin=fin, fout=fout))
 
     # -- camera's --------------------------------------------------------------
     def cam(self, t0, a, b=None, fn=None, dof=None, shake=None, ease=True, name=None, handheld=0.25):
