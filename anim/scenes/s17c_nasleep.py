@@ -188,7 +188,7 @@ S.cam(SISTER, (ZH + V(-1.4, -1.0, 0.9), ZH + V(0, 0, -0.1), 36), (ZH + V(-1.25, 
 S.cam(RUN_IN - 0.2, ((BULLY_STOP.x + 3.0, BULLY_STOP.y - 3.5, 1.0), (BULLY_STOP.x - 0.5, BULLY_STOP.y, 2.2), 26),
       ((BULLY_STOP.x + 2.8, BULLY_STOP.y - 3.2, 1.0), (BULLY_STOP.x - 0.5, BULLY_STOP.y + 0.5, 2.4), 28))
 BH = S.head(pest, l10[0] + 0.5)
-S.cam(l10[0] + 0.6, (BH + V(1.3, 0.75, -0.35), BH + V(0, 0, 0.05), 30), (BH + V(1.2, 0.7, -0.33), BH + V(0, 0, 0.05), 33))
+S.cam(l10[0] + 0.6, (BH + V(-0.8, 1.1, 0.75), BH + V(0, 0.05, -0.05), 30), (BH + V(-0.72, 1.0, 0.7), BH + V(0, 0.05, -0.05), 33))      # van voren-boven: hij kijkt omhoog naar de trein
 S.cam(WALK, ((W0.x - 7.5, W0.y - 11.0, 1.5), (W0.x, W0.y, 2.4), 30), ((W0.x - 7.0, W0.y - 10.2, 1.5), (W0.x, W0.y, 2.4), 32))
 S.cam(VIRAL0 - 0.2, S.shot(vriend, VIRAL0, "mcu", az=35, lens=32), S.shot(vriend, VIRAL0 + 1.8, "mcu", az=30, lens=36))
 S.cam(WRECK, (PHONE, V(X_AFTER + 0.3, HP.y, G + 0.9), 55), (PHONE + V(0.15, 0.2, 0), V(X_AFTER + 0.3, HP.y, G + 1.0), 75), handheld=1.2)
