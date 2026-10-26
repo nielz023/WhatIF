@@ -203,7 +203,7 @@ S.cam(l10[0] - 0.3, ((9.0, -35.5, 1.5), (2.4, -30.4, 1.1), 30), ((8.5, -35.0, 1.
 # de mok op de paal en mama erachter, schuin van opzij zodat haar hoofd naast de mok staat
 MID = (POST_TOP + V(0, 0, 0.07) + S.head(mama, PLACE + 1.0)) * 0.5
 S.cam(PLACE + 0.25, (MID + V(-1.15, -1.15, 0.05), MID, 32), (MID + V(-1.0, -1.0, 0.04), MID, 35))
-S.cam(l11[0] - 0.15, S.shot(mama, l11[0] + 0.5, "mcu", az=58, lens=34), S.shot(mama, TOO, "mcu", az=55, lens=38))
+S.cam(l11[0] - 0.15, S.shot(mama, l11[0] + 0.5, "mcu", az=72, lens=34), S.shot(mama, TOO, "mcu", az=70, lens=38))
 S.cam(TOO + 0.2, S.shot(held, TOO + 0.6, "mcu", az=-20, lens=34), S.shot(held, l11[1], "mcu", az=-18, lens=38))
 S.cam(l12[0] - 0.25, ((-0.7, -33.6, 1.35), (2.5, -31.7, 1.15), 28), ((-0.55, -33.4, 1.35), (2.5, -31.6, 1.2), 30))
 S.cam(GRAB - 0.5, (POST_TOP + V(1.05, 0.45, 0.0), POST_TOP + V(0, -0.25, -0.05), 36),
