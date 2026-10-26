@@ -14,7 +14,8 @@ S = Scene("s27b", "ruimte", "hangar")
 SUIT = V(0.0, 6.0, 0.0)
 GLOVE = SUIT + V(-0.5, -0.02, 0.95)
 H0 = V(-3.2, -7.0, 0.0)
-H1 = V(-0.68, 5.3, 0.0)                       # een armlengte van de handschoen
+H1 = V(-0.85, 4.05, 0.0)                       # hier praat hij met de wetenschapper
+H2 = V(-0.7, 5.25, 0.0)                        # een armlengte van de handschoen
 PROF_AT = V(1.35, 4.35, 0.0)
 
 held = S.actor("hoofdpersonage", H0, heading(H0, H1))
@@ -45,10 +46,11 @@ S.beat(held, OXY + 0.5, "staan", face="neutraal", face_amt=0.6, at=SUIT + V(0, 0
 S.beat(held, l7[0] + 0.2, "staan", face="neutraal", face_amt=0.6, at=S.head(prof, l7[0]), feet="keep")
 S.beat(held, NOBODY, "staan", face="verdrietig", face_amt=0.6, at=S.head(prof, l7[0]), feet="keep", mond_verdrietig=0.4)
 S.beat(held, UNTIL + 0.4, "staan", face="verdrietig", face_amt=0.7, at=GLOVE, feet="keep", mond_verdrietig=0.5, body={"head": (6, 0, 0)})
-S.hold(held, l7[1] + 0.2)
-S.reach(held, l7[1] + 0.2, "L", None, inf=0.0)
-S.reach(held, l7[1] + 0.9, "L", GLOVE + V(0.04, -0.09, 0.0), inf=1.0)
-S.beat(held, l7[1] + 0.9, "staan", face="verdrietig", face_amt=0.8, at=GLOVE, feet="keep", mond_verdrietig=0.6, ogen_knijp=0.3)
+# pas na haar zin stapt hij naar het pak toe
+S.walk(held, UNTIL + 0.5, l7[1] + 0.5, [H1, H2], stride=0.3, arms=0.15, end_rot=heading(H2, SUIT))
+S.reach(held, l7[1] + 0.5, "L", None, inf=0.0)
+S.reach(held, l7[1] + 1.2, "L", GLOVE + V(0.04, -0.09, 0.0), inf=1.0)
+S.beat(held, l7[1] + 1.2, "staan", face="verdrietig", face_amt=0.8, at=GLOVE, feet="keep", mond_verdrietig=0.6, ogen_knijp=0.3)
 S.hold(held, END)
 
 # ---------------------------------------------------------------- de wetenschapper
@@ -61,9 +63,9 @@ S.beat(prof, END - 0.3, "staan", face="verdrietig", face_amt=0.6, look=(0, -0.5)
 # ---------------------------------------------------------------- camera
 S.cam(0.0, ((8.0, -12.0, 3.5), (-1.0, 4.0, 1.6), 24), ((7.4, -11.0, 3.2), (-1.0, 4.0, 1.5), 26))
 S.cam(PSUIT - 0.15, ((0.6, 3.0, 1.75), (0.0, 6.0, 1.75), 32), ((0.5, 3.4, 1.8), (0.0, 6.0, 1.8), 36))
-S.cam(OXY + 0.6, S.shot(held, OXY + 1.2, "mcu", az=62, lens=28), S.shot(held, l6[1], "mcu", az=60, lens=30))      # + = weg van het pak
+S.cam(OXY + 0.6, S.shot(held, OXY + 1.2, "mcu", az=-30, lens=34), S.shot(held, l6[1], "mcu", az=-26, lens=37))      # + = weg van het pak
 S.cam(l7[0] - 0.15, S.shot(prof, l7[0] + 0.5, "mcu", az=20, lens=34), S.shot(prof, NOBODY, "mcu", az=16, lens=37))
-S.cam(NOBODY + 0.9, S.shot(held, NOBODY + 1.2, "mcu", az=64, lens=28), S.shot(held, UNTIL, "mcu", az=62, lens=30))
-S.cam(l7[1] + 0.2, ((-2.4, 6.6, 2.3), (-0.4, 5.5, 1.2), 28), ((-2.25, 6.55, 2.2), (-0.4, 5.5, 1.2), 30))      # van opzij-voor: zijn gezicht en de handschoen
+S.cam(NOBODY + 0.9, S.shot(held, NOBODY + 1.2, "mcu", az=-25, lens=34), S.shot(held, UNTIL, "mcu", az=-22, lens=37))
+S.cam(l7[1] + 0.2, ((-1.5, 6.9, 1.9), (-0.55, 5.4, 1.15), 28), ((-1.45, 6.85, 1.85), (-0.55, 5.45, 1.15), 30))      # van voren-links, over de zuurstofflessen
 
 S.finish(length=END)
