@@ -148,7 +148,7 @@ key(wall, LAND + 0.28, rot=(-90, 0, 0))
 key(wall, END, rot=(-90, 0, 0))
 S.puff(V(3.0, 4.05, 3.05), FLINCH + 0.05, n=5, r=(0.08, 0.16), grow=2.0, dur=1.4, rise=-0.4, spread=0.8)
 for x in (-3.5, -1.8, 0.0, 1.8, 3.5):
-    S.puff(V(x, 6.6, 0.15), LAND, n=7, r=(0.3, 0.6), grow=2.6, dur=2.6, color=(0.82, 0.80, 0.76), rise=0.8, spread=1.4)
+    S.puff(V(x, 6.6, 0.1), LAND, n=6, r=(0.12, 0.25), grow=2.0, dur=2.2, color=(0.82, 0.80, 0.76), rise=0.5, spread=2.0)
     S.debris(V(x, 7.2, 0.1), LAND, n=10, size=(0.03, 0.08), color=(0.86, 0.88, 0.80), speed=(1.0, 3.0), up=1.0, floor=0.0)
 for g in glass:
     visible(g, 0.0, True)
@@ -298,11 +298,11 @@ for k, (ch, path, t0) in enumerate(zip(leavers,
 
 # ---------------------------------------------------------------- camera
 # 1 · vanaf het bord: de klas, en hij in de deur
-S.cam(0.0, ((-3.7, -0.5, 1.8), (3.5, -3.2, 1.15), 24), ((-3.6, -0.6, 1.75), (3.6, -2.0, 1.2), 26))
+S.cam(0.0, ((-3.9, -0.3, 2.25), (3.5, -3.2, 1.05), 24), ((-3.8, -0.4, 2.2), (3.6, -2.0, 1.1), 26))
 # 2 · twee leerlingen glippen langs hem de deur uit
-S.cam(KIDS_GO - 0.1, ((1.0, 1.3, 1.45), (3.6, -3.4, 1.15), 26), ((1.1, 1.2, 1.45), (3.6, -3.0, 1.15), 28))
+S.cam(KIDS_GO - 0.1, ((-0.5, 3.6, 2.4), (3.6, -3.6, 1.1), 26), ((-0.3, 3.5, 2.35), (3.6, -3.0, 1.1), 28))
 # 3 · naar het raam, het lege plein
-S.cam(T2, ((1.5, 1.2, 1.6), (3.5, 4.4, 1.3), 28), ((1.7, 1.5, 1.6), (3.5, 4.4, 1.35), 30))
+S.cam(T2, ((0.9, 3.6, 1.7), (3.6, 2.4, 1.25), 26), ((1.0, 3.65, 1.7), (3.5, 3.0, 1.3), 28))
 # 4 · door het raam: zijn gezicht als het kluisje dichtslaat
 HW = S.headpos(held, ARR + 0.6)
 S.cam(SLAM - 0.6, ((HW.x + 0.15, 5.2, HW.z + 0.02), HW + V(0, 0, -0.08), 40), ((HW.x + 0.12, 5.0, HW.z + 0.02), HW + V(0, 0, -0.06), 44),
@@ -318,21 +318,21 @@ S.cam(MATTER - 0.2, (S.headpos(held, MATTER + 1.2) + V(-0.8, -1.3, -0.05), S.hea
 # 8 · zijn blik over elk gezicht
 HV = S.headpos(held, FACES)
 fwd = V(math.sin(math.radians(TURNED)), -math.cos(math.radians(TURNED)), 0)
-S.cam(FACES - 0.1, (HV + fwd * 0.35, (-1.2, 2.2, 0.95), 32), (HV + fwd * 0.35, (1.0, -2.6, 0.95), 32))
+S.cam(FACES - 0.1, ((3.1, 3.5, 2.45), (-1.2, 2.0, 0.85), 28), ((3.1, 3.5, 2.45), (1.0, -2.6, 0.85), 28))
 # 9 · iemand staat op
-S.cam(l5[0] - 0.2, ((-0.6, -1.4, 1.35), (2.0, 0.3, 1.2), 30), ((-0.4, -1.2, 1.35), (2.1, 0.3, 1.3), 32))
+S.cam(l5[0] - 0.2, ((0.6, 2.9, 1.95), (1.9, 0.2, 1.1), 28), ((0.7, 2.85, 1.95), (2.0, 0.2, 1.25), 30))
 # 10 · 'It's him.'
 S.cam(HIM - 0.2, S.shot(pest, HIM, "mcu", az=10, lens=34), S.shot(pest, HIM + 0.9, "mcu", az=8, lens=38))
 # 11 · 'Hey! HEY!' iets van onderen
-S.cam(l6[0] - 0.1, S.shot(pest, l6[0] + 0.3, "med", az=12, lens=30, h=-0.35), S.shot(pest, l6[0] + 1.3, "med", az=10, lens=32, h=-0.35))
+S.cam(l6[0] - 0.1, ((-0.2, -1.6, 2.2), (1.95, 0.2, 1.3), 28), ((-0.1, -1.5, 2.15), (1.95, 0.2, 1.35), 30))
 # 12 · hij loopt naar achteren, naast hem
 S.cam(l6[0] + 1.4, ((-2.6, -2.4, 1.8), (2.7, 2.6, 1.2), 26), ((-2.4, -2.2, 1.75), (2.8, 2.8, 1.25), 28))
 # 13 · 'You all saw it. So everybody calm down.' de twee, vanuit de klas
-S.cam(SAW - 0.2, ((0.1, 0.6, 1.25), (3.0, 3.2, 1.35), 30), ((0.4, 0.95, 1.25), (3.0, 3.2, 1.35), 34))
+S.cam(SAW - 0.2, ((0.3, 1.0, 2.0), (2.9, 3.1, 1.3), 28), ((0.5, 1.2, 1.95), (2.9, 3.1, 1.3), 30))
 # 14 · de klas ontspant, over zijn schouder
 S.cam(l6[1] + 0.2, ((4.0, 3.0, 2.0), (-1.5, -1.0, 0.85), 26), ((3.9, 2.9, 1.95), (-1.5, -1.0, 0.85), 28))
 # 15 · 'The guy who took your lunch money...' samen in beeld
-S.cam(l7[0] + 0.2, ((1.1, 1.4, 1.45), (3.05, 3.3, 1.4), 32), ((1.3, 1.65, 1.45), (3.05, 3.3, 1.4), 36))
+S.cam(l7[0] + 0.2, S.shot(held, l7[0] + 0.8, "mcu", az=-25, lens=32), S.shot(held, OUT, "mcu", az=-22, lens=35))
 # 16 · buiten: ze lopen samen naar buiten, de klas kijkt
 S.cam(OUT + 0.6, ((6.0, 12.8, 1.8), (2.3, 5.0, 1.2), 26), ((5.6, 12.4, 1.7), (2.3, 6.5, 1.2), 28))
 # 17 · 'You still owe me lunch.'

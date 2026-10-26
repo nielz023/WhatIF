@@ -121,7 +121,8 @@ S.beat(prof, NOT_EQ + 0.3, **SIT_P, pose="staan", face="verbaasd", face_amt=0.9,
 S.hold(prof, END)
 
 # ---------------------------------------------------------------- hij: ligt, ogen open, zit, staat heel voorzichtig op
-key(held := S.actor("hoofdpersonage", LIE, 0), 0.0, loc=LIE, rot=(-90, 0, 90), interp="CONSTANT")
+held = S.actor("hoofdpersonage", LIE, 0)
+key(held.rig, 0.0, loc=LIE, rot=(-90, 0, 90), interp="CONSTANT")
 S.beat(held, 0.0, "staan", face="neutraal", face_amt=1.0, ogen_knijp=1.0, mond_verdrietig=0.2)
 S.beat(held, MILLION - 0.1, "staan", face="neutraal", face_amt=1.0, ogen_knijp=1.0)
 S.beat(held, MILLION + 0.3, "staan", face="nerveus", face_amt=0.6, look=(0, 0.3))
