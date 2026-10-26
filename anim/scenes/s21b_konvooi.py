@@ -176,7 +176,7 @@ for k, ch in enumerate(buren):
 BED_Z = 1.07
 SIT_H, zh = sit(held, seat_top=0.45, lean=8, spread=0.2)
 HERO_L = V(0.95, -0.2, BED_Z + zh)             # op de bank, rug naar de cabine, gezicht naar achteren
-PHONE_L = V(0.5, 0.5, BED_Z - 0.04)           # op de vloer van de laadbak, voor zijn voeten
+PHONE_L = V(0.5, 0.5, BED_Z + 0.01)           # op de vloer van de laadbak, voor zijn voeten
 SIT_M, zm = sit(mama, seat_top=0.85 - 0.0, lean=-4)
 SIT_P, zpa = sit(papa, seat_top=0.85, lean=-4)
 SIT_B, zb = sit(bro, seat_top=0.85, lean=4)
@@ -232,20 +232,20 @@ HO = S.head(officer, l4[0])
 S.cam(l4[0] - 0.2, ((-0.35, 11.4, 1.85), HO + V(0, 0, -0.1), 32), ((-0.4, 11.25, 1.85), HO + V(0, 0, -0.1), 34))
 S.cam(SAFE2 - 0.2, S.shot(officer, SAFE2, "mcu", az=-20, lens=32), S.shot(officer, l4[1], "mcu", az=-18, lens=35))
 # 3 · het konvooi de stad uit, van hoog en opzij
-S.cam(DRIVE, None, fn=lambda t: (V(TX(t) + 20, LANE - 3.5, 7.0), V(TX(t) - 4, LANE, 1.5), 26))
+S.cam(DRIVE, None, fn=lambda t: (V(TX(t) + 18, 1.0, 8.0), V(TX(t) - 4, LANE, 1.5), 26))      # boven de weg, niet in de bomen
 # 4 · vanuit de laadbak: hij, en het busje erachter
 S.cam(FAMILY - 0.1, None, fn=lambda t: (V(TX(t) + 1.6, LANE + 0.9, 2.6), BUS_FACE(t) + V(0, 0, -0.3), 32))
 # 5 · het broertje zwaait
 S.cam(BRO - 0.1, None, fn=lambda t: (V(TX(t) - 3.6, LANE - 0.3, 2.0), V(BX(t) + 0.3, LANE + 0.0, 1.55), 42), handheld=0.6)
 # 6 · de telefoon in de laadbak: hij hangt niet op
 S.cam(FRIEND - 0.1, None, fn=lambda t: (V(TX(t), LANE, 0) + PHONE_L + V(0.45, 0.45, 0.7), V(TX(t), LANE, 0) + PHONE_L + V(0, 0, 0.02), 40))
-S.cam(FRIEND + 2.5, None, fn=lambda t: (S.head(held, t) + V(-1.25, -0.55, -0.1), S.head(held, t) + V(0, 0, -0.25), 32))
+S.cam(FRIEND + 2.5, None, fn=lambda t: (S.head(held, t) + V(-1.1, -0.5, -0.55), S.head(held, t) + V(0, 0, -0.3), 32))      # laag: hij kijkt omlaag
 # 7 · zijn handen
 S.cam(HANDS - 0.1, None, fn=lambda t: (S.head(held, t) + V(-1.5, 0.4, 0.0), S.head(held, t) + V(-0.1, 0, -0.5), 30))
 # 8 · de stad die ze achterlaten
 S.cam(SKY - 0.1, None, fn=lambda t: (V(TX(t) + 30, -7.5, 1.6), V(TX(t) - 60, -12, 22), 26))
 # 9 · zijn hand omhoog, mama's hand omhoog: van opzij, allebei in beeld
-S.cam(MOM - 0.3, None, fn=lambda t: (V((TX(t) + BX(t)) / 2 - 0.8, LANE - 4.0, 6.5), V((TX(t) + BX(t)) / 2 - 0.8, LANE, 1.6), 18))
+S.cam(MOM - 0.3, None, fn=lambda t: (V((TX(t) + BX(t)) / 2 - 0.8, LANE - 1.5, 9.0), V((TX(t) + BX(t)) / 2 - 0.8, LANE, 1.6), 20))
 S.cam(MOM + 1.7, None, fn=lambda t: (V(BX(t) + 3.2, LANE - 0.6, 1.8), V(BX(t) + 0.3, LANE - 0.45, 1.65), 40))
 
 S.finish(length=END)
