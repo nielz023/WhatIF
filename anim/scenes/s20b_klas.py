@@ -326,7 +326,7 @@ S.cam(HIM - 0.2, S.shot(pest, HIM, "mcu", az=10, lens=34), S.shot(pest, HIM + 0.
 # 11 · 'Hey! HEY!' iets van onderen
 S.cam(l6[0] - 0.1, ((-0.2, -1.6, 2.2), (1.95, 0.2, 1.3), 28), ((-0.1, -1.5, 2.15), (1.95, 0.2, 1.35), 30))
 # 12 · hij loopt naar achteren, naast hem
-S.cam(l6[0] + 1.4, ((-2.6, -2.4, 1.8), (2.7, 2.6, 1.2), 26), ((-2.4, -2.2, 1.75), (2.8, 2.8, 1.25), 28))
+S.cam(l6[0] + 1.4, ((-2.6, -2.4, 2.6), (2.7, 2.6, 1.2), 26), ((-2.4, -2.2, 2.55), (2.8, 2.8, 1.25), 28))      # hoog: over de hoofden heen
 # 13 · 'You all saw it. So everybody calm down.' de twee, vanuit de klas
 S.cam(SAW - 0.2, ((0.3, 1.0, 2.0), (2.9, 3.1, 1.3), 28), ((0.5, 1.2, 1.95), (2.9, 3.1, 1.3), 30))
 # 14 · de klas ontspant, over zijn schouder
