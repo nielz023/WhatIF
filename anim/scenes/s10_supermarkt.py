@@ -31,7 +31,7 @@ shopper = S.extra(3, (5.2, -9.0, 0), -60)
 can = T.cyl("Soepblik", tuple(CAN), 0.042, 0.11, S.mat("soepblik_rood", (0.88, 0.15, 0.12)), seg=20, ol=0.003)
 T.cyl("Soepblik_etiket", (0, 0, 0.03), 0.0425, 0.05, S.mat("soepblik_wit", (0.97, 0.95, 0.9)), seg=20, ol=0, cap=False).parent = can
 soup = S.mat("soep", (0.95, 0.45, 0.12))
-splat = [T.sphere(f"Soepvlek_{k}", (0, 0, 0), 0.03 + 0.01 * (k % 3), soup, scale=(1, 0.3, 1), seg=8, ol=0.002) for k in range(5)]
+splat = [T.sphere(f"Soepvlek_{k}", (0, 0, 0), 0.03 + 0.01 * (k % 3), soup, scale=(1, 1, 0.3), seg=8, ol=0.002) for k in range(5)]
 weights = []
 for side in ("L", "R"):
     for k, off in enumerate((-0.05, -0.12)):
@@ -104,7 +104,7 @@ S.debris(AISLE + V(-0.3, 0.05, 1.1), POP, n=6, size=(0.02, 0.05), color=(0.88, 0
 hc = S.head(held, POP)
 for k, o in enumerate(splat):
     attach(o, held, "head" if k < 3 else "chest", ((k % 3 - 1) * 0.12, -0.05 * k, 0.0), (0, 0, 0))
-    o.location = ((k % 3 - 1) * 0.11, -0.12 + 0.05 * k, -0.27) if k < 3 else ((k - 3.5) * 0.12, 0.12, -0.18)
+    o.location = ((k % 3 - 1) * 0.11, -0.28 - 0.06 * k, 0.27 - 0.02 * abs(k % 3 - 1)) if k < 3 else ((k - 3.5) * 0.12, -0.18, 0.16)   # bot-assen: y = op, z = voor
     show(o, POP + 0.04)
 
 # naar de kar (snede) en duwen

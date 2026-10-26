@@ -127,7 +127,7 @@ for k in range(9):
 # de vriend draagt een armvol knuffels
 for k in range(5):
     q = T.sphere(f"Armvol_{k}", (0, 0, 0), 0.085, S.mat(f"knuffel_{k % 6}", PCOL[k % 6]), seg=12, ol=0.004)
-    attach(q, vriend, "chest", ((k % 3 - 1) * 0.12, 0.25 + (k // 3) * 0.04, -0.05 + (k // 3) * 0.14))
+    attach(q, vriend, "chest", ((k % 3 - 1) * 0.12, -0.2 + (k // 3) * 0.12, 0.2 + (k // 3) * 0.04))   # bot-assen: y = op, z = voor
     show(q, N41 - 0.3)
 
 # ---------------------------------------------------------------- de roltrap (omhoog lopen op de roltrap naar beneden)
