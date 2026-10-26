@@ -14,7 +14,7 @@ S = Scene("s27b", "ruimte", "hangar")
 SUIT = V(0.0, 6.0, 0.0)
 GLOVE = SUIT + V(-0.5, -0.02, 0.95)
 H0 = V(-3.2, -7.0, 0.0)
-H1 = V(-0.85, 4.05, 0.0)
+H1 = V(-0.68, 5.3, 0.0)                       # een armlengte van de handschoen
 PROF_AT = V(1.35, 4.35, 0.0)
 
 held = S.actor("hoofdpersonage", H0, heading(H0, H1))
