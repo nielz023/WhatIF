@@ -30,6 +30,9 @@ sys.path.insert(0, HERE)
 import bpy  # noqa: E402
 from mathutils import Vector, Matrix, Quaternion, Euler, noise  # noqa: E402
 from lib import toon as T  # noqa: E402
+from lib import props as P  # noqa: E402
+from lib import interior as I  # noqa: E402
+from lib import street as ST  # noqa: E402
 import rig as R  # noqa: E402
 import acting as A  # noqa: E402
 
@@ -237,8 +240,23 @@ class Scene:
     def mat(self, name, color, glow=0.0):
         k = (name, tuple(color), glow)
         if k not in self.mats:
-            self.mats[k] = T.glow(name, color, glow) if glow else T.toon(name, color)
+            nm = name if not any(kk[0] == name for kk in self.mats) else f"{name}_{len(self.mats)}"
+            self.mats[k] = T.glow(nm, color, glow) if glow else T.toon(nm, color)
         return self.mats[k]
+
+    def wall(self, t0, t1, side="front"):
+        """Laat een verborgen muur (meestal de voorkant) zien van t0 tot t1, voor tegenshots."""
+        for o in bpy.data.objects:
+            if o.name.endswith("_muur_" + side):
+                o.visible_camera = False
+                o.keyframe_insert("visible_camera", frame=1)
+                o.visible_camera = True
+                o.keyframe_insert("visible_camera", frame=F(t0))
+                o.visible_camera = False
+                o.keyframe_insert("visible_camera", frame=F(t1))
+                for fc in A._fcurves(o):
+                    for kp in fc.keyframe_points:
+                        kp.interpolation = "CONSTANT"
 
     # -- figuren -------------------------------------------------------------
     def actor(self, name, loc=(0, 0, 0), rot=0.0, energy=1.0, **kw):
@@ -331,8 +349,46 @@ class Scene:
     def face(self, ch, t, name, amt=1.0, look=None, **extra):
         A.expr(ch, F(t), name, amount=amt, look=look, **extra)
 
+    def _rot_now(self, ch, t):
+        for fc in A._fcurves(ch.rig):
+            if fc.data_path == "rotation_euler" and fc.array_index == 2:
+                return fc.evaluate(F(t))
+        return ch.rig.rotation_euler.z
+
+    def _near(self, ch, t, rot_deg):
+        """Hoek (graden) die het dichtst bij de huidige draaiing ligt (geen rondtollen)."""
+        cur = self._rot_now(ch, t)
+        r = math.radians(rot_deg)
+        while r - cur > math.pi:
+            r -= 2 * math.pi
+        while r - cur < -math.pi:
+            r += 2 * math.pi
+        return math.degrees(r)
+
     def place(self, ch, t, loc=None, rot=None):
+        if rot is not None:
+            rot = self._near(ch, t, rot)
         A.place(ch, F(t), tuple(loc) if loc is not None else None, rot)
+
+    def reach(self, ch, t, side, target=None, inf=1.0, rot=None):
+        """Hand-IK: pols naar een wereldpunt op tijd t (inf=0: IK uit). Houdt rekening met waar het figuur dan staat."""
+        M = self._root_matrix(ch, t)
+        loc, rq, sc = M.decompose()
+        ch.rig.location = loc
+        ch.rig.rotation_euler = rq.to_euler()
+        A.hand_ik(ch, F(t), side, inf, Vector(target) if target is not None else None, rot)
+
+    def turn(self, ch, t0, t1, rot, loc=None):
+        """Ter plekke omdraaien (met twee stapjes) van t0 tot t1."""
+        M = self._root_matrix(ch, t0)
+        here = M.translation.copy()
+        self.place(ch, t0, here, math.degrees(self._rot_now(ch, t0)))
+        self.place(ch, t1, loc if loc is not None else here, rot)
+        for k, side in enumerate(("L", "R")):
+            tm = t0 + (t1 - t0) * (0.3 + 0.4 * k)
+            A.foot(ch, F(tm - 0.08), side, (0, 0, 0))
+            A.foot(ch, F(tm), side, (0, 0.02, 0.06))
+            A.foot(ch, F(tm + 0.1), side, (0, 0, 0))
 
     def walk(self, ch, t0, t1, pts, stride=0.55, turn=True, arms=0.6, end_rot=None):
         """Lopen langs punten (wereld, z = vloer) van t0 tot t1, met voetstappen zonder glijden."""
@@ -353,7 +409,10 @@ class Scene:
 
         frames = list(range(F(t0), F(t1) + 1))
         locs, rots = [], []
-        rot_prev = None
+        # houd de stand van vóór het lopen vast tot t0
+        M0 = self._root_matrix(ch, t0)
+        rot_prev = r0 = self._rot_now(ch, t0)
+        A.place(ch, F(t0) - 1, tuple(M0.translation), math.degrees(rot_prev))
         for f in frames:
             t = (f - 1) / FPS
             # rustig op gang komen en afremmen
@@ -361,14 +420,14 @@ class Scene:
             ease = smooth(0, 1, u) * 0.5 + u * 0.5
             p, d = at_dist(total * ease)
             locs.append(tuple(p))
-            r = math.atan2(d.x, -d.y) if turn else ch.rig.rotation_euler.z
-            if rot_prev is not None:
-                while r - rot_prev > math.pi:
-                    r -= 2 * math.pi
-                while r - rot_prev < -math.pi:
-                    r += 2 * math.pi
+            r = math.atan2(d.x, -d.y) if turn else r0
+            while r - rot_prev > math.pi:
+                r -= 2 * math.pi
+            while r - rot_prev < -math.pi:
+                r += 2 * math.pi
             rot_prev = r
-            rots.append((0.0, 0.0, r))
+            w = smooth(t0 - 0.05, t0 + 0.4, t)          # eerst de bocht in, niet in één frame
+            rots.append((0.0, 0.0, r0 + (r - r0) * w))
         bake(ch.rig, "location", frames, locs, interp="BEZIER")
         bake(ch.rig, "rotation_euler", frames, rots, interp="BEZIER")
         for f in frames[::2] + [frames[-1]]:
@@ -466,6 +525,43 @@ class Scene:
         Positie/doel mogen ook functies van t zijn. handheld = lichte cameraruis in graden."""
         self.cams.append(dict(t0=t0, a=a, b=b, fn=fn, dof=dof, shake=shake, ease=ease,
                               name=name or f"{self.code.upper()}_shot_{len(self.cams) + 1:02d}", hh=handheld))
+
+    SIZES = dict(ecu=0.34, cu=0.66, mcu=0.98, med=1.4, full=2.4, wide=4.2, xwide=8.0)
+
+    def frame_of(self, ch, t=0.0):
+        """(positie, voorwaarts, links) van een figuur op tijd t."""
+        M = self._root_matrix(ch, t)
+        R3 = M.to_3x3().normalized()
+        return M.translation.copy(), R3 @ Vector((0, -1, 0)), R3 @ Vector((1, 0, 0))
+
+    def shot(self, ch, t=0.0, size="med", az=25.0, lens=35, h=0.0, lr=0.0, up=0.0, dist=None):
+        """Kader een figuur: size = ecu/cu/mcu/med/full/wide/xwide of framehoogte in meters,
+        az = graden vanaf zijn neus (+ = naar zijn linkerkant), h = camera hoger/lager dan het doel,
+        lr = doel opzij (m, + = zijn links; zet hem dan rechts in beeld), up = doel omhoog."""
+        pos, fwd, left = self.frame_of(ch, t)
+        sc = ch.rig.scale.z
+        top = ch.J["head_top"].z * sc
+        fh = self.SIZES[size] if isinstance(size, str) else size
+        if size == "ecu":
+            tz = ch.J["head_c"].z * sc + 0.03
+        else:
+            tz = top - fh * 0.5 + fh * 0.07
+        tgt = pos + Vector((0, 0, max(tz, fh * 0.42) + up)) + left * lr
+        d = dist or fh * lens / 20.25
+        a = math.radians(az)
+        cam = tgt + (fwd * math.cos(a) + left * math.sin(a)) * d + Vector((0, 0, h))
+        return (tuple(cam), tuple(tgt), lens)
+
+    def ots(self, a, b, t=0.0, lens=35, side=1, back=0.75, out=0.32, rise=0.12, tgt_up=0.0):
+        """Over-de-schouder: achter figuur a, kijkend naar het gezicht van b. side=1: over zijn rechterschouder."""
+        ha = self.head(a, t)
+        hb = self.head(b, t) + Vector((0, 0, tgt_up))
+        d = hb - ha
+        d.z = 0
+        d.normalize()
+        right = d.cross(Vector((0, 0, 1)))
+        cam = ha - d * back + right * out * side + Vector((0, 0, rise))
+        return (tuple(cam), tuple(hb), lens)
 
     def _cam_eval(self, c, t, t1):
         if c["fn"]:
@@ -706,12 +802,24 @@ def attach(obj, ch, bone="hand.R", loc=(0, 0, 0), rot=(0, 0, 0)):
     obj.rotation_euler = Euler([math.radians(a) for a in rot])
 
 
-def grab(S, obj, ch, t, bone="hand.R", loc=(0, 0, 0), rot=(0, 0, 0), release=None):
-    """Object ligt los tot t, zit daarna in de hand (tot release). Werkt met een Child Of-constraint."""
-    emp = bpy.data.objects.new(S._fxname("Greep"), None)
-    T._link(emp)
-    attach(emp, ch, bone, loc, rot)
-    c = obj.constraints.new("COPY_TRANSFORMS")
+def grab(S, obj, ch, t, bone="hand.R", loc=(0, 0, 0), rot=(0, 0, 0), release=None, mode="full", target=None, offset=None):
+    """Object ligt los tot t, zit daarna in de hand (tot release). mode="loc": alleen de positie volgen
+    (het object blijft rechtop). target = bestaand leeg object om te volgen; offset = wereldverschuiving."""
+    if target is None:
+        emp = bpy.data.objects.new(S._fxname("Greep"), None)
+        T._link(emp)
+        attach(emp, ch, bone, loc, rot)
+    else:
+        emp = target
+    if offset is not None:
+        e2 = bpy.data.objects.new(S._fxname("Greep_ofs"), None)
+        T._link(e2)
+        cl = e2.constraints.new("COPY_LOCATION")
+        cl.target = emp
+        cl.use_offset = True
+        e2.location = Vector(offset)
+        emp = e2
+    c = obj.constraints.new("COPY_TRANSFORMS" if mode == "full" else "COPY_LOCATION")
     c.target = emp
     c.influence = 0.0
     c.keyframe_insert("influence", frame=F(t) - 1)
@@ -750,3 +858,144 @@ WAVE_SMALL_R2 = arm("R", (0.35, 0.25, -0.85), (0.55, 0.2, 0.8))
 PHONE_EAR_R = arm("R", (0.30, 0.15, -0.90), (-0.55, 0.15, 0.82))
 CLAP_A = arms(arm("L", (0.2, 0.9, -0.3), (-0.4, 0.9, 0.1)), arm("R", (0.2, 0.9, -0.3), (-0.4, 0.9, 0.1)))
 CLAP_B = arms(arm("L", (0.3, 0.8, -0.3), (0.3, 0.9, 0.1)), arm("R", (0.3, 0.8, -0.3), (0.3, 0.9, 0.1)))
+
+
+# ---------------------------------------------------------------------------
+# Zitten, scharnieren en nog wat rekwisieten
+# ---------------------------------------------------------------------------
+def sit(ch, seat_top=0.49, lean=-4.0, spread=0.07):
+    """Zithouding voor beat(): geeft (spec, root_z). Zet de wortel van het figuur boven het midden van de
+    zitting op hoogte root_z (> 0 voor kinderen, hun voeten bungelen dan)."""
+    P_ = ch.J["pelvis"].z
+    ank = ch.J["ankle.L"].z
+    L = P_ - ank
+    want = seat_top + 0.07
+    if P_ - 0.03 > want:
+        root_z, drop = 0.0, P_ - want
+        vert = P_ - drop - ank
+        fwd = math.sqrt(max(0.0, (0.97 * L) ** 2 - vert ** 2))
+        feet = ((spread * 0.3, fwd, 0.0), (-spread * 0.3, fwd, 0.0))
+    else:
+        drop = 0.03
+        root_z = want - (P_ - drop)
+        feet = ((spread * 0.3, 0.16, 0.06), (-spread * 0.3, 0.12, 0.03))
+    return dict(crouch=(drop, lean), feet=feet), root_z
+
+
+def hinge(obj, pivot, children=()):
+    """Maak een scharnier (lege ouder op pivot) voor deuren/deksels. Draai daarna de teruggegeven ouder."""
+    e = bpy.data.objects.new(obj.name + "_scharnier", None)
+    T._link(e)
+    e.location = Vector(pivot)
+    inv = Matrix.Translation(Vector(pivot)).inverted()
+    for o in (obj,) + tuple(children):
+        o.parent = e
+        o.matrix_parent_inverse = inv
+    return e
+
+
+def prop_tablet(S, name="Tablet", loc=(0, 0, 0), screen=(0.85, 0.9, 1.0)):
+    o = T.box(name, (0, 0, 0), (0.24, 0.012, 0.17), S.mat("tablet", (0.12, 0.12, 0.14)), base=False, bevel=0.008, ol=0.003)
+    s = T.box(name + "_scherm", (0, -0.0065, 0), (0.22, 0.001, 0.15), S.mat("scherm_" + name, screen, 1.5), base=False, bevel=0, ol=0)
+    s.parent = o
+    for k in range(4):
+        r = T.box(f"{name}_regel{k}", (-0.02, -0.0075, 0.05 - k * 0.03), (0.16 - (k % 2) * 0.05, 0.001, 0.012),
+                  S.mat("tablet_tekst", (0.3, 0.32, 0.4)), base=False, bevel=0, ol=0)
+        r.parent = o
+    o.location = loc
+    return o
+
+
+def prop_jar(S, name="Augurkenpot", loc=(0, 0, 0)):
+    """Augurkenpot met deksel. Geeft (pot, deksel_met_rand) terug; de rand is het bovenste stuk glas."""
+    glas = T.glass("pot_glas", (0.75, 0.9, 0.75), alpha=0.45)
+    jar = T.cyl(name, (0, 0, 0), 0.055, 0.13, glas, seg=24, ol=0.003)
+    pick = S.mat("augurk", (0.35, 0.55, 0.15))
+    for k in range(5):
+        a = k * 1.256
+        o = T.cyl(f"{name}_augurk{k}", (0.025 * math.cos(a), 0.025 * math.sin(a), 0.01), 0.014, 0.11, pick, seg=8, ol=0)
+        o.parent = jar
+    T.cyl(name + "_pekel", (0, 0, 0.005), 0.052, 0.11, T.glass("pekel", (0.85, 0.9, 0.5), alpha=0.35), seg=24, ol=0).parent = jar
+    top = T.cyl(name + "_deksel", (0, 0, 0), 0.058, 0.022, S.mat("deksel", (0.85, 0.2, 0.15)), seg=24, ol=0.003)
+    rim = T.cyl(name + "_rand", (0, 0, -0.025), 0.055, 0.025, glas, seg=24, ol=0.003)
+    rim.parent = top
+    lab = T.cyl(name + "_etiket", (0, 0, 0.03), 0.0565, 0.05, S.mat("etiket", (0.98, 0.9, 0.55)), seg=24, ol=0, cap=False)
+    lab.parent = jar
+    jar.location = Vector(loc)
+    top.location = Vector(loc) + Vector((0, 0, 0.155))
+    return jar, top
+
+
+def prop_egg(S, name="Ei", loc=(0, 0, 0)):
+    return T.sphere(name, tuple(loc), 0.024, S.mat("ei", (0.98, 0.93, 0.85)), scale=(1, 1, 1.3), seg=14, ol=0.002)
+
+
+def prop_bike(S, ch, name="Fiets", color=(0.85, 0.15, 0.15)):
+    """Fiets op maat van de figuren, vast aan de wortel van ch (rijdt mee). Geeft (fiets, crank) terug.
+    Lokaal: figuur kijkt naar -y; trapas op (0, 0, 0.25), wielen r 0.27."""
+    fr = S.mat("fietsframe_" + name, color)
+    blk = P.m("zwart")
+    met = P.m("metaal")
+    parts = []
+    for k, y in enumerate((-0.45, 0.40)):
+        parts.append(T.torus(f"{name}_band{k}", (0, y, 0.27), 0.25, 0.025, blk, rot=(0, 90, 0), seg=32, seg2=8, ol=0))
+        parts.append(T.torus(f"{name}_velg{k}", (0, y, 0.27), 0.22, 0.008, met, rot=(0, 90, 0), seg=32, seg2=6, ol=0))
+        parts.append(T.cyl(f"{name}_naaf{k}", (-0.04, y, 0.27), 0.025, 0.08, met, rot=(0, 90, 0), seg=10, ol=0))
+    pts = [((0, 0.40, 0.27), (0, 0.0, 0.25)), ((0, 0.0, 0.25), (0, 0.10, 0.60)), ((0, 0.10, 0.60), (0, 0.40, 0.27)),
+           ((0, 0.10, 0.56), (0, -0.33, 0.66)), ((0, 0.0, 0.25), (0, -0.33, 0.62)), ((0, -0.33, 0.62), (0, -0.45, 0.27)),
+           ((0, -0.33, 0.62), (0, -0.36, 0.80))]
+    for k, (a, b) in enumerate(pts):
+        parts.append(T.to_mesh(T.tube(f"{name}_buis{k}", [a, b], 0.018, fr)))
+    parts.append(T.to_mesh(T.tube(f"{name}_stuur", [(-0.22, -0.30, 0.82), (-0.1, -0.36, 0.80), (0.1, -0.36, 0.80), (0.22, -0.30, 0.82)], 0.014, met)))
+    for x in (-0.22, 0.22):
+        parts.append(T.cyl(f"{name}_handvat{x}", (x - 0.04, -0.30, 0.82), 0.02, 0.08, blk, rot=(0, 90, 0), seg=8, ol=0))
+    parts.append(T.box(f"{name}_zadel", (0, 0.12, 0.60), (0.1, 0.22, 0.05), blk, bevel=0.02, ol=0))
+    parts.append(T.box(f"{name}_spatbord", (0, 0.40, 0.53), (0.08, 0.3, 0.02), fr, bevel=0.01, ol=0))
+    bike = T.merge(name, parts, ol=0.006)
+    crank = T.merge(name + "_crank", [T.box(f"{name}_crankarm", (0, 0, -0.13), (0.03, 0.03, 0.26), met, base=False, bevel=0.005, ol=0),
+                                      T.box(f"{name}_pedaal1", (0.07, 0, -0.13), (0.09, 0.05, 0.02), blk, base=False, bevel=0, ol=0),
+                                      T.box(f"{name}_pedaal2", (-0.07, 0, 0.13), (0.09, 0.05, 0.02), blk, base=False, bevel=0, ol=0),
+                                      T.cyl(f"{name}_tandwiel", (0.04, 0, 0), 0.08, 0.01, met, rot=(0, 90, 0), seg=20, ol=0)], ol=0.004)
+    for o in (bike, crank):
+        o.parent = ch.rig
+        o.matrix_parent_inverse = Matrix.Identity(4)
+    bike.location = (0, 0, 0)
+    crank.location = (0, 0, 0.25)
+    return bike, crank
+
+
+def ride(S, ch, crank, t0, t1, cadence=2.2, lean=24, phase=0.0):
+    """Fietsen: zit op het zadel, handen aan het stuur, voeten op de trappers die rondgaan."""
+    for f in range(F(t0), F(t1) + 1, 2):
+        t = (f - 1) / FPS
+        ph = phase + (t - t0) * cadence * 2 * math.pi
+        A.crouch(ch, f, 0.07, lean)
+        for side, off in (("R", 0.0), ("L", math.pi)):
+            a = ph + off
+            A.foot(ch, f, side, (0, 0.13 * math.cos(a), 0.15 + 0.13 * math.sin(a)), (-15 * math.sin(a), 0, 0))
+        crank.rotation_euler = (ph, 0, 0)
+        crank.keyframe_insert("rotation_euler", frame=f)
+    M = S._root_matrix(ch, t0)
+    for side, x in (("L", 0.2), ("R", -0.2)):
+        for t in (t0, t1):
+            M = S._root_matrix(ch, t)
+            S.reach(ch, t, side, M @ Vector((x, -0.30, 0.83)))
+    for fc in A._fcurves(crank):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+
+
+def prop_bus(S, name="Bus", color=(0.95, 0.85, 0.15)):
+    """Stadsbus (11 m), rijdt langs +x. Oorsprong onder het midden."""
+    body = S.mat("bus_" + name, color)
+    glas = S.mat("busruit", (0.15, 0.22, 0.3))
+    p = [T.box(name + "_romp", (0, 0, 0.35), (11.0, 2.5, 2.7), body, bevel=0.15, ol=0),
+         T.box(name + "_ramen", (0, 0, 1.45), (10.4, 2.54, 1.0), glas, bevel=0.05, ol=0),
+         T.box(name + "_voorruit", (5.47, 0, 1.0), (0.1, 2.3, 1.7), glas, bevel=0.04, ol=0),
+         T.box(name + "_streep", (0, 0, 0.95), (11.02, 2.52, 0.12), S.mat("busstreep", (0.15, 0.35, 0.8)), bevel=0, ol=0),
+         T.box(name + "_bord", (5.52, 0, 2.65), (0.04, 1.6, 0.3), S.mat("busbord", (1.0, 0.65, 0.15), 2.0), bevel=0, ol=0)]
+    for i, (x, y) in enumerate([(3.6, 1.15), (-3.4, 1.15), (3.6, -1.15), (-3.4, -1.15)]):
+        p.append(T.cyl(f"{name}_wiel{i}", (x, y - 0.12 * (1 if y > 0 else -1), 0.5), 0.5, 0.3, P.m("zwart"), rot=(90, 0, 0), seg=18, ol=0))
+    for y in (0.85, -0.85):
+        p.append(T.sphere(f"{name}_lamp{y}", (5.5, y, 0.6), 0.14, T.toon("koplamp", (1, 0.97, 0.85)), scale=(0.4, 1, 0.7), seg=10, ol=0))
+    return T.merge(name, p, ol=0.02)
