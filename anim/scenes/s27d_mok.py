@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
 from scene import *  # noqa: E402,F401
-from ruimte import suit_actor, follow_lights  # noqa: E402
+from ruimte import suit_actor, follow_lights, soften_shadows  # noqa: E402
 
 S = Scene("s27d", "ruimte", "ruimte")
 S.clip = (0.05, 30000)
@@ -42,7 +42,7 @@ for k, (x, y) in enumerate([(0.0, 1.25), (-2.6, 1.25), (2.6, 1.25), (-1.3, -2.3)
     I.table(f"Console_{k}", tuple(MC + V(x, y, 0)), size=(2.0, 0.8, 0.75), color=(0.30, 0.32, 0.36))
     for dx in (-0.62, 0.62):
         T.box(f"Monitor_{k}_{dx}", tuple(MC + V(x + dx, y + 0.18, 0.75)), (0.5, 0.04, 0.34), mon, bevel=0.01, ol=0.006)
-I.chair("Bureaustoel_vriend", tuple(MC + V(0.0, 0.55, 0)), rot=0, color=(0.15, 0.15, 0.18), office=True)
+I.chair("Bureaustoel_vriend", tuple(MC + V(0.0, 0.55, 0)), rot=180, color=(0.15, 0.15, 0.18), office=True)
 for k, (x, y, e) in enumerate([(-3.0, 0.3, 900), (3.0, 0.3, 900), (0.0, -1.0, 700), (0.0, 2.6, 900), (-3.5, -3.0, 500), (3.5, -3.0, 500)]):
     T.point_light(f"Controlekamer_licht_{k}", tuple(MC + V(x, y, 3.1)), color=(0.95, 0.95, 1.0), energy=e, radius=0.4)
 
@@ -64,7 +64,7 @@ for k, x in enumerate((-1.3, 1.3)):
     ex = S.actor("wetenschapper", MC + V(x, -1.75, 0), 180, energy=0.5, label=f"controle_{k}",
                  outfit=dict(shirt=(0.30, 0.40, 0.55), broek=(0.2, 0.2, 0.25), haar=((0.15, 0.1, 0.07), (0.6, 0.45, 0.3))[k]), drop=("bril",))
     sp, zz = sit(ex, seat_top=0.5, lean=8)
-    I.chair(f"Bureaustoel_{k}", tuple(MC + V(x, -1.75, 0)), rot=0, color=(0.15, 0.15, 0.18), office=True)
+    I.chair(f"Bureaustoel_{k}", tuple(MC + V(x, -1.75, 0)), rot=180, color=(0.15, 0.15, 0.18), office=True)
     S.place(ex, 0.0, MC + V(x, -1.75, zz), 180)
     S.beat(ex, 0.0, **sp, face="neutraal", face_amt=0.5, look=(0, -0.1), arms=LOOK_HANDS)
 
@@ -197,25 +197,27 @@ S.cam(0.0, ((-5.0, -14.0, 403.0), (0.0, 0.0, 400.6), 40), ((-4.7, -13.0, 402.8),
 S.cam(l14[0] - 0.2, S.shot(held, l14[0] + 0.5, "mcu", az=10, lens=34), S.shot(held, l14[1], "mcu", az=8, lens=37))
 S.cam(l15[0] + 1.0, (MCC(2.4, 3.3, 1.9), MCC(-0.4, -0.2, 1.1), 22), (MCC(2.1, 3.3, 1.85), MCC(-0.4, -0.2, 1.1), 24))
 S.cam(l16[0] - 0.1, S.shot(vriend, l16[0] + 0.5, "mcu", az=12, lens=32), S.shot(vriend, MOM_SAYS, "mcu", az=10, lens=35))
-S.cam(MOM_SAYS - 0.1, S.shot(mama, MOM_SAYS + 0.5, "med", az=-10, lens=32), S.shot(mama, HANDLE, "med", az=-8, lens=34))
+MAH = S.head(mama, MOM_SAYS)
+S.cam(MOM_SAYS - 0.1, (MAH + V(-0.2, 2.2, 0.55), MAH + V(0, 0, -0.35), 30), (MAH + V(-0.15, 2.0, 0.5), MAH + V(0, 0, -0.3), 32))
 MH = S.bone_world(mama, "hand.R", HANDLE + 0.4)
-S.cam(HANDLE + 0.1, (MH + V(0.15, 0.75, 0.12), MH + V(0, 0, 0.05), 45), (MH + V(0.13, 0.68, 0.11), MH + V(0, 0, 0.05), 48))
+S.cam(HANDLE + 0.1, (MH + V(0.25, 1.15, 0.3), MH + V(0, 0, 0.15), 40), (MH + V(0.22, 1.05, 0.28), MH + V(0, 0, 0.15), 42))
 S.cam(l17[0] + 1.3, S.shot(held, l17[0] + 1.6, "mcu", az=-12, lens=34), S.shot(held, l17[1], "mcu", az=-10, lens=37))
-S.cam(l18[0] - 0.2, S.shot(bro, l18[0] + 0.3, "med", az=-20, lens=30), S.shot(bro, l18[1], "med", az=-18, lens=32))
+S.cam(l18[0] - 0.2, (MCC(-1.0, 2.4, 1.85), MCC(-0.3, 0.45, 0.95), 32), (MCC(-0.95, 2.3, 1.82), MCC(-0.3, 0.45, 0.95), 34))
 S.cam(l19[0] - 0.2, (V(3.0, -4.0, 399.5), V(2000, 300, -900), 28), (V(3.2, -4.2, 399.4), V(2000, 300, -880), 30))
 S.cam(POCKET - 0.1, S.shot(held, POCKET + 0.4, "med", az=20, lens=30), S.shot(held, POCKET + 1.4, "med", az=18, lens=32))
 H1 = S.bone_world(held, "hand.R", THE_MUG + 0.3)
-S.cam(THE_MUG - 0.1, (H1 + V(0.25, -0.45, 0.2), H1 + V(0, 0, 0.03), 40), (H1 + V(0.22, -0.4, 0.18), H1 + V(0, 0, 0.03), 42))
+S.cam(THE_MUG - 0.1, (H1 + V(-0.05, 0.62, 0.22), H1 + V(0, 0, 0.03), 40), (H1 + V(-0.05, 0.56, 0.2), H1 + V(0, 0, 0.03), 42))
 S.cam(l21[0] + 0.6, S.shot(held, l21[0] + 1.0, "mcu", az=15, lens=34), S.shot(held, CAN + 0.6, "mcu", az=12, lens=37))
-S.cam(l22[0] - 0.1, (V(-2.5, -7.5, 401.8), V(1.0, 25.0, 385.0), 24), (V(-2.2, -7.0, 401.6), V(1.0, 25.0, 385.0), 26))
+S.cam(l22[0] - 0.1, (V(-2.5, -7.5, 401.8), V(1.0, 25.0, 390.0), 18), (V(-2.2, -7.0, 401.6), V(1.0, 25.0, 390.0), 18))
 S.cam(ONE - 0.1, S.shot(held, ONE + 0.5, "full", az=-25, lens=30), S.shot(held, l22[1], "full", az=-22, lens=32))
 S.cam(l23[0] - 0.1, (V(0.0, -3.0, 410.0), V(0.0, 40.0, 0.0), 30), (V(0.0, -3.0, 412.0), V(0.0, 40.0, 0.0), 30))
 H2 = S.bone_world(held, "hand.R", l24[0] + 1.0)
-S.cam(l24[0] + 0.2, (H2 + V(-0.35, -0.55, 0.25), H2 + V(0, 0, 0.1), 34), (H2 + V(-0.32, -0.5, 0.23), H2 + V(0, 0, 0.1), 36))
+S.cam(l24[0] + 0.2, (H2 + V(0.3, 0.75, 0.3), H2 + V(0, 0, 0.12), 34), (H2 + V(0.27, 0.68, 0.28), H2 + V(0, 0, 0.12), 36))
 S.cam(FLOAT - 0.2, S.shot(held, FLOAT + 0.3, "mcu", az=20, lens=34), S.shot(held, l24[1], "mcu", az=18, lens=37))
 S.cam(l25[0] - 0.1, (V(-7.0, -12.0, 404.0), V(0.0, 0.0, 400.6), 32), (V(-7.5, -13.5, 404.3), V(0.0, 0.0, 400.6), 32))
 S.cam(TOMORROW - 0.1, S.shot(held, TOMORROW + 0.4, "mcu", az=-15, lens=34), S.shot(held, l25[1], "mcu", az=-12, lens=38))
 H3 = S.bone_world(held, "hand.R", l26[0])
-S.cam(l26[0] - 0.25, (H3 + V(0.12, -0.32, 0.1), H3 + V(0, 0, 0.04), 50), (H3 + V(0.1, -0.27, 0.085), H3 + V(0, 0, 0.04), 50))
+S.cam(l26[0] - 0.25, (H3 + V(-0.1, 0.36, 0.1), H3 + V(0, 0, 0.04), 50), (H3 + V(-0.08, 0.3, 0.085), H3 + V(0, 0, 0.04), 50))
 
+soften_shadows(S)
 S.finish(length=END)

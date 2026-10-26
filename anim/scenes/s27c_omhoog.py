@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
 from scene import *  # noqa: E402,F401
-from ruimte import suit_actor, sky_dome, cloud_layer, follow_lights  # noqa: E402
+from ruimte import suit_actor, sky_dome, cloud_layer, follow_lights, soften_shadows  # noqa: E402
 
 S = Scene("s27c", "ruimte", "ruimte")
 S.clip = (0.05, 30000)                        # sterren en zon staan ver weg
@@ -128,4 +128,5 @@ S.cam(ASTRO - 0.2, S.shot(held, ASTRO + 0.5, "med", az=-30, lens=32), S.shot(hel
 S.cam(l13[0] - 0.1, ((2.5, -5.5, 401.2), (0.0, 0.0, 401.0), 30), ((2.7, -5.9, 401.2), (0.0, 0.0, 401.0), 30))
 S.cam(CANT - 0.3, ((-6.0, -16.0, 404.0), (0.0, 0.0, 400.6), 40), ((-6.4, -17.5, 404.3), (0.0, 0.0, 400.6), 40))
 
+soften_shadows(S)
 S.finish(length=END)

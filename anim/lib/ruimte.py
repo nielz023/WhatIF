@@ -113,3 +113,25 @@ def follow_lights(S, ch, key=(1.2, -2.6, 1.2), fill=(-2.0, -1.5, 0.4), rim=(0.5,
         cl = lt.constraints.new("COPY_LOCATION")
         cl.target = ch.rig
         cl.use_offset = True
+
+
+def soften_shadows(S, shadow=(0.40, 0.44, 0.62), ambient=(0.30, 0.32, 0.42)):
+    """De ruimte-mood heeft bijna zwarte schaduwen; op gezichten geeft dat ruis op de grens van licht en donker.
+    Lichtere schaduwkleur in de toon-banden en wat meer omgevingslicht (de camera ziet de zwarte hemel nog steeds)."""
+    for ng in bpy.data.node_groups:
+        ramp = ng.nodes.get("Lichtbanden")
+        if not ramp:
+            continue
+        els = ramp.color_ramp.elements
+        li = tuple(els[len(els) - 1].color[:3])
+        mid = tuple(shadow[i] * 0.35 + li[i] * 0.65 for i in range(3))
+        for e in els:
+            if e.position < 0.3:
+                e.color = (*shadow, 1)
+            elif e.position < 0.65:
+                e.color = (*mid, 1)
+    w = S.sc.world
+    if w and w.use_nodes:
+        for n in w.node_tree.nodes:
+            if n.type == "BACKGROUND" and not n.inputs["Color"].is_linked:
+                n.inputs["Color"].default_value = (*ambient, 1)
