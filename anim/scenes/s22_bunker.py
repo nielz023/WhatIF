@@ -52,17 +52,17 @@ S.text("WALLS: 2 M CONCRETE", THICK + 1.4, FLOOR - 0.1, loc=(0.965, 0.22), size=
 S.text("\"THE ANCHOR\" T-SHIRTS SOLD: 40", SOLD + 0.2, KEEP + 1.5, loc=(0.965, 0.22), size=50, color=GOLD, anchor=("RIGHT", "BOTTOM"))
 
 # ---------------------------------------------------------------- hij: op zijn rug, hoofd naar de telefoon
-TO_PHONE = {"head": (0, -48, 0), "neck": (0, -18, 0)}
+TO_PHONE = {"head": (0, 48, 0), "neck": (0, 18, 0)}      # + = gezicht naar +x, naar de telefoon
 HOVER = arm("L", (0.85, 0.35, 0.25), (0.8, 0.45, 0.4))
-S.beat(held, 0.0, "staan", face="neutraal", face_amt=0.6, look=(0, 0), body={"head": (0, -10, 0)})
+S.beat(held, 0.0, "staan", face="neutraal", face_amt=0.6, look=(0, 0), body={"head": (0, 10, 0)})
 S.beat(held, FLOOR - 0.2, "staan", face="verdrietig", face_amt=0.5, look=(0, 0))
 S.beat(held, l2[0] + 0.4, "staan", face="neutraal", face_amt=0.6, look=(0.6, -0.2), body=TO_PHONE)
 S.beat(held, l3[0] + 0.5, "staan", face="blij", face_amt=0.3, look=(0.6, -0.2), body=TO_PHONE, mond_verdrietig=0.3)
 S.beat(held, ALONE + 1.0, "staan", face="verdrietig", face_amt=0.5, look=(0.6, -0.2), body=TO_PHONE)
 S.beat(held, l4[0] + 0.4, "staan", face="blij", face_amt=0.4, look=(0.6, -0.2), body=TO_PHONE)
 S.beat(held, KEEP + 0.4, "staan", face="lach", face_amt=0.5, look=(0.6, -0.2), body=TO_PHONE)
-S.beat(held, l5[0] + 0.1, "staan", face="lach", face_amt=0.7, look=(0.5, 0.0), body={"head": (0, -30, 0)}, ogen_knijp=0.4)
-S.beat(held, l5[1] + 0.3, "staan", face="blij", face_amt=0.5, look=(0.2, 0.0), body={"head": (0, -15, 0)})
+S.beat(held, l5[0] + 0.1, "staan", face="lach", face_amt=0.7, look=(0.5, 0.0), body={"head": (0, 30, 0)}, ogen_knijp=0.4)
+S.beat(held, l5[1] + 0.3, "staan", face="blij", face_amt=0.5, look=(0.2, 0.0), body={"head": (0, 15, 0)})
 S.beat(held, l6[0] + 0.3, "staan", face="verdrietig", face_amt=0.5, look=(0.6, -0.2), body=TO_PHONE)
 S.beat(held, SCARED - 0.6, "staan", face="verdrietig", face_amt=0.6, look=(0.6, -0.3), body=TO_PHONE, arms=HOVER)
 S.beat(held, SCARED + 0.6, "staan", face="nerveus", face_amt=0.7, look=(0.6, -0.3), body=TO_PHONE,
