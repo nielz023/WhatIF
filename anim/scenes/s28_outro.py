@@ -8,12 +8,14 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
 from scene import *  # noqa: E402,F401
+from ruimte import soften_shadows  # noqa: E402
 
 S = Scene("s28", "ruimte", "ruimte")
 S.clip = (0.01, 30000)
 
 MUG = V(0.0, -0.6, 400.0)
 mug = S.obj("Mok_gelijmd")
+T.point_light("Moklicht", tuple(MUG + V(0.6, -0.9, 0.7)), color=(1.0, 0.96, 0.9), energy=25, radius=0.3, shadow=False)
 
 # ---------------------------------------------------------------- tijdlijn
 S.music("strijkers_warm", 0.0, 0, vol=0.2, fade_in=2.0, fade_out=3.0)
@@ -53,10 +55,11 @@ if mug:
     key(mug, END, loc=MUG + V(0.0, 0.0, 0.01), rot=tuple(r0 + V(6, -4, 40)))
 
 # ---------------------------------------------------------------- camera: langzaam naar de mok, dan wijd voor het eindscherm
-S.cam(0.0, ((0.9, -4.2, 400.9), (0.0, -0.6, 400.05), 24), ((0.25, -1.9, 400.25), (0.0, -0.6, 400.05), 30))
-S.cam(GO_HOME, ((0.25, -1.9, 400.25), (0.0, -0.6, 400.05), 30), ((0.06, -1.0, 400.09), (0.0, -0.6, 400.04), 50))
-S.cam(l2[0] - 0.2, ((-1.0, -6.0, 401.2), (0.0, 40.0, 385.0), 24), ((-0.8, -5.2, 401.0), (0.0, 40.0, 385.0), 24))
+S.cam(0.0, (MUG + V(0.6, -3.4, 2.2), MUG + V(0, 0, 0.05), 24), (MUG + V(0.15, -1.1, 0.68), MUG + V(0, 0, 0.05), 32))
+S.cam(GO_HOME, (MUG + V(0.15, -1.1, 0.68), MUG + V(0, 0, 0.05), 32), (MUG + V(0.06, -0.5, 0.3), MUG + V(0, 0, 0.05), 45))
+S.cam(l2[0] - 0.2, ((-1.0, -6.0, 401.2), (0.0, 40.0, 378.0), 18), ((-0.8, -5.2, 401.0), (0.0, 40.0, 378.0), 18))
 S.cam(l3[0] - 0.2, ((3.0, -4.0, 399.5), (2000, 300, -900), 28), ((3.1, -4.1, 399.6), (2000, 300, -900), 30))
 S.cam(ENDSCREEN - 0.3, ((0.4, -5.5, 401.6), (0.0, -0.6, 399.6), 26), ((0.5, -6.5, 401.9), (0.0, -0.6, 399.6), 26))
 
+soften_shadows(S)
 S.finish(length=END)
