@@ -78,6 +78,6 @@ kc = kids[4]
 KH = S.head(kc, NOT_CLASS)
 S.cam(NOT_CLASS - 0.15, (V(-0.35, KH.y - 1.5, KH.z + 0.05), KH + V(0, 0, -0.15), 36), (V(-0.25, KH.y - 1.3, KH.z + 0.05), KH + V(0, 0, -0.12), 40))
 # 4 · bij de deur, in profiel, langzaam dichterbij
-S.cam(GOODBYE - 0.1, ((-1.2, -1.3, 1.45), (-1.55, 0.85, 1.3), 30), ((-1.25, -1.0, 1.45), (-1.55, 0.85, 1.32), 33))
+S.cam(GOODBYE - 0.1, ((-0.15, -0.95, 1.5), (-1.5, 0.85, 1.3), 30), ((-0.2, -0.75, 1.5), (-1.5, 0.85, 1.32), 33))
 
 S.finish(length=END)
