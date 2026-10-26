@@ -114,9 +114,9 @@ SIT_P, zp = sit(prof, seat_top=0.5, lean=10)
 S.place(prof, 0, DK + V(0.2, 0.1, zp), 0 + 180)
 S.beat(prof, 0.0, **SIT_P, pose="ontspannen", face="neutraal", face_amt=1.0, ogen_knijp=1.0, body={"head": (24, 0, 10)})
 S.beat(prof, UNI + 0.5, **SIT_P, pose="ontspannen", face="neutraal", face_amt=1.0, ogen_knijp=1.0, body={"head": (24, 0, 10)})
-S.beat(prof, UNI + 0.75, **SIT_P, pose="schrik", amount=0.8, face="geschrokken", face_amt=1.0, look=(0, -0.2))
-S.beat(prof, UNI + 1.6, **SIT_P, pose="staan", face="verbaasd", face_amt=1.0, at=PAPER0, body={"spine": (20, 0, 0), "chest": (10, 0, 0)})
-S.beat(prof, NOT_EQ + 0.3, **SIT_P, pose="staan", face="verbaasd", face_amt=0.9, at=PAPER0, body={"spine": (24, 0, 0), "chest": (12, 0, 0)},
+S.beat(prof, UNI + 0.75, **SIT_P, pose="schrik", amount=0.8, body={"head": (0, 0, 0)}, face="geschrokken", face_amt=1.0, look=(0, -0.2))
+S.beat(prof, UNI + 1.6, **SIT_P, pose="staan", face="verbaasd", face_amt=1.0, at=PAPER0 + V(0, 0.2, 0.75), body={"spine": (8, 0, 0), "chest": (4, 0, 0), "head": (0, 0, 0)})
+S.beat(prof, NOT_EQ + 0.3, **SIT_P, pose="staan", face="verbaasd", face_amt=0.9, at=PAPER0 + V(0, 0.2, 0.75), body={"spine": (10, 0, 0), "chest": (5, 0, 0), "head": (0, 0, 0)},
        arms=HOLD_FRONT_R)
 S.hold(prof, END)
 
