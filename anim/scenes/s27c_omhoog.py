@@ -117,8 +117,8 @@ for k, t in enumerate(frange(SWIM + 0.3, K50 + 0.5, 1.26)):
 
 # ---------------------------------------------------------------- camera
 HP = lambda t: S._root_matrix(held, t).translation
-S.cam(0.0, None, fn=lambda t: (HP(t) + V(2.0, -2.8, -0.9), HP(t) + V(0, 0, 1.2), 26))
-S.cam(SWIM - 0.2, None, fn=lambda t: (V(4.5, -6.5, 4.2), HP(t) + V(0, 0, 1.0), 24 + min(30.0, (t - SWIM) * 6)))
+S.cam(0.0, None, fn=lambda t: (HP(t) + V(2.0, -2.8, 0.5), HP(t) + V(0, 0, 1.2), 26))      # boven de landschijf (bovenkant z ~5)
+S.cam(SWIM - 0.2, None, fn=lambda t: (V(4.5, -6.5, 6.8), HP(t) + V(0, 0, 1.0), 24 + min(30.0, (t - SWIM) * 6)))
 S.cam(K10 - 0.1, None, fn=lambda t: (HP(t) + V(3.5, -5.0, -2.5), HP(t) + V(0, 0, 0.8), 26))
 S.cam(K50 - 0.2, None, fn=lambda t: (HP(t) + V(1.2, -1.8, 4.5), HP(t) + V(0, 0, -1.0), 24))
 S.cam(K100 + 0.6, None, fn=lambda t: (TOP + V(-1.6, -4.6, 1.0) + V(0, -(t - K100) * 0.08, 0), TOP + V(15.0, 55.0, -17.0), 18))
