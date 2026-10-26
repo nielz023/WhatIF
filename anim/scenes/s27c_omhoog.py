@@ -61,7 +61,7 @@ S.gauge("DISTANCE MOVED: 0 M", CANT - 0.1, END, color=WHITE, size=56)
 # ---------------------------------------------------------------- de hemel: blauw, donkerblauw, zwart, en dan weg
 sky_dome(S, held.rig, [(0.0, (0.42, 0.66, 0.98), 1.0), (K10, (0.36, 0.58, 0.95), 1.0), (K20, (0.16, 0.30, 0.72), 1.0),
                        (K50, (0.04, 0.08, 0.30), 1.0), (K100, (0.008, 0.012, 0.04), 1.0), (K100 + 1.2, (0.0, 0.0, 0.0), 0.0)])
-cloud_layer(S, V(0, 0, 0), 16.0)
+cloud_layer(S, V(0, 0, 0), 18.0, n=12)      # losse wolken: één recht boven hem, eromheen blauwe lucht
 
 # ---------------------------------------------------------------- omhoog zwemmen
 z_keys = [(0.0, 6.0), (SWIM, 6.2), (SWIM + 1.6, 17.0), (K10, 34.0), (K20, 80.0), (K50, 200.0), (K100 - 0.3, 385.0), (K100 + 1.2, 400.0)]
@@ -117,7 +117,7 @@ for k, t in enumerate(frange(SWIM + 0.3, K50 + 0.5, 1.26)):
 
 # ---------------------------------------------------------------- camera
 HP = lambda t: S._root_matrix(held, t).translation
-S.cam(0.0, None, fn=lambda t: (HP(t) + V(2.0, -2.8, 0.5), HP(t) + V(0, 0, 1.2), 26))      # boven de landschijf (bovenkant z ~5)
+S.cam(0.0, None, fn=lambda t: (HP(t) + V(1.5, 3.0, 1.9), HP(t) + V(0, 0, 1.0), 26))      # van voren en iets hoger: de landschijf achter hem
 S.cam(SWIM - 0.2, None, fn=lambda t: (V(4.5, -6.5, 6.8), HP(t) + V(0, 0, 1.0), 24 + min(30.0, (t - SWIM) * 6)))
 S.cam(K10 - 0.1, None, fn=lambda t: (HP(t) + V(3.5, -5.0, -2.5), HP(t) + V(0, 0, 0.8), 26))
 S.cam(K50 - 0.2, None, fn=lambda t: (HP(t) + V(1.2, -1.8, 4.5), HP(t) + V(0, 0, -1.0), 24))
