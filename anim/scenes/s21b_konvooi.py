@@ -239,13 +239,13 @@ S.cam(FAMILY - 0.1, None, fn=lambda t: (V(TX(t) + 1.6, LANE + 0.9, 2.6), BUS_FAC
 S.cam(BRO - 0.1, None, fn=lambda t: (V(TX(t) - 3.6, LANE - 0.3, 2.0), V(BX(t) + 0.3, LANE + 0.0, 1.55), 42), handheld=0.6)
 # 6 · de telefoon in de laadbak: hij hangt niet op
 S.cam(FRIEND - 0.1, None, fn=lambda t: (V(TX(t), LANE, 0) + PHONE_L + V(0.45, 0.45, 0.7), V(TX(t), LANE, 0) + PHONE_L + V(0, 0, 0.02), 40))
-S.cam(FRIEND + 2.5, None, fn=lambda t: (S.head(held, t) + V(-1.1, -0.5, -0.55), S.head(held, t) + V(0, 0, -0.3), 32))      # laag: hij kijkt omlaag
+S.cam(FRIEND + 2.5, None, fn=lambda t: (S.head(held, t) + V(-1.25, -0.6, -0.55), S.head(held, t) + V(0, 0, -0.35), 24))      # laag: hij kijkt omlaag
 # 7 · zijn handen
 S.cam(HANDS - 0.1, None, fn=lambda t: (S.head(held, t) + V(-1.5, 0.4, 0.0), S.head(held, t) + V(-0.1, 0, -0.5), 30))
 # 8 · de stad die ze achterlaten
 S.cam(SKY - 0.1, None, fn=lambda t: (V(TX(t) + 30, -7.5, 1.6), V(TX(t) - 60, -12, 22), 26))
 # 9 · zijn hand omhoog, mama's hand omhoog: van opzij, allebei in beeld
-S.cam(MOM - 0.3, None, fn=lambda t: (V((TX(t) + BX(t)) / 2 - 0.8, LANE - 1.5, 9.0), V((TX(t) + BX(t)) / 2 - 0.8, LANE, 1.6), 20))
+S.cam(MOM - 0.3, None, fn=lambda t: (V((TX(t) + BX(t)) / 2 + 0.6, LANE - 1.5, 9.0), V((TX(t) + BX(t)) / 2 + 0.6, LANE, 1.6), 20))
 S.cam(MOM + 1.7, None, fn=lambda t: (V(BX(t) + 3.2, LANE - 0.6, 1.8), V(BX(t) + 0.3, LANE - 0.45, 1.65), 40))
 
 S.finish(length=END)
