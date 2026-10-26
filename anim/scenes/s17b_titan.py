@@ -235,13 +235,13 @@ for t, (rh, lh) in ((HOLD, (rh0, lh0)), (IMPACT, (rh0, lh0)), (IMPACT + 0.5, (rh
 S.beat(held, HOLD, **BRACE, face="vastberaden", face_amt=1.0, look=(0, 0.3))
 S.beat(held, l7[0] + 0.2, **BRACE, face="schreeuw", face_amt=0.8, mouth=0.7, look=(0, 0.35))
 S.beat(held, IMPACT - 0.05, **BRACE, face="inspanning", face_amt=1.0, mouth=0.5, look=(0, 0.3), ogen_knijp=0.8)
-S.beat(held, IMPACT + 0.3, pose="schrap", crouch=(0.28, 12.0), feet=((0.16, 0.1, 0), (-0.16, -0.5, 0)),
-       body={"spine": (10, 0, 0), "chest": (4, 0, 0), "head": (-16, 0, 0)}, face="inspanning", face_amt=1.0, mouth=0.4, ogen_knijp=1.0)
+S.beat(held, IMPACT + 0.3, pose="schrap", crouch=(0.25, -4.0), feet=((0.16, 0.1, 0), (-0.16, -0.5, 0)),
+       body={"spine": (-2, 0, 0), "chest": (0, 0, 0), "head": (-12, 0, 0)}, face="inspanning", face_amt=1.0, mouth=0.4, ogen_knijp=1.0)
 S.hold(held, l8[0] + 0.2)
-S.beat(held, l8[0] + 1.0, pose="schrap", crouch=(0.24, 10.0), feet=((0.16, 0.1, 0), (-0.16, -0.5, 0)),
-       body={"spine": (8, 0, 0), "chest": (3, 0, 0), "head": (-8, 0, 0)}, face="verbaasd", face_amt=0.6, look=(0, 0.2), mouth=0.2)
-S.beat(held, ONE_M + 0.5, pose="schrap", crouch=(0.22, 8.0), feet=((0.16, 0.1, 0), (-0.16, -0.5, 0)),
-       body={"spine": (6, 0, 0), "chest": (2, 0, 0), "head": (-4, 0, 0)}, face="verdrietig", face_amt=0.5, look=(0, 0.1), mouth=0.15)
+S.beat(held, l8[0] + 1.0, pose="schrap", crouch=(0.22, -3.0), feet=((0.16, 0.1, 0), (-0.16, -0.5, 0)),
+       body={"spine": (-2, 0, 0), "chest": (0, 0, 0), "head": (-6, 0, 0)}, face="verbaasd", face_amt=0.6, look=(0, 0.2), mouth=0.2)
+S.beat(held, ONE_M + 0.5, pose="schrap", crouch=(0.2, -2.0), feet=((0.16, 0.1, 0), (-0.16, -0.5, 0)),
+       body={"spine": (-1, 0, 0), "chest": (0, 0, 0), "head": (-2, 0, 0)}, face="verdrietig", face_amt=0.5, look=(0, 0.1), mouth=0.15)
 S.hold(held, END)
 # meegeduwd door de trein na de klap
 ifr = list(range(F(IMPACT) - 1, F(END) + 1))
@@ -258,7 +258,7 @@ S.cam(0.0, None, fn=lambda t: (vlerp((47, -64, 9.5), (49, -60, 10.0), t / 3.0), 
 S.cam(l3[0] - 0.1, None, fn=lambda t: (lambda c: (c[0] + c[1] * 2.3 + c[3] * 1.25, c[0] - c[1] * 1.2 + c[3] * 0.8, 21))(car0(t)),
       shake=lambda t: 1.1)
 S.cam(KMH - 0.1, None, fn=lambda t: (V(40.5, -19.5, 3.4), TR.nose(D(t)) - V(0, 0, 0.6), 24), shake=lambda t: 0.6)
-S.cam(GRAB - 0.25, (H(1.75, -1.15, 0.72), H(0.1, 0, 0.5), 30), (H(1.55, -1.0, 0.68), H(0.1, 0, 0.5), 32),
+S.cam(GRAB - 0.25, (H(2.7, -1.7, 1.05), H(0.0, 0, 0.72), 30), (H(2.5, -1.55, 1.0), H(0.0, 0, 0.72), 31),
       shake=lambda t: max(0.0, 1.2 - (t - GRAB) * 2.0) if t > GRAB else 0.0)
 b2 = bolt_at[1]
 S.cam(BOLTS - 0.2, (b2 + V(2.0, -0.55, 0.22), b2 + V(-0.4, 0.15, 0.05), 32), (b2 + V(1.75, -0.5, 0.22), b2 + V(-0.4, 0.15, 0.05), 32),

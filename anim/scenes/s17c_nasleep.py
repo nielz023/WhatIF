@@ -105,8 +105,9 @@ S.beat(held, l12[0] + 3.0, pose="staan", crouch=(0.08, 4.0), feet=((0.14, 0.1, 0
 S.beat(held, RUN, pose="staan", crouch=(0.06, 2.0), feet=((0.14, 0.1, 0), (-0.14, -0.3, 0)), body={"head": (6, -45, 0), "neck": (0, -10, 0)},
        face="verdrietig", face_amt=0.9, look=(-0.7, -0.3), mond_verdrietig=0.8)
 S.hold(held, END)
-for k, t in enumerate(frange(0.0, END, 2.2)):
-    S.puff(V(X_AFTER + 0.4, HP.y, G + 0.3), t, n=5, r=(0.2, 0.4), grow=2.2, dur=2.6, color=(0.78, 0.74, 0.68), rise=1.2, spread=1.2)
+for k, t in enumerate(frange(0.0, END, 2.6)):               # laag, dun stof rond zijn voeten (niet voor zijn gezicht)
+    S.puff(V(X_AFTER + 0.5, HP.y + (0.5 if k % 2 else -0.5), G + 0.08), t, n=4, r=(0.06, 0.13), grow=1.6, dur=2.4,
+           color=(0.72, 0.69, 0.64), rise=0.35, spread=0.9)
 
 # de passagiers in de trein (vóór ze uitstappen): stil, geschrokken
 for n, ch in enumerate(rs):
@@ -155,6 +156,7 @@ for n, ch in enumerate(group):
     p2 = p1 + DIR * 10.0 + SIDE * (dx * 0.6)
     S.place(ch, 0.0, p0, heading(p0, p1))
     S.teleport(ch, WALK - 0.05, p0, heading(p0, p1))
+    visible(ch.rig, 0.0, False)                         # tot dan zitten ze nog in de trein
     visible(ch.rig, WALK, True)
     S.walk(ch, WALK, RUN - 0.1, [p0, p1], stride=0.4 if ch is not zus_g else 0.3, arms=0.3)
     S.walk(ch, RUN, END, [p1, p2], stride=0.95 if ch is not zus_g else 0.6, arms=1.2)
@@ -178,7 +180,7 @@ PHONE = FRIEND_AT + V(0, 0, 1.45) + (V(X_AFTER, HP.y, 0) - FRIEND_AT).normalized
 coil_c = coil_points(TR)[30]
 S.cam(0.0, ((X_AFTER - 3.0, HP.y - 8.5, G + 0.4), (X_AFTER + 1.0, HP.y, G + 0.4), 30), ((X_AFTER - 2.6, HP.y - 7.8, G + 0.3), (X_AFTER + 1.0, HP.y, G + 0.4), 32))
 S.cam(SAILORS - 0.1, (DK + V(-16, 12, 7.0), DK + V(1, -3, 2.4), 28), (DK + V(-14, 11, 6.2), DK + V(1.5, -2, 2.0), 30))
-S.cam(BOLLARD - 0.1, (BOL + V(1.9, 2.4, 1.25), BOL + V(0, 0, 0.5), 38), (BOL + V(1.6, 2.0, 1.1), BOL + V(0, 0, 0.5), 40))
+S.cam(BOLLARD - 0.1, (BOL + V(-1.7, 2.3, 1.15), BOL + V(0.5, 0.4, 0.5), 32), (BOL + V(-1.45, 2.0, 1.05), BOL + V(0.5, 0.4, 0.5), 34))
 S.cam(FRICTION - 0.1, ((HP.x + 1.5, HP.y - 2.4, 1.45), (HP.x, HP.y - 0.2, 1.5), 34), ((HP.x + 1.3, HP.y - 2.1, 1.5), (HP.x, HP.y - 0.2, 1.5), 36))
 S.cam(COASTER - 0.1, ((X_AFTER - 7.0, HP.y - 9.5, 5.4), (X_AFTER + 2.5, HP.y, 3.3), 28), ((X_AFTER - 6.4, HP.y - 8.8, 5.2), (X_AFTER + 2.5, HP.y, 3.3), 30))
 ZH = S.headpos(zus, SISTER + 0.5)
@@ -186,7 +188,7 @@ S.cam(SISTER, (ZH + V(-1.2, -0.55, 0.05), ZH + V(0, 0, -0.05), 40), (ZH + V(-1.0
 S.cam(RUN_IN - 0.2, ((BULLY_STOP.x + 3.0, BULLY_STOP.y - 3.5, 1.0), (BULLY_STOP.x - 0.5, BULLY_STOP.y, 2.2), 26),
       ((BULLY_STOP.x + 2.8, BULLY_STOP.y - 3.2, 1.0), (BULLY_STOP.x - 0.5, BULLY_STOP.y + 0.5, 2.4), 28))
 BH = S.head(pest, l10[0] + 0.5)
-S.cam(l10[0] + 0.6, (BH + V(0.45, 1.0, 0.55), BH + V(0, 0, -0.05), 34), (BH + V(0.4, 0.9, 0.5), BH + V(0, 0, -0.05), 38))
+S.cam(l10[0] + 0.6, (BH + V(0.8, 1.7, 0.45), BH + V(0, 0, -0.2), 30), (BH + V(0.7, 1.55, 0.42), BH + V(0, 0, -0.2), 33))
 S.cam(WALK, ((W0.x - 7.5, W0.y - 11.0, 1.5), (W0.x, W0.y, 2.4), 30), ((W0.x - 7.0, W0.y - 10.2, 1.5), (W0.x, W0.y, 2.4), 32))
 S.cam(VIRAL0 - 0.2, S.shot(vriend, VIRAL0, "mcu", az=35, lens=32), S.shot(vriend, VIRAL0 + 1.8, "mcu", az=30, lens=36))
 S.cam(WRECK, (PHONE, V(X_AFTER + 0.3, HP.y, G + 0.9), 55), (PHONE + V(0.15, 0.2, 0), V(X_AFTER + 0.3, HP.y, G + 1.0), 75), handheld=1.2)
