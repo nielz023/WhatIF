@@ -193,20 +193,22 @@ S.cam(l2[0] + 2.3, S.shot(held, HEART, "med", az=22, lens=32), S.shot(held, HEAR
 S.cam(STRONGER - 0.2, S.shot(held, STRONGER, "mcu", az=-35, lens=34), S.shot(held, SOFAR, "mcu", az=-30, lens=37))
 S.cam(VISIT - 0.1, ((1.4, -58.6, 1.55), BASE_LOOK, 110), ((1.45, -58.4, 1.55), BASE_LOOK + V(0, 0, 0.1), 120))
 S.cam(SANDBAGS - 0.1, ((8.4, -11.5, 1.35), (8.0, -4.9, 1.05), 28), ((8.3, -11.0, 1.35), (8.0, -4.9, 1.05), 30))
-S.cam(l5[0] - 0.15, S.shot(bro, l5[0] + 0.5, "med", az=10, lens=32), S.shot(bro, l5[0] + 1.5, "med", az=8, lens=35))
+S.cam(l5[0] - 0.15, S.shot(bro, l5[0] + 0.5, "med", az=35, lens=32), S.shot(bro, l5[0] + 1.5, "med", az=32, lens=35))
 S.cam(l6[0] - 0.1, S.shot(held, l6[0] + 1.0, "mcu", az=20, lens=34), S.shot(held, l6[1], "mcu", az=18, lens=38))
 S.cam(l7[0] - 0.1, S.shot(opa, l7[0] + 0.5, "med", az=-15, lens=30), S.shot(opa, l7[1], "med", az=-12, lens=33))
 S.cam(WAVE - 0.15, S.shot(held, WAVE + 0.5, "full", az=12, lens=30), S.shot(held, WAVE + 1.5, "full", az=10, lens=32))
 S.cam(WAVE_BACK - 0.1, ((7.9, -13.0, 1.4), (7.9, -4.9, 1.15), 26), ((7.9, -12.4, 1.4), (7.9, -4.9, 1.15), 28))
 S.cam(l9[0] - 0.15, S.shot(mama, l9[0] + 0.5, "med", az=15, lens=32), ((15.5, -14.0, 1.9), (11.5, -6.5, 1.0), 26))
 S.cam(l10[0] - 0.3, ((9.0, -35.5, 1.5), (2.4, -30.4, 1.1), 30), ((8.5, -35.0, 1.5), (2.4, -30.4, 1.1), 32))
-S.cam(PLACE + 0.25, (POST_TOP + V(0.14, -0.5, 0.1), POST_TOP + V(0, 0, 0.07), 50), (POST_TOP + V(0.1, -0.4, 0.09), POST_TOP + V(0, 0, 0.07), 55))
-S.cam(l11[0] - 0.15, S.shot(mama, l11[0] + 0.5, "mcu", az=22, lens=34), S.shot(mama, TOO, "mcu", az=18, lens=38))
+# de mok op de paal en mama erachter, schuin van opzij zodat haar hoofd naast de mok staat
+MID = (POST_TOP + V(0, 0, 0.07) + S.head(mama, PLACE + 1.0)) * 0.5
+S.cam(PLACE + 0.25, (MID + V(-1.15, -1.15, 0.05), MID, 32), (MID + V(-1.0, -1.0, 0.04), MID, 35))
+S.cam(l11[0] - 0.15, S.shot(mama, l11[0] + 0.5, "mcu", az=58, lens=34), S.shot(mama, TOO, "mcu", az=55, lens=38))
 S.cam(TOO + 0.2, S.shot(held, TOO + 0.6, "mcu", az=-20, lens=34), S.shot(held, l11[1], "mcu", az=-18, lens=38))
-S.cam(l12[0] - 0.25, ((0.3, -32.4, 1.25), (2.5, -31.2, 1.15), 30), ((0.45, -32.3, 1.25), (2.5, -31.2, 1.2), 32))
-S.cam(GRAB - 0.5, (POST_TOP + V(-0.55, -0.6, 0.12), POST_TOP + V(0, -0.15, 0.0), 42),
-      (POST_TOP + V(-0.6, -0.75, -0.1), POST_TOP + V(0, -0.35, -0.2), 40))
-S.cam(NOBREAK - 0.15, S.shot(held, NOBREAK + 0.5, "mcu", az=25, lens=34, up=-0.1), S.shot(held, TIRED, "mcu", az=20, lens=37, up=-0.1))
+S.cam(l12[0] - 0.25, ((-0.7, -33.6, 1.35), (2.5, -31.7, 1.15), 28), ((-0.55, -33.4, 1.35), (2.5, -31.6, 1.2), 30))
+S.cam(GRAB - 0.5, (POST_TOP + V(1.05, 0.45, 0.0), POST_TOP + V(0, -0.25, -0.05), 36),
+      (POST_TOP + V(1.1, 0.35, -0.12), POST_TOP + V(0, -0.4, -0.2), 34))
+S.cam(NOBREAK - 0.15, S.shot(held, NOBREAK + 0.5, "mcu", az=58, lens=34, up=-0.1), S.shot(held, TIRED, "mcu", az=55, lens=37, up=-0.1))
 S.cam(TIRED - 0.2, ((0.4, -36.5, 1.9), (3.6, -22.0, 1.1), 24), ((0.6, -35.8, 2.1), (3.6, -22.0, 1.2), 26))
 
 S.finish(length=END)
