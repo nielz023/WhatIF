@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
 from scene import *  # noqa: E402,F401
-from ruimte import suit_actor  # noqa: E402
+from ruimte import suit_actor, follow_lights  # noqa: E402
 
 S = Scene("s27d", "ruimte", "ruimte")
 S.clip = (0.05, 30000)
@@ -22,6 +22,7 @@ if o:
 TOP = V(0.0, 0.0, 400.0)
 SUN = V(0.876, 0.0, -0.46).normalized() * 9000
 held = suit_actor(S, TOP, 200, energy=0.8)
+follow_lights(S, held)
 
 # ---------------------------------------------------------------- de controlekamer (ver weg in dezelfde scène)
 MC = V(0.0, 0.0, -6000.0)

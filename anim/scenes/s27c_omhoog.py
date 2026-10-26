@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
 from scene import *  # noqa: E402,F401
-from ruimte import suit_actor, sky_dome, cloud_layer  # noqa: E402
+from ruimte import suit_actor, sky_dome, cloud_layer, follow_lights  # noqa: E402
 
 S = Scene("s27c", "ruimte", "ruimte")
 S.clip = (0.05, 30000)                        # sterren en zon staan ver weg
@@ -18,9 +18,10 @@ for n in ("Mok_gelijmd",):                     # de mok uit de outro hoort hier 
     if o:
         for c in [o] + list(o.children_recursive):
             c.hide_render = True
-P0 = V(0.0, 0.0, 2.0)                          # onder de wolken
+P0 = V(0.0, 0.0, 6.0)                          # onder de wolken (de landschijven zijn bijna 2 m dik)
 TOP = V(0.0, 0.0, 400.0)                       # 'honderd kilometer' (de set: de aarde onder je, de ruimte erboven)
 held = suit_actor(S, P0, 180, energy=1.2)
+follow_lights(S, held)
 
 # ---------------------------------------------------------------- tijdlijn
 S.hud(40, "1,099,511,627,776x STRONGER", t0=0.5)
@@ -60,10 +61,10 @@ S.gauge("DISTANCE MOVED: 0 M", CANT - 0.1, END, color=WHITE, size=56)
 # ---------------------------------------------------------------- de hemel: blauw, donkerblauw, zwart, en dan weg
 sky_dome(S, held.rig, [(0.0, (0.42, 0.66, 0.98), 1.0), (K10, (0.36, 0.58, 0.95), 1.0), (K20, (0.16, 0.30, 0.72), 1.0),
                        (K50, (0.04, 0.08, 0.30), 1.0), (K100, (0.008, 0.012, 0.04), 1.0), (K100 + 1.2, (0.0, 0.0, 0.0), 0.0)])
-cloud_layer(S, P0, 9.0)
+cloud_layer(S, V(0, 0, 0), 16.0)
 
 # ---------------------------------------------------------------- omhoog zwemmen
-z_keys = [(0.0, 2.0), (SWIM, 2.2), (SWIM + 1.6, 9.0), (K10, 30.0), (K20, 80.0), (K50, 200.0), (K100 - 0.3, 385.0), (K100 + 1.2, 400.0)]
+z_keys = [(0.0, 6.0), (SWIM, 6.2), (SWIM + 1.6, 17.0), (K10, 34.0), (K20, 80.0), (K50, 200.0), (K100 - 0.3, 385.0), (K100 + 1.2, 400.0)]
 for t, z in z_keys:
     key(held.rig, t, loc=V(0, 0, z), rot=(12 if t >= SWIM else 0, 0, 180))
 # zweven in het niets: heel langzaam draaien, geen meter vooruit
@@ -117,14 +118,14 @@ for k, t in enumerate(frange(SWIM + 0.3, K50 + 0.5, 1.26)):
 # ---------------------------------------------------------------- camera
 HP = lambda t: S._root_matrix(held, t).translation
 S.cam(0.0, None, fn=lambda t: (HP(t) + V(2.0, -2.8, -0.9), HP(t) + V(0, 0, 1.2), 26))
-S.cam(SWIM - 0.2, None, fn=lambda t: (V(4.5, -6.5, 0.6), HP(t) + V(0, 0, 1.0), 24 + min(30.0, (t - SWIM) * 6)))
+S.cam(SWIM - 0.2, None, fn=lambda t: (V(4.5, -6.5, 4.2), HP(t) + V(0, 0, 1.0), 24 + min(30.0, (t - SWIM) * 6)))
 S.cam(K10 - 0.1, None, fn=lambda t: (HP(t) + V(3.5, -5.0, -2.5), HP(t) + V(0, 0, 0.8), 26))
 S.cam(K50 - 0.2, None, fn=lambda t: (HP(t) + V(1.2, -1.8, 4.5), HP(t) + V(0, 0, -1.0), 24))
-S.cam(K100 + 0.6, None, fn=lambda t: (TOP + V(-1.6, -4.6, 1.0) + V(0, -(t - K100) * 0.08, 0), TOP + V(3.0, 60.0, -28.0), 24))
+S.cam(K100 + 0.6, None, fn=lambda t: (TOP + V(-1.6, -4.6, 1.0) + V(0, -(t - K100) * 0.08, 0), TOP + V(15.0, 55.0, -17.0), 18))
 S.cam(NOTHING + 0.2, S.shot(held, NOTHING + 0.8, "mcu", az=15, lens=34), S.shot(held, l11[1], "mcu", az=10, lens=38))
-S.cam(l12[0] - 0.1, ((3.0, -7.0, 401.5), (0.0, 30.0, 380.0), 24), ((2.6, -7.4, 401.3), (0.0, 30.0, 380.0), 24))
+S.cam(l12[0] - 0.1, ((3.0, -7.0, 401.5), (0.0, 30.0, 388.0), 18), ((2.6, -7.4, 401.3), (0.0, 30.0, 388.0), 18))
 S.cam(ASTRO - 0.2, S.shot(held, ASTRO + 0.5, "med", az=-30, lens=32), S.shot(held, l12[1], "med", az=-36, lens=34))
-S.cam(l13[0] - 0.1, S.shot(held, l13[0] + 1.0, "full", az=20, lens=30), S.shot(held, l13[0] + 2.5, "full", az=24, lens=30))
+S.cam(l13[0] - 0.1, ((2.5, -5.5, 401.2), (0.0, 0.0, 401.0), 30), ((2.7, -5.9, 401.2), (0.0, 0.0, 401.0), 30))
 S.cam(CANT - 0.3, ((-6.0, -16.0, 404.0), (0.0, 0.0, 400.6), 40), ((-6.4, -17.5, 404.3), (0.0, 0.0, 400.6), 40))
 
 S.finish(length=END)

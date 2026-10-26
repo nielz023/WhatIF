@@ -94,7 +94,7 @@ def sky_dome(S, follow, keys, radius=650.0):
 def cloud_layer(S, center, z, n=26, spread=60.0, seed=7):
     """Een laag dikke wolken rond een punt, om doorheen te zwemmen."""
     rnd = random.Random(seed)
-    wit = S.mat("wolk_dik", (0.97, 0.97, 1.0))
+    wit = S.mat("wolk_dik", (0.97, 0.97, 1.0), 0.8)
     parts = []
     for k in range(n):
         a = rnd.uniform(0, 2 * math.pi)
@@ -103,3 +103,13 @@ def cloud_layer(S, center, z, n=26, spread=60.0, seed=7):
         p = Vector(center) + Vector((math.cos(a) * d, math.sin(a) * d, z + rnd.uniform(-0.8, 0.8)))
         parts.append(T.sphere(f"Wolklaag_{k}", tuple(p), s, wit, scale=(1.4, 1.0, 0.28), seg=16, ol=0))
     return parts
+
+
+def follow_lights(S, ch, key=(1.2, -2.6, 1.2), fill=(-2.0, -1.5, 0.4), rim=(0.5, 2.5, 2.0), energy=260):
+    """Licht dat met hem meereist: in de ruimte is alleen de zon, en dan valt de schaduwkant helemaal weg."""
+    for name, off, col, e in (("Volglicht_key", key, (1.0, 0.96, 0.9), energy), ("Volglicht_fill", fill, (0.75, 0.82, 1.0), energy * 0.45),
+                              ("Volglicht_rim", rim, (0.85, 0.9, 1.0), energy * 0.6)):
+        lt = T.point_light(name, tuple(off), color=col, energy=e, radius=0.6, shadow=False)
+        cl = lt.constraints.new("COPY_LOCATION")
+        cl.target = ch.rig
+        cl.use_offset = True
