@@ -64,6 +64,66 @@ S01 = dict(
 SCENES = {"s01": (S01, "S01_cold_open")}
 
 
+# ---------------------------------------------------------------------------
+# Mixen: de stem staat centraal
+# ---------------------------------------------------------------------------
+# Elk bestand wordt eerst gemeten en op een vast niveau gezet, zodat een hard opgenomen effect
+# (achtbaan, remmen) nooit boven de stem uitkomt. Daarna duikt alles weg zodra er gesproken wordt.
+VOICE_DB = -18.0        # gemiddeld niveau van de stem (dBFS, actieve delen)
+SFX_DB = -26.0          # luidste 0,4 s van een effect bij vol 1.0
+MUSIC_DB = -31.0        # gemiddeld niveau van muziek bij vol 0.3
+AMB_DB = -38.0          # gemiddeld niveau van sfeergeluid bij vol 0.2
+DUCK = dict(voice=1.0, sfx=0.45, music=0.32, amb=0.45)   # factor zolang er iemand praat
+_LEVELS = {}
+
+
+def _level(path):
+    """(luidste 0,4 s, gemiddeld actief niveau) in dBFS."""
+    if path not in _LEVELS:
+        import aud
+        import numpy as np
+        snd = aud.Sound(path)
+        d = snd.data()
+        sr = int(snd.specs[0])
+        m = d.mean(axis=1) if d.ndim > 1 else d
+        w = max(1, int(sr * 0.4))
+        n = len(m) // w
+        if n == 0:
+            r = np.array([np.sqrt((m ** 2).mean() + 1e-12)])
+        else:
+            r = np.sqrt((m[:n * w].reshape(n, w) ** 2).mean(axis=1) + 1e-12)
+        db = 20 * np.log10(r)
+        act = db[db > db.max() - 30]
+        _LEVELS[path] = (float(db.max()), float(10 * np.log10((10 ** (act / 10)).mean())))
+    return _LEVELS[path]
+
+
+def _kind(snd):
+    f = snd["file"]
+    if f.startswith("muziek/") or "/muziek_" in f:
+        return "music"
+    if "_sfeer" in f or "geroezemoes" in f or snd.get("loop_to"):
+        return "amb"
+    return "sfx"
+
+
+def _gain(path, kind, v):
+    import math
+    peak, act = _level(path)
+    v = max(0.0, v)
+    if v <= 0:
+        return 0.0
+    if kind == "voice":
+        db = VOICE_DB - act
+    elif kind == "music":
+        db = MUSIC_DB + 20 * math.log10(v / 0.3) - act
+    elif kind == "amb":
+        db = min(AMB_DB + 20 * math.log10(v / 0.2), -32.0) - act
+    else:
+        db = SFX_DB + 20 * math.log10(min(v, 1.0)) - peak
+    return 10 ** (max(-40.0, min(18.0, db)) / 20)
+
+
 def new_strip(kind, sed, name, channel, start, **kw):
     """Werkt met zowel de oude (sequences) als de nieuwe (strips) VSE-API."""
     coll = sed.strips if hasattr(sed, "strips") else sed.sequences
@@ -228,14 +288,14 @@ def build(spec, frames_dir, out, render=True):
         title.blend_alpha = 1.0
         title.keyframe_insert("blend_alpha", frame=F(h0) + 4)
 
-    # stem
+    # stem: genormaliseerd, altijd het luidst
     vint = []
     for name, t in spec["voice"]:
         path = os.path.join(AUDIO, name)
         d = _alen(path)
         f0 = F(t)
         s = new_strip("sound", sed, os.path.basename(name)[:30], _pack(used, 60, f0, f0 + int(d * FPS) + 2), f0, filepath=path)
-        s.volume = 1.0
+        s.volume = _gain(path, "voice", 1.0) * float(os.environ.get("MIX_VOICE", "1"))
         vint.append((t, t + d))
 
     def duck_at(t):
@@ -246,12 +306,13 @@ def build(spec, frames_dir, out, render=True):
                 d = max(d, max(0.0, w))
         return d
 
-    # geluid en muziek (met lussen, faden en ducking onder de stem)
+    # geluid en muziek: elk bestand op een vast niveau onder de stem, en alles duikt weg zodra er gesproken wordt
     for snd in spec["sounds"]:
         path = os.path.join(AUDIO, snd["file"] + ("" if snd["file"].endswith(".mp3") else ".mp3"))
         if not os.path.exists(path):
             print("LET OP: geluid ontbreekt", path)
             continue
+        kind = _kind(snd)
         flen = _alen(path)
         cut = snd.get("cut") or (0.0, None)
         c0 = cut[0] or 0.0
@@ -261,8 +322,23 @@ def build(spec, frames_dir, out, render=True):
         t_end = snd.get("loop_to") or (t_start + piece)
         t_end = min(t_end, length if "titel" in snd["file"] else pic_end)
         fi, fo = snd.get("fade_in", 0.0), snd.get("fade_out", 0.0)
-        base = snd["vol"]
         keys = snd.get("keys")
+
+        def vol_at(p, snd=snd, keys=keys, kind=kind, path=path, fi=fi, fo=fo, t_start=t_start, t_end=t_end):
+            v = snd["vol"]
+            if keys:
+                ks = sorted(keys)
+                v = ks[0][1] if p <= ks[0][0] else ks[-1][1]
+                for (ka, va), (kb, vb) in zip(ks, ks[1:]):
+                    if ka <= p <= kb:
+                        v = va + (vb - va) * (p - ka) / max(1e-6, kb - ka)
+            g = _gain(path, kind, v)
+            if fi:
+                g *= min(1.0, max(0.0, (p - t_start) / fi))
+            if fo:
+                g *= min(1.0, max(0.0, (t_end - p) / fo))
+            return g * (1.0 - (1.0 - DUCK[kind]) * duck_at(p))
+
         tt = t_start
         first = True
         while tt < t_end - 0.05:
@@ -274,32 +350,19 @@ def build(spec, frames_dir, out, render=True):
             s = new_strip("sound", sed, os.path.basename(snd["file"])[:30], ch, f0 - int(round(src0 * FPS)), filepath=path)
             s.frame_final_start = f0
             s.frame_final_end = f0 + nframes
-            if keys:
-                for tk, v in keys:
-                    s.volume = v
-                    s.keyframe_insert("volume", frame=F(tk))
-            elif fi or fo or snd.get("duck"):
-                pts = {tt, tt + seg}
-                if fi:
-                    pts |= {t_start, t_start + fi}
-                if fo:
-                    pts |= {t_end - fo, t_end}
-                if snd.get("duck"):
-                    for a, b in vint:
-                        pts |= {a - 0.3, a - 0.05, b + 0.15, b + 0.5}
-                for p in sorted(pts):
-                    if tt - 0.01 <= p <= tt + seg + 0.01:
-                        v = base
-                        if fi:
-                            v *= min(1.0, max(0.0, (p - t_start) / fi))
-                        if fo:
-                            v *= min(1.0, max(0.0, (t_end - p) / fo))
-                        if snd.get("duck"):
-                            v *= 1.0 - 0.72 * duck_at(p)
-                        s.volume = v
-                        s.keyframe_insert("volume", frame=F(p))
-            else:
-                s.volume = base
+            pts = {tt, tt + seg}
+            if fi:
+                pts |= {t_start, t_start + fi}
+            if fo:
+                pts |= {t_end - fo, t_end}
+            for k in keys or []:
+                pts.add(k[0])
+            for a, b in vint:
+                pts |= {a - 0.3, a - 0.05, b + 0.15, b + 0.5}
+            for p in sorted(pts):
+                if tt - 0.01 <= p <= tt + seg + 0.01:
+                    s.volume = vol_at(p)
+                    s.keyframe_insert("volume", frame=F(p))
             tt += seg
             first = False
 
