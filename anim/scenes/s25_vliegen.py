@@ -149,12 +149,12 @@ S.cam(D30 - 0.1, ((LAUNCH.x - 12, LAUNCH.y - 18, 3.5), (LAUNCH.x, LAUNCH.y + 10,
 S.cam(RAISE - 0.3, ((LAUNCH.x + 1.6, LAUNCH.y - 3.0, 0.5), (LAUNCH.x, LAUNCH.y, 1.6), 24), ((LAUNCH.x + 1.4, LAUNCH.y - 2.8, 0.45), (LAUNCH.x, LAUNCH.y, 1.6), 24),
       shake=lambda t: max(0.0, 2.0 - (t - PUSH) * 1.5) if t > PUSH else 0.0)
 S.cam(PUSH + 1.2, ((LAUNCH.x + 14, LAUNCH.y - 14, 7), (LAUNCH.x, LAUNCH.y, 1.0), 26), ((LAUNCH.x + 13, LAUNCH.y - 13, 6.5), (LAUNCH.x, LAUNCH.y, 1.4), 26))
-S.cam(THICK - 0.2, None, fn=lambda t: (HP(t) + V(1.5, -3.2, 1.6), HP(t) + V(0, 0, 1.2), 30))
+S.cam(THICK - 0.2, None, fn=lambda t: (HP(t) + V(1.8, 3.0, 1.35), HP(t) + V(0, 0, 1.15), 30))      # van voren: zijn gezicht als de lucht dik wordt
 S.cam(SWIM - 0.3, None, fn=lambda t: (HP(t) + V(5.0, -4.0, -1.0), HP(t) + V(0, 1.0, 0.5), 28))
 S.cam(l6[0] + 2.0, None, fn=lambda t: (HP(t) + V(-3.5, -6.0, -6.0), HP(t) + V(0, 2.0, 0.0), 26))
 S.cam(l7[0] - 0.2, None, fn=lambda t: (HP(t) + V(4.0, 4.5, 0.6), HP(t) + V(0, 0.8, 0.2), 30))
 S.cam(FLYING - 0.3, None, fn=lambda t: (HP(t) + V(10, -14, 5), HP(t) + V(-4, 30, 0), 24))
-S.cam(l8[0] + 1.4, None, fn=lambda t: (HP(t) + V(1.8, -3.0, 1.9), HP(t) + V(0, 0, 1.4), 32))
+S.cam(l8[0] + 1.4, None, fn=lambda t: (HP(t) + V(1.6, 2.7, 1.35), HP(t) + V(0, 0, 1.3), 32))
 S.cam(FAR - 0.2, None, fn=lambda t: (HP(t) + V(1.0, -2.6, 1.8), CITY, 30))
 S.cam(SMALL - 0.2, None, fn=lambda t: (HP(t) + V(1.0, -2.6, 1.8) + V(0, -(t - SMALL) * 0.9, (t - SMALL) * 0.4), CITY, 30 + (t - SMALL) * 3))
 
