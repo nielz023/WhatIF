@@ -173,7 +173,7 @@ S.cam(l2[0] - 0.2, (CHAIR + N_B * 2.2 + T_B * 1.2 + V(0, 0, 1.55), BOARD + V(0, 
 S.cam(l3[0] - 0.1, S.shot(prof, l3[0] + 1.0, "med", az=-25, lens=32), S.shot(prof, ELEVEN, "mcu", az=-22, lens=34))
 S.cam(ELEVEN + 0.4, (BOARD + N_B * 1.3 + T_B * 0.3 + V(0, 0, 1.35), BOARD + V(0, 0, 1.25) - N_B * 0.03, 34),
       (BOARD + N_B * 1.1 + T_B * 0.25 + V(0, 0, 1.3), BOARD + V(0, 0, 1.2) - N_B * 0.03, 38))
-S.cam(TODAY - 0.1, S.shot(held, TODAY, "mcu", az=25, lens=34), S.shot(held, l3[1] + 0.6, "mcu", az=22, lens=38))
+S.cam(TODAY - 0.1, S.shot(held, TODAY, "mcu", az=-38, lens=34), S.shot(held, l3[1] + 0.6, "mcu", az=-34, lens=38))
 # 3 · de sprong: laag en breed, de waarnemers achter de zandzakken
 S.cam(CUT, ((5.5, -4.5, 1.0), (0, 3, 1.4), 26), ((5.0, -4.0, 1.0), (0, 3, 1.3), 28))
 S.cam(KNEES - 0.1, ((0.9, 0.6, 0.55), (0, 3, 0.9), 26), ((0.8, 0.8, 0.5), (0, 3, 0.85), 28))
@@ -181,11 +181,11 @@ S.cam(PUSH - 0.05, ((0.0, -4.0, 0.7), (0, 3, 1.6), 22), ((0.0, -4.2, 0.6), (0, 3
       shake=lambda t: max(0.0, 2.5 - (t - CRUSH) * 1.5) if t > CRUSH else 0.0)
 # 4 · 'Even solid granite...' hij tot zijn middel in de krater
 S.cam(l6[0] - 0.3, ((4.5, -2.0, 1.6), (0, 3, 0.2), 26), ((4.0, -1.6, 1.5), (0, 3, 0.2), 28))
-S.cam(LEGS - 0.2, ((0.9, 1.3, 0.45), (0, 3, 0.55), 32), ((0.8, 1.45, 0.45), (0, 3, 0.55), 36))
+S.cam(LEGS - 0.2, ((0.9, 4.7, 0.7), (0, 3, 0.55), 32), ((0.8, 4.55, 0.68), (0, 3, 0.55), 36))      # hij kijkt naar +y
 S.cam(PLANET - 0.6, ((0.0, 2.4, 6.0), (0, 3, 0), 24), ((0.0, -10, 90), (0, 3, 0), 24))
 # 5 · eruit klimmen, op de rand
 S.cam(CLIMB - 0.1, ((3.5, -3.0, 1.0), (0, 1.8, 0.4), 28), ((3.2, -2.8, 1.0), (0, 1.5, 0.4), 30))
-S.cam(STRONGEST - 0.1, (RIM + V(0.5, -2.2, 0.6), RIM + V(0, 0, 0.6), 32), (RIM + V(0.45, -1.9, 0.55), RIM + V(0, 0, 0.6), 36))
+S.cam(STRONGEST - 0.1, S.shot(held, STRONGEST + 0.3, "mcu", az=20, lens=32), S.shot(held, CANT - 0.2, "mcu", az=18, lens=36))
 S.cam(CANT - 0.1, ((-7.0, -9.0, 2.2), (0, 1.0, 0.4), 30), ((-7.5, -10.0, 2.6), (0, 1.0, 0.4), 30))
 
 S.finish(length=END)
