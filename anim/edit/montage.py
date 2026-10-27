@@ -11,6 +11,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 
 import bpy
@@ -28,38 +29,41 @@ def F(t):
 # ---------------------------------------------------------------------------
 # S01 · cold open
 # ---------------------------------------------------------------------------
+# niels (2026-10-27): de cold open was een minuut en moest korter en spannender. Nu ~23 s, geknipt uit de al
+# gerenderde S01-beelden: de remmen falen, hij staat op de rails, dan meteen de greep in het staal en de bouten.
+# De uitleg (cruiseschip, simulatie) valt weg; die komt op dag 16 (S17B) toch terug.
+# edit: stukken (van, tot) in seconden van de S01-render, achter elkaar geplakt. Alle andere tijden zijn nieuwe tijd.
+S01_END = 22.75
 S01 = dict(
-    length=55.0,
-    picture_end=51.6,                      # smash cut naar zwart
-    voice=[("S01/S01-01_Verteller", 1.2), ("S01/S01-02_Verteller", 4.3), ("S01/S01-03_Verteller", 11.8),
-           ("S01/S01-04_Vriend", 15.6), ("S01/S01-05_Verteller", 18.6), ("S01/S01-06_Verteller", 24.4),
-           ("S01/S01-07_Verteller", 38.2), ("S01/S01-08_Verteller", 43.4), ("S01/S01-09_Verteller", 46.6),
-           ("S01/S01-10_Verteller", 49.6)],
-    # (bestand, start, volume, [knip_in, knip_uit] in seconden binnen het bestand, volumesleutels (t, v))
+    length=26.2,
+    picture_end=S01_END,
+    edit=[(1.0, 5.95), (11.4, 18.4), (40.8, 51.6)],
+    voice=[("S01/S01-01_Verteller.mp3", 0.2), ("S01/S01-03_Verteller.mp3", 5.4), ("S01/S01-04_Vriend.mp3", 9.2),
+           ("S01/S01-08_Verteller.mp3", 14.6), ("S01/S01-09_Verteller.mp3", 17.8), ("S01/S01-10_Verteller.mp3", 20.8)],
     sounds=[
-        ("sfx/sfx_pretpark_sfeer", 0.0, 0.55, None, [(7.8, 0.55), (9.6, 0.10)]),
-        ("sfx/sfx_pretpark_sfeer", 29.9, 0.10, (0.0, 21.7), None),
-        ("sfx/muziek_spanning", 1.0, 0.0, None, [(1.0, 0.0), (2.4, 0.32)]),
-        ("sfx/muziek_spanning", 30.9, 0.32, (0.0, 20.7), None),
-        ("sfx/sfx_remmen", 1.7, 1.0, None, None),
-        ("sfx/sfx_trein_raast", 3.9, 0.85, None, [(7.6, 0.85), (8.9, 0.25)]),
-        ("sfx/sfx_slowmo", 8.5, 0.9, None, None),
-        ("sfx/sfx_knokkels", 19.0, 1.0, None, None),
-        ("sfx/sfx_hologram", 24.0, 0.7, None, None),
-        ("sfx/sfx_schuiven", 30.8, 0.9, None, None),
-        ("sfx/sfx_hologram", 37.35, 0.55, None, None),
-        ("sfx/sfx_staal", 40.95, 1.0, None, None),
-        ("sfx/sfx_bouten", 45.92 - 0.55, 3.0, (0.5, 1.0), None),
-        ("sfx/sfx_bouten", 46.95 - 0.55, 3.0, (0.5, 1.0), None),
-        ("sfx/sfx_bouten", 47.86 - 0.55, 3.5, (0.5, 1.0), None),
-        ("sfx/sfx_riser", 47.9, 0.8, None, None),
-        ("sfx/sfx_trein_raast", 50.4, 0.9, (0.5, 1.7), None),
-        ("sfx/sfx_titel", 50.75, 1.0, None, None),
+        dict(file="sfx/sfx_pretpark_sfeer", t=0.0, vol=0.5, keys=[(3.5, 0.5), (5.5, 0.10)], loop_to=S01_END, fade_in=0.4),
+        dict(file="sfx/muziek_spanning", t=0.0, vol=0.32, loop_to=S01_END, fade_in=1.5),
+        dict(file="sfx/sfx_remmen", t=0.7, vol=1.0),
+        dict(file="sfx/sfx_trein_raast", t=2.9, vol=0.85, keys=[(5.0, 0.85), (6.3, 0.25)], fade_out=1.0),
+        dict(file="sfx/sfx_hartslag", t=5.0, vol=0.6, cut=(0.0, 6.95), fade_in=1.0, fade_out=0.4),
+        dict(file="sfx/sfx_whoosh", t=11.7, vol=0.6),
+        dict(file="muziek/drums_build", t=11.95, vol=0.24, loop_to=S01_END, fade_in=2.0),
+        dict(file="sfx/sfx_staal", t=12.12, vol=1.0),
+        dict(file="sfx/sfx_metaal_buigt", t=12.6, vol=0.6),
+        dict(file="sfx/sfx_bouten", t=16.54, vol=1.0, cut=(0.5, 1.0)),
+        dict(file="sfx/sfx_bouten", t=17.57, vol=1.0, cut=(0.5, 1.0)),
+        dict(file="sfx/sfx_bouten", t=18.48, vol=1.0, cut=(0.5, 1.0)),
+        dict(file="sfx/sfx_riser", t=19.07, vol=0.8),
+        dict(file="sfx/sfx_trein_raast", t=21.57, vol=0.9, cut=(0.5, 1.7)),
+        dict(file="sfx/sfx_titel", t=21.92, vol=1.0),
     ],
-    hud=[("DAY 16", 0.3, 51.6, (0.035, 0.94), 92, (1, 1, 1, 1)),
-         ("65,536x STRONGER", 0.3, 51.6, (0.035, 0.845), 52, (1.0, 0.82, 0.18, 1))],
-    sim=(24.2, 37.6),
-    title=("16 DAYS EARLIER", 52.2, 55.0),
+    texts=[dict(body="DAY 16", t0=0.3, t1=S01_END, loc=(0.035, 0.94), size=92, color=(1, 1, 1, 1),
+                anchor=("LEFT", "TOP"), pop=False),
+           dict(body="65,536x STRONGER", t0=0.3, t1=S01_END, loc=(0.035, 0.845), size=52, color=(1.0, 0.82, 0.18, 1),
+                anchor=("LEFT", "TOP"), pop=False)],
+    cards=[],
+    sim=None,
+    title=("16 DAYS EARLIER", S01_END + 0.6, 26.2),
 )
 SCENES = {"s01": (S01, "S01_cold_open")}
 
@@ -240,10 +244,25 @@ def build(spec, frames_dir, out, render=True):
     bpy.data.images.remove(img)
 
     # beeld
-    pic = new_strip("image", sed, "beeld", 2, 1, filepath=files[0])
-    for f in files[1:]:
-        pic.elements.append(os.path.basename(f))
-    pic.frame_final_end = min(pic.frame_final_end, F(pic_end))
+    if spec.get("edit"):
+        # montage uit stukken van één render: frame n van de render is bestand nr. n
+        byno = {int(re.findall(r"(\d+)\.png$", f)[0]): f for f in files}
+        pos = 1
+        for i, (a, b) in enumerate(spec["edit"]):
+            part = [byno[n] for n in range(F(a), F(b)) if n in byno]
+            if len(part) != F(b) - F(a):
+                raise SystemExit("Beelden ontbreken voor stuk %d (%.2f-%.2f s)" % (i, a, b))
+            pic = new_strip("image", sed, "beeld%d" % i, 2, pos, filepath=part[0])
+            for f in part[1:]:
+                pic.elements.append(os.path.basename(f))
+            print("stuk %d: %.2f-%.2f s -> %.3f s" % (i, a, b, (pos - 1) / FPS))
+            pos += len(part)
+        print("beeld tot %.3f s (picture_end %.3f)" % ((pos - 1) / FPS, pic_end))
+    else:
+        pic = new_strip("image", sed, "beeld", 2, 1, filepath=files[0])
+        for f in files[1:]:
+            pic.elements.append(os.path.basename(f))
+        pic.frame_final_end = min(pic.frame_final_end, F(pic_end))
     black = new_strip("effect", sed, "zwart", 1, 1, type="COLOR", length=sc.frame_end)
     black.color = (0, 0, 0)
 
@@ -412,7 +431,8 @@ def main():
     sdir = os.path.join(REPO, "out", a.scene)
     if a.scene in SCENES:
         spec, base = SCENES[a.scene]
-        spec = _legacy(spec)
+        if "hud" in spec:
+            spec = _legacy(spec)
     else:
         with open(os.path.join(sdir, "montage.json")) as fh:
             spec = json.load(fh)
