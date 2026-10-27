@@ -23,7 +23,7 @@ for o in bpy.data.objects:
 
 HERO_SEAT = seat(1, 1, 1)
 held = S.actor("hoofdpersonage", HERO_SEAT, -90)
-SEATS = [(0, 1, 1), (0, 1, -1), (1, 1, -1), (2, 1, 1), (2, 1, -1), (1, 0, 1), (1, 2, -1)]
+SEATS = [(0, 1, -1), (1, 1, -1), (2, 1, 1), (2, 1, -1), (1, 0, 1), (1, 2, -1)]
 klas = [S.extra(k, seat(*rcs), -90, energy=0.8) for k, rcs in enumerate(SEATS)]
 TEACH = V(-3.3, 0.6, 0)
 leraar = S.actor("gymleraar", TEACH, 90, label="leraar", drop=("fluitje", "koord"),
@@ -90,8 +90,8 @@ S.beat(leraar, T0, "armen_over", face="neutraal", at=HERO_SEAT + V(0, 0, 1.2))
 S.beat(leraar, UP + 0.5, "schrik", amount=0.7, face="geschrokken", face_amt=1.0, at=HERO_SEAT + V(0, 0, 1.2), mouth=0.6)
 S.hold(held, END)
 
-S.cam(T0, ((-1.4, -1.0, 1.6), (0.4, 0.3, 0.95), 26), ((-1.3, -0.95, 1.55), (0.4, 0.3, 0.95), 28))
-S.cam(WRITE0 + 1.2, (PAPER + V(0.1, -0.35, 0.35), PAPER + V(0, 0, 0.0), 36), (PAPER + V(0.08, -0.3, 0.3), PAPER, 40))
-S.cam(SCORE - 0.3, ((-1.5, -0.2, 1.4), (0.3, 0.2, 1.25), 28), ((-1.45, -0.18, 1.4), (0.3, 0.2, 1.25), 30))
+S.cam(T0, ((-1.2, 1.25, 1.55), (0.3, 0.2, 1.0), 26), ((-1.1, 1.2, 1.52), (0.3, 0.2, 1.0), 28))
+S.cam(WRITE0 + 1.2, (PAPER + V(-0.3, 0.32, 0.42), PAPER + V(0.02, 0, 0.0), 34), (PAPER + V(-0.27, 0.3, 0.38), PAPER + V(0.02, 0, 0), 38))
+S.cam(SCORE - 0.3, ((-1.0, 1.1, 1.45), (0.3, 0.2, 1.3), 28), ((-0.95, 1.08, 1.45), (0.3, 0.2, 1.3), 30))
 
 S.done()

@@ -121,7 +121,7 @@ class Short(Scene):
             tt = a
             for c in chunks:
                 d = (b - a) * (len(c) + 3) / tot
-                self.texts.append(dict(body=c.upper(), t0=tt, t1=tt + d, loc=(0.5, 0.30), size=120, color=WHITE,
+                self.texts.append(dict(body=c.upper(), t0=tt, t1=tt + d, loc=(0.5, 0.30), size=135, color=WHITE,
                                        anchor=("CENTER", "CENTER"), pop=False))
                 tt += d
 
@@ -131,13 +131,13 @@ class Short(Scene):
         self.texts.append(dict(body=body, t0=t0, t1=t1, loc=(0.5, 0.79), size=size, color=color,
                                anchor=("CENTER", "CENTER"), pop=True))
         if sub:
-            self.texts.append(dict(body=sub, t0=t0 + 0.1, t1=t1, loc=(0.5, 0.735), size=66, color=WHITE,
+            self.texts.append(dict(body=sub, t0=t0 + 0.1, t1=t1, loc=(0.5, 0.735), size=92, color=WHITE,
                                    anchor=("CENTER", "CENTER"), pop=True))
         if tick:
             self.sfx("sfx_hud_tik", t0, 0.5)
 
     def real(self, t0, t1):
-        self.texts.append(dict(body="THIS PART IS REAL", t0=t0, t1=t1, loc=(0.5, 0.68), size=62, color=CYAN,
+        self.texts.append(dict(body="THIS PART IS REAL", t0=t0, t1=t1, loc=(0.5, 0.68), size=84, color=CYAN,
                                anchor=("CENTER", "CENTER"), pop=True))
 
     def music_all(self, name, vol=0.3, start=0.0, fade_in=0.6):
@@ -156,8 +156,9 @@ class Short(Scene):
                                    anchor=("CENTER", "CENTER"), pop=False))
         if last in self.mylines:
             c0 = self.L[last][0]
-            self.card("LIKE & SUBSCRIBE", c0 + 0.1, self.total, size=150, dim=0.62, color=YELLOW,
+            self.card("LIKE & SUBSCRIBE", c0 + 0.1, self.total, size=160, dim=0.62, color=YELLOW,
                       sub="FOR THE FULL VERSION", fin=6, fout=1)
+            self.cards[-1]["sub_scale"] = 0.62
             self.sfx("sfx_whoosh_titel", c0 - 0.1, 0.45)
         self._captions()
         self._finish_part()
@@ -381,7 +382,7 @@ def parent_keep(objs, parent):
         o.matrix_parent_inverse = parent.matrix_world.inverted()
 
 
-def face_points(S, ch, t, fwd, region, step=0.022, depth=1.5):
+def face_points(S, ch, t, fwd, region, step=0.022, depth=0.7):
     """Punten op het gezicht (wereld) via stralen naar het hoofd, op tijd t. fwd = kijkrichting van het figuur.
     region(u, v) -> True houdt een punt (u = links/rechts, v = op/neer t.o.v. het hoofdmidden, in meters)."""
     sc = S.sc
@@ -399,7 +400,7 @@ def face_points(S, ch, t, fwd, region, step=0.022, depth=1.5):
                 continue
             o = hc + side * u + Vector((0, 0, v)) + fwd * depth
             hit, loc, nor, idx, ob, M = sc.ray_cast(dg, o, -fwd)
-            if hit and ob and ob.parent == ch.rig:
+            if hit and ob and getattr(ob, "original", ob).parent == ch.rig:
                 out.append(loc + nor * 0.004)
     return out
 

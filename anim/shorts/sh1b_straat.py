@@ -47,7 +47,7 @@ S.sfx("sfx_riser", l7[0] - 0.5, 0.6)
 S.sfx("sfx_cliffhanger", l7[1] - 4.6, 0.8)
 S.counter("DAY 2", l3[0] + 0.1, l5[0] - 0.05, sub="100x FASTER")
 S.gauge_y = 0.69
-S.texts.append(dict(body="1,500 km/h", t0=l3[0] + 2.0, t1=l5[0] - 0.05, loc=(0.5, 0.68), size=96, color=WHITE,
+S.texts.append(dict(body="1,500 km/h", t0=l3[0] + 2.0, t1=l4[0] + 1.5, loc=(0.5, 0.68), size=96, color=WHITE,
                     anchor=("CENTER", "CENTER"), pop=True))
 S.real(l4[0] + 1.6, l4[1])
 S.counter("DAY 3", l5[0] + 0.05, l7[0] - 0.05, sub="1,000x FASTER")

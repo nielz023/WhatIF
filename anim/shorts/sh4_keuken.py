@@ -256,7 +256,8 @@ Z_ = V(0, 0, ZS)
 S.cam(l6[0], (V(TOP_X + 2.6, 0.2, BOT_Z + 0.8) + Z_, V(TOP_X - 0.2, 0, 0.9) + Z_, 22), (V(TOP_X + 2.4, 0.2, BOT_Z + 0.8) + Z_, V(TOP_X - 0.2, 0, 0.85) + Z_, 24))
 S.cam(l6[0] + 1.9, (V(TOP_X - 1.2, -0.35, 1.75) + Z_, V(TOP_X + 2.5, 0.1, BOT_Z + 0.3) + Z_, 22),
       (V(TOP_X - 1.1, -0.32, 1.7) + Z_, V(TOP_X + 2.5, 0.1, BOT_Z + 0.2) + Z_, 22))
-S.cam(SLIP - 0.1, (V(TOP_X + 1.6, -0.55, 0.3) + Z_, V(TOP_X + 0.1, 0, 0.75) + Z_, 20), (V(TOP_X + 1.5, -0.5, 0.1) + Z_, V(TOP_X + 0.4, 0, 0.45) + Z_, 22),
+S.cam(SLIP - 0.1, None, fn=lambda t: (TOP + V(1.6 + fall(t)[1], -0.55, 0.3 - fall(t)[2]),
+                                      TOP + V(0.15 + fall(t)[1], 0, 0.7 - fall(t)[2] * 1.3), 21),
       shake=lambda t: 0.5 + 0.8 * smooth(SLIP, SLIP + 0.5, t))
 
 S.done()

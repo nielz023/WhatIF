@@ -287,7 +287,7 @@ def fly(t):
 bake(rig, "location", fr2, [tuple(fly((f - 1) / FPS)) for f in fr2])
 for f in fr2:
     u = max(0.0, (f - 1) / FPS - LIFT)
-    rig.rotation_euler = (math.radians(-35 * min(1, u) - 25 * u), math.radians(30 * math.sin(u * 2.0)), math.radians(90 + 25 * u))
+    rig.rotation_euler = (math.radians(-20 * min(1, u) - 12 * u), math.radians(25 * math.sin(u * 2.0)), math.radians(90 + 25 * u))
     rig.keyframe_insert("rotation_euler", frame=f)
 
 # ---------------------------------------------------------------- camera's

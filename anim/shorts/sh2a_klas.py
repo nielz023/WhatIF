@@ -85,6 +85,9 @@ S.reach(pest, FREEZE, "R", BULLY_SEAT + V(-0.42, 0.06, 1.0))
 # ---------------------------------------------------------------- hij: niezen, stilte, opstaan
 HS = SIT[held.rig.name]
 S.beat(held, 0.0, **HS, pose="ontspannen", face="neutraal", look=(0, 0))
+S.reach(held, 0.0, "R", None, 0.0)
+S.reach(held, 0.0, "L", None, 0.0)
+S.reach(held, l2[0] + 1.3, "R", None, 0.0)
 S.beat(held, l1[0] + 0.3, **HS, pose="ontspannen", face="inspanning", face_amt=0.5, look=(0, 0.4), mouth=0.4,
        body={"head": (-18, 0, 0), "chest": (-6, 0, 0)})
 S.beat(held, l1[0] + 0.6, **HS, pose="schrik", amount=0.5, face="inspanning", face_amt=1.0, look=(0, -0.4), mouth=0.7,
@@ -137,7 +140,8 @@ show(chips, 0, STACHE)
 show(marker, STACHE)
 face_c = S.head(pest, FREEZE)
 fwd = V(-1, 0, 0)
-lip = face_c + fwd * 0.27 + V(0, 0, -0.13)
+hit = face_points(S, pest, FREEZE, fwd, lambda u, v: abs(u) < 0.012 and abs(v + 0.2) < 0.012, step=0.01)
+lip = (hit[0] if hit else face_c + fwd * 0.28 + V(0, 0, -0.2)) + fwd * 0.01
 S.beat(held, STACHE, "staan", face="grijns", face_amt=1.0, at=lip, mouth=0.0)
 for k, t in enumerate(frange(STACHE + 0.3, l3[1] - 0.9, 0.18)):
     s_ = math.sin(k * 1.3)
@@ -157,9 +161,9 @@ S.cam(0.0, ((-1.0, -0.55, 1.3), (0.38, 0.18, 1.1), 30), ((-0.95, -0.5, 1.28), (0
 S.cam(FREEZE - 0.15, ((-4.1, -3.6, 2.5), (0.9, 0.6, 0.9), 18), ((-4.0, -3.5, 2.45), (0.9, 0.6, 0.9), 19))
 S.cam(UP, ((1.5, -0.9, 1.45), (0.7, 0.4, 1.2), 26), ((1.45, -0.85, 1.42), (0.7, 0.4, 1.2), 28))
 S.cam(UP + 2.1, ((-1.9, 0.0, 1.55), TEACH_FACE + V(0, 0, -0.1), 26), ((-2.1, 0.05, 1.55), TEACH_FACE + V(0, 0, -0.1), 28))
-S.cam(l2[1] - 1.7, (TEACH_FACE + V(0.75, 0.25, 0.0), TEACH_FACE + V(0, 0, 0.02), 44), (TEACH_FACE + V(0.7, 0.24, 0.0), TEACH_FACE + V(0, 0, 0.02), 48))
-S.cam(JUMP, ((-3.6, -3.4, 1.9), (-0.8, 0.9, 1.0), 22), ((-3.5, -3.3, 1.85), (-0.8, 0.9, 1.0), 23))
-S.cam(SNACK, ((-1.0, -0.5, 1.3), (-1.6, 0.85, 1.1), 28), ((-1.05, -0.45, 1.28), (-1.6, 0.85, 1.1), 30))
+S.cam(l2[1] - 1.7, (TEACH_FACE + V(0.7, -0.5, 0.0), TEACH_FACE + V(0, 0, 0.02), 40), (TEACH_FACE + V(0.65, -0.46, 0.0), TEACH_FACE + V(0, 0, 0.02), 44))
+S.cam(JUMP, ((-3.1, 1.25, 1.6), (-0.85, 0.92, 1.1), 24), ((-3.0, 1.22, 1.58), (-0.85, 0.92, 1.1), 25))
+S.cam(SNACK, ((-2.75, 1.7, 1.45), (-1.6, 0.9, 1.1), 26), ((-2.7, 1.68, 1.43), (-1.6, 0.9, 1.1), 28))
 S.cam(STACHE, ((0.75, 0.55, 1.3), face_c + V(0, 0.2, -0.05), 26), ((0.8, 0.55, 1.28), face_c + V(0, 0.2, -0.05), 28))
 S.cam(l3[1] - 1.0, (face_c + fwd * 0.95 + V(0, 0.08, 0.05), face_c + V(0, 0, -0.08), 40), (face_c + fwd * 0.88 + V(0, 0.08, 0.05), face_c + V(0, 0, -0.08), 42))
 

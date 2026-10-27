@@ -297,7 +297,7 @@ def build(spec, frames_dir, out, render=True):
                  anchor=("CENTER", "CENTER"))
         _fade(s, f0, f1)
         if c.get("sub"):
-            s2 = text(sed, c["sub"], c["t0"] + 0.3, c["t1"], (0.5, 0.40), int(c["size"] * 0.45), (1.0, 0.82, 0.18, 1),
+            s2 = text(sed, c["sub"], c["t0"] + 0.3, c["t1"], (0.5, 0.40), int(c["size"] * c.get("sub_scale", 0.45)), (1.0, 0.82, 0.18, 1),
                       _pack(used, 20, F(c["t0"] + 0.3), f1), anchor=("CENTER", "CENTER"))
             _fade(s2, F(c["t0"] + 0.3), f1)
 
