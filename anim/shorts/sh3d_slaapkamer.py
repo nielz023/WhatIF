@@ -46,7 +46,7 @@ T.box("Foto_trui", (0, -0.013, -0.07), (0.1, 0.002, 0.08), S.mat("foto_trui", (0
 T.cyl("Foto_hoofd", (0, -0.013, 0.02), 0.045, 0.002, S.mat("foto_huid", (0.89, 0.6, 0.42)), rot=(90, 0, 0), seg=20,
       ol=0).parent = photo
 MH = S.head(mama, VIS0)
-HANDS = MOM + V(0.32, 0, 0.78 + mz)
+HANDS = MOM + V(0.34, 0, 0.98 + mz)
 photo.location = HANDS + V(0.04, 0, 0.12)
 photo.rotation_euler = (math.radians(70), 0, math.radians(-90))
 show(photo, VIS0, VIS1)
@@ -83,16 +83,16 @@ S.beat(mama, VIS0, **mspec, pose="ontspannen", face="verdrietig", face_amt=1.0, 
 S.reach(mama, VIS0, "R", HANDS + V(0, -0.1, 0))
 S.reach(mama, VIS0, "L", HANDS + V(0, 0.1, 0))
 S.beat(mama, l6[1] - 1.8, **mspec, pose="ontspannen", face="verdrietig", face_amt=1.0, at=photo.location, mouth=0.15,
-       body={"head": (16, 0, 0), "chest": (10, 0, 0)})
+       body={"head": (6, 0, 0), "chest": (8, 0, 0)})
 for k, t in enumerate(frange(l6[1] - 1.6, VIS1, 0.35)):
     S.beat(mama, t, **mspec, pose="ontspannen", face="verdrietig", face_amt=1.0, at=photo.location, mouth=0.2,
-           body={"head": (16, 0, 0), "chest": (10 + (2 if k % 2 else -2), 0, 0)})
+           body={"head": (6, 0, 0), "chest": (8 + (2 if k % 2 else -2), 0, 0)})
 
 # ---------------------------------------------------------------- camera
 S.cam(T0, S.shot(held, T0 + 0.3, "mcu", az=6, lens=34, h=-0.05), S.shot(held, VIS0, "cu", az=2, lens=52, h=-0.05))
-S.cam(VIS0, ((1.2, -1.6, 1.9), (-1.2, 0.9, 0.7), 20), ((1.1, -1.5, 1.85), (-1.2, 0.9, 0.7), 21))
-S.cam(l6[0] + 1.6, ((0.4, -0.6, 1.2), MOM + V(0.2, 0, 1.0), 30), ((0.35, -0.5, 1.2), MOM + V(0.2, 0, 1.0), 33))
-S.cam(l6[1] - 1.9, (MH + V(0.85, -0.25, 0.0), MH + V(0, 0, -0.05), 44), (MH + V(0.75, -0.22, 0.0), MH + V(0, 0, -0.05), 48))
+S.cam(VIS0, ((0.7, -1.5, 1.75), (-1.1, 0.6, 0.8), 20), ((0.65, -1.4, 1.72), (-1.1, 0.6, 0.8), 21))
+S.cam(l6[0] + 1.6, (MH + V(1.3, -0.55, -0.45), MH + V(0.2, 0, -0.3), 28), (MH + V(1.2, -0.5, -0.45), MH + V(0.2, 0, -0.3), 30))
+S.cam(l6[1] - 1.9, (MH + V(0.75, -0.25, -0.4), MH + V(0, 0, -0.08), 40), (MH + V(0.7, -0.22, -0.38), MH + V(0, 0, -0.08), 44))
 S.cam(VIS1, S.shot(held, VIS1 + 0.3, "mcu", az=8, lens=32, h=-0.05), S.shot(held, l8[0], "cu", az=4, lens=46, h=-0.05),
       shake=lambda t: 0.6 * max(0, 1 - (t - VIS1) / 1.0))
 S.cam(l8[0], S.shot(held, l8[0], "cu", az=3, lens=46, h=-0.05), S.shot(held, END, "cu", az=0, lens=56, h=-0.05))

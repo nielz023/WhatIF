@@ -14,7 +14,7 @@ FALL = timeline("sh8")[3][0] + 3.6              # '... and you drop straight thr
 S = Short("sh8", "a", "slaapkamer", "ochtend", lines=(1, 2, 3), t1=FALL + 0.25)
 l1, l2, l3 = S.L[1], S.L[2], S.L[3]
 T0, END = S.t0, S.t1
-for n in ("Telefoon", "Telefoon_scherm", "Laptop"):
+for n in ("Telefoon", "Telefoon_scherm", "Laptop", "Vloerkleed"):
     o = S.obj(n)
     if o:
         o.hide_render = True

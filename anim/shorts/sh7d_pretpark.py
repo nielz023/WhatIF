@@ -11,7 +11,7 @@ from short import *  # noqa: E402,F401
 S = Short("sh7", "d", "pretpark", "dag", lines=(), t0=7.5, t1=9.5)
 T0, END = S.t0, S.t1
 HP = V(-9.3, -20.6, 0)
-held = S.actor("hoofdpersonage", HP, 200)
+held = S.actor("hoofdpersonage", HP, 50)
 tele_fx(S, HP, T0 + 0.02, sound=False)
 S.counter("JUMPS: 3", T0 + 0.1, None, color=(0.6, 0.85, 1.0, 1))
 S.sfx("sfx_pretpark_sfeer", T0, 0.15)

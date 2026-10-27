@@ -41,6 +41,6 @@ S.debris(LAND + V(0, 0, 0.1), LT, n=20, size=(0.05, 0.1), color=(0.75, 0.7, 0.62
          life=1.5, name="Tegel")
 S.puff(LAND + V(0, 0, 0.3), LT, n=12, r=(0.25, 0.5), grow=2.4, dur=1.2, color=(0.85, 0.82, 0.78), rise=0.5, spread=1.0)
 S.sfx("sfx_inslag", LT - 0.03, 0.6)
-S.cam(T0, ((LAND.x - 1.8, LAND.y - 2.0, 0.5), (LAND.x, LAND.y, 1.2), 18), ((LAND.x - 1.7, LAND.y - 1.9, 0.5), (LAND.x, LAND.y, 0.9), 18),
+S.cam(T0, ((2.25, -0.9, 0.95), (LAND.x, LAND.y, 1.4), 18), ((2.2, -0.85, 0.95), (LAND.x, LAND.y, 0.8), 18),
       shake=lambda t: 2.5 * max(0, 1 - (t - LT) / 0.7) if t > LT else 0.0)
 S.done()

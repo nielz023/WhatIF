@@ -69,10 +69,10 @@ S.counter("WHICH ONE IS REAL?", l6[1] - 1.2, None, color=RED, size=110)
 
 # camera
 S.cam(T0, ((STOP.x + 1.1, STOP.y + 3.6, 2.0), (STOP.x - 0.5, -2.0, 0.8), 22), ((STOP.x + 0.9, STOP.y + 3.4, 1.95), (STOP.x - 0.5, -2.0, 0.9), 22))
-S.cam(l5[0] + 2.0, ((STOP.x + 0.5, STOP.y + 1.3, 1.55), (STOP.x - 1.0, 0.0, 1.0), 20), ((STOP.x + 0.4, STOP.y + 1.2, 1.55), (STOP.x - 1.0, 0.0, 1.0), 20))
+S.cam(l5[0] + 2.0, ((STOP.x + 1.0, STOP.y + 1.3, 1.65), (STOP.x - 1.0, 0.0, 1.0), 20), ((STOP.x + 0.9, STOP.y + 1.2, 1.65), (STOP.x - 1.0, 0.0, 1.0), 20))
 S.cam(TURN0 - 0.2, ((STOP.x - 0.8, STOP.y - 1.3, 1.3), (STOP.x - 1.5, -2.0, 1.2), 20), ((STOP.x - 0.8, STOP.y - 1.2, 1.3), (STOP.x - 1.5, -2.0, 1.2), 21))
 near = sorted(copies, key=lambda c: (c.rig.location - STOP).length)[:2]
-S.cam(l6[0] + 2.4, S.shot(near[0], l6[0] + 2.6, "mcu", az=0, lens=34), S.shot(near[0], l6[0] + 3.6, "mcu", az=0, lens=40))
+S.cam(l6[0] + 2.4, S.shot(near[0], l6[0] + 2.6, "mcu", az=40, lens=34), S.shot(near[0], l6[0] + 3.6, "mcu", az=35, lens=40))
 S.cam(l6[0] + 3.7, S.shot(held, l6[0] + 3.9, "mcu", az=0, lens=34), S.shot(held, STEP, "mcu", az=0, lens=38))
 S.cam(STEP, ((STOP.x + 0.2, STOP.y - 9.0, 6.0), (STOP.x, STOP.y - 2.0, 0.8), 22), ((STOP.x + 0.2, STOP.y - 8.0, 7.0), (STOP.x, STOP.y - 1.5, 0.8), 22))
 S.cam(l7[0], ((STOP.x, STOP.y + 1.5, 9.0), STOP + V(0, -0.3, 0), 18), ((STOP.x, STOP.y + 1.0, 11.0), STOP + V(0, -0.2, 0), 18))
