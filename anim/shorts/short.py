@@ -167,8 +167,10 @@ class Short(Scene):
         self.length = self.t1
         sc.frame_start, sc.frame_end = F(self.t0), F(self.t1) - 1
         for i, ch in enumerate(self.cast):
-            A.blinks(ch, F(self.t0), F(self.t1), seed=i * 3 + 1)
-            A.alive(ch, F(self.t0), F(self.t1), energy=getattr(ch, "energy", 1.0), seed=i * 5 + 2)
+            end = F(getattr(ch, "frozen", None) or self.t1)     # bevroren figuren: geen knipperen of ademen meer
+            if end > F(self.t0) + 2:
+                A.blinks(ch, F(self.t0), end, seed=i * 3 + 1)
+                A.alive(ch, F(self.t0), end, energy=getattr(ch, "energy", 1.0), seed=i * 5 + 2)
         # camera's: het eerste shot begint op t0
         if self.cams:
             first = min(self.cams, key=lambda c: c["t0"])
@@ -249,3 +251,213 @@ def body_copy(S, ch, mat, name):
 def show_objs(objs, t0, t1=None):
     for o in objs:
         show(o, t0, t1)
+
+
+# -- materiaal dat zich over het lichaam verspreidt (SH4) ------------------------------------
+def spread_shader(kind):
+    """Schaduw-netwerk voor een materiaal dat over het lichaam kruipt: 'hout', 'staal' of 'glas'.
+    Geeft een functie die (nodes, links) krijgt en een shader-socket teruggeeft."""
+    def build(N, L):
+        g = N.new("ShaderNodeGroup")
+        g.node_tree = bpy.data.node_groups["ToonLicht"]
+        if kind == "hout":
+            tc = N.new("ShaderNodeTexCoord")
+            wv = N.new("ShaderNodeTexWave")
+            wv.inputs["Scale"].default_value = 7.0
+            wv.inputs["Distortion"].default_value = 4.0
+            wv.inputs["Detail"].default_value = 1.0
+            L.new(tc.outputs["Object"], wv.inputs["Vector"])
+            rp = N.new("ShaderNodeValToRGB")
+            rp.color_ramp.elements[0].color = (0.42, 0.22, 0.09, 1)
+            rp.color_ramp.elements[1].color = (0.66, 0.40, 0.18, 1)
+            L.new(wv.outputs["Fac"], rp.inputs[0])
+            L.new(rp.outputs[0], g.inputs["Kleur"])
+            return g.outputs[0]
+        if kind == "staal":
+            g.inputs["Kleur"].default_value = (0.58, 0.62, 0.68, 1)
+            gl = N.new("ShaderNodeBsdfGlossy")
+            gl.inputs["Roughness"].default_value = 0.25
+            gl.inputs["Color"].default_value = (0.8, 0.85, 0.9, 1)
+            mx = N.new("ShaderNodeMixShader")
+            mx.inputs[0].default_value = 0.3
+            L.new(g.outputs[0], mx.inputs[1])
+            L.new(gl.outputs[0], mx.inputs[2])
+            return mx.outputs[0]
+        # glas: licht blauw, half doorzichtig, met een glimrand
+        g.inputs["Kleur"].default_value = (0.72, 0.9, 1.0, 1)
+        tr = N.new("ShaderNodeBsdfTransparent")
+        lw = N.new("ShaderNodeLayerWeight")
+        lw.inputs["Blend"].default_value = 0.35
+        mp = N.new("ShaderNodeMapRange")
+        mp.inputs["To Min"].default_value = 0.35
+        mp.inputs["To Max"].default_value = 0.9
+        L.new(lw.outputs["Facing"], mp.inputs[0])
+        mx = N.new("ShaderNodeMixShader")
+        L.new(mp.outputs[0], mx.inputs[0])
+        L.new(tr.outputs[0], mx.inputs[1])
+        L.new(g.outputs[0], mx.inputs[2])
+        return mx.outputs[0]
+    return build
+
+
+def material_spread(ch, stages, skip=("_vlak", "Contour")):
+    """stages = [(kind, empty), ...]. Per stadium kruipt het materiaal vanaf het lege object over het lichaam:
+    alles binnen een bol met straal = schaal van het lege object. Later stadium wint. Ogen/mond blijven gewoon."""
+    done = set()
+    for o in ch.rig.children_recursive:
+        if o.type != "MESH":
+            continue
+        for slot in o.material_slots:
+            mt = slot.material
+            if mt is None or mt.name in done or any(s in mt.name for s in skip) or not mt.use_nodes:
+                continue
+            done.add(mt.name)
+            N, L = mt.node_tree.nodes, mt.node_tree.links
+            out = next(n for n in N if n.type == "OUTPUT_MATERIAL")
+            if not out.inputs["Surface"].links:
+                continue
+            cur = out.inputs["Surface"].links[0].from_socket
+            for kind, emp in stages:
+                tc = N.new("ShaderNodeTexCoord")
+                tc.object = emp
+                ln = N.new("ShaderNodeVectorMath")
+                ln.operation = "LENGTH"
+                L.new(tc.outputs["Object"], ln.inputs[0])
+                nz = N.new("ShaderNodeTexNoise")
+                nz.inputs["Scale"].default_value = 9.0
+                ad = N.new("ShaderNodeMath")
+                ad.operation = "MULTIPLY_ADD"
+                tg = N.new("ShaderNodeTexCoord")
+                L.new(tg.outputs["Object"], nz.inputs["Vector"])
+                L.new(nz.outputs["Fac"], ad.inputs[0])
+                ad.inputs[1].default_value = 0.35
+                L.new(ln.outputs["Value"], ad.inputs[2])
+                lt = N.new("ShaderNodeMath")
+                lt.operation = "LESS_THAN"
+                L.new(ad.outputs[0], lt.inputs[0])
+                lt.inputs[1].default_value = 1.15
+                mx = N.new("ShaderNodeMixShader")
+                L.new(lt.outputs[0], mx.inputs[0])
+                L.new(cur, mx.inputs[1])
+                L.new(spread_shader(kind)(N, L), mx.inputs[2])
+                cur = mx.outputs[0]
+            L.new(cur, out.inputs["Surface"])
+
+
+def spreader(S, ch, name, t0, t1, r1=2.5, bone="hand.R"):
+    """Leeg object op de hand; groeit van niets (t0) tot straal r1 (t1). Daarna blijft het groot."""
+    emp = bpy.data.objects.new(name, None)
+    T._link(emp)
+    attach(emp, ch, bone)
+    key(emp, 0, scale=0.001)
+    key(emp, t0, scale=0.001)
+    key(emp, t1, scale=r1)
+    return emp
+
+
+def rock(name, loc, r, mat, seed=0, squash=0.75, ol=0.01, sub=2):
+    """Onregelmatige steen/korrel (ijsbol met verschoven punten)."""
+    import bmesh
+    rnd = random.Random(seed)
+    me = bpy.data.meshes.new(name)
+    bm = bmesh.new()
+    bmesh.ops.create_icosphere(bm, subdivisions=sub, radius=r)
+    sx, sy = rnd.uniform(0.8, 1.25), rnd.uniform(0.8, 1.25)
+    for v in bm.verts:
+        n = noise.noise(v.co * (2.2 / r) + Vector((seed * 3.1, seed, 0)))
+        v.co = v.co * (1 + 0.28 * n)
+        v.co = Vector((v.co.x * sx, v.co.y * sy, v.co.z * squash))
+    bm.to_mesh(me)
+    bm.free()
+    o = T._obj(name, me, mat, tuple(loc), (0, 0, rnd.uniform(0, 360)), ol * r)
+    return o
+
+
+def parent_keep(objs, parent):
+    """Hang objecten aan een leeg object zonder dat ze verspringen."""
+    bpy.context.view_layer.update()
+    for o in objs:
+        o.parent = parent
+        o.matrix_parent_inverse = parent.matrix_world.inverted()
+
+
+def face_points(S, ch, t, fwd, region, step=0.022, depth=1.5):
+    """Punten op het gezicht (wereld) via stralen naar het hoofd, op tijd t. fwd = kijkrichting van het figuur.
+    region(u, v) -> True houdt een punt (u = links/rechts, v = op/neer t.o.v. het hoofdmidden, in meters)."""
+    sc = S.sc
+    sc.frame_set(F(t))
+    dg = bpy.context.evaluated_depsgraph_get()
+    hc = S.headpos(ch, t)
+    fwd = Vector(fwd).normalized()
+    side = fwd.cross(Vector((0, 0, 1))).normalized()
+    out = []
+    n = int(0.4 / step)
+    for i in range(-n, n + 1):
+        for j in range(-n, n + 1):
+            u, v = i * step, j * step
+            if not region(u, v):
+                continue
+            o = hc + side * u + Vector((0, 0, v)) + fwd * depth
+            hit, loc, nor, idx, ob, M = sc.ray_cast(dg, o, -fwd)
+            if hit and ob and ob.parent == ch.rig:
+                out.append(loc + nor * 0.004)
+    return out
+
+
+def attach_keep(obj, ch, bone, t):
+    """Hang obj aan een bot zonder dat het verspringt (zoals het nu op tijd t in de wereld staat)."""
+    S_frame = bpy.context.scene
+    S_frame.frame_set(F(t))
+    pb = ch.rig.pose.bones[bone]
+    Mb = ch.rig.matrix_world @ pb.matrix @ Matrix.Translation((0, pb.bone.length, 0))
+    W_ = obj.matrix_world.copy()
+    obj.parent = ch.rig
+    obj.parent_type = "BONE"
+    obj.parent_bone = bone
+    obj.matrix_parent_inverse = Mb.inverted()
+    obj.matrix_basis = W_
+
+
+def eye_glow(ch, keys, color=(0.85, 0.95, 1.0), strength=8.0, slots=range(8, 22)):
+    """Ogen gloeien wit op (SH3). keys = [(t, 0..1), ...]. De oogmaterialen zijn Material_8 ... Material_21."""
+    for o in ch.rig.children_recursive:
+        if o.type != "MESH":
+            continue
+        for slot in o.material_slots:
+            mt = slot.material
+            if mt is None or not mt.use_nodes:
+                continue
+            m = re.search(r"Material_(\d+)\.", mt.name)
+            if not m or int(m.group(1)) not in slots or "gloei" in mt.get("fx", ""):
+                continue
+            mt["fx"] = "gloei"
+            N, L = mt.node_tree.nodes, mt.node_tree.links
+            out = next(n for n in N if n.type == "OUTPUT_MATERIAL")
+            if not out.inputs["Surface"].links:
+                continue
+            cur = out.inputs["Surface"].links[0].from_socket
+            em = N.new("ShaderNodeEmission")
+            em.inputs["Color"].default_value = (*color, 1)
+            em.inputs["Strength"].default_value = strength
+            mx = N.new("ShaderNodeMixShader")
+            L.new(cur, mx.inputs[1])
+            L.new(em.outputs[0], mx.inputs[2])
+            L.new(mx.outputs[0], out.inputs["Surface"])
+            for t, v in keys:
+                mx.inputs[0].default_value = v
+                mx.inputs[0].keyframe_insert("default_value", frame=F(t))
+
+
+def tele_fx(S, pos, t, sound=True, vol=0.4):
+    """Teleport-effect op pos (voeten): blauwe vonkjes, ring en een lichtflits."""
+    pos = Vector(pos)
+    S.puff(pos + Vector((0, 0, 0.8)), t, n=8, r=(0.12, 0.3), grow=1.8, dur=0.5, color=(0.55, 0.8, 1.0), rise=0.4, spread=0.4)
+    S.debris(pos + Vector((0, 0, 0.9)), t, n=16, size=(0.02, 0.04), color=(0.7, 0.9, 1.0), speed=(1.0, 2.5), up=0.6,
+             floor=pos.z, life=0.8, name="Vonk")
+    lamp = T.point_light(S._fxname("Teleportlicht"), tuple(pos + Vector((0, 0, 1.0))), color=(0.6, 0.85, 1.0), energy=0,
+                         radius=0.2)
+    for tt, e in ((t - 0.05, 0), (t, 300), (t + 0.35, 0)):
+        lamp.data.energy = e
+        lamp.data.keyframe_insert("energy", frame=F(tt))
+    if sound:
+        S.sfx("sfx_teleport", t - 0.05, vol)

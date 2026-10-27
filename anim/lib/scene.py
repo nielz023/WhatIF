@@ -637,7 +637,7 @@ class Scene:
             t0 = c["t0"]
             t1 = cams[k + 1]["t0"] if k + 1 < len(cams) else self.length
             cd = bpy.data.cameras.new(c["name"])
-            cd.clip_start, cd.clip_end = getattr(self, "clip", (0.02, 6000))
+            cd.clip_start, cd.clip_end = c.get("clip") or getattr(self, "clip", (0.02, 6000))
             cd.sensor_width = 36
             cam = bpy.data.objects.new(c["name"], cd)
             T._link(cam)

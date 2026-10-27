@@ -312,6 +312,8 @@ def alive(ch, start, end, energy=1.0, seed=3):
         m.strength = math.radians(amp * energy) * 2
         m.phase = seed * 7 + idx * 13 + len(b)
         m.blend_type = "ADD"
+        m.use_restricted_range = True             # na `end` staat hij stil (bevroren figuren in de shorts)
+        m.frame_start, m.frame_end = start, end
     # ademhaling: borst schaal
     pb = ch.pb["chest"]
     pb.keyframe_insert("scale", frame=start)
@@ -322,6 +324,8 @@ def alive(ch, start, end, energy=1.0, seed=3):
             m.amplitude = 0.012 * energy
             m.phase_multiplier = 2 * math.pi / (3.8 * 24)
             m.use_additive = True
+            m.use_restricted_range = True
+            m.frame_start, m.frame_end = start, end
 
 
 # ---------------------------------------------------------------------------
