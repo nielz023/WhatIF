@@ -14,6 +14,9 @@ S = Short("sh8", "c", "straat", "zonnig", lines=(4, 5, 6, 7, 8))
 l4, l5, l6, l7, l8 = (S.L[n] for n in (4, 5, 6, 7, 8))
 T0, END = S.t0, S.t1
 S.clip = (0.05, 3000)
+for o in bpy.data.objects:                      # de boom staat voor de hoge shots
+    if o.name.startswith("Straatboom_-3_-5.4"):
+        o.hide_render = True
 
 HP = V(0.0, 0.6, 0)
 held = S.actor("hoofdpersonage", HP, 10)
