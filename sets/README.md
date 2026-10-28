@@ -84,6 +84,8 @@ Handig voor de animatie:
 - **Vuilniswagen**: koplampen zijn echte spotlampen; voorkant wijst naar +x. Rijdt in `grijs` op y = 1.5 naar het huis.
 - **Markeringen** in `straat grijs`: `Markering_broertje_oversteek` en `Markering_stoeprand_dag3` (lege objecten).
 - **Regen**: `Regendruppels` (één mesh met ~8.000 druppels) en `Gesplitste_druppel_1/2`.
+- **Kraai en vogels** in de straat zijn stilstaande props. De kraai die met zijn vleugels slaat komt uit de cast
+  (`anim/lib/glans.py`, `G.crow()`); vervang de set-kraai daarmee als hij moet bewegen.
 
 ## Zelf bouwen of aanpassen
 

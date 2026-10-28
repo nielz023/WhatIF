@@ -853,6 +853,7 @@ def _rim_lights(cam):
 # ---------------------------------------------------------------------------
 def finish(out_dir, name, cameras, percent=100, render=True):
     os.makedirs(out_dir, exist_ok=True)
+    bpy.context.preferences.filepaths.save_version = 0  # geen .blend1-reservekopieën
     sc = bpy.context.scene
     sc.render.resolution_percentage = percent
     render = render and os.environ.get("SET_RENDER", "1") == "1"
