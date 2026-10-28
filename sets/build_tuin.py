@@ -1,7 +1,9 @@
 """Set: Achtertuin en dak van het huis. Video 1, dag 4 (zonsondergang, oranje en paars).
+Video 2 (10x sneller), dag 2: variant 'regen', vroege ochtend, buitenlamp aan, regendruppels
+die stil in de lucht hangen.
 
 Gebruik:
-    blender -b -P sets/build_tuin.py -- [zonsondergang] [uitvoermap]
+    blender -b -P sets/build_tuin.py -- [zonsondergang|regen] [uitvoermap]
 """
 import math
 import os
@@ -16,10 +18,15 @@ from lib import street as S  # noqa: E402
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 MOOD = args[0] if args else "zonsondergang"
-OUT = args[1] if len(args) > 1 else "/mnt/project-files/sets/07_achtertuin_dak"
+RAIN = MOOD == "regen"
+OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/10x-sneller/sets/07_achtertuin" if RAIN else "/mnt/project-files/sets/07_achtertuin_dak")
 
-mood = dict(T.MOODS[MOOD])
+mood = dict(T.MOODS["bewolkt" if RAIN else MOOD])
 mood.update(sun_rot=(66, 0, 150), fog_start=40, fog_end=350, fog_max=0.5)
+if RAIN:
+    mood.update(sky_top=(0.16, 0.20, 0.30), sky_horizon=(0.42, 0.44, 0.52), ground_glow=(0.25, 0.28, 0.3),
+                sun_rot=(70, 0, 120), sun_strength=0.25, ambient=(0.20, 0.23, 0.30), fog_color=(0.40, 0.44, 0.52),
+                fog_start=12.0, fog_end=120.0, fog_max=0.6, bloom=0.6)
 if mood.get("sun_disc"):
     mood["sun_disc"] = dict(mood["sun_disc"], dir=(150, 7))
 T.new_scene("Achtertuin_" + MOOD, mood, samples=32)
@@ -98,9 +105,33 @@ d = T.merge("Satellietschotel", dish, ol=0.01)
 d.location = (1.6, -2.6, 8.9)
 d.rotation_euler = (math.radians(-25), 0, math.radians(200))
 
+if RAIN:
+    from lib import huis as HU  # noqa: E402
+    T.use_collection(T.collection("Regen"))
+    # buitenlamp naast de achterdeur (achterdeur op x = 1.4)
+    T.box("Buitenlamp_achter_houder", (0.55, 0.12, 2.0), (0.16, 0.1, 0.3), P.m("zwart"), bevel=0.02, ol=0)
+    T.box("Buitenlamp_achter_glas", (0.55, 0.19, 2.02), (0.12, 0.05, 0.22), T.glow("buitenlamp_achter", (1.0, 0.75, 0.42), 8), bevel=0.01, ol=0)
+    T.point_light("Buitenlamp_achter_licht", (0.55, 0.45, 2.0), color=(1.0, 0.7, 0.4), energy=90, radius=0.12)
+    HU.regendruppels("Regendruppels", ((-3.0, 3.0), (0.6, 13.5), (0.05, 5.0)), 7000, seed=31,
+                     dicht_bij=((0.6, 6.0, 1.3), 1.3, 900))
+    HU.regendruppels("Regendruppels_camera", ((-0.4, 1.0), (6.4, 7.6), (0.8, 1.8)), 500, seed=32)
+    # de druppel die hij aantikt en die in tweeën splitst
+    for k, dx in enumerate((-0.012, 0.012)):
+        T.sphere(f"Gesplitste_druppel_{k + 1}", (0.35 + dx, 6.45, 1.25), 0.004, HU.water("regendruppel"), scale=(1, 1, 1.4), seg=10, ol=0)
+    for nm, sx in (("Natte_plekken_terras", 1.0),):
+        T.plane(nm, (0, 1.6, 0.012), (6, 3.2), T.toon("terras_nat", (0.40, 0.40, 0.42)))
+
 T.use_collection(None)
-T.character((0.4, -4.5, 9.15), rot_z=180)  # staat op de nok van het dak
+if not RAIN:
+    T.character((0.4, -4.5, 9.15), rot_z=180)  # staat op de nok van het dak
 T.character((0.6, 6.0, 0.0), rot_z=200, coll_name="Hoofdpersonage (tuin)")
+if RAIN:
+    cams = [T.camera("CAM_01_regen_wide", (-1.6, 10.9, 1.9), (0.5, 1.0, 2.0), lens=20),
+            T.camera("CAM_02_tussen_de_druppels", (0.1, 8.1, 1.2), (0.6, 6.0, 1.35), lens=35, dof=2.8),
+            T.camera("CAM_03_trampoline", (-2.4, 3.6, 1.5), (1.2, 10.2, 1.0), lens=24)]
+    blend, renders = T.finish(OUT, "achtertuin_regen", cams)
+    print("KLAAR", blend, renders)
+    sys.exit(0)
 cams = [
     T.camera("CAM_01_tuin_wide", (-1.6, 10.9, 1.9), (0.5, 1.0, 2.2), lens=20),
     T.camera("CAM_02_dak", (-3.5, 3.5, 9.6), (0.4, -4.5, 9.9), lens=26),

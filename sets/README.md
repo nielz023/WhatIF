@@ -6,6 +6,18 @@ staan in de projectmap `sets/` (genummerd in volgorde van de video).
 
 ## Stijl
 
+Sinds video 2 renderen alle sets standaard in de **glans-look** (`SET_LOOK=glans`, de standaard): dezelfde
+scripts en kleuren, maar in Cycles met glimmende vinyl-materialen met een coatlaag, kleuren iets voller, AgX
+"Punchy" en een oranje en blauw randlicht op het hoofdpersonage (alleen op hem, via light linking). Metalen
+(materialen met *metaal*, *rvs*, *chroom* ... in de naam) worden echt metaal. Contourlijnen vallen weg.
+De node group `ToonLicht` bestaat nog steeds, maar bevat nu een Principled BSDF met de ingangen *Kleur*,
+*Ruwheid* en *Metaal*. Met `SET_LOOK=toon` krijg je de oude look van video 1 terug (hieronder beschreven).
+
+Renderen op de pc met de videokaart: `SET_GPU=1`. In de cloudcontainer (alleen CPU) kost een camera op
+1920x1080 met 64 samples ~10 minuten; testen met `SET_PCT=25 SET_SAMPLES=24` (~25 s).
+
+### Oude look (video 1, `SET_LOOK=toon`)
+
 - **Toon-shading in EEVEE**: drie lichtbanden (schaduw, midden, licht) via Shader to RGB, matte kleuren, afgeronde randen.
   Render altijd met EEVEE, want in Cycles werkt de toon-shader niet.
 - **Contourlijnen**: dunne donkere randen via een Solidify-modifier met de naam `Contour` (inverted hull). Dikte
@@ -45,6 +57,33 @@ staan in de projectmap `sets/` (genummerd in volgorde van de video).
 
 De voordeur en veranda (dag 10) zitten in de straat-set (variant `avond`), de zwarte SUV's (dag 15) in variant `suvs`
 en het konvooi met de gezinsauto (dag 20) in variant `konvooi`.
+
+## Sets voor video 2: "What IF You Got 10x FASTER Every Day?"
+
+Alle locaties zijn hergebruik; nieuw zijn de varianten en de props (`lib/huis.py` en onderaan `lib/street.py`).
+Renders en `.blend`-bestanden staan in de projectmap `videos/10x-sneller/sets/`.
+
+| Map | Script en variant | Waar in de video |
+|-----|-------------------|------------------|
+| 00_props | `build_props_10x.py klein` / `voertuigen` | overzicht van alle nieuwe props in de glans-studio |
+| 02_slaapkamer | `build_slaapkamer.py ochtend` (glans) / `dag2` / `broertje` | titel dag 1, dag 2 om 06:20 (wekker, glas water), kamer van het broertje (origami, dinoposter) |
+| 04_keuken | `build_keuken.py dag1` / `dageraad` / `kraanvogels` / `natuurkundige` / `knal` / `verjaardag` | bijna alles vanaf dag 1 |
+| 05_straat | `build_straat.py zonnig` (glans) / `dageraad` / `grijs` | dag 1 bus, dag 2 hardlopen langs de bestelbus en de bus, cold open en dag 3-4 met de vuilniswagen |
+| 06_gymzaal | `build_gymzaal.py` (glans) | dag 1, de sprint |
+| 07_achtertuin | `build_tuin.py regen` | dag 2, de regen die stilhangt |
+
+Handig voor de animatie:
+
+- **Whiteboard**: elke regel tekst is een eigen object (`Whiteboard_voor_regel1a`, ..., `Whiteboard_achter_regel3`),
+  zodat hij letter voor letter of regel voor regel kan verschijnen. De ouder `Whiteboard` draait 180 graden om de
+  achterkant te tonen. Lettertype: Permanent Marker (`sets/fonts`, Apache 2.0).
+- **Taart**: de vlammetjes heten `Verjaardagstaart_vlam_1..9`; het licht `Verjaardagstaart_kaarslicht`.
+- **Kraanvogels**: elke kraanvogel is een los object dat een mesh deelt met de andere van dezelfde kleur
+  (`kraanvogel_mesh_0..7`). In `knal` hangen er 1.000 in de lucht; in `verjaardag` liggen er 249 in een krans
+  rond de taart en heet de laatste `Kraanvogel_de_laatste`.
+- **Vuilniswagen**: koplampen zijn echte spotlampen; voorkant wijst naar +x. Rijdt in `grijs` op y = 1.5 naar het huis.
+- **Markeringen** in `straat grijs`: `Markering_broertje_oversteek` en `Markering_stoeprand_dag3` (lege objecten).
+- **Regen**: `Regendruppels` (één mesh met ~8.000 druppels) en `Gesplitste_druppel_1/2`.
 
 ## Zelf bouwen of aanpassen
 

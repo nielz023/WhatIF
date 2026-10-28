@@ -1,4 +1,10 @@
-"""Toon-stijl voor alle sets van 3D What If Channel.
+"""Toon- en glans-stijl voor alle sets van 3D What If Channel.
+
+Sinds video 2 is de glans-look de standaard (SET_LOOK=glans, Cycles): dezelfde
+sets en kleuren, maar als glimmend vinyl-speelgoed met een coatlaag, AgX-kleuren
+en een oranje en blauw randlicht op het hoofdpersonage. SET_LOOK=toon geeft de
+oude look van video 1 terug. Alles hieronder over de toon-shading geldt alleen
+voor SET_LOOK=toon.
 
 Eén plek voor de look: toon-shading met drie lichtbanden, dunne donkere
 contourlijnen (inverted hull), matte verzadigde kleuren, afgeronde randen en
@@ -73,6 +79,10 @@ MOODS = {
 }
 
 OUTLINE_COLOR = (0.025, 0.018, 0.035)
+LOOK = os.environ.get("SET_LOOK", "glans")
+GLANS = LOOK == "glans"
+# materialen met deze woorden in de naam worden in de glans-look metaal
+METAL_WORDS = ("metaal", "rvs", "chroom", "staal", "kraan", "zilver", "goud")
 _mood = None
 _mats = {}
 
@@ -87,16 +97,30 @@ def new_scene(name, mood, res=(1920, 1080), samples=16):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
     sc.name = name
-    sc.render.engine = "BLENDER_EEVEE"
     sc.render.resolution_x, sc.render.resolution_y = res
     sc.render.resolution_percentage = 100
     sc.render.film_transparent = False
-    sc.eevee.taa_render_samples = int(os.environ.get("SET_SAMPLES", samples))
-    sc.eevee.use_shadows = True
-    sc.eevee.shadow_ray_count = 2
-    sc.eevee.shadow_step_count = 6
-    sc.view_settings.view_transform = "Standard"
-    sc.view_settings.look = "None"
+    if GLANS:
+        sc.render.engine = "CYCLES"
+        sc.cycles.device = "GPU" if os.environ.get("SET_GPU") == "1" else "CPU"
+        sc.cycles.samples = int(os.environ.get("SET_SAMPLES", 64))
+        sc.cycles.use_denoising = True
+        sc.cycles.max_bounces = 6
+        sc.cycles.diffuse_bounces = 3
+        sc.cycles.glossy_bounces = 3
+        sc.cycles.transparent_max_bounces = 16
+        sc.cycles.sample_clamp_indirect = 8.0
+        sc.view_settings.view_transform = "AgX"
+        sc.view_settings.look = "AgX - Punchy"
+        sc.view_settings.exposure = mood.get("exposure", -0.2)
+    else:
+        sc.render.engine = "BLENDER_EEVEE"
+        sc.eevee.taa_render_samples = int(os.environ.get("SET_SAMPLES", samples))
+        sc.eevee.use_shadows = True
+        sc.eevee.shadow_ray_count = 2
+        sc.eevee.shadow_step_count = 6
+        sc.view_settings.view_transform = "Standard"
+        sc.view_settings.look = "None"
     sc.render.image_settings.file_format = "PNG"
     sc.unit_settings.system = "METRIC"
     _toon_group()
@@ -131,8 +155,53 @@ def _link(obj):
 # ---------------------------------------------------------------------------
 # Materialen
 # ---------------------------------------------------------------------------
+def _glans_group():
+    """Glans-versie van 'ToonLicht': kleur -> iets voller -> Principled met coat -> waas.
+    Zelfde naam en ingang 'Kleur', zodat elk set-script ongewijzigd werkt."""
+    m = _mood
+    ng = bpy.data.node_groups.new("ToonLicht", "ShaderNodeTree")
+    ng.interface.new_socket("Kleur", in_out="INPUT", socket_type="NodeSocketColor")
+    r = ng.interface.new_socket("Ruwheid", in_out="INPUT", socket_type="NodeSocketFloat")
+    r.default_value = 0.38
+    mt = ng.interface.new_socket("Metaal", in_out="INPUT", socket_type="NodeSocketFloat")
+    mt.default_value = 0.0
+    ng.interface.new_socket("Licht", in_out="OUTPUT", socket_type="NodeSocketShader")
+    N, L = ng.nodes, ng.links
+    gi = N.new("NodeGroupInput")
+    go = N.new("NodeGroupOutput")
+    hs = N.new("ShaderNodeHueSaturation")
+    hs.inputs["Saturation"].default_value = 1.2
+    b = N.new("ShaderNodeBsdfPrincipled")
+    b.name = b.label = "Glans"
+    b.inputs["Coat Weight"].default_value = 0.25
+    b.inputs["Coat Roughness"].default_value = 0.18
+    b.inputs["Specular IOR Level"].default_value = 0.55
+    L.new(gi.outputs["Kleur"], hs.inputs["Color"])
+    L.new(hs.outputs["Color"], b.inputs["Base Color"])
+    L.new(gi.outputs["Ruwheid"], b.inputs["Roughness"])
+    L.new(gi.outputs["Metaal"], b.inputs["Metallic"])
+    # waas op afstand, net als in de toon-look
+    cam = N.new("ShaderNodeCameraData")
+    mr = N.new("ShaderNodeMapRange")
+    mr.name = mr.label = "Waas afstand"
+    mr.inputs["From Min"].default_value = m["fog_start"]
+    mr.inputs["From Max"].default_value = m["fog_end"]
+    mr.inputs["To Max"].default_value = m["fog_max"]
+    em = N.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = (*m["fog_color"], 1)
+    mix = N.new("ShaderNodeMixShader")
+    L.new(cam.outputs["View Distance"], mr.inputs["Value"])
+    L.new(mr.outputs["Result"], mix.inputs[0])
+    L.new(b.outputs[0], mix.inputs[1])
+    L.new(em.outputs[0], mix.inputs[2])
+    L.new(mix.outputs[0], go.inputs["Licht"])
+    return ng
+
+
 def _toon_group():
     """Node group 'ToonLicht': diffuse licht -> 3 banden -> x basiskleur -> waas."""
+    if GLANS:
+        return _glans_group()
     m = _mood
     ng = bpy.data.node_groups.new("ToonLicht", "ShaderNodeTree")
     ng.interface.new_socket("Kleur", in_out="INPUT", socket_type="NodeSocketColor")
@@ -194,6 +263,9 @@ def toon(name, color):
     g = N.new("ShaderNodeGroup")
     g.node_tree = bpy.data.node_groups["ToonLicht"]
     g.inputs["Kleur"].default_value = (*color, 1)
+    if GLANS and any(w in name.lower() for w in METAL_WORDS):
+        g.inputs["Ruwheid"].default_value = 0.18
+        g.inputs["Metaal"].default_value = 1.0
     mt.node_tree.links.new(g.outputs[0], out.inputs["Surface"])
     mt.diffuse_color = (*color, 1)
     _mats[key] = mt
@@ -260,7 +332,9 @@ def _outline_mat():
 
 
 def outline(obj, width=0.012):
-    """Inverted-hull contourlijn. width in meters."""
+    """Inverted-hull contourlijn. width in meters. Niet in de glans-look."""
+    if GLANS:
+        return obj
     if obj.type not in ("MESH", "CURVE", "FONT") or width <= 0:
         return obj
     mats = obj.data.materials
@@ -351,7 +425,7 @@ def _sun():
     ld = bpy.data.lights.new("Zon", "SUN")
     ld.color = m["sun_color"]
     ld.energy = m["sun_strength"] * math.pi  # 1.0 = wit vlak precies "vol" belicht
-    ld.angle = math.radians(0.6)
+    ld.angle = math.radians(2.5 if GLANS else 0.6)
     o = bpy.data.objects.new("Zon", ld)
     o.rotation_euler = Euler([math.radians(a) for a in m["sun_rot"]])
     bpy.context.scene.collection.objects.link(o)
@@ -699,7 +773,11 @@ def character(loc, rot_z=0.0, coll_name="Hoofdpersonage (schaal)"):
         c.objects.link(o)
         if o.parent is None:
             o.parent = root
-        if o.type == "MESH":
+        if o.type == "MESH" and GLANS:
+            for slot in o.material_slots:
+                if slot.material and not slot.material.get("glans"):
+                    _glossify(slot.material)
+        elif o.type == "MESH":
             for i, slot in enumerate(o.material_slots):
                 ms = slot.material
                 if ms and not ms.name.startswith("pers_"):
@@ -712,7 +790,62 @@ def character(loc, rot_z=0.0, coll_name="Hoofdpersonage (schaal)"):
             outline(o, 0.006)
     root.location = loc
     root.rotation_euler = (0, 0, math.radians(rot_z))
+    root["held"] = True
     return root
+
+
+def _glossify(mat):
+    """Glans-materiaal voor de figuren, zelfde regels als cast/render_glans.py."""
+    mat["glans"] = True
+    b = mat.node_tree.nodes.get("Principled BSDF") if mat.use_nodes else None
+    if b is None:
+        return
+    col = b.inputs["Base Color"].default_value
+    if b.inputs["Metallic"].default_value > 0.5:
+        b.inputs["Roughness"].default_value = 0.18
+        return
+    r, g, bb = col[:3]
+    skin = r > g > bb and r > 0.15 and (r - bb) > 0.12 and 0.35 < g / max(r, 1e-4) < 0.75
+    if skin:
+        b.inputs["Roughness"].default_value = 0.42
+        b.inputs["Subsurface Weight"].default_value = 0.25
+        b.inputs["Subsurface Radius"].default_value = (0.9, 0.35, 0.2)
+        b.inputs["Subsurface Scale"].default_value = 0.03
+        b.inputs["Coat Weight"].default_value = 0.15
+        b.inputs["Coat Roughness"].default_value = 0.3
+        return
+    b.inputs["Roughness"].default_value = 0.38
+    b.inputs["Coat Weight"].default_value = 0.25
+    b.inputs["Coat Roughness"].default_value = 0.18
+    b.inputs["Specular IOR Level"].default_value = 0.55
+    m = (r + g + bb) / 3
+    b.inputs["Base Color"].default_value = (max(0, m + (r - m) * 1.2), max(0, m + (g - m) * 1.2),
+                                            max(0, m + (bb - m) * 1.2), 1)
+
+
+def _rim_lights(cam):
+    """Glans-look: oranje en blauw randlicht schuin achter elk hoofdpersonage, gezien
+    vanuit deze camera. Ze vallen alleen op de figuur (light linking)."""
+    for o in [o for o in bpy.data.objects if o.name.startswith("Randlicht_")]:
+        bpy.data.objects.remove(o)
+    for root in [o for o in bpy.data.objects if o.get("held")]:
+        c = root.users_collection[0]
+        p = root.matrix_world.translation + Vector((0, 0, 1.3))
+        d = cam.matrix_world.translation - p
+        d.z = 0
+        if d.length < 1e-3:
+            continue
+        d.normalize()
+        side = Vector((-d.y, d.x, 0))
+        for tag, s_, col, e in (("oranje", -1, (1.0, 0.33, 0.045), 700), ("blauw", 1, (0.047, 0.24, 1.0), 800)):
+            ld = bpy.data.lights.new(f"Randlicht_{tag}", "AREA")
+            ld.shape, ld.size, ld.energy, ld.color = "DISK", 0.6, e, col
+            lo = bpy.data.objects.new(f"Randlicht_{tag}_{root.name}", ld)
+            lo.location = p - d * 1.6 + side * s_ * 1.4 + Vector((0, 0, 0.6))
+            _aim(lo, p)
+            lo.visible_camera = False
+            lo.light_linking.receiver_collection = c
+            bpy.context.scene.collection.objects.link(lo)
 
 
 # ---------------------------------------------------------------------------
@@ -721,20 +854,32 @@ def character(loc, rot_z=0.0, coll_name="Hoofdpersonage (schaal)"):
 def finish(out_dir, name, cameras, percent=100, render=True):
     os.makedirs(out_dir, exist_ok=True)
     sc = bpy.context.scene
-    sc.render.resolution_percentage = int(os.environ.get("SET_PCT", percent))
+    sc.render.resolution_percentage = percent
     render = render and os.environ.get("SET_RENDER", "1") == "1"
+    if GLANS:
+        for o in bpy.data.objects:
+            if o.type == "LIGHT":
+                o.visible_camera = False
     if cameras:
         sc.camera = cameras[0]
+        if GLANS:
+            _rim_lights(cameras[0])
     blend = os.path.join(out_dir, name + ".blend")
     bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
     outs = []
+    sc.render.resolution_percentage = int(os.environ.get("SET_PCT", percent))
     if render:
         for cam in cameras:
             sc.camera = cam
+            if GLANS:
+                _rim_lights(cam)
             sc.render.filepath = os.path.join(out_dir, f"{name}__{cam.name}.png")
             bpy.ops.render.render(write_still=True)
             outs.append(sc.render.filepath)
         sc.camera = cameras[0]
+        if GLANS:
+            _rim_lights(cameras[0])
+        sc.render.resolution_percentage = percent  # .blend altijd op de standaardresolutie
         bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
     return blend, outs
 
