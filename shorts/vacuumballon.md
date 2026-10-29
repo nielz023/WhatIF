@@ -77,3 +77,22 @@ hij leeg genoeg is om te zweven. Laat hem in beeld 6 dus niet eerst opstijgen.
   Daarom zegt het script "nog niemand gelukt" en niet "onmogelijk".
 - Een vacuüm geeft op zeeniveau ongeveer 16 % meer draagkracht dan helium (eigen berekening uit de
   dichtheden bij 15 °C). Dat getal staat niet in het script.
+
+## Animatie (cut-out-stijl)
+
+De Short is gebouwd in `remotion/` (zie `remotion/README.md`): 1080x1920 op 60 fps, geleverd als
+4K (2160x3840) met stem en geluidseffecten.
+
+Ingesproken tekst (Engels, 71 woorden, 25,4 s). Dit zijn de regels van hierboven, iets losser gezegd:
+
+Why fill a balloon with helium, when you could fill it with nothing?
+An empty one would be even lighter, right?
+But air pushes from all sides, almost 15 pounds per square inch.
+Helium pushes back. A vacuum can't, so the balloon just gets crushed.
+So what about a hard shell?
+Even a diamond one caves in, if it's light enough to float.
+That's why nobody's pulled it off since 1670.
+
+- Stem: ElevenLabs, "Tim Riley - Natural. Conversational", eleven_v4, één take; woordtijden met Scribe.
+- Beelden: vectortekeningen in code (Higgsfield was niet bereikbaar vanuit de cloudsessie).
+- Geluidseffecten: zelf gesynthetiseerd (`remotion/scripts/make_sfx.py`).

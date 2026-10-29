@@ -9,7 +9,7 @@ onderwerp, uitleg en categorie steeds anders zijn.
 |---|---|---|---|
 | - | "What if you got 2x stronger every day?" (video 1) | menselijk lichaam | `cast/README.md` |
 | - | "Can we throw trash in a volcano?" (voorbeeld uit de skill) | aarde / afval | - |
-| 2026-10-29 | Waarom vullen we ballonnen niet met niks (vacuüm)? | natuurkunde / techniek / geschiedenis | [vacuumballon.md](vacuumballon.md) |
+| 2026-10-29 | Waarom vullen we ballonnen niet met niks (vacuüm)? | natuurkunde / techniek / geschiedenis | [vacuumballon.md](vacuumballon.md), animatie in `remotion/` |
 
 ## Onderzocht, nog niet gebruikt
 

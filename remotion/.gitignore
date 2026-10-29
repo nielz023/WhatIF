@@ -1,0 +1,7 @@
+node_modules/
+out/
+build/
+images/vacuum/vo.wav
+images/vacuum/qa/*.mp4
+images/vacuum/qa/frames/
+images/vacuum/qa/pv/

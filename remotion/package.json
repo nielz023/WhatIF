@@ -1,0 +1,22 @@
+{
+  "name": "whatif-shorts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Cut-out cartoon Shorts (Remotion)",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts VacuumBalloon out/vacuum-4K.mp4 --scale=2 --image-format=png --crf=16 --pixel-format=yuv420p"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.534",
+    "@remotion/cli": "4.0.534",
+    "@remotion/renderer": "4.0.534",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.534"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.6.3"
+  }
+}
