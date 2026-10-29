@@ -377,7 +377,9 @@ def eevee_glans(sc, samples=32, room=None, bake=True):
     for ob in sc.objects:
         if ob.type == "LIGHT":
             ob.data.use_shadow = True
-            ob.data.use_shadow_jitter = True
+            # kleine puntlampjes (kaarsen, gloed, ganglamp) zonder jitter: die kubusschaduwen kosten veel rendertijd
+            small = ob.data.type == "POINT" and ob.data.energy <= 80
+            ob.data.use_shadow_jitter = not small
             ob.data.shadow_jitter_overblur = 10.0
     if room:
         center, half = room
