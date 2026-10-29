@@ -65,6 +65,8 @@ S.sfx("sfx_whoosh", CUT - 0.25, 0.35)
 S.card("", CUT, CARD, dim=1.0, fin=1, fout=1)
 S.card("3 DAYS EARLIER", CARD, END, size=96, dim=1.0, fin=1, fout=4)
 S.sfx("sfx_hud_tik", CARD, 0.5)
+# zodat de kijker meteen weet dat dit een sprong vooruit is (verzoek niels)
+S.text("LATER IN THIS VIDEO...", 0.15, CUT, loc=(0.035, 0.94), size=64, color=GOLD, anchor=("LEFT", "TOP"))
 
 # ---------------------------------------------------------------- het broertje: bevroren sprint
 run_pose(S, bro, 0.0, front="R", amount=0.85, lift=0.14, reach=0.12, back=0.16, face="blij", look=(0.15, 0.1))
