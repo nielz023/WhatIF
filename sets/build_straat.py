@@ -7,6 +7,11 @@ Varianten (één script, verschillende .blend-bestanden):
     scherven  dag 18 na de nies: alle ramen kapot, glas overal
     konvooi   dag 20: bewolkt, legertrucks, dranghekken, helikopter, de gezinsauto
 
+Video 2 (10x sneller):
+    grijs     dag 3-4 en cold open: grijze ochtend, vuilniswagen met koplampen aan, kraai en plastic
+              zak die stilhangen, kliko's aan de straat, mama's tekst op het voorraam
+    dageraad  dag 2 bij zonsopkomst: lege straat, bestelbus, stadsbus bij de halte, fiets, vogels
+
 Gebruik:
     blender -b -P sets/build_straat.py -- <variant> [uitvoermap]
 """
@@ -24,12 +29,21 @@ from lib import street as S  # noqa: E402
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 VAR = args[0] if args else "zonnig"
-OUT = args[1] if len(args) > 1 else "/mnt/project-files/sets/05_straat"
+V2 = VAR in ("grijs", "dageraad")
+OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/10x-sneller/sets/05_straat" if V2 else "/mnt/project-files/sets/05_straat")
 
-mood_name = {"zonnig": "dag", "suvs": "dag", "lente": "dag", "scherven": "dag", "avond": "avond", "konvooi": "bewolkt"}[VAR]
+mood_name = {"zonnig": "dag", "suvs": "dag", "lente": "dag", "scherven": "dag", "avond": "avond", "konvooi": "bewolkt",
+             "grijs": "bewolkt", "dageraad": "ochtend"}[VAR]
 mood = dict(T.MOODS[mood_name])
 if VAR == "lente":
     mood.update(sky_horizon=(0.80, 0.86, 1.0), lit_tint=(1.0, 0.97, 0.95))
+if VAR == "grijs":
+    mood.update(sky_top=(0.22, 0.25, 0.30), sky_horizon=(0.46, 0.48, 0.52), ground_glow=(0.3, 0.32, 0.34),
+                sun_strength=0.3, ambient=(0.26, 0.28, 0.31), fog_color=(0.48, 0.50, 0.54), fog_start=15.0, fog_end=160.0,
+                fog_max=0.65, bloom=0.5)
+if VAR == "dageraad":
+    mood.update(sun_rot=(80, 0, 95), sun_strength=0.9, sky_top=(0.30, 0.42, 0.80), sky_horizon=(1.0, 0.66, 0.42),
+                ambient=(0.30, 0.28, 0.34), fog_start=25.0, fog_end=260.0, fog_max=0.5, bloom=0.6)
 T.new_scene("Straat_" + VAR, mood, samples=32)
 rnd = random.Random(11)
 
@@ -58,7 +72,8 @@ T.plane("Tuinen_zuid", (0, -8.25, 0.01), (LEN, 4.5), T.toon("gras_tuin", (0.28, 
 T.use_collection(T.collection("Huizen"))
 BRICKS = [(0.72, 0.38, 0.26), (0.80, 0.55, 0.38), (0.62, 0.30, 0.22), (0.85, 0.75, 0.60), (0.70, 0.45, 0.35), (0.92, 0.88, 0.80)]
 DOORS = [(0.15, 0.35, 0.75), (0.80, 0.15, 0.12), (0.15, 0.55, 0.35), (0.95, 0.75, 0.15), (0.35, 0.25, 0.55)]
-lit = VAR == "avond"
+lit = VAR in ("avond", "grijs")
+lit_p = 0.25 if VAR == "grijs" else 0.7
 broken = VAR == "scherven"
 for side, fy, facing in (("noord", 13.0, -1), ("zuid", -10.5, 1)):
     for k, x in enumerate(range(-66, 67, 6)):
@@ -66,7 +81,7 @@ for side, fy, facing in (("noord", 13.0, -1), ("zuid", -10.5, 1)):
         nm = "Huis_hoofdpersonage" if hero else f"Huis_{side}_{x}"
         S.terraced_house(nm, x, fy, color=(0.95, 0.88, 0.72) if hero else BRICKS[(k * 7 + (side == "zuid")) % 6],
                          door_color=(0.85, 0.20, 0.15) if hero else DOORS[(k * 3 + (side == "zuid")) % 5],
-                         facing=facing, lit=lit and rnd.random() < 0.7 or (lit and hero), broken=broken and abs(x) < 50)
+                         facing=facing, lit=lit and rnd.random() < lit_p or (VAR == "avond" and hero), broken=broken and abs(x) < 50)
         if abs(x) < 40:
             S.front_garden(nm + "_tuin", x, fy, depth=4.5, facing=facing, flowers=abs(x) < 20)
 
@@ -158,6 +173,34 @@ if VAR == "konvooi":
     for k, x in enumerate((-12, 0, 8)):
         T.box(f"Legerjeep_{k + 1}", (x - 40, -1.5, 0.5), (4.4, 2.0, 1.3), G, bevel=0.2, ol=0.02)
 
+if VAR == "grijs":
+    from lib import huis as HU  # noqa: E402
+    S.garbage_truck("Vuilniswagen", (-13.0, 1.5, 0), rot=0, lights=True)
+    S.bird("Kraai", (-4.0, 2.2, 4.3), rot_z=30, wings_up=40)
+    S.plastic_bag("Plastic_zak", (-2.6, 1.6, 1.7))
+    # vuilnisdag: kliko's aan de stoeprand
+    for k, x in enumerate((-19.5, -7.6, 4.4, 10.5, 16.4)):
+        kl = [T.box(f"Kliko_{k}_bak", (0, 0, 0.06), (0.58, 0.72, 0.98), T.toon("kliko_grijs", (0.32, 0.34, 0.36)), bevel=0.04),
+              T.box(f"Kliko_{k}_deksel", (0, 0.02, 1.04), (0.62, 0.78, 0.05), T.toon("kliko_deksel", (0.15, 0.50, 0.25)), bevel=0.02)]
+        T.merge(f"Kliko_{k + 1}", kl, ol=0.012).location = (x, 6.45, 0.12)
+    # mama schrijft achterstevoren op het voorraam, zodat hij het buiten kan lezen
+    for k, (tx, z) in enumerate((("COME INSIDE.", 2.12), ("WE'RE NOT", 1.84), ("SCARED.", 1.56))):
+        HU.marker_text(f"Raamtekst_regel{k + 1}", tx, (1.2, 12.905, z), 0.17, "blauw")
+    # markeringen voor de animatie (lege objecten)
+    for nm, loc in (("Markering_broertje_oversteek", (-1.4, 1.2, 0.0)), ("Markering_stoeprand_dag3", (-10.0, 6.15, 0.12))):
+        e = bpy.data.objects.new(nm, None)
+        e.empty_display_type = "SINGLE_ARROW"
+        e.location = loc
+        T._link(e)
+
+if VAR == "dageraad":
+    S.delivery_van("Bestelbus", (-6.0, 1.5, 0), rot=0)
+    S.city_bus("Stadsbus", (23.0, 1.45, 0), rot=0)
+    S.bicycle("Fiets", (-22.0, 5.25, 0.01), rot=0)
+    for k in range(12):
+        S.bird(f"Vogel_{k + 1}", (2 + rnd.uniform(-6, 6), 1 + rnd.uniform(-3, 3), 9 + rnd.uniform(-1.5, 2.5)),
+               rot_z=rnd.uniform(-30, 30), span=0.35, color=(0.12, 0.12, 0.15), wings_up=rnd.uniform(-20, 50))
+
 # ---------------------------------------------------------------------------
 # Hoofdpersonage en camera's
 # ---------------------------------------------------------------------------
@@ -166,6 +209,8 @@ if VAR == "avond":
     T.character((-1.5, 10.6, 0.0), rot_z=0)
 elif VAR == "konvooi":
     T.character((-1.0, 7.0, 0.12), rot_z=0)
+elif VAR == "dageraad":
+    T.character((-1.0, 5.25, 0.01), rot_z=90)
 else:
     T.character((-2.0, 7.0, 0.12), rot_z=-10)
 
@@ -184,6 +229,13 @@ cams = {
     "konvooi": [T.camera("CAM_01_konvooi_wide", (-38, 5.0, 4.0), (0, 0, 2.0), lens=24),
                 T.camera("CAM_02_helikopter", (2, 4.9, 1.5), (8, 2, 30), lens=22),
                 T.camera("CAM_03_gezinsauto", (-0.8, -1.4, 1.5), (3.5, -1.2, 1.1), lens=30)],
+    "grijs": [T.camera("CAM_01_cold_open", (2.5, -2.2, 1.3), (-6.0, 2.6, 1.6), lens=24),
+              T.camera("CAM_02_koplampen", (-2.8, 0.0, 0.6), (-13.0, 1.5, 1.5), lens=24),
+              T.camera("CAM_03_raam_mama", (1.0, 9.6, 1.7), (1.2, 13.0, 1.85), lens=30),
+              T.camera("CAM_04_stoeprand_wide", (12.0, -2.6, 1.7), (-8.0, 6.5, 1.6), lens=24)],
+    "dageraad": [T.camera("CAM_01_lange_weg", (-40.0, 0.2, 1.1), (20.0, 1.6, 1.8), lens=35),
+                 T.camera("CAM_02_bestelbus", (0.2, -0.3, 1.5), (-4.0, 1.5, 1.6), lens=26),
+                 T.camera("CAM_03_bus_halte", (8.0, -2.2, 1.5), (24.0, 3.0, 1.8), lens=28)],
 }[VAR]
 blend, renders = T.finish(OUT, "straat_" + VAR, cams)
 print("KLAAR", blend, renders)
