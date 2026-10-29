@@ -130,12 +130,11 @@ if RAIN:
             T.camera("CAM_02_tussen_de_druppels", (0.1, 8.1, 1.2), (0.6, 6.0, 1.35), lens=35, dof=2.8),
             T.camera("CAM_03_trampoline", (-2.4, 3.6, 1.5), (1.2, 10.2, 1.0), lens=24)]
     blend, renders = T.finish(OUT, "achtertuin_regen", cams)
-    print("KLAAR", blend, renders)
-    sys.exit(0)
-cams = [
-    T.camera("CAM_01_tuin_wide", (-1.6, 10.9, 1.9), (0.5, 1.0, 2.2), lens=20),
-    T.camera("CAM_02_dak", (-3.5, 3.5, 9.6), (0.4, -4.5, 9.9), lens=26),
-    T.camera("CAM_03_vanaf_dak", (0.4, -3.6, 10.8), (0.5, 14, 1.0), lens=24),
-]
-blend, renders = T.finish(OUT, "achtertuin_dak_" + MOOD, cams)
+else:  # (geen sys.exit: de animatiescènes laden deze set via runpy)
+    cams = [
+        T.camera("CAM_01_tuin_wide", (-1.6, 10.9, 1.9), (0.5, 1.0, 2.2), lens=20),
+        T.camera("CAM_02_dak", (-3.5, 3.5, 9.6), (0.4, -4.5, 9.9), lens=26),
+        T.camera("CAM_03_vanaf_dak", (0.4, -3.6, 10.8), (0.5, 14, 1.0), lens=24),
+    ]
+    blend, renders = T.finish(OUT, "achtertuin_dak_" + MOOD, cams)
 print("KLAAR", blend, renders)
