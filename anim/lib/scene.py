@@ -37,6 +37,9 @@ import rig as R  # noqa: E402
 import acting as A  # noqa: E402
 
 FPS = 24
+# Uitvoer-fps. Alles wordt in 24-fps-frames geanimeerd; bij WHATIF_FPS=60 rekt Blender de tijd op
+# (frame_map 24 -> 60) en tussenframes worden uit de curves geïnterpoleerd. 60-fps-beeld n toont t = (n - 2.5) / 60.
+OUT_FPS = int(os.environ.get("WHATIF_FPS", FPS))
 AUDIO = os.path.join(R.ASSETS, "audio")
 GOLD = (1.0, 0.82, 0.18, 1)
 WHITE = (1, 1, 1, 1)
@@ -88,7 +91,8 @@ def audio_len(path):
 
 
 def voice_file(line_id):
-    hits = glob.glob(os.path.join(AUDIO, line_id[:3], line_id + "_*.mp3"))
+    hits = sorted(glob.glob(os.path.join(AUDIO, line_id[:3], line_id + "_*.mp3")))
+    hits = [h for h in hits if not h.endswith("_traag.mp3")] or hits   # vertraagde versie alleen expliciet
     if not hits:
         raise SystemExit("Geen stem voor " + line_id)
     return hits[0]
@@ -767,16 +771,24 @@ class Scene:
         return objs
 
     # -- afronden ----------------------------------------------------------------
+    def pre_finish(self):
+        """Haak voor subklassen: vlak voor het bouwen van de camera's."""
+
+    def post_cams(self):
+        """Haak voor subklassen: na het bouwen van de camera's (self.shots bestaat dan)."""
+
     def finish(self, length=None, tail=0.8, picture_end=None, title=None):
         self.length = length or (self.t + tail)
         sc = self.sc
         sc.frame_start, sc.frame_end = 1, F(self.length)
+        self.pre_finish()
         for i, ch in enumerate(self.cast):
             A.blinks(ch, 1, F(self.length), seed=i * 3 + 1)
             A.alive(ch, 1, F(self.length), energy=getattr(ch, "energy", 1.0), seed=i * 5 + 2)
         self._build_cams()
+        self.post_cams()
         spec = dict(code=self.code, length=self.length, picture_end=picture_end or self.length,
-                    voice=self.voice, sounds=self.sounds, texts=self.texts, cards=self.cards, title=title)
+                    voice=self.voice, sounds=self.sounds, texts=self.texts, cards=self.cards, title=title, fps=OUT_FPS)
         os.makedirs(self.out, exist_ok=True)
         with open(os.path.join(self.out, "montage.json"), "w") as fh:
             json.dump(spec, fh, indent=1)
@@ -789,6 +801,13 @@ class Scene:
             except Exception:
                 pass
         sc.frame_set(1)
+        if OUT_FPS != FPS:
+            sc.render.fps = OUT_FPS
+            sc.render.frame_map_old, sc.render.frame_map_new = FPS, OUT_FPS
+            sc.frame_start = 3
+            sc.frame_end = int(math.ceil(self.length * OUT_FPS + 2.5))
+            # (cameramarkers blijven in 24-fps-frames: Blender vergelijkt ze met de opgerekte tijd)
+            sc.frame_set(3)
         if not self.args.nosave:
             blend = os.path.join(self.out, self.code + ".blend")
             bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
@@ -799,11 +818,12 @@ class Scene:
             else:
                 times = [float(x) for x in self.args.stills.split(",")]
             for t in times:
-                f = F(t)
+                f = F(t) if OUT_FPS == FPS else int(round(t * OUT_FPS + 2.5))
                 sc.frame_set(f)
                 for t0, t1, cam in self.shots:
                     if t0 <= t < t1:
                         sc.camera = cam
+                print("STILL", t, "frame", f, "camera", sc.camera.name)
                 sc.render.filepath = os.path.join(self.out, "stills", f"{self.code}_t{t:05.1f}.png")
                 bpy.ops.render.render(write_still=True)
             sc.render.filepath = os.path.join(self.out, "frames", "")

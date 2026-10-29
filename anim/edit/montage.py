@@ -20,6 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 AUDIO = os.path.join(os.environ.get("WHATIF_ASSETS", os.path.join(REPO, "assets")), "audio")
 FPS = 24
+K = 1.0   # frames per 24-fps-frame (fades e.d. staan in 24-fps-frames)
 
 
 def F(t):
@@ -217,14 +218,17 @@ def _fade(s, f0, f1, pop=True, out=True):
     s.blend_alpha = 0.0
     s.keyframe_insert("blend_alpha", frame=f0)
     s.blend_alpha = 1.0
-    s.keyframe_insert("blend_alpha", frame=f0 + 4)
-    if out and f1 - f0 > 10:
-        s.keyframe_insert("blend_alpha", frame=f1 - 4)
+    s.keyframe_insert("blend_alpha", frame=f0 + round(4 * K))
+    if out and f1 - f0 > 10 * K:
+        s.keyframe_insert("blend_alpha", frame=f1 - round(4 * K))
         s.blend_alpha = 0.0
         s.keyframe_insert("blend_alpha", frame=f1)
 
 
 def build(spec, frames_dir, out, render=True):
+    global FPS, K
+    FPS = spec.get("fps", 24)
+    K = FPS / 24.0
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
     sc.name = os.path.basename(os.path.splitext(out)[0]) + "_montage"
@@ -283,7 +287,7 @@ def build(spec, frames_dir, out, render=True):
         dim = new_strip("effect", sed, "dim", _pack(used, 20, f0, f1), f0, type="COLOR", length=f1 - f0)
         dim.color = tuple(c.get("bg") or (0.02, 0.02, 0.05))
         dim.blend_type = "ALPHA_OVER"
-        fin, fout = c.get("fin", 5), c.get("fout", 5)
+        fin, fout = round(c.get("fin", 5) * K), round(c.get("fout", 5) * K)
         dim.blend_alpha = 0.0
         dim.keyframe_insert("blend_alpha", frame=f0)
         dim.blend_alpha = c["dim"]
@@ -316,7 +320,7 @@ def build(spec, frames_dir, out, render=True):
         title.blend_alpha = 0.0
         title.keyframe_insert("blend_alpha", frame=F(h0))
         title.blend_alpha = 1.0
-        title.keyframe_insert("blend_alpha", frame=F(h0) + 4)
+        title.keyframe_insert("blend_alpha", frame=F(h0) + round(4 * K))
 
     # stem: genormaliseerd, altijd het luidst
     vint = []
