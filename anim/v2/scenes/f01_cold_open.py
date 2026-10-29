@@ -72,9 +72,9 @@ A.key_prop(bro.rig, "mond_open", 0.35, F(0.0))
 S.hold(bro, END)
 
 # ---------------------------------------------------------------- hij
-SH_L = S.bone_world(bro, "upper_arm.L", 0.0, tail=False) + V(0, 0.04, 0.06)
-SH_R = S.bone_world(bro, "upper_arm.R", 0.0, tail=False) + V(0, 0.04, 0.06)
-GAP = V(0, 0.07, 0.03)                         # handen blijven een paar centimeter van zijn schouders
+SH_L = BRO_AT + V(0.15, 0.17, 0.5)               # op zijn rug, net onder de grote dinocapuchon
+SH_R = BRO_AT + V(-0.15, 0.17, 0.5)
+GAP = V(0, 0.04, 0.0)                          # handen blijven een paar centimeter van hem af
 S.beat(held, 0.0, "staan", face="bang", at=S.head(bro, 0) + V(-1.0, 0, 0))
 S.beat(held, l1[1] - 0.6, "staan", face="nerveus", at=S.head(bro, 0))
 S.beat(held, l2[0] + 1.2, "staan", face="bang", at=truck.location + V(4.3, 0, 1.2))
