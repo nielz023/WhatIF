@@ -40,6 +40,7 @@ FPS = 24
 # Uitvoer-fps. Alles wordt in 24-fps-frames geanimeerd; bij WHATIF_FPS=60 rekt Blender de tijd op
 # (frame_map 24 -> 60) en tussenframes worden uit de curves geïnterpoleerd. 60-fps-beeld n toont t = (n - 2.5) / 60.
 OUT_FPS = int(os.environ.get("WHATIF_FPS", FPS))
+OUT_OFF = OUT_FPS / FPS   # beeld n toont t = (n - OUT_OFF) / OUT_FPS (2.5 bij 60 fps, 1.25 bij 30 fps)
 AUDIO = os.path.join(R.ASSETS, "audio")
 GOLD = (1.0, 0.82, 0.18, 1)
 WHITE = (1, 1, 1, 1)
@@ -804,10 +805,10 @@ class Scene:
         if OUT_FPS != FPS:
             sc.render.fps = OUT_FPS
             sc.render.frame_map_old, sc.render.frame_map_new = FPS, OUT_FPS
-            sc.frame_start = 3
-            sc.frame_end = int(math.ceil(self.length * OUT_FPS + 2.5))
+            sc.frame_start = int(math.ceil(OUT_OFF))
+            sc.frame_end = int(math.ceil(self.length * OUT_FPS + OUT_OFF))
             # (cameramarkers blijven in 24-fps-frames: Blender vergelijkt ze met de opgerekte tijd)
-            sc.frame_set(3)
+            sc.frame_set(sc.frame_start)
         if not self.args.nosave:
             blend = os.path.join(self.out, self.code + ".blend")
             bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
@@ -818,7 +819,7 @@ class Scene:
             else:
                 times = [float(x) for x in self.args.stills.split(",")]
             for t in times:
-                f = F(t) if OUT_FPS == FPS else int(round(t * OUT_FPS + 2.5))
+                f = F(t) if OUT_FPS == FPS else int(round(t * OUT_FPS + OUT_OFF))
                 sc.frame_set(f)
                 for t0, t1, cam in self.shots:
                     if t0 <= t < t1:

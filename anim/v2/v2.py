@@ -2,7 +2,7 @@
 
 Verschillen met video 1:
 - glans-look: figuren via glans.character(), randlichten (oranje/blauw) per shot op het hoofdpersonage;
-- 60 fps (WHATIF_FPS=60, standaard aan): animatie in 24-fps-tijd, Blender rekt op bij het renderen;
+- 30 fps sinds f07 (WHATIF_FPS, f01-f06 in 60): animatie in 24-fps-tijd, Blender rekt op bij het renderen;
 - render-engine via WHATIF_ENGINE (EEVEE standaard, CYCLES kan ook), afgesteld op de glans-look;
 - HUD rechtsboven: DAY · SPEED, de echte klok (die tikt) en vanaf de twist AWAKE;
 - ondertitels voor vertraagde stemmen (say_slow) en tellers onder de HUD (gauge2).
@@ -19,7 +19,7 @@ import os
 import sys
 
 os.environ.setdefault("SET_LOOK", "glans")
-os.environ.setdefault("WHATIF_FPS", "60")
+os.environ.setdefault("WHATIF_FPS", "30")   # vanaf f07 30 fps (keuze niels 30 okt; f01-f06 staan in 60)
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 from scene import *  # noqa: E402,F401,F403
