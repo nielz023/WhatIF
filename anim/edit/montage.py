@@ -309,6 +309,8 @@ def build(spec, frames_dir, out, render=True):
     for x in spec.get("texts", []):
         t1 = x["t1"] if x["t1"] is not None else pic_end
         f0, f1 = F(x["t0"]), F(t1)
+        if f1 <= f0:                     # korter dan één beeld (snelle kloktikken bij 30 fps)
+            continue
         s = text(sed, x["body"], x["t0"], t1, tuple(x["loc"]), x["size"], tuple(x["color"]), _pack(used, 40, f0, f1),
                  anchor=tuple(x["anchor"]))
         _fade(s, f0, f1, x.get("pop", True), out=x["t1"] is not None)
