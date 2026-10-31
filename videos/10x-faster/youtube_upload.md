@@ -12,15 +12,19 @@ Waarom: zelfde vorm als de best scorende IFOLOGY-video ("10x Faster", 817K) en a
 
 ## Beschrijving (kopieer alles tussen de lijnen)
 
+Versie 2 (31 okt): eerste versie scoorde 33 in vidIQ. Nu staan de titelwoorden in de eerste zin, komt elke tag letterlijk terug in de tekst en is hij ruim 300 woorden.
+
 ---
 
-What if every time you woke up, you were 10x faster than the day before? ⚡
+What if you got 10x faster every day? In this 3D animation, one ordinary kid wakes up with super speed, and every morning he is ten times faster than the day before. ⚡
 
-Day 2, you beat the bus on foot. Day 3, you break the sound barrier just by running to your mom. Day 4, you have sixteen minutes to save your little brother from a garbage truck, and the only way to do it is slowly. And by day 10, you're a billion times faster, watching light crawl across the kitchen table.
+Day 2, you beat the bus on foot at 250 km/h. Day 3, you break the sound barrier just by running to your mom. Day 4, you have sixteen minutes to save your little brother from a garbage truck, and the only way to do it is slowly. By day 10, you are a billion times faster, and you watch light crawl across the kitchen table.
 
-But there's a catch nobody saw coming: every day you live is ten times shorter than the one before. All of your days fit before 9:00 on Tuesday morning, the exact minute your little brother blows out his birthday candles. The only way to get there is to stay awake.
+But this superpower has a catch nobody saw coming. Every day you live is ten times shorter than the one before. All of your days fit before 9:00 on Tuesday morning, the exact minute your little brother blows out his birthday candles. The only way to get there is to stay awake.
 
-Follow one ordinary kid, the one who's always late, from day 1 to day 10, and see what would REALLY happen, backed by real science: reaction time, sonic booms, slowed-down sound, and the oldest puzzle in math.
+This what if video follows the kid who is always late, from day 1 to day 10, and shows what would REALLY happen if you got faster every day, backed by real science: reaction time, sonic booms, slowed-down sound, the speed of light, and one of the oldest puzzles in math. A hypothetical scenario about super speed, superpowers and time, told as a 3D animated story.
+
+Would you want to be a speedster? 
 
 ⏱️ CHAPTERS
 0:00 Save Him… Slowly
@@ -37,20 +41,21 @@ Follow one ordinary kid, the one who's always late, from day 1 to day 10, and se
 11:05 Day 10: One Billion Times Faster
 12:30 Could YOU Stay Awake?
 
-👇 Tell me in the comments: could YOU stay awake for seven more hours?
-
-🔔 Subscribe to Driftmark for a new 3D What If every week.
-👍 Like the video if you made it to day 10!
+👇 Tell me in the comments: could YOU stay awake for seven more hours to see the candles?
 
 ▶️ Watch next: What IF You Got 2x STRONGER Every Day for 40 Days?
+https://youtu.be/9xSou5t37nk
 
-#whatif #superpowers #3danimation
+🔔 Subscribe to Driftmark for a new 3D What If every week: superpowers, science and hypothetical scenarios, pushed as far as they can go.
+https://youtube.com/@driftmark3d?sub_confirmation=1
+
+👍 Like the video if you made it to day 10!
+
+#whatif #superpowers #3danimation #superspeed #animation
 
 ---
 
 Let op: de hoofdstuktijden zijn omgerekend van het script (12:42) naar de eindversie (13:08). Check ze even in CapCut en schuif ze een paar seconden op als een scène net anders begint. YouTube eist dat de eerste op 0:00 staat en elk hoofdstuk minstens 10 seconden duurt (dat klopt nu).
-
-Bij "Watch next" de link van video 1 (https://youtu.be/9xSou5t37nk) eronder plakken.
 
 ## Tags (10, kort en met echt zoekvolume)
 
