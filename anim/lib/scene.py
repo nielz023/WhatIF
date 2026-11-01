@@ -789,7 +789,8 @@ class Scene:
         self._build_cams()
         self.post_cams()
         spec = dict(code=self.code, length=self.length, picture_end=picture_end or self.length,
-                    voice=self.voice, sounds=self.sounds, texts=self.texts, cards=self.cards, title=title, fps=OUT_FPS)
+                    voice=self.voice, sounds=self.sounds, texts=self.texts, cards=self.cards, title=title, fps=OUT_FPS,
+                    inserts=getattr(self, "inserts", []))
         os.makedirs(self.out, exist_ok=True)
         with open(os.path.join(self.out, "montage.json"), "w") as fh:
             json.dump(spec, fh, indent=1)
