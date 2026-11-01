@@ -43,6 +43,8 @@ OUT_FPS = int(os.environ.get("WHATIF_FPS", FPS))
 OUT_OFF = OUT_FPS / FPS
 # Shorts: staand renderen (WHATIF_VERTICAL=1) en alleen de stukken die de short gebruikt (WHATIF_RANGES="3.2-18.4,40-52")
 VERTICAL = os.environ.get("WHATIF_VERTICAL") == "1"
+# WHATIF_VSHIFT="55.7-62:0.8": in dat stuk scènetijd het staande kader vast op 80% naar rechts (-1 = helemaal links)
+VSHIFT = [(float(r.split(":")[0].split("-")[0]), float(r.split(":")[0].split("-")[1]), float(r.split(":")[1])) for r in os.environ.get("WHATIF_VSHIFT", "").split(",") if r.strip()]
 DEBUG_V = os.environ.get("WHATIF_VDEBUG") == "1"
 VZOOM = float(os.environ.get("WHATIF_VZOOM", "1.0"))
 RANGES = [tuple(float(x) for x in r.split("-")) for r in os.environ.get("WHATIF_RANGES", "").split(",") if r.strip()]   # beeld n toont t = (n - OUT_OFF) / OUT_FPS (2.5 bij 60 fps, 1.25 bij 30 fps)
@@ -858,6 +860,10 @@ class Scene:
         heroes = getattr(self, "heroes", None) or [c for c in people if c.name.startswith("hoofdpersonage")]
         wins = RANGES or [(0.0, self.length)]
         log = []
+
+        def lim_of(ext):                                   # ext = 2 * 10.125 * VZOOM / lens
+            lens = 2 * 10.125 * VZOOM / ext
+            return 18.0 / lens - 10.125 * VZOOM * 9 / 16 / lens
         for t0, t1, cam in self.shots:
             cd = cam.data
             cd.sensor_fit = "VERTICAL"
@@ -914,6 +920,8 @@ class Scene:
                     if c is None:
                         c = min(known, key=lambda k: abs(k[0] - t))[1]
                     vals.append((t, c, ext))
+            for a, b, v in VSHIFT:                         # handmatig kader (tangens-fractie van de limiet, -1..1)
+                vals = [(t, (v * lim_of(ext)) if a <= t <= b else c, ext) for t, c, ext in vals]
             sm = []
             for t, c, ext in vals:
                 w = [(v[1], 1.0 - abs(v[0] - t) / 0.9) for v in vals if abs(v[0] - t) < 0.9]
