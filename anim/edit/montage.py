@@ -406,6 +406,12 @@ def build(spec, frames_dir, out, render=True):
 
     # uitvoer: H.264 + AAC
     r = sc.render
+    # beelden zijn al tone-mapped: geen AgX/Filmic er nog eens overheen (anders flets, wit wordt grijs)
+    try:
+        sc.view_settings.view_transform = os.environ.get("WHATIF_VIEW", "Standard")
+        sc.view_settings.look = "None"
+    except Exception as e:
+        print("view_transform niet gezet:", e)
     if hasattr(r.image_settings, "media_type"):
         r.image_settings.media_type = "VIDEO"
     r.image_settings.file_format = "FFMPEG"
