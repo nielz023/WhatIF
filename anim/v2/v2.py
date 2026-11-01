@@ -281,6 +281,7 @@ class Scene2(Scene):
         for d in self.texts:
             if d["t1"] is None or d["t1"] > self.length:
                 d["t1"] = self.length
+        self.all_cast = list(self.cast)
         self.cast = [ch for ch in self.cast if not getattr(ch, "frozen", False)]
 
     def post_cams(self):

@@ -40,7 +40,12 @@ FPS = 24
 # Uitvoer-fps. Alles wordt in 24-fps-frames geanimeerd; bij WHATIF_FPS=60 rekt Blender de tijd op
 # (frame_map 24 -> 60) en tussenframes worden uit de curves geïnterpoleerd. 60-fps-beeld n toont t = (n - 2.5) / 60.
 OUT_FPS = int(os.environ.get("WHATIF_FPS", FPS))
-OUT_OFF = OUT_FPS / FPS   # beeld n toont t = (n - OUT_OFF) / OUT_FPS (2.5 bij 60 fps, 1.25 bij 30 fps)
+OUT_OFF = OUT_FPS / FPS
+# Shorts: staand renderen (WHATIF_VERTICAL=1) en alleen de stukken die de short gebruikt (WHATIF_RANGES="3.2-18.4,40-52")
+VERTICAL = os.environ.get("WHATIF_VERTICAL") == "1"
+DEBUG_V = os.environ.get("WHATIF_VDEBUG") == "1"
+VZOOM = float(os.environ.get("WHATIF_VZOOM", "1.0"))
+RANGES = [tuple(float(x) for x in r.split("-")) for r in os.environ.get("WHATIF_RANGES", "").split(",") if r.strip()]   # beeld n toont t = (n - OUT_OFF) / OUT_FPS (2.5 bij 60 fps, 1.25 bij 30 fps)
 AUDIO = os.path.join(R.ASSETS, "audio")
 GOLD = (1.0, 0.82, 0.18, 1)
 WHITE = (1, 1, 1, 1)
@@ -788,6 +793,8 @@ class Scene:
             A.alive(ch, 1, F(self.length), energy=getattr(ch, "energy", 1.0), seed=i * 5 + 2)
         self._build_cams()
         self.post_cams()
+        if VERTICAL:
+            self._vertical()
         spec = dict(code=self.code, length=self.length, picture_end=picture_end or self.length,
                     voice=self.voice, sounds=self.sounds, texts=self.texts, cards=self.cards, title=title, fps=OUT_FPS)
         os.makedirs(self.out, exist_ok=True)
@@ -828,9 +835,96 @@ class Scene:
                 sc.render.filepath = os.path.join(self.out, "stills", f"{self.code}_t{t:05.1f}.png")
                 bpy.ops.render.render(write_still=True)
             sc.render.filepath = os.path.join(self.out, "frames", "")
-        if self.args.render:
+        if self.args.render and RANGES:
+            # alleen de stukken die een short gebruikt (scènetijd in seconden), met de gewone framenummers
+            for a, b in RANGES:
+                sc.frame_start = max(1, int(math.ceil(a * OUT_FPS + OUT_OFF)))
+                sc.frame_end = min(int(math.ceil(self.length * OUT_FPS + OUT_OFF)), int(math.ceil(b * OUT_FPS + OUT_OFF)) + 1)
+                print("STUK", a, b, "frames", sc.frame_start, sc.frame_end)
+                bpy.ops.render.render(animation=True)
+            print("KLAAR: frames in", os.path.join(self.out, "frames"))
+        elif self.args.render:
             bpy.ops.render.render(animation=True)
             print("KLAAR: frames in", os.path.join(self.out, "frames"))
+
+    # -- staand (shorts) -------------------------------------------------------
+    def _vertical(self):
+        """9:16 voor shorts (WHATIF_VERTICAL=1). Elke camera houdt zijn hoogte-beeldhoek, het staande kader
+        is dus een uitsnede van het liggende beeld, maar dan scherp gerenderd. shift_x schuift die uitsnede per
+        frame naar het hoofdpersonage (of de groep die in beeld is), afgevlakt en binnen het oude kader."""
+        sc = self.sc
+        sc.render.resolution_x, sc.render.resolution_y = 1080, 1920
+        people = getattr(self, "all_cast", None) or self.cast
+        heroes = getattr(self, "heroes", None) or [c for c in people if c.name.startswith("hoofdpersonage")]
+        wins = RANGES or [(0.0, self.length)]
+        log = []
+        for t0, t1, cam in self.shots:
+            cd = cam.data
+            cd.sensor_fit = "VERTICAL"
+            cd.sensor_height = 20.25 * VZOOM
+            todo = [(max(t0, a), min(t1, b)) for a, b in wins if a < t1 and b > t0]
+            if not todo:
+                continue
+            samples = []
+            for a, b in todo:
+                n = max(2, int((b - a) * 8) + 1)
+                for i in range(n):
+                    t = a + (b - a) * i / (n - 1)
+                    sc.frame_set(F(t))
+                    Mi = cam.matrix_world.inverted()
+                    lens = cd.lens
+                    hw, hh = 18.0 / lens, 10.125 / lens            # liggend kader (tangens)
+                    hv = 10.125 * VZOOM * 9 / 16 / lens              # half staand kader
+                    vis = []
+                    for ch in people:
+                        if DEBUG_V:
+                            print("V", cam.name, round(t, 2), ch.name, ch.rig.hide_render, tuple(round(x, 2) for x in Mi @ (ch.rig.matrix_world @ ch.rig.pose.bones["head"].head)))
+                        kids = [o for o in ch.rig.children_recursive if o.type == "MESH"]
+                        if kids and all(o.hide_render for o in kids):
+                            continue
+                        hb = ch.rig.matrix_world @ ch.rig.pose.bones["head"].head
+                        p = Mi @ hb
+                        if p.z > -0.15:
+                            continue
+                        tx, ty = p.x / -p.z, p.y / -p.z
+                        if abs(tx) < hw * 1.02 and -hh * 1.1 < ty < hh * 1.25:
+                            vis.append((ch in heroes, -p.z, tx))
+                    lim = max(0.0, hw - hv)
+                    if not vis:
+                        c = None
+                    else:
+                        main = [v for v in vis if v[0]] or [min(vis, key=lambda v: v[1])]
+                        c = main[0][2]
+                        grp = sorted(v[2] for v in vis)
+                        if grp[-1] - grp[0] <= 2 * hv * 0.72:
+                            c = (grp[0] + grp[-1]) / 2
+                        elif len(vis) > 1:                         # te breed: hoofdpersoon plus zijn naaste buur
+                            near = sorted(vis, key=lambda v: abs(v[2] - c))[:2]
+                            if abs(near[1][2] - near[0][2]) <= 2 * hv * 0.72:
+                                c = (near[0][2] + near[1][2]) / 2
+                        c = max(-lim, min(lim, c))
+                    samples.append((t, c, 2 * 10.125 * VZOOM / lens))
+            # gaten (niemand in beeld) opvullen met de buren, dan afvlakken (~0,9 s) en per frame zetten
+            known = [s for s in samples if s[1] is not None]
+            if not known:
+                vals = [(t, 0.0, ext) for t, _, ext in samples]
+            else:
+                vals = []
+                for t, c, ext in samples:
+                    if c is None:
+                        c = min(known, key=lambda k: abs(k[0] - t))[1]
+                    vals.append((t, c, ext))
+            sm = []
+            for t, c, ext in vals:
+                w = [(v[1], 1.0 - abs(v[0] - t) / 0.9) for v in vals if abs(v[0] - t) < 0.9]
+                cc = sum(x * k for x, k in w) / sum(k for _, k in w)
+                sm.append((t, cc / ext))
+            for t, sh in sm:
+                cd.shift_x = sh
+                cd.keyframe_insert("shift_x", frame=F(t))
+            log.append((cam.name, round(t0, 2), round(t1, 2), [round(s, 3) for _, s in sm[:: max(1, len(sm) // 4)]]))
+        for row in log:
+            print("STAAND", *row)
 
 
 # ---------------------------------------------------------------------------
