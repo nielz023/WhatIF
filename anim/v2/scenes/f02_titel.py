@@ -1,8 +1,6 @@
-"""F02 · Titel en belofte, dan dag 1 · 1x · slaapkamer, maandagochtend.
-Retentie (video 1 verloor 2/3 van de kijkers in de eerste minuut): meteen de titelkaart en de regel
-(F02-06) met grote tellers DAY 2 / DAY 3 / DAY 10, dan drie flash-forwards uit latere scènes (F02-07:
-glas, regendruppel, licht). Pas daarna maandag: wekker 07:00, drie keer snooze, mama roept,
-'Remember this Monday.'
+"""F02 · Titel en spelregels · dag 1 · 1x · slaapkamer, maandagochtend.
+Wekker 07:00, drie keer snooze (07:09, 07:18, 07:27). Mama roept van beneden. 'What if...',
+titelkaart, de regels, 'Remember this Monday.'
 
     blender -b -P anim/v2/scenes/f02_titel.py -- [--render] [--stills auto] [--pct 25]
 """
@@ -17,7 +15,7 @@ S = Scene2("f02", "slaapkamer", "ochtend")
 # ---------------------------------------------------------------- set
 wekker = S.obj("Wekker")
 digits = {}
-for txt in ("06:59", "07:00", "07:09", "07:18", "07:27"):
+for txt in ("07:00", "07:09", "07:18", "07:27"):
     o = T.text("Wekker_" + txt, txt, (0, -0.0445, 0.034), 0.034, T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 6), extrude=0.001)
     o.parent = wekker
     digits[txt] = o
@@ -62,33 +60,7 @@ def lie_const():
 
 
 # ---------------------------------------------------------------- tijdlijn
-# 1. meteen de titel en de regel, met de tellers groot in beeld
-CARD = 0.05
-S.sfx("sfx_whoosh_titel", 0.0, 0.8)
-S.sfx("sfx_titel", CARD, 0.5)
-S.card("WHAT IF YOU GOT\n10x FASTER\nEVERY DAY?", CARD, CARD + 3.2, size=120, fin=2)
-l6 = S.say("F02-06", at=0.45)
-# woordtijden in F02-06 (stiltes in de clip): 'Day two' 4.05, 'Day three' 6.06, 'Day ten' 8.08, 'a billion' 9.18, 'And the world' 10.37
-COUNT = [(4.0, "DAY 2  ·  10x"), (6.0, "DAY 3  ·  100x"), (8.03, "DAY 10  ·  1,000,000,000x")]
-for k, (dt, body) in enumerate(COUNT):
-    t0 = l6[0] + dt
-    t1 = l6[0] + (COUNT[k + 1][0] if k + 1 < len(COUNT) else 10.1)
-    S.text(body, t0, t1, loc=(0.5, 0.5), size=(110 if k < 2 else 96), color=(GOLD if k == 2 else WHITE), anchor=("CENTER", "CENTER"))
-    S.sfx("sfx_brass_hit" if k == 2 else "sfx_hud_tik", t0, 0.35 if k == 2 else 0.5)
-# 2. de belofte: drie flash-forwards uit latere scènes (op de woorden van F02-07)
-l7 = S.say("F02-07", gap=0.3)
-# (scène, bron-s, start in F02-07, duur): f04a/f05b zijn 60 fps en spelen hier half zo snel (vertraagd)
-FLASH = [("f04a", 9.75, 0.1, 1.62),            # 'You'll catch a falling glass.' (vangt op 10,33)
-         ("f05b", 9.2, 1.88, 2.0),             # 'You'll hold a raindrop in your hand.' (landt op 9,94)
-         ("f12", 16.0, 4.03, 1.95)]            # 'You'll even watch light move.' (de lichtgolven rond de vlam)
-S.inserts = []
-for code, src_t, dt, dur in FLASH:
-    S.inserts.append(dict(scene=code, src_t=src_t, at=l7[0] + dt, dur=dur))
-    S.sfx("sfx_whoosh", l7[0] + dt - 0.15, 0.3)
-FLASH_END = l7[0] + FLASH[-1][2] + FLASH[-1][3]
-# 3. maandag
-M = l7[1] + 0.45
-SNOOZE = [M, M + 2.35, M + 4.6, M + 6.6]        # 07:00, 07:09, 07:18, 07:27 verschijnen
+SNOOZE = [0.0, 2.35, 4.6, 6.6]                 # 07:00, 07:09, 07:18, 07:27 verschijnen
 
 
 def clk(t):
@@ -99,22 +71,27 @@ def clk(t):
     return f"MON 07:{m:02d}"
 
 
-S.hud2(1, "1x", clock=clk, t0=M + 0.3)
-l1 = S.say("F02-01", at=M + 0.1)
+S.hud2(1, "1x", clock=clk, t0=0.3)
+l1 = S.say("F02-01", gap=0.55)
 l2 = S.say("F02-02", gap=0.35, at=max(S.t + 0.35, SNOOZE[3] + 1.0))
-l5 = S.say("F02-05", gap=0.5)
+l3 = S.say("F02-03", gap=0.6)
+S.wait(0.3)
+CARD = S.t + 0.1
+S.sfx("sfx_whoosh_titel", CARD - 0.25, 0.8)
+S.sfx("sfx_titel", CARD, 0.5)
+S.card("WHAT IF YOU GOT\n10x FASTER\nEVERY DAY?", CARD, CARD + 3.0, size=120)
+l4 = S.say("F02-04", gap=0.6, at=CARD + 3.2)
+l5 = S.say("F02-05", gap=0.45)
 END = l5[1] + 0.9
 
 for k, s in enumerate(SNOOZE[:3]):
     S.sfx("sfx_wekker", s + 0.05, 0.45, cut=(0, 1.1))
     show(digits[("07:00", "07:09", "07:18")[k]], s, SNOOZE[k + 1])
     S.sfx("sfx_hout_klop", s + 1.15, 0.35)
-show(digits["06:59"], 0.0, SNOOZE[0])
 show(digits["07:27"], SNOOZE[3])
-S.music("drums_build", 0.0, M - 0.2, vol=0.22, fade_in=0.2, fade_out=0.3)
-S.sfx("sfx_riser", l7[1] - 2.2, 0.3)
-S.music("ochtend", M, END, vol=0.2, fade_in=0.4, fade_out=1.0)
-S.ambience("sfx_straat_sfeer", M, END, vol=0.06)
+S.music("ochtend", 0.0, CARD, vol=0.22, fade_in=0.6, fade_out=0.3)
+S.music("strijkers_warm", CARD + 1.0, END, vol=0.24, fade_in=1.2)
+S.ambience("sfx_straat_sfeer", 0.0, END, vol=0.06)
 
 # ---------------------------------------------------------------- hij: snooze, snooze, snooze
 lie(0.0, True)
@@ -132,36 +109,46 @@ S.eyes_closed(held, 0.0, WAKE - 0.05)
 lie(WAKE, False)
 S.beat(held, WAKE, **SIT, face="geschrokken", look=(0.4, 0.2), body={"head": (-6, 30, 0)})
 S.beat(held, l2[1] + 0.3, **SIT, face="nerveus", face_amt=0.8, look=(0.3, 0.1), body={"head": (-4, 25, 0)})
-# 'but that's tomorrow': opstaan; 'remember this Monday': hij rent naar de deur
+# 'what if...' hij kijkt naar zijn handen, dan naar ons
+HANDS = BED_EDGE + V(0.42, 0, 0.55)
+S.beat(held, l3[0] + 0.3, **{**SIT, "pose": "staan"}, face="twijfel", face_amt=0.6, at=HANDS, arms=LOOK_HANDS)
+S.beat(held, l3[0] + 3.2, **{**SIT, "pose": "staan"}, face="verbaasd", face_amt=0.7, at=HANDS, arms=LOOK_HANDS)
+S.beat(held, l3[1] - 1.6, **{**SIT, "pose": "vuisten"}, face="verbaasd", face_amt=0.9, look=(0, 0.1), body={"head": (-4, -8, 0)})
+# na de titel: opstaan, naar de deur
 STAND = V(-0.4, 0.3, 0)
-UP = l5[0] + 0.2
-S.hold(held, UP)
-S.beat(held, UP + 0.6, "staan", crouch=(0.2, 20), feet=((0.02, 0.18, 0), (-0.02, 0.18, 0)), face="neutraal")
-S.place(held, UP, BED_EDGE, 90)
-S.place(held, UP + 1.0, BED_EDGE + V(0.35, 0, 0), 90)
-S.beat(held, UP + 1.1, "staan", face="neutraal", look=(0.3, 0))
-S.walk(held, UP + 1.2, UP + 3.4, [BED_EDGE + V(0.35, 0, 0), STAND, V(0.8, -0.9, 0), DOOR], arms=0.9, stride=0.6)
+S.hold(held, CARD + 0.3)
+S.beat(held, CARD + 1.0, "staan", crouch=(0.2, 20), feet=((0.02, 0.18, 0), (-0.02, 0.18, 0)), face="neutraal")
+S.place(held, CARD + 0.3, BED_EDGE, 90)
+S.place(held, CARD + 1.6, BED_EDGE + V(0.35, 0, 0), 90)
+S.beat(held, CARD + 1.8, "staan", face="neutraal", face_amt=0.4)
+S.walk(held, CARD + 2.0, CARD + 3.6, [BED_EDGE + V(0.35, 0, 0), STAND], end_rot=heading(STAND, (0.6, -3.0, 0)))
+# 'your legs, your hands, your brain, your heart'
+S.beat(held, l4[0] + 4.6, "staan", face="twijfel", face_amt=0.5, at=STAND + V(0, 0, 0.35), body={"head": (20, 0, 0)})
+S.beat(held, l4[0] + 5.8, "staan", face="verbaasd", face_amt=0.5, at=STAND + V(0.3, -0.4, 0.65), arms=LOOK_HANDS)
+S.beat(held, l4[0] + 7.6, "staan", face="neutraal", look=(0, 0.1), body={"head": (-4, 0, 0)}, arms=HOLD_FRONT_R)
+S.beat(held, l4[1] - 0.2, "handen_zij", face="blij", face_amt=0.5, look=(0, 0))
+# 'remember this Monday': hij pakt zijn tas niet eens, rent naar de deur
+S.beat(held, l5[0] + 1.6, "staan", face="neutraal", look=(0.3, 0))
+S.walk(held, l5[0] + 2.6, l5[0] + 4.6, [STAND, V(0.8, -0.9, 0), DOOR], arms=0.9, stride=0.6)
 S.hold(held, END)
 
 # ---------------------------------------------------------------- camera
-# 0: titel en tellers: hij slaapt nog (06:59), steeds dichterbij
-HL = LIE_AT + V(0, 1.42, 0.38)
-S.cam(0.0, ((0.9, -2.6, 1.6), (-1.3, 0.9, 0.7), 24), ((0.75, -2.2, 1.5), (-1.3, 0.9, 0.7), 27))
-S.cam(l6[0] + COUNT[0][0] - 0.05, (CLOCK_P + V(0.62, -0.62, 0.3), CLOCK_P + V(-0.18, 0, 0.02), 32), (CLOCK_P + V(0.5, -0.5, 0.26), CLOCK_P + V(-0.18, 0, 0.02), 36), dof=1.4)
-S.cam(l6[0] + COUNT[1][0] - 0.05, (HL + V(-0.2, -1.3, 1.25), HL + V(0, -0.1, 0.05), 30), (HL + V(-0.15, -1.15, 1.1), HL + V(0, -0.1, 0.05), 33), dof=1.6)
-S.cam(l6[0] + COUNT[2][0] - 0.05, ((1.3, -2.9, 2.4), (-1.2, 0.8, 0.6), 22), ((1.2, -2.7, 2.3), (-1.2, 0.8, 0.6), 23))
-# (de flash-forwards liggen er in de montage overheen)
-S.cam(FLASH_END, (HL + V(0.6, -1.0, 1.1), HL + V(0, -0.05, 0.05), 34), (HL + V(0.4, -0.68, 0.76), HL + V(0, -0.05, 0.05), 42), dof=1.4)
 # 1-3: de wekker, telkens een andere tijd, een hand die erop slaat
 # (camera aan de kamerkant: zijn hand komt van links uit het dekbed)
-S.cam(SNOOZE[0], (CLOCK_P + V(0.62, -0.62, 0.3), CLOCK_P + V(-0.18, 0, 0.02), 32), (CLOCK_P + V(0.56, -0.56, 0.28), CLOCK_P + V(-0.18, 0, 0.02), 35), dof=1.4)
+S.cam(0.0, (CLOCK_P + V(0.62, -0.62, 0.3), CLOCK_P + V(-0.18, 0, 0.02), 32), (CLOCK_P + V(0.56, -0.56, 0.28), CLOCK_P + V(-0.18, 0, 0.02), 35), dof=1.4)
 S.cam(SNOOZE[1], (CLOCK_P + V(0.75, -0.9, 0.35), CLOCK_P + V(-0.35, 0, -0.05), 32), dof=1.6)
 S.cam(SNOOZE[2], (CLOCK_P + V(0.3, -0.62, 0.42), CLOCK_P + V(-0.15, 0, 0.0), 36), dof=1.4)
 # 4: breed: hij in bed, de kamer
 S.cam(SNOOZE[3], ((0.9, -2.6, 1.6), (-1.3, 0.9, 0.7), 24), ((0.8, -2.35, 1.55), (-1.3, 0.9, 0.7), 26))
 # 5: mama roept: hij zit rechtop
 S.cam(WAKE - 0.05, S.shot(held, WAKE + 0.5, "mcu", az=-30, lens=32, h=0.1))
-# 6: 'but that's tomorrow... remember this Monday' - de wekker op 07:27 op de voorgrond, hij gaat
+# 6: 'so what if...' langzaam naar hem toe
+S.cam(l3[0] + 2.4, S.shot(held, l3[0] + 3, "med", az=-25, lens=30), S.shot(held, l3[1], "mcu", az=-15, lens=36))
+# 7: na de titel: opstaan en de kamer in
+S.cam(CARD, ((1.0, -2.9, 1.5), (-0.5, 0.4, 0.85), 22), ((0.9, -2.7, 1.5), (-0.4, 0.3, 0.85), 23))
+S.cam(l4[0] + 4.2, S.shot(held, l4[0] + 5, "med", az=-20, lens=32), S.shot(held, l4[0] + 8, "mcu", az=-15, lens=36))
+S.cam(l4[0] + 8.2, S.shot(held, l4[1], "full", az=-35, lens=28))
+# 8: 'remember this Monday' - de wekker op 07:27 op de voorgrond, hij gaat
 S.cam(l5[0] - 0.1, (CLOCK_P + V(0.35, -0.9, 0.25), V(0.2, -0.4, 0.9), 26), (CLOCK_P + V(0.3, -1.0, 0.3), V(0.6, -0.9, 0.95), 26))
 
 lie_const()

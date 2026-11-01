@@ -137,26 +137,6 @@ def _gain(path, kind, v):
     return 10 ** (max(-40.0, min(18.0, db)) / 20)
 
 
-
-def _find_scene_mp4(code, out):
-    """De goede MP4 van een andere scène: naast de uitvoer (video2_scenes), via WHATIF_INSERTS of in out/<code>."""
-    dirs = [os.environ.get("WHATIF_INSERTS", ""), os.path.dirname(out), os.path.join(REPO, "out", code)]
-    bad = ("kapot", "_30fps", "_v1", "montage")
-    for d in filter(None, dirs):
-        cands = [f for f in glob.glob(os.path.join(d, code + "_*.mp4")) + glob.glob(os.path.join(d, code.upper() + ".mp4"))
-                 if not any(b in os.path.basename(f) for b in bad)]
-        if cands:
-            return max(cands, key=os.path.getmtime)
-    raise SystemExit("Geen MP4 gevonden voor flash-forward " + code)
-
-
-def _set_handles(s, f0, f1):
-    if hasattr(s, "left_handle"):
-        s.left_handle, s.right_handle = f0, f1
-    else:
-        s.frame_final_start, s.frame_final_end = f0, f1
-
-
 def new_strip(kind, sed, name, channel, start, **kw):
     """Werkt met zowel de oude (sequences) als de nieuwe (strips) VSE-API."""
     coll = sed.strips if hasattr(sed, "strips") else sed.sequences
@@ -168,8 +148,6 @@ def new_strip(kind, sed, name, channel, start, **kw):
             return coll.new_effect(name=name, type=kw["type"], channel=channel, frame_start=start, frame_end=start + length)
     if kind == "sound":
         return coll.new_sound(name=name, filepath=kw["filepath"], channel=channel, frame_start=start)
-    if kind == "movie":
-        return coll.new_movie(name=name, filepath=kw["filepath"], channel=channel, frame_start=start)
     if kind == "image":
         return coll.new_image(name=name, filepath=kw["filepath"], channel=channel, frame_start=start)
 
@@ -291,17 +269,6 @@ def build(spec, frames_dir, out, render=True):
         pic.frame_final_end = min(pic.frame_final_end, F(pic_end))
     black = new_strip("effect", sed, "zwart", 1, 1, type="COLOR", length=sc.frame_end)
     black.color = (0, 0, 0)
-
-    # flash-forwards: stukjes uit de MP4's van latere scènes (zonder geluid), bv. in de opening van F02
-    for i, ins in enumerate(spec.get("inserts", [])):
-        src = _find_scene_mp4(ins["scene"], out)
-        f0, f1 = F(ins["at"]), F(ins["at"] + ins["dur"])
-        mov = new_strip("movie", sed, "flash%d" % i, 34 + i, f0, filepath=src)   # elk een eigen kanaal
-        # beeld voor beeld: een 60-fps-bron speelt in een 30-fps-scène dus half zo snel (vertraagd, bewust)
-        # (retiming-keys in de VSE-API laten Blender 5 crashen)
-        mov.frame_start = f0 - int(round(ins["src_t"] * (getattr(mov, "fps", 0) or FPS)))
-        _set_handles(mov, f0, f1)
-        print("flash %d: %s %.2f s -> %.2f-%.2f s" % (i, os.path.basename(src), ins["src_t"], ins["at"], ins["at"] + ins["dur"]))
 
     # simulatie (alleen S01): blauw en ontkleurd, met een label
     if spec.get("sim"):

@@ -56,25 +56,23 @@ HUD = the on-screen counter, top right, always visible: DAY · SPEED · REAL CLO
 
 ---
 
-## TITLE, RULE AND PROMISE [0:28 – 1:08] · Day 1 · 1x · Bedroom
+## TITLE AND RULES [0:30 – 1:09] · Day 1 · 1x · Bedroom
 
-*Rewritten 1 Nov for retention (video 1 lost two thirds of its viewers in the first minute): no calm build-up. The title and the rule come right after the cold open, then three flash-forwards, and only then Monday.*
+*Background: Bedroom, morning light. Bed with a blue duvet, nightstand with an alarm clock and a glass of water, desk, space poster, hoodie over a chair.*
 
-*Visual: Title card immediately, whoosh. WHAT IF YOU GOT 10x FASTER EVERY DAY? Behind it, he is still asleep, alarm clock on 06:59.*
-
-**VO:** [intrigued] What if, every time you woke up, you were ten times faster? Day two, ten times. Day three, a hundred. Day ten… a billion. And the world stays exactly the same.
-
-*Visual: Big counters on the words: DAY 2 · 10x, DAY 3 · 100x, DAY 10 · 1,000,000,000x (gold, brass hit).*
-
-**VO:** [building excitement] You'll catch a falling glass. You'll hold a raindrop in your hand. You'll even watch light move. [short pause] But every new day… costs you something.
-
-*Visual: Three flash-forwards, one per sentence: the glass catch (day 2), the raindrop landing in his hand (day 2), the light waves around the candle flame (day 10). Then his sleeping face.*
+*Music: Soft morning ambient with curious plucked notes. A sting on the title card, then the light main theme under the rules.*
 
 *Visual: Alarm clock 07:00. A hand slaps snooze. 07:09. Snooze. 07:18. Snooze. HUD: DAY 1 · 1x · MON 07:27.*
 
 **VO:** [calm] It starts on a Monday. You hit snooze three times. You always do. You're the kid who's late for everything.
 
 **MOM:** [calling from downstairs] You're going to be late!
+
+**VO:** [curious] So what if, every day, you got ten times faster? Day two, ten times. Day three, a hundred. Day ten… [short pause] a billion.
+
+*Visual: Title card, whoosh. WHAT IF YOU GOT 10x FASTER EVERY DAY?*
+
+**VO:** Here's how it works. Every time you wake up, everything about you is ten times faster. Your legs, your hands, your brain, your heart. The world stays exactly the same.
 
 **VO:** But that's tomorrow. [short pause] Remember this Monday. It's the last normal day you'll ever have.
 
