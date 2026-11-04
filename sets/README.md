@@ -118,3 +118,37 @@ Handige omgevingsvariabelen:
 Elke set zet objecten in duidelijke collecties (bijvoorbeeld *Titan achtbaan*, *Titan trein*, *Reuzenrad*), met
 Nederlandse namen, zodat je in de Outliner snel vindt wat je zoekt. De achtbaan heeft een verborgen curve
 *Titan_pad (voor animatie)* voor een Follow Path-constraint op de trein.
+
+## Video 3: What IF There Were NO RULES?
+
+Alle uitvoer komt standaard in `/mnt/project-files/videos/geen-regels/sets/`. Nieuwe props en stadsonderdelen
+staan in `lib/stad.py` (verkeerslichten, reclameborden, gebouwen per blok, lantaarns per blok, fiets met lamp en
+jerrycan, slagboom, regelborden, troon, kroon, pillendoosje, HOUSE RULES enzovoort).
+
+| Script | Varianten | Scènes |
+|---|---|---|
+| `build_stad.py` | `nacht`, `middag`, `ochtend`, `stroom`, `winkelstraat` | 0, 1, 3e-f, 6, 7a-c, 10, 12d-f |
+| `build_park.py` | `ochtend`, `dag2`, `dag3`, `jaar1` | 3a-b, 7k, 8g, 9f-g, 18a-c |
+| `build_strand.py` | `middag`, `jaar5`, `leeg` | 3c-d, 19d-e |
+| `build_snelweg.py` | `snelweg`, `tankstation` | 8b, 12a-c |
+| `build_brug.py` | `brug`, `lab_buiten`, `lab_binnen` | 13 |
+| `build_stadsplein.py` | `jaar1`, `jaar10`, `middernacht` | 18f, 20, 21 |
+| `build_koninkrijk.py` | `ingang`, `troon` | 15e-g |
+| `build_props_nr.py` | (overzicht van alle props) | |
+| `build_keuken.py` | `nr_diner`, `nr_kaarsen`, `nr_oud` | 4a-d, 10d-k, 11a, 22a |
+| `build_slaapkamer.py` | `nr_nacht` (wekker 23:59, seconden schakelbaar) | 4e-g, 5, 6 |
+| `build_supermarkt.py` | `nr_normaal`, `nr_leeg` | 3g, 7d-e, 8a |
+| `build_straat.py` | `nr_stroomuit`, `nr_vuurkorf`, `nr_slagboom`, `nr_eerste_licht`, `nr_sneeuw` | 0d, 10c3-i, 14, 15a-d, 16, 17 |
+| `build_school.py` | `nr_no_school`, `nr_jaar1` | 9, 18d-e |
+
+Schakelbare onderdelen voor de animatie (zichtbaarheid of Emission Strength keyframen):
+
+- reclameborden `Billboard_N_reclame` / `_alarm` (omklappen naar rood), schermen op het plein `Scherm_N_tekst_test/_result/_phase`
+- verkeerslichten: materialen `VKL_*_rood/_oranje/_groen` (0 = uit, ~9 = aan)
+- stroomuitval per blok: materialen `ramen_A`..`ramen_H` en `lantaarn_A`..`H`, lampen in collectie `Lantaarnlicht_A`..`H`
+- slagboom-arm `Slagboom_arm` (rotation y), dekseltjes `Pillendoosje_opa_deksel_MON`..`SUN`, laatjes `Apotheek_la_N`
+- prijsbord `Prijsbord_prijs_oud` / `_nieuw` (1.89 naar 18.90), wekker `Wekker_sec_57`..`00`
+
+Kwaliteitscheck: `toon.finish` waarschuwt nu als een camera in een groot object staat (`WAARSCHUWING: camera ... staat in object ...`).
+Snel testen: `SET_PCT=40 SET_SAMPLES=12 SET_MAXCAMS=1` (alleen de eerste camera). Teksten op borden gebruiken
+Inter Display Bold (`fonts/`, OFL) en worden in de .blend ingepakt.

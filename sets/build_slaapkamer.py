@@ -23,7 +23,10 @@ BRO = MOOD == "broertje"
 DAG2 = MOOD == "dag2"
 V2 = BRO or DAG2
 OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/10x-sneller/sets/02_slaapkamer" if V2 else "/mnt/project-files/sets/02_slaapkamer")
-NIGHT = MOOD in ("nacht", "broertje")
+NR = MOOD == "nr_nacht"   # video 3 (No Rules), scène 4e-6: nacht, wekker op 23:59, telefoon naast de wekker
+if NR:
+    OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/geen-regels/sets/09_slaapkamer"
+NIGHT = MOOD in ("nacht", "broertje", "nr_nacht")
 
 mood = dict(T.MOODS["nacht" if NIGHT else "ochtend"])
 if DAG2:
@@ -81,6 +84,12 @@ ns_o = T.merge("Nachtkastje", ns, ol=0.01)
 clock = [T.box("Wekker_body", (0, 0, 0), (0.16, 0.08, 0.11), T.toon("wekker_rood", (0.85, 0.12, 0.10)), bevel=0.03, ol=0),
          T.box("Wekker_scherm", (0, -0.041, 0.025), (0.12, 0.005, 0.06), T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 2.5) if NIGHT else T.toon("wekker_scherm", (0.1, 0.1, 0.1)), bevel=0, ol=0)]
 clock_o = T.merge("Wekker", clock, ol=0.006)
+if NR:
+    T.text("Wekker_tijd", "23:59", (-0.012, -0.0445, 0.034), 0.034, T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 6), extrude=0.001).parent = clock_o
+    for k, sec in enumerate(("57", "58", "59", "00")):
+        t = T.text(f"Wekker_sec_{sec}", sec, (0.046, -0.0445, 0.034), 0.016, T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 6), extrude=0.001)
+        t.parent = clock_o
+        t.hide_render = t.hide_viewport = k != 0   # zichtbaarheid per seconde wisselen
 if DAG2:
     T.text("Wekker_tijd", "06:20", (0, -0.0445, 0.034), 0.034, T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 6), extrude=0.001).parent = clock_o
 clock_o.location = (0.09, -0.05, 0.55)
@@ -91,13 +100,14 @@ lamp = [T.cyl("Leeslamp_voet", (0, 0, 0), 0.07, 0.03, P.m("zwart"), seg=16, ol=0
 lamp_o = T.merge("Leeslamp", lamp, ol=0.006)
 lamp_o.location = (-0.12, 0.08, 0.55)
 T.group("Nachtkastje (geheel)", [ns_o, clock_o, lamp_o], loc=(-0.72, 1.62, 0))
-phone = T.box("Telefoon", (-0.62, 1.52, 0.555), (0.075, 0.15, 0.01), P.m("zwart"), bevel=0.004, ol=0.003)
+PH = (-0.86, 1.52)   # naast de wekker, niet eronder (kwaliteitscheck video 2)
+phone = T.box("Telefoon", (PH[0], PH[1], 0.555), (0.075, 0.15, 0.01), P.m("zwart"), bevel=0.004, ol=0.003)
 if DAG2:
     from lib import huis as HU  # noqa: E402
     HU.waterglas("Glas_water", (-0.92, 1.47, 0.55), vol=0.8)
 if NIGHT and not BRO:
-    T.box("Telefoon_scherm", (-0.62, 1.52, 0.566), (0.066, 0.14, 0.002), T.glow("telefoonscherm", (0.45, 0.65, 1.0), 6), bevel=0, ol=0)
-    T.point_light("Telefoon_gloed", (-0.62, 1.4, 0.75), color=(0.35, 0.55, 1.0), energy=25, radius=0.2)
+    T.box("Telefoon_scherm", (PH[0], PH[1], 0.566), (0.066, 0.14, 0.002), T.glow("telefoonscherm", (0.45, 0.65, 1.0), 6), bevel=0, ol=0)
+    T.point_light("Telefoon_gloed", (PH[0], 1.4, 0.75), color=(0.35, 0.55, 1.0), energy=25, radius=0.2)
 
 # ---------------------------------------------------------------------------
 # Bureau met laptop, schoolboeken, stoel met hoodie
@@ -243,6 +253,8 @@ cams = [
 ]
 if BRO:
     cams.append(T.camera("CAM_05_origami_bureau", (DX - 0.45, DY + 0.95, 1.3), (DX + 0.1, DY + 0.2, 0.78), lens=30))
+if NR:
+    cams.append(T.camera("CAM_05_wekker_detail", (-0.5, 1.12, 0.7), (-0.66, 1.57, 0.6), lens=55))
 if DAG2:
     cams.append(T.camera("CAM_05_wekker_glas", (-0.55, 0.85, 0.85), (-0.75, 1.55, 0.6), lens=40))
 blend, renders = T.finish(OUT, ("kamer_broertje" if BRO else "slaapkamer_" + MOOD), cams)

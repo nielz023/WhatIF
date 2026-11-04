@@ -27,11 +27,20 @@ args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 MOOD = args[0] if args else "ochtend"
 V2 = MOOD in ("dag1", "dageraad", "kraanvogels", "natuurkundige", "knal", "verjaardag")
 OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/10x-sneller/sets/04_keuken" if V2 else "/mnt/project-files/sets/04_keuken")
-DINNER = MOOD == "zondagsdiner"
+# Video 3 (No Rules): nr_diner (scène 4, zondagsdiner + HOUSE RULES op de koelkast),
+# nr_kaarsen (dag 4-5: stroom uit, kaarsen op tafel, planken voor het raam), nr_oud (scène 22a: vergeeld vel, regel 5)
+NR = MOOD in ("nr_diner", "nr_kaarsen", "nr_oud")
+if NR:
+    OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/geen-regels/sets/08_keuken"
+DINNER = MOOD in ("zondagsdiner", "nr_diner", "nr_oud")
+CANDLES = MOOD == "nr_kaarsen"
 DAWN = MOOD == "dageraad"
 CRANES = MOOD in ("kraanvogels", "natuurkundige", "knal", "verjaardag")
 
-if DAWN:
+if CANDLES:
+    mood = dict(T.MOODS["nacht"])
+    mood.update(ambient=(0.07, 0.08, 0.15), fog_max=0.0, bloom=0.7, exposure=-0.3)
+elif DAWN:
     mood = dict(T.MOODS["nacht"])
     mood.update(sky_top=(0.04, 0.07, 0.2), sky_horizon=(0.35, 0.32, 0.5), sun_rot=(85, 0, 160), sun_strength=0.15,
                 ambient=(0.08, 0.09, 0.16), fog_max=0.0, bloom=0.5, exposure=-1.0)
@@ -303,8 +312,27 @@ if V2:
         gate.append(T.box(f"Tuinhek_lat{k}", (-0.6 + k * 0.2, -0.02, 0.1), (0.14, 0.04, 1.4), T.toon("tuinhek", (0.95, 0.93, 0.88)), bevel=0.01))
     T.merge("Tuinhek", gate).location = (-0.2, 8.88, 0)
 
+if NR:
+    from lib import stad as ST
+    T.use_collection(T.collection("No Rules"))
+    ST.house_rules("HOUSE_RULES", (FX + 0.14, D / 2 - 0.737, 1.42), rot=(0, 0, 0),
+                   extra="5. EVERYONE GETS A VOTE." if MOOD == "nr_oud" else None, yellowed=(MOOD == "nr_oud"))
+    if CANDLES:
+        for k, (dx, h) in enumerate(((-0.25, 0.2), (0.0, 0.14), (0.22, 0.24))):
+            ST.kaars(f"Kaars_tafel_{k}", (TX + dx, TY, TZ), h=h, lit=True, energy=18)
+        T.box("Lucifers", (TX + 0.4, TY - 0.15, TZ), (0.05, 0.035, 0.015), T.toon("lucifers_rood", (0.8, 0.15, 0.1)), bevel=0.002, ol=0)
+        # planken voor het raam (camera kan erdoor naar buiten kijken, scène 10i)
+        x0, x1, z0, z1 = WIN
+        for k in range(4):
+            T.box(f"Raamplank_{k}", ((x0 + x1) / 2 - W / 2, D / 2 - 0.08, z0 + 0.12 + k * 0.26), (x1 - x0 + 0.3, 0.025, 0.14),
+                  T.toon("plank_steigerhout", (0.62, 0.48, 0.32)), rot=(0, (k % 2 * 2 - 1) * 4, 0), bevel=0.005, ol=0)
+        T.area_light("Maanlicht_raam", (W / 2 - 2.6, D / 2 - 0.3, 1.6), (0, -1, 0.5), size=(1.3, 0.9), color=(0.45, 0.55, 1.0), energy=8)
+    cam_extra.append(T.camera("CAM_05_house_rules", (FX - 0.2, D / 2 - 1.5, 1.4), (FX + 0.14, D / 2 - 0.737, 1.3), lens=45))
+
 T.use_collection(None)
-if DAWN:
+if CANDLES:
+    pass
+elif DAWN:
     T.area_light("Schemer_raam", (W / 2 - 2.6, D / 2 - 0.3, 1.6), (0, -1, 0.5), size=(1.3, 0.9), color=(0.45, 0.55, 1.0), energy=25)
     T.area_light("Vullicht", (0, -3.5, 2.2), (0, 0, 1.0), size=(3, 2), color=(0.55, 0.65, 1.0), energy=10)
 elif DINNER:
@@ -320,6 +348,8 @@ cams = [
     T.camera("CAM_03_aanrecht_mokken", (0.6, 0.4, 1.45), (0.8, D / 2, 1.2), lens=30),
     T.camera("CAM_04_koelkast", (FX - 0.6, 0.2, 1.5), (FX, D / 2 - 0.75, 1.3), lens=30),
 ]
+if NR:
+    cams = cams + cam_extra
 if V2:
     keep = {"dag1": ("CAM_01", "CAM_02", "CAM_04"), "dageraad": ("CAM_01", "CAM_02"), "kraanvogels": ("CAM_01",),
             "natuurkundige": ("CAM_01",), "knal": ("CAM_01",), "verjaardag": ("CAM_01", "CAM_02")}[MOOD]

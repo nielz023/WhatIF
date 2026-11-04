@@ -17,7 +17,12 @@ from lib import props as P  # noqa: E402
 from lib import interior as I  # noqa: E402
 
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
-OUT = args[1] if len(args) > 1 else "/mnt/project-files/sets/10_supermarkt"
+VAR = args[0] if args else "binnen"
+# Video 3 (No Rules): nr_normaal (scène 3g/7d-7e: rij bij de kassa, PLEASE QUEUE HERE, chocoladerek),
+# nr_leeg (scène 8a: alle schappen leeg, losse blikjes op de vloer, omgevallen winkelwagen)
+NR = VAR in ("nr_normaal", "nr_leeg")
+LEEG = VAR == "nr_leeg"
+OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/geen-regels/sets/10_supermarkt" if NR else "/mnt/project-files/sets/10_supermarkt")
 rnd = random.Random(9)
 
 mood = dict(T.MOODS["binnen"])
@@ -94,8 +99,11 @@ def shelf_unit(name, x, y, length=10.0, kind="blik", rot=0):
                         items.append(("blik", (xx + w / 2, s * 0.27 + d, z + 0.03), (w, w, h), col))
                     xx += w + 0.012
     o = T.merge(name, p, ol=0.01)
-    pk = packs_mesh(name + "_waren", items)
-    pk.parent = o
+    if LEEG:
+        items = [it for it in items if rnd.random() < 0.025]
+    if items:
+        pk = packs_mesh(name + "_waren", items)
+        pk.parent = o
     o.location = (x, y, 0)
     o.rotation_euler.z = math.radians(rot)
     return o
@@ -123,7 +131,10 @@ for k in range(6):
             items.append(("doos" if lvl % 2 else "blik", (xx + 0.06, -0.1, z + 0.02), (0.1, 0.1, 0.24), col))
             xx += 0.14
     o = T.merge(f"Koeling_{k + 1}", fr, ol=0.01)
-    packs_mesh(f"Koeling_{k + 1}_waren", items).parent = o
+    if LEEG:
+        items = [it for it in items if rnd.random() < 0.03]
+    if items:
+        packs_mesh(f"Koeling_{k + 1}_waren", items).parent = o
     o.location = (x, D / 2 - 0.6, 0)
 # kassa's
 T.use_collection(T.collection("Kassa's"))
@@ -188,5 +199,34 @@ cams = [
 ]
 T.box("Gevelbord", (7.5, -D / 2 - 0.1, 3.6), (9, 0.2, 0.8), T.toon("merkband_rood", (0.88, 0.12, 0.12)), bevel=0.05, ol=0.01)
 T.text("Gevelnaam", "SUPERMARKET", (7.5, -D / 2 - 0.22, 3.75), 0.55, P.m("wit"), extrude=0.03)
-blend, renders = T.finish(OUT, "supermarkt", cams)
+if NR:
+    from lib import stad as ST
+    T.use_collection(T.collection("No Rules"))
+    KX = -10  # eerste kassa
+    if not LEEG:
+        ST.sign("Bord_PLEASE_QUEUE_HERE", ["PLEASE", "QUEUE HERE"], (KX - 1.3, -D / 2 + 9.2, 0), rot_z=180, w=0.7, h=0.5,
+                bg=(0.15, 0.45, 0.85), post_h=1.1)
+        for i in range(4):
+            ST.dranghek(f"Rijlint_{i}", (KX - 1.6, -D / 2 + 10.5 + i * 2.5, 0), rot_z=90, l=2.4)
+        # chocoladerek naast kassa 1 (scène 7e)
+        T.box("Chocoladerek", (KX + 0.85, -D / 2 + 5.4, 0), (0.5, 0.4, 1.3), T.toon("rek_snoep", (0.85, 0.15, 0.12)), bevel=0.02, ol=0)
+        for lvl in range(4):
+            for j in range(4):
+                T.box(f"Chocoladereep_{lvl}_{j}", (KX + 0.67 + j * 0.12, -D / 2 + 5.19, 0.45 + lvl * 0.22), (0.1, 0.02, 0.17),
+                      T.toon(["wikkel_paars", "wikkel_blauw", "wikkel_goud"][(lvl + j) % 3],
+                             [(0.45, 0.15, 0.55), (0.15, 0.35, 0.85), (0.95, 0.75, 0.2)][(lvl + j) % 3]), rot=(-10, 0, 0), bevel=0.003, ol=0)
+    else:
+        for i in range(14):
+            T.cyl(f"Los_blik_{i}", (rnd.uniform(-11, 11), rnd.uniform(-8, 12), 0.045), 0.045, 0.12,
+                  T.toon(f"verpakking_{PACK_COLS[i % 9]}", PACK_COLS[i % 9]), rot=(90, 0, rnd.uniform(0, 180)), seg=10, ol=0)
+        for i in range(8):
+            T.box(f"Lege_doos_{i}", (rnd.uniform(-11, 11), rnd.uniform(-8, 12), 0), (0.4, 0.3, 0.3), T.toon("karton", (0.78, 0.62, 0.40)),
+                  rot=(0, 0, rnd.uniform(0, 90)), bevel=0.01, ol=0)
+        ST.winkelkar("Winkelkar_omgevallen", (-2.25, -1.0, 0), rot=40, tipped=True)
+        T.box("Bord_SORRY_EMPTY", (-2.25, -5.52, 2.0), (1.4, 0.03, 0.4), T.toon("papier_wit", (0.97, 0.97, 0.95)), bevel=0, ol=0)
+        from lib import huis as HU
+        HU.marker_text("Bord_SORRY_EMPTY_tekst", "SORRY - EMPTY", (-2.25, -5.545, 2.15), 0.11, "rood")
+    cams.append(T.camera("CAM_05_kassa_rij" if not LEEG else "CAM_05_lege_gang", (KX - 4, -D / 2 + 3.5, 1.6) if not LEEG else (-2.25, -9, 1.4),
+                         (KX, -D / 2 + 7, 1.0) if not LEEG else (-2.25, 10, 0.9), lens=26))
+blend, renders = T.finish(OUT, "supermarkt" if not NR else "supermarkt_" + VAR, cams)
 print("KLAAR", blend, renders)

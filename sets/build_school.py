@@ -18,12 +18,17 @@ args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 VAR = args[0] if args else "klaslokaal"
 OUT = args[1] if len(args) > 1 else "/mnt/project-files/sets/18_school"
 rnd = random.Random(19)
+# Video 3 (No Rules): nr_no_school (dag 3: NO SCHOOL FOREVER!! op het bord, stoelen omver),
+# nr_jaar1 (scène 18d-18e: school weer open, half uitgeveegd NO SCHOOL FOR...)
+NR = VAR in ("nr_no_school", "nr_jaar1")
+if NR:
+    OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/geen-regels/sets/12_klas"
 
 mood = dict(T.MOODS["bewolkt"])
 mood.update(ambient=(0.40, 0.42, 0.44), sun_strength=0.55, sun_rot=(50, 0, 160), fog_max=0.3, fog_start=20, fog_end=200)
 T.new_scene("School_" + VAR, mood, samples=48)
 
-if VAR == "klaslokaal":
+if VAR == "klaslokaal" or NR:
     W, D, H = 9.0, 8.0, 3.2
     wins = [(a, a + 1.6, 0.9, 2.6) for a in (0.8, 2.9, 5.0, 7.1)]
     T.use_collection(T.collection("Lokaal"))
@@ -34,9 +39,21 @@ if VAR == "klaslokaal":
     # whiteboard op de linkerwand (voor de klas)
     T.box("Whiteboard", (-W / 2 + 0.04, 0, 0.95), (0.05, 3.6, 1.25), P.m("wit"), bevel=0.01, ol=0.008)
     T.box("Whiteboard_rand", (-W / 2 + 0.05, 0, 0.92), (0.07, 3.7, 0.06), P.m("metaal"), bevel=0.01, ol=0.006)
-    for k, (z, w, c) in enumerate([(1.85, 2.0, (0.15, 0.3, 0.8)), (1.6, 1.5, (0.15, 0.3, 0.8)), (1.35, 2.4, (0.8, 0.15, 0.15))]):
-        T.box(f"Whiteboard_tekst_{k}", (-W / 2 + 0.07, -1.6 + w / 2, z), (0.005, w, 0.05), T.toon(f"stift{k}", c), bevel=0, ol=0)
-    T.text("Whiteboard_formule", "F = m x a", (-W / 2 + 0.075, 0.9, 1.3), 0.22, T.toon("stift_zwart", (0.08, 0.08, 0.1)), rot=(90, 0, 90), extrude=0.002)
+    if NR:
+        from lib import huis as HU
+        if VAR == "nr_no_school":
+            HU.marker_text("Bord_NO_SCHOOL", "NO SCHOOL", (-W / 2 + 0.075, 0, 1.68), 0.3, "rood", rot=(90, 0, 90))
+            HU.marker_text("Bord_FOREVER", "FOREVER!!", (-W / 2 + 0.075, 0, 1.22), 0.3, "rood", rot=(90, 0, 90))
+        else:
+            # half uitgeveegd: alleen NO SCHOOL FOR... nog leesbaar, een vage veeg erover, en de les van oma
+            HU.marker_text("Bord_NO_SCHOOL_FOR", "NO SCHOOL FOR...", (-W / 2 + 0.075, -0.9, 1.85), 0.15, "rood", rot=(90, 0, 90))
+            T.box("Bord_veeg", (-W / 2 + 0.072, -0.1, 1.72), (0.003, 1.7, 0.3), T.toon("veeg_roze", (0.97, 0.86, 0.86)), bevel=0, ol=0)
+            HU.marker_text("Bord_les", "HOW TO GROW BEANS", (-W / 2 + 0.075, 0.4, 1.35), 0.14, "blauw", rot=(90, 0, 90))
+            HU.marker_text("Bord_les2", "1. SEED  2. WATER  3. WAIT", (-W / 2 + 0.075, 0.4, 1.12), 0.1, "blauw", rot=(90, 0, 90))
+    else:
+        for k, (z, w, c) in enumerate([(1.85, 2.0, (0.15, 0.3, 0.8)), (1.6, 1.5, (0.15, 0.3, 0.8)), (1.35, 2.4, (0.8, 0.15, 0.15))]):
+            T.box(f"Whiteboard_tekst_{k}", (-W / 2 + 0.07, -1.6 + w / 2, z), (0.005, w, 0.05), T.toon(f"stift{k}", c), bevel=0, ol=0)
+        T.text("Whiteboard_formule", "F = m x a", (-W / 2 + 0.075, 0.9, 1.3), 0.22, T.toon("stift_zwart", (0.08, 0.08, 0.1)), rot=(90, 0, 90), extrude=0.002)
     # wereldkaart
     wm = [T.box("Wereldkaart_zee", (0, 0, 0), (2.0, 0.015, 1.2), T.toon("kaart_zee", (0.35, 0.62, 0.90)), bevel=0, base=False, ol=0)]
     for k, (x, z, sx, sz) in enumerate([(-0.55, 0.2, 0.4, 0.35), (-0.45, -0.25, 0.2, 0.35), (0.05, 0.22, 0.25, 0.25), (0.1, -0.15, 0.22, 0.35), (0.5, 0.18, 0.55, 0.3), (0.65, -0.35, 0.2, 0.12)]):
@@ -76,6 +93,8 @@ if VAR == "klaslokaal":
     cams = [T.camera("CAM_01_klas_wide", (3.8, -4.3, 1.9), (-2.5, 1.0, 1.0), lens=20),
             T.camera("CAM_02_vanaf_whiteboard", (-W / 2 + 0.8, 2.5, 1.6), (3.0, -1.5, 0.9), lens=22),
             T.camera("CAM_03_raam_plein", (1.0, 1.0, 1.5), (2.0, 12.0, 2.0), lens=26)]
+    if NR:
+        cams.append(T.camera("CAM_04_bord", (-W / 2 + 3.0, -0.6, 1.5), (-W / 2, 0.0, 1.5), lens=28))
 else:
     W, D, H = 4.0, 30.0, 3.2
     T.use_collection(T.collection("Gang"))
@@ -105,5 +124,5 @@ else:
     cams = [T.camera("CAM_01_gang", (0.6, -D / 2 + 0.6, 1.6), (0, 6, 1.3), lens=24),
             T.camera("CAM_02_kluisjes", (-0.5, -8.0, 1.5), (W / 2, -5, 1.2), lens=26)]
 
-blend, renders = T.finish(OUT, VAR, cams)
+blend, renders = T.finish(OUT, ("klas_" + VAR) if NR else VAR, cams)
 print("KLAAR", blend, renders)

@@ -84,3 +84,14 @@ Bruikbaar in elke scène via `anim/lib/glans.py`:
 - `G.smoke(ch, "foot.L", t0, t1)`: rookpluimpjes van een bot (rokende schoenen, `forearm.R` voor de mouw op dag 5).
 - `G.ghosts(ch, frame, offsets)`: snelheidsspoor, doorzichtige gloeiende kopieën achter de figuur.
 - `G.studio()`: de donkere glans-studio voor losse stills.
+
+## Video 3 (No Rules) en glans 2
+
+- `build_cast.py --cast nr` bouwt de vaste cast plus de nieuwe figuren van video 3 in `cast_no_rules.blend`
+  (hoofdpersonage als kind, in pyjama, tiener en jongvolwassene; pestkop volwassen en drie volgelingen; agent met
+  pet, badge en fluitje; kassière, buurman, ruilmarktverkoper, strandwacht, hondenbaas, figuranten, grijze ouders).
+  De glb's staan in `assets/cast_v3/`; de animatie gebruikt ze met `WHATIF_CAST=cast_v3`.
+- Glans 2 (`render_glans.py`): stofreliëf per stofsoort (tag in de materiaalnaam, bijvoorbeeld `shirt_katoen_...`),
+  plooien, huid met blos, rubberen zolen, zomen en boorden. Uitzetten met `GLANS_DETAIL=0`.
+- `build_dieren.py` bouwt hondje, hondje_oud (grijze snuit) en zebra met een eigen rig en acties
+  (`hond_loop/draf/kwispel/snuffel`, `zebra_loop/draf/schrik`). Glb's in `assets/dieren/`.

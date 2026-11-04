@@ -26,7 +26,7 @@ OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/geen-regels/sets/
 
 if VAR == "troon":
     mood = dict(T.MOODS["binnen"])
-    mood.update(ambient=(0.34, 0.34, 0.40), sun_strength=0.5, bloom=0.5)
+    mood.update(ambient=(0.26, 0.26, 0.32), sun_strength=0.35, bloom=0.3, exposure=-0.9)
 else:
     mood = dict(T.MOODS["bewolkt"])
     mood.update(sun_strength=0.7, exposure=0.05)
@@ -98,7 +98,7 @@ def troon():
     T.box("Glasdak", (0, 0, H), (W, D, 0.1), T.glass("glasdak", (0.80, 0.90, 1.0), alpha=0.2), bevel=0, ol=0)
     for k in range(7):
         T.box(f"Dakligger_{k}", (0, -D / 2 + k * D / 6, H - 0.3), (W, 0.25, 0.3), T.toon("staal_wit", (0.9, 0.9, 0.9)), bevel=0, ol=0)
-    T.area_light("Daklicht", (0, 0, H - 0.5), (0, 0, 0), size=(W - 4, D - 4), color=(1.0, 0.98, 0.95), energy=6000)
+    T.area_light("Daklicht", (0, 0, H - 0.5), (0, 0, 0), size=(W - 4, D - 4), color=(1.0, 0.98, 0.95), energy=1800)
     # lege etalages
     for i, y in enumerate((-8, 0, 8)):
         for s in (1, -1):

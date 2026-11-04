@@ -30,10 +30,19 @@ from lib import street as S  # noqa: E402
 args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 VAR = args[0] if args else "zonnig"
 V2 = VAR in ("grijs", "dageraad")
-OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/10x-sneller/sets/05_straat" if V2 else "/mnt/project-files/sets/05_straat")
+# Video 3 (No Rules):
+#   nr_stroomuit    dag 4 (scène 0d, 10c3-10i): nacht, alle lantaarns uit, planken voor de ramen, fiets op de stoep, zaklamp
+#   nr_vuurkorf     dag 9 (scène 14): nacht, vuurkorf midden op straat, kratje voor de wetenschapper, kaarsen achter de ramen
+#   nr_slagboom     dag 14 (scène 15a, 15d): slagboom aan het eind van de straat, ruilmarkt met tafels
+#   nr_eerste_licht dag 30 (scène 16): schemer, één lantaarn met zonnepaneel (Lantaarn_zonnepaneel, lamp eigen materiaal)
+#   nr_sneeuw       dag 100 (scène 17): sneeuw, slagboom met sneeuw en vuurkorf, warme ramen
+NR = VAR.startswith("nr_")
+OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/10x-sneller/sets/05_straat" if V2 else
+                                     "/mnt/project-files/videos/geen-regels/sets/11_straat" if NR else "/mnt/project-files/sets/05_straat")
 
 mood_name = {"zonnig": "dag", "suvs": "dag", "lente": "dag", "scherven": "dag", "avond": "avond", "konvooi": "bewolkt",
-             "grijs": "bewolkt", "dageraad": "ochtend"}[VAR]
+             "grijs": "bewolkt", "dageraad": "ochtend", "nr_stroomuit": "nacht", "nr_vuurkorf": "nacht",
+             "nr_slagboom": "bewolkt", "nr_eerste_licht": "avond", "nr_sneeuw": "bewolkt"}[VAR]
 mood = dict(T.MOODS[mood_name])
 if VAR == "lente":
     mood.update(sky_horizon=(0.80, 0.86, 1.0), lit_tint=(1.0, 0.97, 0.95))
@@ -44,6 +53,11 @@ if VAR == "grijs":
 if VAR == "dageraad":
     mood.update(sun_rot=(80, 0, 95), sun_strength=0.9, sky_top=(0.30, 0.42, 0.80), sky_horizon=(1.0, 0.66, 0.42),
                 ambient=(0.30, 0.28, 0.34), fog_start=25.0, fog_end=260.0, fog_max=0.5, bloom=0.6)
+if VAR in ("nr_stroomuit", "nr_vuurkorf"):
+    mood.update(ambient=(0.10, 0.12, 0.24), fog_start=15.0, fog_end=180.0, fog_max=0.55, exposure=0.15)
+if VAR == "nr_sneeuw":
+    mood.update(sky_top=(0.45, 0.52, 0.62), sky_horizon=(0.80, 0.84, 0.90), ambient=(0.40, 0.45, 0.55), sun_strength=0.35,
+                fog_color=(0.80, 0.85, 0.92), fog_start=10.0, fog_end=120.0, fog_max=0.75, exposure=0.0)
 T.new_scene("Straat_" + VAR, mood, samples=32)
 rnd = random.Random(11)
 
@@ -72,7 +86,7 @@ T.plane("Tuinen_zuid", (0, -8.25, 0.01), (LEN, 4.5), T.toon("gras_tuin", (0.28, 
 T.use_collection(T.collection("Huizen"))
 BRICKS = [(0.72, 0.38, 0.26), (0.80, 0.55, 0.38), (0.62, 0.30, 0.22), (0.85, 0.75, 0.60), (0.70, 0.45, 0.35), (0.92, 0.88, 0.80)]
 DOORS = [(0.15, 0.35, 0.75), (0.80, 0.15, 0.12), (0.15, 0.55, 0.35), (0.95, 0.75, 0.15), (0.35, 0.25, 0.55)]
-lit = VAR in ("avond", "grijs")
+lit = VAR in ("avond", "grijs", "nr_sneeuw")
 lit_p = 0.25 if VAR == "grijs" else 0.7
 broken = VAR == "scherven"
 for side, fy, facing in (("noord", 13.0, -1), ("zuid", -10.5, 1)):
@@ -202,6 +216,75 @@ if VAR == "dageraad":
                rot_z=rnd.uniform(-30, 30), span=0.35, color=(0.12, 0.12, 0.15), wings_up=rnd.uniform(-20, 50))
 
 # ---------------------------------------------------------------------------
+# Video 3 (No Rules)
+# ---------------------------------------------------------------------------
+if NR:
+    from lib import stad as ST
+    from lib import huis as HU
+    T.use_collection(T.collection("No Rules " + VAR))
+    plank = T.toon("plank_steigerhout", (0.62, 0.48, 0.32))
+    if VAR in ("nr_stroomuit", "nr_vuurkorf"):
+        T.point_light("Maan_vul", (0, -30, 30), color=(0.45, 0.55, 1.0), energy=5000, radius=8, shadow=False)
+        # planken voor de ramen van een paar huizen (ook het huis van de hoofdrolspeler)
+        for x in (0, -12, 18, -30):
+            for k in range(3):
+                T.box(f"Raamplank_{x}_{k}", (x + 1.2, 12.8, 1.2 + k * 0.42), (2.5, 0.04, 0.18), plank,
+                      rot=(0, (k % 2 * 2 - 1) * 5, 0), bevel=0.005, ol=0)
+    if VAR == "nr_stroomuit":
+        ST.fiets2("Fiets_op_stoep", (0.6, 7.4, 0.13), rot=20, color=(0.15, 0.35, 0.75), jerrycan=True)
+        o = bpy.data.objects["Fiets_op_stoep"]
+        o.rotation_euler.x = math.radians(84)   # ligt op zijn kant
+        o.location.z = 0.18
+        ST.zaklamp("Zaklamp_agent", (-2.6, 9.6, 1.1), rot=(0, 60, -70), on=False)
+        ST.mark("MARK_agent", (-2.4, 10.0, 0), rot_z=150)
+    if VAR == "nr_vuurkorf":
+        ST.vuurkorf("Vuurkorf", (-1.0, 1.0, 0.0), lit=True)
+        T.box("Kratje_wetenschapper", (2.2, 0.2, 0), (0.5, 0.4, 0.32), T.toon("plastic_krat_blauw", (0.15, 0.35, 0.75)), bevel=0.03, ol=0)
+        for i, x in enumerate((-18, -6, 6, 12, 24)):
+            ST.kaars(f"Raamkaars_{i}", (x + 1.2, 12.88, 1.04), lit=True, energy=15)
+    if VAR in ("nr_slagboom", "nr_sneeuw"):
+        snow = VAR == "nr_sneeuw"
+        ST.slagboom("Slagboom", (-30, 0.5, 0), rot_z=90, open_=False, snow=snow)
+        ST.vuurkorf("Vuurkorf_slagboom", (-28.0, 5.4, 0.12), lit=snow)
+        ST.mark("MARK_agent_slagboom", (-28.5, 3.8, 0.0), rot_z=-90)
+    if VAR == "nr_slagboom":
+        # ruilmarkt: tafels met batterijen, kaarsen, stripboeken, water
+        tafel = T.toon("hout_marktkraam", (0.70, 0.52, 0.32))
+        for i, x in enumerate((-16, -12, -8)):
+            T.box(f"Markttafel_{i}", (x, 7.3, 0.85), (1.8, 0.8, 0.05), tafel, bevel=0.01, ol=0)
+            for dx in (-0.8, 0.8):
+                for dy in (-0.32, 0.32):
+                    T.box(f"Markttafel_{i}_poot{dx}{dy}", (x + dx, 7.3 + dy, 0.12), (0.05, 0.05, 0.73), tafel, bevel=0, ol=0)
+        ST.batterijen("Batterijen_markt", (-16.4, 7.2, 0.9), n=8)
+        for k in range(3):
+            ST.kaars(f"Marktkaars_{k}", (-15.6 + k * 0.1, 7.4, 0.9), lit=False)
+        ST.stripboeken("Stripboeken_markt", (-12.3, 7.2, 0.9), n=6)
+        for k in range(4):
+            T.cyl(f"Waterfles_{k}", (-8.5 + k * 0.14, 7.3, 0.9), 0.04, 0.3, T.glass("fles_water", (0.75, 0.9, 1.0), alpha=0.5), seg=12, ol=0)
+        ST.sign("Bord_SWAP_MARKET", ["SWAP MARKET"], (-19.5, 7.4, 0.12), rot_z=0, w=1.2, h=0.35, bg=(0.92, 0.85, 0.65), fg=(0.15, 0.12, 0.1), marker=True)
+    if VAR == "nr_eerste_licht":
+        ST.street_lamp("Lantaarn_zonnepaneel", (8, 6.5, 0.12), rot_z=0, on=True, block="Z", h=5.5, energy=900)
+        ST.zonnepaneel("Zonnepaneel_lantaarn", (9.4, 7.3, 0.12), rot_z=180, w=1.0, d=1.6, tilt=30)
+        T.to_mesh(T.tube("Kabel_paneel", [(9.4, 7.0, 0.5), (8.6, 6.9, 0.14), (8.05, 6.55, 0.6)], 0.012, T.toon("kabel_zwart", (0.05, 0.05, 0.06))))
+    if VAR == "nr_sneeuw":
+        # alles onder de sneeuw: gras, stoepen, bomen, tuinen
+        snowc = (0.92, 0.95, 1.0)
+        for mt in bpy.data.materials:
+            n = mt.name.lower()
+            if any(w in n for w in ("gras", "boomblad", "stoep", "fietspad", "haag", "bloem", "tuin")):
+                for nd in mt.node_tree.nodes if mt.node_tree else []:
+                    if nd.type == "GROUP" and "Kleur" in nd.inputs:
+                        nd.inputs["Kleur"].default_value = (*snowc, 1)
+        T.plane("Sneeuw_rijbaan", (0, 0.5, 0.008), (LEN, 8), T.toon("sneeuw_aangereden", (0.78, 0.80, 0.86)))
+        for i in range(30):
+            T.sphere(f"Sneeuwhoop_{i}", (rnd.uniform(-60, 60), rnd.choice((3.9, -2.9)), 0.0), rnd.uniform(0.3, 0.6),
+                     T.toon("sneeuw", snowc), scale=(2.0, 0.8, 0.5), seg=12, ol=0)
+        # sneeuwpop in de voortuin
+        for k, (z, r) in enumerate(((0.3, 0.32), (0.78, 0.23), (1.12, 0.16))):
+            T.sphere(f"Sneeuwpop_{k}", (4.5, 10.5, z), r, T.toon("sneeuw", snowc), seg=16, ol=0)
+        T.cyl("Sneeuwpop_wortel", (4.5, 10.32, 1.12), 0.025, 0.12, T.toon("wortel_oranje", (0.95, 0.45, 0.1)), r2=0.0, rot=(90, 0, 0), seg=8, ol=0)
+
+# ---------------------------------------------------------------------------
 # Hoofdpersonage en camera's
 # ---------------------------------------------------------------------------
 T.use_collection(None)
@@ -236,6 +319,17 @@ cams = {
     "dageraad": [T.camera("CAM_01_lange_weg", (-40.0, 0.2, 1.1), (20.0, 1.6, 1.8), lens=35),
                  T.camera("CAM_02_bestelbus", (0.2, -0.3, 1.5), (-4.0, 1.5, 1.6), lens=26),
                  T.camera("CAM_03_bus_halte", (8.0, -2.2, 1.5), (24.0, 3.0, 1.8), lens=28)],
+    "nr_stroomuit": [T.camera("CAM_01_voordeur", (1.6, 6.0, 1.5), (-1.3, 12.6, 1.2), lens=26),
+                     T.camera("CAM_02_drone_straat", (-30, -12, 22), (5, 6, 0), lens=26),
+                     T.camera("CAM_03_door_planken", (0.8, 13.3, 1.3), (-2, 2, 1.2), lens=24)],
+    "nr_vuurkorf": [T.camera("CAM_01_crane_vuurkorf", (-9, -6, 6), (-1, 1, 0.8), lens=24),
+                    T.camera("CAM_02_kratje", (5, -2.5, 1.5), (2.2, 0.2, 1.1), lens=30)],
+    "nr_slagboom": [T.camera("CAM_01_slagboom", (-20, -1.5, 1.8), (-30, 1.0, 1.2), lens=26),
+                    T.camera("CAM_02_ruilmarkt", (-12, 4.0, 1.6), (-12.3, 7.3, 0.95), lens=30)],
+    "nr_eerste_licht": [T.camera("CAM_01_lantaarn_laag", (4, 1.5, 0.6), (8, 6.5, 4.5), lens=22),
+                        T.camera("CAM_02_straat_wide", (-12, -1.5, 2.0), (8, 6, 3.0), lens=24)],
+    "nr_sneeuw": [T.camera("CAM_01_drone_sneeuw", (-55, -14, 18), (-20, 4, 0), lens=26),
+                  T.camera("CAM_02_agent_slagboom", (-24, -2, 1.6), (-29, 2.5, 1.4), lens=30)],
 }[VAR]
 blend, renders = T.finish(OUT, "straat_" + VAR, cams)
 print("KLAAR", blend, renders)

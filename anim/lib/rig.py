@@ -37,6 +37,13 @@ HERO_GLB = os.path.join(ASSETS, "hoofdpersonage.glb")
 
 
 def cast_glb(name):
+    """Zoekt eerst in de cast-map uit WHATIF_CAST (video 3: WHATIF_CAST=cast_v3, met de glans 2-figuren),
+    dan in assets/cast. Dieren staan in assets/dieren."""
+    for d in (os.environ.get("WHATIF_CAST", ""), "cast", "dieren"):
+        if d:
+            p = os.path.join(ASSETS, d, name + ".glb")
+            if os.path.exists(p):
+                return p
     return os.path.join(ASSETS, "cast", name + ".glb")
 
 

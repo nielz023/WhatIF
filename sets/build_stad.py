@@ -32,7 +32,9 @@ args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 VAR = args[0] if args else "nacht"
 OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/geen-regels/sets/01_stad"
 
-mood = dict(T.MOODS[{"nacht": "nacht", "middag": "dag", "ochtend": "bewolkt", "stroom": "avond"}[VAR]])
+mood = dict(T.MOODS[{"nacht": "nacht", "middag": "dag", "ochtend": "bewolkt", "stroom": "avond", "winkelstraat": "bewolkt"}[VAR]])
+if VAR == "winkelstraat":
+    mood.update(sun_strength=0.65, sky_top=(0.46, 0.52, 0.60), exposure=0.05)
 if VAR == "nacht":
     mood.update(ambient=(0.12, 0.15, 0.28), fog_start=12.0, fog_end=160.0, fog_max=0.6, exposure=0.1)
 if VAR == "ochtend":
@@ -43,7 +45,7 @@ T.new_scene("Stad_" + VAR, mood, samples=32)
 rnd = random.Random(7)
 
 NIGHT = VAR in ("nacht", "stroom")
-LIT = {"nacht": 0.22, "middag": 0.0, "ochtend": 0.08, "stroom": 0.6}[VAR]
+LIT = {"nacht": 0.22, "middag": 0.0, "ochtend": 0.08, "stroom": 0.6, "winkelstraat": 0.0}[VAR]
 ROAD_W, WALK = 12.0, 4.0          # rijbaan 12 m, stoep 4 m
 EDGE = ROAD_W / 2 + WALK          # gevellijn op 10 m van het midden
 asfalt = T.toon("asfalt", (0.20, 0.20, 0.23))
@@ -262,6 +264,110 @@ def laan():
     ]
 
 
-cams = laan() if VAR == "stroom" else kruispunt()
+def apotheek(name, loc, rot_z):
+    """Apotheek met hol interieur (scène 12e-12f): open deur, lege schappen, omgevallen rek,
+    toonbank met laatjes (<naam>_la_N, schuiven langs local y). Gevel kijkt naar local -y."""
+    root = S._empty(name, size=0.5)
+    W, D, H = 8.0, 6.0, 3.4
+    muur = T.toon("muur_apotheek", (0.93, 0.95, 0.93))
+    gevel = T.toon("gevel_apotheek", (0.80, 0.86, 0.82))
+    parts = []
+    def add(o):
+        o.parent = root
+        parts.append(o)
+        return o
+    add(T.box(name + "_vloer", (0, D / 2, -0.02), (W, D, 0.04), T.pattern("vloer_apotheek", (0.90, 0.90, 0.88), (0.80, 0.84, 0.82), size=(0.4, 0.4), kind="schaak"), bevel=0, ol=0))
+    add(T.box(name + "_achter", (0, D, 0), (W, 0.2, H), muur, bevel=0, ol=0))
+    for sx in (-1, 1):
+        add(T.box(f"{name}_zij{sx}", (sx * W / 2, D / 2, 0), (0.2, D, H), muur, bevel=0, ol=0))
+    add(T.box(name + "_plafond", (0, D / 2, H), (W, D, 0.2), muur, bevel=0, ol=0))
+    # gevel: deur (links) en een etalage zonder glas (rechts)
+    add(T.box(name + "_gevel_l", (-3.5, 0, 0), (1.0, 0.25, H), gevel, bevel=0.01, ol=0))
+    add(T.box(name + "_gevel_m", (-1.5, 0, 0), (1.0, 0.25, H), gevel, bevel=0.01, ol=0))
+    add(T.box(name + "_gevel_r", (3.75, 0, 0), (0.5, 0.25, H), gevel, bevel=0.01, ol=0))
+    add(T.box(name + "_gevel_boven", (0, 0, 2.4), (W, 0.25, H - 2.4 + 2.0), gevel, bevel=0.01, ol=0))
+    add(T.box(name + "_etalage_onder", (1.25, 0, 0), (4.5, 0.25, 0.6), gevel, bevel=0.01, ol=0))
+    for j in range(5):
+        add(T.box(f"{name}_glasscherf_{j}", (rnd.uniform(-0.5, 3.0), -rnd.uniform(0.3, 1.5), 0.005), (0.25, 0.18, 0.01),
+                  T.glass("glasscherf", (0.75, 0.88, 0.95), alpha=0.5), rot=(0, 0, rnd.uniform(0, 90)), bevel=0, ol=0))
+    deur = S._empty(name + "_deur", (-3.0, -0.1, 0), size=0.2)
+    deur.parent = root
+    T.box(name + "_deurblad", (0.5, 0, 0), (1.0, 0.05, 2.3), T.glass("deurglas_apotheek", (0.7, 0.85, 0.9), alpha=0.35), bevel=0.01, ol=0).parent = deur
+    deur.rotation_euler.z = math.radians(-80)   # staat open
+    S.label(name + "_naam", "PHARMACY", (1.0, -0.14, 2.75), 0.45, (0.10, 0.55, 0.30), extrude=0.02).parent = root
+    S.apotheekkruis(name + "_kruis", (-3.5, -0.9, 3.4), rot_z=90).parent = root
+    # interieur
+    hout = T.toon("hout_toonbank", (0.85, 0.78, 0.66))
+    add(T.box(name + "_toonbank", (0, 3.4, 0), (4.0, 0.7, 1.0), hout, bevel=0.02, ol=0))
+    add(T.box(name + "_toonbankblad", (0, 3.4, 1.0), (4.2, 0.8, 0.05), T.toon("toonbank_blad", (0.95, 0.95, 0.95)), bevel=0.01, ol=0))
+    for k in range(6):
+        la = S._empty(f"{name}_la_{k}", ((k % 3 - 1) * 1.2, 3.76, 0.55 - (k // 3) * 0.35), size=0.1)
+        la.parent = root
+        T.box(f"{name}_la_{k}_front", (0, 0, 0), (1.05, 0.03, 0.28), hout, bevel=0.01, ol=0).parent = la
+        T.box(f"{name}_la_{k}_greep", (0, 0.03, 0.12), (0.2, 0.03, 0.03), T.toon("metaal_greep", (0.7, 0.7, 0.72)), bevel=0, ol=0).parent = la
+        if k == 1:
+            la.location.y += 0.35   # deze la staat open
+    sch = T.toon("schap_wit", (0.95, 0.95, 0.95))
+    for k in range(5):
+        add(T.box(f"{name}_wandschap_{k}", (0, D - 0.3, 0.3 + k * 0.5), (7.0, 0.4, 0.03), sch, bevel=0, ol=0))
+    for k in range(3):   # nog drie doosjes over
+        S.medicijndoos(f"{name}_doosje_{k}", (rnd.uniform(-3, 3), D - 0.3, 0.83 + 0.5 * (k % 2)), rot_z=rnd.uniform(-20, 20)).parent = root
+    rek = S._empty(name + "_rek_omgevallen", (2.6, 2.0, 0.0), size=0.2)
+    rek.parent = root
+    for k in range(4):
+        T.box(f"{name}_rek_plank{k}", (0, 0, 0.2 + k * 0.4), (1.4, 0.4, 0.03), sch, bevel=0, ol=0).parent = rek
+    for x in (-0.7, 0.7):
+        T.box(f"{name}_rek_staander{x}", (x, 0, 0), (0.04, 0.4, 1.6), sch, bevel=0, ol=0).parent = rek
+    rek.rotation_euler = (math.radians(-82), 0, math.radians(25))
+    rek.location.z = 0.22
+    T.point_light(name + "_daglicht", (0, 0, 0), color=(0.9, 0.95, 1.0), energy=120, radius=1.5).parent = root
+    bpy.data.objects[name + "_daglicht"].location = (0, 2.5, 2.8)
+    root.location = loc
+    root.rotation_euler.z = math.radians(rot_z)
+    return root
+
+
+def winkelstraat():
+    """Scène 12d: winkelstraat na een week zonder regels: etalages zonder glas, kledingrekken op straat."""
+    T.use_collection(T.collection("Winkelstraat"))
+    P.ground("Ondergrond", (500, 500), (0.30, 0.30, 0.32), z=-0.03)
+    road("Straat", (0, 40), 160, "y")
+    T.use_collection(T.collection("Winkels"))
+    names_o = ("SHOES", "FASHION", None, "TOYS", "PHONES")
+    names_w = ("BAKERY", "JEANS", "BOOKS", None, "SPORT", "CAFE")
+    row("Winkel_oost", [4, 18, 46, 58, 70], EDGE, -90, "W", names_o)
+    row("Winkel_west", [4, 16, 28, 40, 52, 64], -EDGE, 90, "W", names_w)
+    apotheek("Apotheek", (EDGE, 32, 0), -90)
+    T.use_collection(T.collection("Rommel"))
+    for i in range(5):   # kledingrekken op straat
+        y = rnd.uniform(5, 60)
+        x = rnd.choice((-1, 1)) * rnd.uniform(3, 8)
+        rk = S._empty(f"Kledingrek_{i}", (x, y, 0), size=0.2)
+        T.to_mesh(T.tube(f"Kledingrek_{i}_buis", [(-0.7, 0, 0), (-0.7, 0, 1.5), (0.7, 0, 1.5), (0.7, 0, 0)], 0.02,
+                         T.toon("chroom_rek", (0.8, 0.82, 0.85)))).parent = rk
+        for k in range(5):
+            T.box(f"Kledingrek_{i}_kleding{k}", (-0.5 + k * 0.25, 0, 0.75), (0.05, 0.45, 0.7),
+                  T.toon(f"stof_kleding_{k}", [(0.85, 0.2, 0.2), (0.2, 0.4, 0.85), (0.95, 0.8, 0.2), (0.3, 0.7, 0.4), (0.9, 0.5, 0.7)][k]),
+                  bevel=0.02, ol=0).parent = rk
+        rk.rotation_euler.z = math.radians(rnd.uniform(0, 180))
+        if i % 2:
+            rk.rotation_euler.x = math.radians(85)
+            rk.location.z = 0.05
+    for i in range(12):
+        T.box(f"Papier_{i}", (rnd.uniform(-6, 6), rnd.uniform(0, 70), 0.004), (0.21, 0.29, 0.002), T.toon("papier_wit", (0.97, 0.97, 0.95)),
+              rot=(0, 0, rnd.uniform(0, 180)), bevel=0, ol=0)
+    S.winkelkar("Winkelkar_straat", (-4, 22, 0), rot=60, tipped=True)
+    for i in range(4):
+        P.tree(f"Straatboom_{i}", ((-8.5, 8.5)[i % 2], 12 + i * 14, 0.15), h=6.0, r=2.0, seed=i)
+    S.fiets2("Fiets_held", (-1.5, 10, 0), rot=90, color=(0.15, 0.35, 0.75))
+    S.fiets2("Fiets_vriend", (1.0, 9.0, 0), rot=95, color=(0.85, 0.12, 0.10), sticker=True)
+    T.use_collection(None)
+    T.character((-2.2, 11, 0), rot_z=0)
+    return [T.camera("CAM_01_winkelstraat_pushin", (0, -6, 1.8), (0, 30, 2.5), lens=26),
+            T.camera("CAM_02_apotheek_deur", (2.0, 24.5, 1.6), (EDGE, 30.5, 1.3), lens=28),
+            T.camera("CAM_03_apotheek_binnen", (EDGE + 1.5, 30.5, 1.5), (EDGE + 4.0, 32, 1.0), lens=22)]
+
+
+cams = laan() if VAR == "stroom" else winkelstraat() if VAR == "winkelstraat" else kruispunt()
 blend, renders = T.finish(OUT, "stad_" + VAR, cams)
 print("KLAAR", blend, renders)

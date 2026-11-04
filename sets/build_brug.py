@@ -88,7 +88,7 @@ def brug():
         T.box(f"Pijler_{y}", (0, y * 0.98, -4.5), (11, 2.0, 4.0), beton, bevel=0.03, ol=0)
     # aanloopweg aan beide kanten
     for s in (1, -1):
-        T.plane(f"Aanloop_{s}", (0, s * (BL / 2 + 40), 0.0), (6.4, 80), asfalt)
+        T.plane(f"Aanloop_{s}", (0, s * (BL / 2 + 40), 0.004), (6.4, 80), asfalt)
     # lantaarns op de brug (uit, dag 7 is er geen stroom)
     for i, y in enumerate(range(-50, 51, 20)):
         S.street_lamp(f"Bruglantaarn_{i}", (4.6 * (1 if i % 2 else -1), y, 0.18), rot_z=-90 if i % 2 else 90, on=False, block="Z", h=5.0)
@@ -130,7 +130,7 @@ def lab_gebouw():
     S.sign("Bord_lab", ["DR. LAB", "KNOCK"], (4.6, Y - 4.4, 0), rot_z=0, w=0.6, h=0.35, bg=(0.95, 0.95, 0.92), fg=(0.1, 0.1, 0.12), post_h=1.0)
     for i in range(4):
         T.cyl(f"Accu_{i}", (12.5 + i * 0.5, Y - 4.4, 0), 0.18, 0.4, T.toon("accu_zwart", (0.08, 0.08, 0.09)), seg=12, ol=0)
-    T.plane("Erf_lab", (9, Y - 6, 0.002), (14, 4), T.toon("grindpad_aarde", (0.78, 0.68, 0.52)))
+    T.plane("Erf_lab", (9, Y - 6, 0.008), (14, 4), T.toon("grindpad_aarde", (0.78, 0.68, 0.52)))
 
 
 def lab_binnen():
@@ -172,9 +172,9 @@ def lab_binnen():
     T.box("Medicijnkast", (2.6, 2.7, 0), (1.2, 0.5, 1.9), metaal, bevel=0.02, ol=0)
     for k, z in enumerate((0.5, 0.95, 1.4)):
         T.box(f"Kastplank_{k}", (2.6, 2.44, z), (1.1, 0.02, 0.02), metaal, bevel=0, ol=0)
-    deur = S._empty("Medicijnkast_deur", (2.0, 2.44, 0.05), size=0.1)
-    T.box("Medicijnkast_deurblad", (0.3, 0, 0), (0.6, 0.03, 1.8), metaal, bevel=0.01, ol=0).parent = deur
-    deur.rotation_euler.z = math.radians(-100)
+    deur = S._empty("Medicijnkast_deur", (3.2, 2.44, 0.05), size=0.1)
+    T.box("Medicijnkast_deurblad", (-0.6, 0, 0), (1.2, 0.03, 1.8), metaal, bevel=0.01, ol=0).parent = deur
+    deur.rotation_euler.z = math.radians(95)   # open, scharnier rechts (uit beeld van CAM_02)
     S.medicijndoos("Medicijndoos_kast", (2.4, 2.4, 1.42), rot_z=0)
     for i in range(3):
         T.box(f"Kastpotje_{i}", (2.65 + i * 0.16, 2.5, 1.42), (0.1, 0.1, 0.14), T.toon("potje_bruin", (0.45, 0.25, 0.12)), bevel=0.01, ol=0)
@@ -212,7 +212,7 @@ elif VAR == "lab_buiten":
 else:
     lab_binnen()
     T.use_collection(None)
-    T.character((0.2, -0.8, 0), rot_z=0)
+    T.character((-2.4, 0.6, 0), rot_z=-30)
     cams = [T.camera("CAM_01_lab_binnen", (-1.5, -2.7, 1.7), (0.8, 2.2, 1.1), lens=22),
             T.camera("CAM_02_medicijnkast", (1.7, 1.0, 1.5), (2.5, 2.5, 1.4), lens=35)]
 blend, renders = T.finish(OUT, VAR, cams)
