@@ -546,3 +546,25 @@ def leash(S, ch, an, t0, t1, side="R", step=0.125, color=(0.75, 0.12, 0.1)):
             o.keyframe_insert(p, frame=F(t))
         t += step
     return o
+
+
+# ---------------------------------------------------------------- bestek (echte lepel/vork/mes, geen staafjes)
+def cutlery(S, kind, name, scale=1.6):
+    """Bestek op maat van de grote handen. Oorsprong = waar de hand het vastpakt; het werkende eind wijst naar +z.
+    kind: lepel, vork, mes, opscheplepel."""
+    met = P.m("metaal")
+    s = scale
+    parts = [T.box(name + "_steel", (0, 0, 0.02 * s), (0.014 * s, 0.006 * s, 0.11 * s), met, base=False, bevel=0.003, ol=0)]
+    if kind in ("lepel", "opscheplepel"):
+        k = 1.6 if kind == "opscheplepel" else 1.0
+        parts.append(T.sphere(name + "_kom", (0, -0.006 * s, 0.1 * s * k), 0.024 * s * k, met, scale=(0.8, 0.35, 1.25), seg=16, ol=0))
+    elif kind == "vork":
+        parts.append(T.box(name + "_hals", (0, 0, 0.085 * s), (0.026 * s, 0.005 * s, 0.018 * s), met, base=False, bevel=0.002, ol=0))
+        for i in (-1, 0, 1):
+            parts.append(T.box(f"{name}_tand{i}", (i * 0.009 * s, 0, 0.11 * s), (0.004 * s, 0.004 * s, 0.035 * s), met, base=False,
+                               bevel=0.001, ol=0))
+    elif kind == "mes":
+        parts.append(T.box(name + "_lemmet", (0.004 * s, 0, 0.115 * s), (0.02 * s, 0.003 * s, 0.085 * s), met, base=False, bevel=0.002,
+                           ol=0))
+    o = T.merge(name, parts, ol=0)
+    return o
