@@ -139,15 +139,15 @@ export const useGame = create<GameStore>()(
           d.projects.unshift({
             id, title, topic, channelId, stage: 'research', status: 'Active', createdTick: d.tick,
             deadlineTick: d.tick + deadlineDays * TICKS_PER_DAY, priority, taskIds: [], stageQuality: {}, rejections: 0, cost: 0,
-            history: [{ tick: d.tick, text: 'Project created by CEO' }],
+            history: [{ tick: d.tick, text: 'Project gestart door niels' }],
           });
           createStageTask(d, d.projects[0], 'research');
           bumpMission(d, 'start_video');
           addCompanyXp(d, 10);
           const ceo = d.agents.find((a) => a.role === 'ceo_agent');
-          if (ceo) post(d, ceo.id, 'update', `New video greenlit: "${title}" 🎬 Research team, it's yours.`);
+          if (ceo) post(d, ceo.id, 'update', `Nieuwe video gestart: "${title}" 🎬 Onderzoek, aan jullie.`);
         });
-        get().toast(`Started "${title}" — Research has the brief.`, 'success');
+        get().toast(`"${title}" gestart. Onderzoek heeft de opdracht.`, 'success');
         return id;
       },
       assignManualTask: (i) => {
@@ -164,7 +164,7 @@ export const useGame = create<GameStore>()(
           d.tasks.push(t);
           if (i.projectId) d.projects.find((p) => p.id === i.projectId)?.taskIds.push(t.id);
         });
-        get().toast('Task created and queued for the agent.', 'success');
+        get().toast('Taak gemaakt en klaargezet voor de agent.', 'success');
       },
       setTaskPriority: (taskId, p) => set((s) => { const t = s.tasks.find((x) => x.id === taskId); if (t) t.priority = p; }),
       commentTask: (taskId, text) => set((s) => {
@@ -186,7 +186,7 @@ export const useGame = create<GameStore>()(
           t.status = 'In Progress';
           t.progress = 55;
           t.revision += 1;
-          t.comments.push({ id: uid('c'), authorId: 'player', text: `Changes requested: ${note || 'Please improve quality.'}`, tick: d.tick });
+          t.comments.push({ id: uid('c'), authorId: 'player', text: `Aanpassingen gevraagd: ${note || 'Please improve quality.'}`, tick: d.tick });
         }
       }),
       reassignTask: (taskId, agentId) => set((s) => {
@@ -203,8 +203,8 @@ export const useGame = create<GameStore>()(
       hireAgent: (role, channelIds) => {
         const d = get() as unknown as GameData;
         const def = roleById(role);
-        if (d.agents.length >= agentSlots(d)) { get().toast('No free desks — buy an Office Expansion upgrade.', 'warning'); return false; }
-        if (d.company.balance < def.hireCost) { get().toast('Not enough balance to hire.', 'warning'); return false; }
+        if (d.agents.length >= agentSlots(d)) { get().toast('Geen vrij bureau. Koop de upgrade Kantooruitbreiding.', 'warning'); return false; }
+        if (d.company.balance < def.hireCost) { get().toast('Niet genoeg saldo om aan te nemen.', 'warning'); return false; }
         let name = '';
         set((s) => {
           const g = s as unknown as GameData;
@@ -213,8 +213,8 @@ export const useGame = create<GameStore>()(
           g.agents.push(a);
           ledger(g, 'Hiring', -def.hireCost, `Hired ${a.name} (${def.title})`);
           bumpMission(g, 'hire');
-          post(g, a.id, 'celebration', `Hi everyone 👋 I'm ${a.name}, the new ${def.title}. Excited to join the ${def.department} team!`);
-          notify(g, `👋 ${a.name} joined as ${def.title}.`, 'success', 'agents');
+          post(g, a.id, 'celebration', `Hoi allemaal 👋 Ik ben ${a.name}, de nieuwe ${def.title}. Zin in het team ${def.department}!`);
+          notify(g, `👋 ${a.name} is begonnen als ${def.title}.`, 'success', 'agents');
           checkAchievements(g);
         });
         get().toast(`Hired ${name} as ${def.title}.`, 'success');
@@ -225,7 +225,7 @@ export const useGame = create<GameStore>()(
         if (!a) return;
         s.tasks.filter((t) => t.agentId === id && !['Completed', 'Rejected'].includes(t.status)).forEach((t) => { t.agentId = null; t.status = 'Pending'; });
         s.agents = s.agents.filter((x) => x.id !== id);
-        notify(s as unknown as GameData, `${a.name} left the company.`, 'info', 'agents');
+        notify(s as unknown as GameData, `${a.name} heeft het bedrijf verlaten.`, 'info', 'agents');
         if (s.selectedAgentId === id) s.selectedAgentId = null;
       }),
       trainAgent: (id, skill) => {
@@ -234,9 +234,9 @@ export const useGame = create<GameStore>()(
         if (!a) return false;
         const lab = upgradeLevel(d, 'training_lab');
         const cost = Math.round(120 * a.level * (1 - lab * 0.25));
-        if (a.currentTaskId) { get().toast(`${a.name} is busy with a task — try again when idle.`, 'warning'); return false; }
-        if (a.state === 'training') { get().toast(`${a.name} is already training.`, 'warning'); return false; }
-        if (d.company.balance < cost) { get().toast('Not enough balance for training.', 'warning'); return false; }
+        if (a.currentTaskId) { get().toast(`${a.name} is bezig met een taak. Probeer het als hij vrij is.`, 'warning'); return false; }
+        if (a.state === 'training') { get().toast(`${a.name} zit al in een training.`, 'warning'); return false; }
+        if (d.company.balance < cost) { get().toast('Niet genoeg saldo voor de training.', 'warning'); return false; }
         set((s) => {
           const g = s as unknown as GameData;
           const ag = g.agents.find((x) => x.id === id)!;
@@ -256,11 +256,11 @@ export const useGame = create<GameStore>()(
         const a = d.agents.find((x) => x.id === id);
         if (!a) return false;
         const cost = 250 * a.level;
-        if (d.company.balance < cost) { get().toast('Not enough balance to upgrade agent.', 'warning'); return false; }
+        if (d.company.balance < cost) { get().toast('Niet genoeg saldo voor deze upgrade.', 'warning'); return false; }
         set((s) => {
           const g = s as unknown as GameData;
           const ag = g.agents.find((x) => x.id === id)!;
-          ledger(g, 'Training', -cost, `Upgraded ${ag.name} to level ${ag.level + 1}`);
+          ledger(g, 'Training', -cost, `${ag.name} naar niveau ${ag.level + 1}`);
           addAgentXp(g, ag, xpForLevel(ag.level) - ag.xp);
           checkAchievements(g);
         });
@@ -274,18 +274,18 @@ export const useGame = create<GameStore>()(
         const p = d.projects.find((x) => x.id === id);
         if (!p || p.status !== 'Awaiting Approval') return;
         const t = d.tasks.find((x) => x.projectId === id && x.stage === 'approval' && x.status === 'Review');
-        if (t) { t.status = 'Completed'; t.quality = projectQuality(p); t.result = 'Approved by CEO (player).'; }
+        if (t) { t.status = 'Completed'; t.quality = projectQuality(p); t.result = 'Goedgekeurd door niels.'; }
         p.stageQuality.approval = projectQuality(p);
         p.stage = 'publishing';
         p.status = 'Awaiting Publish';
-        p.history.push({ tick: d.tick, text: 'Approved by CEO' });
+        p.history.push({ tick: d.tick, text: 'Goedgekeurd door niels' });
         const pt = createStageTask(d, p, 'publishing');
         pt.status = 'Review';
         pt.agentId = d.agents.find((a) => a.role === 'upload_manager')?.id ?? null;
-        pt.documents.push({ id: uid('doc'), name: 'Upload Package', kind: 'metadata', content: `UPLOAD PACKAGE\nTitle: ${p.title}\nDestination: LOCAL SIMULATION\nAwaiting explicit CEO publish confirmation.` });
+        pt.documents.push({ id: uid('doc'), name: 'Upload Package', kind: 'metadata', content: `UPLOADPAKKET\nTitel: ${p.title}\nWacht op bevestiging van niels.` });
         bumpMission(d, 'approve');
         addCompanyXp(d, 15);
-        notify(d, `✅ "${p.title}" approved — ready to publish (needs your confirmation).`, 'approval', 'projects');
+        notify(d, `✅ "${p.title}" goedgekeurd, klaar om te publiceren (jij bevestigt).`, 'approval', 'projects');
       }),
       rejectProject: (id, to, reason) => set((s) => {
         const d = s as unknown as GameData;
@@ -309,11 +309,11 @@ export const useGame = create<GameStore>()(
             views: 0, revenue: 0, likes: 0,
           };
           d.videos.push(vid);
-          d.tasks.filter((t) => t.projectId === id && t.stage === 'publishing').forEach((t) => { t.status = 'Completed'; t.result = 'Published to LOCAL SIMULATION.'; t.quality = q; });
+          d.tasks.filter((t) => t.projectId === id && t.stage === 'publishing').forEach((t) => { t.status = 'Completed'; t.result = 'Gepubliceerd.'; t.quality = q; });
           p.status = 'Published';
           p.publishedTick = d.tick;
           p.videoId = vid.id;
-          p.history.push({ tick: d.tick, text: 'Published (local simulation — no external upload)' });
+          p.history.push({ tick: d.tick, text: 'Gepubliceerd (uploaden doet niels in Studio)' });
           // first-hour views
           const first = Math.round((q * 8 + ch.subscribers * 0.05) * (vid.ctr / 5));
           vid.views += first; ch.views += first;
@@ -323,10 +323,10 @@ export const useGame = create<GameStore>()(
           const smm = d.agents.find((a) => a.role === 'social_media_manager' || a.role === 'upload_manager');
           if (smm) post(d, smm.id, 'celebration', `🚀 "${p.title}" is LIVE on ${ch.name} (simulated). Predicted CTR ${vid.ctr}% · AVD ${vid.avd}%`);
           d.agents.filter((a) => d.tasks.some((t) => t.projectId === id && t.agentId === a.id)).forEach((a) => addAgentXp(d, a, 15));
-          notify(d, `🚀 Published "${p.title}" (local simulation).`, 'success', 'analytics');
+          notify(d, `🚀 "${p.title}" gepubliceerd.`, 'success', 'analytics');
           checkAchievements(d);
         });
-        get().toast('Video published in the local simulation.', 'success');
+        get().toast('Video gepubliceerd. Claude maakt het uploadpakket klaar.', 'success');
       },
       cancelProject: (id) => set((s) => {
         const p = s.projects.find((x) => x.id === id);
@@ -376,15 +376,15 @@ export const useGame = create<GameStore>()(
         const u = d.upgrades.find((x) => x.id === id);
         if (!u || u.level >= u.maxLevel) return false;
         const cost = Math.round(u.cost * (1 + u.level * 0.6));
-        if (d.company.balance < cost) { get().toast('Not enough balance for this upgrade.', 'warning'); return false; }
+        if (d.company.balance < cost) { get().toast('Niet genoeg saldo voor deze upgrade.', 'warning'); return false; }
         set((s) => {
           const g = s as unknown as GameData;
           const up = g.upgrades.find((x) => x.id === id)!;
           up.level += 1;
-          ledger(g, 'Upgrades', -cost, `Office upgrade: ${up.name} L${up.level}`);
+          ledger(g, 'Upgrades', -cost, `Kantoor-upgrade: ${up.name} N${up.level}`);
           if (id === 'neon') g.company.reputation = clamp(g.company.reputation + 10, 0, 100);
           addCompanyXp(g, 40);
-          notify(g, `🛠️ ${up.name} upgraded to level ${up.level}.`, 'success', 'upgrades');
+          notify(g, `🛠️ ${up.name} naar niveau ${up.level}.`, 'success', 'upgrades');
           checkAchievements(g);
         });
         get().toast(`${u.name} installed!`, 'success');
@@ -396,7 +396,7 @@ export const useGame = create<GameStore>()(
         if (!m || m.claimed || m.progress < m.target) return;
         m.claimed = true;
         addCompanyXp(d, m.rewardXp);
-        ledger(d, 'Rewards', m.rewardCash, `Mission reward: ${m.title}`);
+        ledger(d, 'Rewards', m.rewardCash, `Missiebeloning: ${m.title}`);
       }),
 
       // ── channels ─────────────────────────────────────
@@ -404,7 +404,7 @@ export const useGame = create<GameStore>()(
         const d = s as unknown as GameData;
         d.channels.push({ ...c, id: uid('ch'), subscribers: 0, views: 0, revenue: 0, monetized: false, ctrBoost: 0, retentionBoost: 0, createdTick: d.tick, isDemo: false });
         addCompanyXp(d, 30);
-        notify(d, `📺 New channel launched: ${c.name}`, 'success', 'channels');
+        notify(d, `📺 Nieuw kanaal gestart: ${c.name}`, 'success', 'channels');
         checkAchievements(d);
       }),
       updateChannel: (id, patch) => set((s) => { const c = s.channels.find((x) => x.id === id); if (c) Object.assign(c, patch); }),
@@ -416,7 +416,7 @@ export const useGame = create<GameStore>()(
       openWarCase: (type, channelId) => set((s) => {
         const d = s as unknown as GameData;
         const ch = d.channels.find((c) => c.id === channelId);
-        const { analysis, recs } = buildAnalysis(type, ch?.name ?? 'all channels');
+        const { analysis, recs } = buildAnalysis(type, ch?.name ?? 'alle kanalen');
         const mgmt = d.agents.filter((a) => ['ceo_agent', 'performance_analyst', 'financial_manager', 'ctr_specialist', 'editing_supervisor'].includes(a.role)).slice(0, 4);
         d.warCases.unshift({
           id: uid('war'), type, channelId, title: `${ISSUE_META[type].label}${ch ? ` · ${ch.name}` : ''}`,
@@ -424,14 +424,14 @@ export const useGame = create<GameStore>()(
           agentIds: mgmt.map((a) => a.id), analysis, recommendations: recs,
         });
         mgmt.forEach((a) => { if (!a.currentTaskId) a.state = 'meeting'; });
-        notify(d, `🛡️ War Room convened: ${ISSUE_META[type].label}`, 'info', 'warroom');
+        notify(d, `🛡️ Crisiskamer bijeengeroepen: ${ISSUE_META[type].label}`, 'info', 'warroom');
       }),
       approveRecommendation: (caseId, recId) => {
         const d = get() as unknown as GameData;
         const w = d.warCases.find((x) => x.id === caseId);
         const r = w?.recommendations.find((x) => x.id === recId);
         if (!w || !r) return;
-        if (d.company.balance < r.cost) { get().toast('Not enough balance for this plan.', 'warning'); return; }
+        if (d.company.balance < r.cost) { get().toast('Niet genoeg saldo voor dit plan.', 'warning'); return; }
         set((s) => {
           const g = s as unknown as GameData;
           const wc = g.warCases.find((x) => x.id === caseId)!;
@@ -442,13 +442,13 @@ export const useGame = create<GameStore>()(
           if (r.effect === 'rpm') targets.forEach((c) => (c.rpm = +(c.rpm + r.magnitude).toFixed(2)));
           if (r.effect === 'schedule') targets.forEach((c) => { c.uploadsPerWeek += 1; c.uploadSchedule = `${c.uploadsPerWeek}x / week`; });
           if (r.effect === 'speed') { g.modifiers.speedBoost = r.magnitude; g.modifiers.speedBoostUntil = g.tick + 14 * TICKS_PER_DAY; }
-          ledger(g, r.effect === 'speed' ? 'Freelancers' : 'Production', -r.cost, `War Room plan: ${r.title}`, wc.channelId);
+          ledger(g, r.effect === 'speed' ? 'Freelancers' : 'Production', -r.cost, `Plan crisiskamer: ${r.title}`, wc.channelId);
           addCompanyXp(g, 50);
           const ceo = g.agents.find((a) => a.role === 'ceo_agent');
-          if (ceo) post(g, ceo.id, 'update', `CEO approved War Room plan "${r.title}". Rolling it out now.`);
+          if (ceo) post(g, ceo.id, 'update', `niels keurde het plan "${r.title}" goed. We voeren het nu uit.`);
           checkAchievements(g);
         });
-        get().toast(`Plan approved: ${r.title}`, 'success');
+        get().toast(`Plan goedgekeurd: ${r.title}`, 'success');
       },
       dismissCase: (caseId) => set((s) => { const w = s.warCases.find((x) => x.id === caseId); if (w) w.status = 'Dismissed'; }),
 
@@ -478,11 +478,11 @@ function evidenceFor(d: GameData, type: WarIssueType, channelId: string | null):
   const ctr = st.length ? st.reduce((s, x) => s + x.ctr, 0) / st.length : 0;
   const avd = st.length ? st.reduce((s, x) => s + x.avd, 0) / st.length : 0;
   switch (type) {
-    case 'declining_views': return `Last 7 days: ${views.toLocaleString()} views.`;
-    case 'low_ctr': return `Avg CTR last 7 days: ${ctr.toFixed(2)}%.`;
-    case 'poor_retention': return `Avg view duration last 7 days: ${avd.toFixed(1)}%.`;
-    case 'production_delays': return `${d.projects.filter((p) => p.status === 'Active' && p.deadlineTick < d.tick).length} overdue projects · ${d.tasks.filter((t) => t.status === 'Pending').length} tasks waiting for an agent.`;
-    case 'falling_revenue': return `Revenue last 7 days: €${st.reduce((s, x) => s + x.revenue, 0).toFixed(2)}.`;
+    case 'declining_views': return `Laatste 7 dagen: ${views.toLocaleString('nl-NL')} weergaven.`;
+    case 'low_ctr': return `Gem. CTR laatste 7 dagen: ${ctr.toFixed(2)}%.`;
+    case 'poor_retention': return `Gem. kijkduur laatste 7 dagen: ${avd.toFixed(1)}%.`;
+    case 'production_delays': return `${d.projects.filter((p) => p.status === 'Active' && p.deadlineTick < d.tick).length} projecten te laat · ${d.tasks.filter((t) => t.status === 'Pending').length} taken wachten op een agent.`;
+    case 'falling_revenue': return `Inkomsten laatste 7 dagen: €${st.reduce((s, x) => s + x.revenue, 0).toFixed(2)}.`;
   }
 }
 

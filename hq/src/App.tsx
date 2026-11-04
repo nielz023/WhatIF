@@ -22,6 +22,7 @@ import SettingsPage from './pages/SettingsPage';
 import WarRoomPage from './pages/WarRoomPage';
 import DriftmarkPage from './pages/DriftmarkPage';
 import type { PageId } from './types';
+import { realTick } from './lib/util';
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
   driftmark: DriftmarkPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
@@ -29,16 +30,18 @@ const PAGES: Record<PageId, () => JSX.Element | null> = {
   settings: SettingsPage, warroom: WarRoomPage,
 };
 
-/** Drives the simulation clock. 1 tick = 1 game hour. */
+/** De klok loopt met de echte tijd mee: 1 tick = 1 echt uur. Na afwezigheid wordt bijgewerkt (max 30 dagen). */
 function useSimulationLoop() {
-  const paused = useGame((s) => s.paused);
-  const speed = useGame((s) => s.speed);
-  const anyModal = useGame((s) => !!s.modal || !!s.confirm);
   useEffect(() => {
-    if (paused || anyModal) return;
-    const id = setInterval(() => useGame.getState().advance(), 1000 / speed);
+    const sync = () => {
+      const st = useGame.getState();
+      const gap = Math.min(realTick() - st.tick, 24 * 30);
+      if (gap > 0) st.fastForward(gap);
+    };
+    sync();
+    const id = setInterval(sync, 10000);
     return () => clearInterval(id);
-  }, [paused, speed, anyModal]);
+  }, []);
 }
 
 export default function App() {
@@ -49,8 +52,7 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.closest('input,textarea,select')) return;
-      if (e.code === 'Space') { e.preventDefault(); useGame.getState().togglePause(); }
-      if (e.key === 'Escape') { const st = useGame.getState(); st.selectAgent(null); st.selectProject(null); st.selectDept(null); st.setNotifOpen(false); }
+            if (e.key === 'Escape') { const st = useGame.getState(); st.selectAgent(null); st.selectProject(null); st.selectDept(null); st.setNotifOpen(false); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

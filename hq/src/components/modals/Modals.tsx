@@ -184,7 +184,7 @@ export function NewChannelModal() {
     if (!f.name.trim() || !f.niche.trim()) return;
     s.addChannel({ name: f.name.trim(), niche: f.niche.trim(), audience: f.audience.trim() || 'General audience', logo: { emoji: f.emoji, color: f.color }, rpm: f.rpm, uploadsPerWeek: f.perWeek, uploadSchedule: `${f.perWeek}x / week` });
     s.closeModal();
-    s.toast(`Channel "${f.name}" created (local simulation).`, 'success');
+    s.toast(`Kanaal "${f.name}" gemaakt.`, 'success');
   };
   return (
     <Modal open={open} onClose={s.closeModal} title="📺 Launch New Channel" footer={<><button className="btn-ghost" onClick={s.closeModal}>Cancel</button><button className="btn-primary" disabled={!f.name.trim() || !f.niche.trim()} onClick={submit}>Create channel</button></>}>

@@ -4,7 +4,7 @@
 // Stand: 4 november 2026. Werk dit bestand bij als er iets verandert.
 // ───────────────────────────────────────────────────────────────
 
-export const UPDATED = '4 november 2026, 23:00';
+export const UPDATED = 'donderdag 5 november 2026, 00:15';
 const PROJ = 'https://claude.ai/code/project/chan_01LkmukDuDNkj8pXsDu4v8WG';
 export const threadUrl = (id: string) => `${PROJ}?thread=${id}`;
 

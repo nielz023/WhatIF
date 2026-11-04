@@ -35,7 +35,7 @@ export default function AchievementsPage() {
                     <div className="mt-2 flex items-center gap-3">
                       <div className="flex-1"><Progress value={(m.progress / m.target) * 100} h={5} color={done ? '#f59e0b' : '#6366f1'} /></div>
                       <span className="text-xs text-slate-400">{m.progress}/{m.target}</span>
-                      <button className="btn-success !px-2.5 !py-1 text-xs" disabled={!done || m.claimed} onClick={() => { s.claimMission(m.id); s.toast(`Mission complete! +${m.rewardXp} XP, +${eur(m.rewardCash)}`, 'success'); }}>{m.claimed ? 'Claimed' : 'Claim'}</button>
+                      <button className="btn-success !px-2.5 !py-1 text-xs" disabled={!done || m.claimed} onClick={() => { s.claimMission(m.id); s.toast(`Missie voltooid! +${m.rewardXp} XP, +${eur(m.rewardCash)}`, 'success'); }}>{m.claimed ? 'Claimed' : 'Claim'}</button>
                     </div>
                   </div>
                 );

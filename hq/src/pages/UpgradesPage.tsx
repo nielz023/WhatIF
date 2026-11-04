@@ -8,7 +8,7 @@ export default function UpgradesPage() {
   const s = useGame();
   return (
     <div className="h-full overflow-y-auto p-4 pb-28 md:p-6 md:pb-28">
-      <PageHeader title="Office Upgrades" subtitle={`Balance ${eur(s.company.balance)} · ${s.agents.length}/${agentSlots(s as unknown as GameData)} desks · reputation ${Math.round(s.company.reputation)}/100`} />
+      <PageHeader title="Office Upgrades" subtitle={`Saldo ${eur(s.company.balance)} · ${s.agents.length}/${agentSlots(s as unknown as GameData)} bureaus · reputatie ${Math.round(s.company.reputation)}/100`} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {s.upgrades.map((u) => {
           const cost = Math.round(u.cost * (1 + u.level * 0.6));
@@ -28,7 +28,7 @@ export default function UpgradesPage() {
               <button
                 className="btn-primary mt-4 w-full"
                 disabled={maxed || s.company.balance < cost}
-                onClick={() => s.askConfirm({ title: `Buy ${u.name}?`, body: `Upgrade ${u.name} to level ${u.level + 1} for ${eur(cost)}.\n${u.effect}.`, confirmLabel: `Pay ${eur(cost)}`, onConfirm: () => s.buyUpgrade(u.id) })}
+                onClick={() => s.askConfirm({ title: `Buy ${u.name}?`, body: `${u.name} naar niveau ${u.level + 1} voor ${eur(cost)}.\n${u.effect}.`, confirmLabel: `Pay ${eur(cost)}`, onConfirm: () => s.buyUpgrade(u.id) })}
               >
                 {maxed ? 'Maxed out' : `Upgrade · ${eur(cost)}`}
               </button>

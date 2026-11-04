@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Pause, Play, FastForward, Users, Wallet, Eye, Tv, Star } from 'lucide-react';
 import { useGame } from '../../store/useGame';
@@ -38,21 +39,8 @@ export default function TopBar() {
       {s.demoMode && <span className="hidden xl:inline"><DemoBadge /></span>}
 
       <div className="ml-auto flex items-center gap-2">
-        {/* time controls */}
-        <div className="flex items-center gap-1 rounded-xl border border-hq-line/60 bg-hq-panel/60 p-1">
-          <div className="hidden px-2 text-xs font-semibold text-slate-300 sm:block">{fmtTick(s.tick)}</div>
-          <button onClick={s.togglePause} className="rounded-lg p-1.5 text-slate-300 hover:bg-white/10 hover:text-white" title={s.paused ? 'Resume simulation' : 'Pause simulation'}>
-            {s.paused ? <Play size={15} /> : <Pause size={15} />}
-          </button>
-          {[1, 3, 8].map((v) => (
-            <button key={v} onClick={() => s.setSpeed(v)} className={`rounded-lg px-1.5 py-1 text-[11px] font-bold ${s.speed === v && !s.paused ? 'bg-indigo-500/30 text-white' : 'text-slate-400 hover:text-white'}`} title={`${v}× speed`}>
-              {v}×
-            </button>
-          ))}
-          <button onClick={() => { s.fastForward(24); s.toast('Skipped ahead one day.', 'info'); }} className="rounded-lg p-1.5 text-slate-300 hover:bg-white/10 hover:text-white" title="Skip 1 day">
-            <FastForward size={15} />
-          </button>
-        </div>
+        {/* echte klok */}
+        <RealClock />
 
         {/* notifications */}
         <div className="relative">
@@ -87,5 +75,17 @@ export default function TopBar() {
         </div>
       </div>
     </header>
+  );
+}
+
+function RealClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const id = setInterval(() => setNow(new Date()), 15000); return () => clearInterval(id); }, []);
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-hq-line/60 bg-hq-panel/60 px-3 py-1.5" title="De game loopt gelijk met de echte tijd">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+      <span className="text-xs font-semibold text-slate-200">{now.toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })}</span>
+      <span className="hidden text-[10px] uppercase tracking-wider text-slate-500 sm:inline">echte tijd</span>
+    </div>
   );
 }

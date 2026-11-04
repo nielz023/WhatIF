@@ -15,61 +15,61 @@ export function buildAnalysis(type: WarIssueType, channelName: string): { analys
     case 'low_ctr':
       return {
         analysis: [
-          `Performance Analyst: CTR on ${channelName} is below the 4.5% niche benchmark over the last 7 days.`,
-          `CTR Specialist: Thumbnails use too much text; competitor outliers use 1 focal object + ≤3 words.`,
-          `CEO Agent: Impressions are healthy — the packaging, not the topic, is the bottleneck.`,
+          `Prestatie-analist: de CTR van ${channelName} ligt de laatste 7 dagen onder de 4,5% van de niche.`,
+          `CTR-specialist: thumbnails hebben te veel tekst; uitschieters gebruiken 1 blikvanger en max. 3 woorden.`,
+          `CEO-agent: vertoningen zijn goed, de verpakking is het probleem, niet het onderwerp.`,
         ],
         recs: [
-          r('Thumbnail redesign sprint', 'CTR Specialist + Thumbnail Designer redo packaging style guide.', 400, 'ctr', 1.2),
-          r('Title A/B testing protocol', 'Every upload ships with 3 title variants rotated after 48h.', 150, 'ctr', 0.6),
+          r('Thumbnails opnieuw ontwerpen', 'CTR-specialist en thumbnailontwerper maken een nieuwe stijlgids.', 400, 'ctr', 1.2),
+          r('Titels A/B testen', 'Elke upload krijgt 3 titelvarianten, na 48 uur wisselen.', 150, 'ctr', 0.6),
         ],
       };
     case 'poor_retention':
       return {
         analysis: [
-          `Performance Analyst: Average view duration on ${channelName} drops sharply after the first 45 seconds.`,
-          `Hook Specialist: Intros spend too long on context before the open loop.`,
-          `Editing Supervisor: Pacing dips in act 2 — fewer pattern interrupts than competitors.`,
+          `Prestatie-analist: de kijkduur van ${channelName} zakt hard na de eerste 45 seconden.`,
+          `Hook-specialist: intro’s geven te lang uitleg voor de spanning begint.`,
+          `Montagechef: het tempo zakt in deel 2, minder verrassingen dan de concurrentie.`,
         ],
         recs: [
-          r('Hook rewrite framework', 'Hooks must deliver stakes in < 15s. Train Creative team.', 300, 'retention', 6),
-          r('Pattern-interrupt editing pass', 'Add b-roll / zoom every 6–8s in act 2.', 500, 'retention', 9),
+          r('Hooks herschrijven', 'Spanning binnen 5 seconden. Creatief team trainen.', 300, 'retention', 6),
+          r('Montage met meer verrassingen', 'Shots max 6 s, elke 60-90 s een nieuw probleem.', 500, 'retention', 9),
         ],
       };
     case 'declining_views':
       return {
         analysis: [
-          `Performance Analyst: 7-day views on ${channelName} are trending down vs. the previous week.`,
-          `Niche Analyst: Topic fatigue — the last uploads covered overlapping subjects.`,
-          `Upload Manager: Upload cadence slipped below the promised schedule.`,
+          `Prestatie-analist: de weergaven van ${channelName} dalen ten opzichte van vorige week.`,
+          `Niche-analist: de laatste uploads leken te veel op elkaar.`,
+          `Uploadmanager: we halen het uploadschema niet.`,
         ],
         recs: [
-          r('Increase upload cadence', 'Raise schedule by +1 video/week; prioritise production queue.', 250, 'schedule', 1),
-          r('Fresh topic cluster research', 'Competitor Analyst maps 10 new outlier topics.', 350, 'ctr', 0.8),
+          r('Vaker uploaden', '+1 video per week; productie voorrang geven.', 250, 'schedule', 1),
+          r('Nieuwe onderwerpen zoeken', 'Concurrentie-analist zoekt 10 nieuwe uitschieters.', 350, 'ctr', 0.8),
         ],
       };
     case 'production_delays':
       return {
         analysis: [
-          `CEO Agent: Several projects are past their deadline.`,
-          `Editing Supervisor: The edit bay is the bottleneck — tasks wait for a free editor.`,
-          `Financial Manager: Delays cost an estimated 12% of monthly revenue potential.`,
+          `CEO-agent: meerdere projecten zijn over hun deadline.`,
+          `Montagechef: de montage is de flessenhals, taken wachten op een animator.`,
+          `Financieel manager: vertraging kost naar schatting 12% van de maandinkomsten.`,
         ],
         recs: [
-          r('Hire freelance editor (temporary)', 'One-off freelancer boosts production speed for 14 days.', 600, 'speed', 0.25),
-          r('Overtime week', 'Small morale cost, faster throughput.', 200, 'speed', 0.12),
+          r('Tijdelijke freelance animator', 'Freelancer versnelt de productie 14 dagen.', 600, 'speed', 0.25),
+          r('Week overwerk', 'Iets minder moraal, sneller klaar.', 200, 'speed', 0.12),
         ],
       };
     case 'falling_revenue':
       return {
         analysis: [
-          `Financial Manager: Revenue is down vs. the previous period while expenses grew.`,
-          `Performance Analyst: Mix shifted toward lower-RPM topics.`,
-          `CEO Agent: Prioritise high-RPM sub-topics and longer videos for mid-rolls.`,
+          `Financieel manager: minder inkomsten dan vorige periode, terwijl de kosten stegen.`,
+          `Prestatie-analist: meer onderwerpen met een lage RPM.`,
+          `CEO-agent: kies onderwerpen met hogere RPM en video’s langer dan 8 minuten.`,
         ],
         recs: [
-          r('High-RPM topic pivot', 'Steer topics toward finance/tech-adjacent angles.', 300, 'rpm', 0.8),
-          r('Mid-roll optimisation', 'Videos > 8 min with natural ad breaks.', 150, 'rpm', 0.4),
+          r('Onderwerpen met hogere RPM', 'Kies wetenschap- en techhoeken.', 300, 'rpm', 0.8),
+          r('Advertenties halverwege', 'Video’s langer dan 8 min met natuurlijke pauzes.', 150, 'rpm', 0.4),
         ],
       };
   }

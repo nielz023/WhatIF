@@ -8,9 +8,10 @@ import { ACHIEVEMENTS, UPGRADES, generateMissions } from '../modules/gameplay/pr
 import { PIPELINE } from '../modules/workflows/pipeline';
 import { simulateDeliverable } from '../modules/workflows/deliverables';
 import { DEFAULT_SETTINGS, type GameData } from '../store/state';
-import { TICKS_PER_DAY, uid, rand, randInt } from '../lib/util';
+import { TICKS_PER_DAY, uid, rand, randInt, realTick, dayOf } from '../lib/util';
 
-export const SEED_DAYS = 21;
+// Geschiedenis vanaf 14 okt 2026 tot vandaag (echte datum).
+export const SEED_DAYS = dayOf(realTick());
 
 // Rollen van de Driftmark-studio. De instructies komen uit de echte werkwijze van het project.
 const RULES: Partial<Record<RoleId, string>> = {
@@ -37,7 +38,7 @@ const STARTER_ROLES: [RoleId, string][] = [
 ];
 
 export function createSeed(): GameData {
-  const now = SEED_DAYS * TICKS_PER_DAY + 9;
+  const now = realTick();
   const agents: Agent[] = STARTER_ROLES.map(([role, name], i) =>
     createAgent(role, 0, { name, level: 1 + (i % 3), xp: randInt(0, 60), ...(RULES[role] ? { instructions: `Driftmark-studio. ${RULES[role]}` } : {}) }),
   );
@@ -52,12 +53,13 @@ export function createSeed(): GameData {
   const stats: DailyStat[] = [];
   const ledger: LedgerEntry[] = [];
   const demoTitles: [string, string, number][] = [
-    ['ch_science', 'What If Time Stopped? (SH2)', 1],
-    ['ch_science', 'What If You Got 10x Faster Every Day? (SH1)', 2],
-    ['ch_history', 'What IF You Got 2x STRONGER Every Day for 40 Days?', 3],
-    ['ch_science', 'What If You Sneezed at 1,000,000x? (V1 short)', 5],
-    ['ch_science', 'What If One Step Broke The Sound Barrier? (V2S2)', 15],
-    ['ch_history', 'What IF You Got 10x FASTER Every Day?', 17],
+    // dag 0 = 14 okt 2026
+    ['ch_science', 'Teaser-short SH1: 10x sneller per dag', 13],
+    ['ch_science', 'Teaser-short SH2: tijd stopt', 13],
+    ['ch_history', 'What IF You Got 2x STRONGER Every Day for 40 Days?', 14],
+    ['ch_science', 'Short uit video 1: Titan', 15],
+    ['ch_science', 'Short uit video 1: Sneeze', 16],
+    ['ch_science', 'Teaser-short SH4: word wat je aanraakt', 17],
   ];
   demoTitles.forEach(([ch, title, day]) => {
     videos.push({ id: uid('vid'), projectId: 'demo', channelId: ch, title, publishedTick: day * TICKS_PER_DAY + 15, quality: randInt(55, 78), ctr: +rand(3.6, 6.2).toFixed(1), avd: +rand(34, 48).toFixed(1), views: 0, revenue: 0, likes: 0 });

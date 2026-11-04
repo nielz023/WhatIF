@@ -51,7 +51,7 @@ export default function DepartmentDrawer() {
       <div className="mt-3 flex flex-wrap gap-2">
         <button className="btn-ghost text-xs" onClick={() => s.openModal('hireAgent', { dept: id })}><UserPlus size={14} />Hire for {dept.short}</button>
         <button className="btn-ghost text-xs" onClick={() => s.openModal('assignTask', { agentId: agents[0]?.id })} disabled={!agents.length}><ClipboardList size={14} />Assign task</button>
-        <select className="input !w-auto !py-1.5 text-xs" defaultValue="" onChange={(e) => { s.assignDeptToChannel(id, e.target.value || null); s.toast(`${dept.short} now works for ${e.target.value ? s.channels.find((c) => c.id === e.target.value)?.name : 'all channels'}.`, 'success'); }}>
+        <select className="input !w-auto !py-1.5 text-xs" defaultValue="" onChange={(e) => { s.assignDeptToChannel(id, e.target.value || null); s.toast(`${dept.short} werkt nu voor ${e.target.value ? s.channels.find((c) => c.id === e.target.value)?.name : 'alle kanalen'}.`, 'success'); }}>
           <option value="" disabled>Assign department to channel…</option>
           <option value="">All channels</option>
           {s.channels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}

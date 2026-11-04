@@ -73,6 +73,6 @@ export function financeSummary(d: Pick<GameData, 'ledger' | 'videos' | 'projects
   const days = new Set(rows.map((r) => r.day)).size || 1;
   const dailyIncome = income / days;
   const dailyExpense = expenses / days;
-  const breakEven = dailyIncome > dailyExpense ? 'Reached / profitable' : dailyIncome > 0 ? `Needs ${(dailyExpense / dailyIncome).toFixed(1)}× current income` : 'No revenue yet';
+  const breakEven = dailyIncome > dailyExpense ? 'Reached / profitable' : dailyIncome > 0 ? `Vraagt ${(dailyExpense / dailyIncome).toFixed(1)}× de huidige inkomsten` : 'Nog geen inkomsten';
   return { rows, byCat, income, expenses, profit, margin, roi, breakEven, dailyIncome, dailyExpense };
 }

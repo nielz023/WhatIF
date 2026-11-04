@@ -23,7 +23,7 @@ export default function ProjectDrawer() {
   const confirmPublish = () =>
     s.askConfirm({
       title: 'Publish this video?',
-      body: `"${p.title}" will be published to ${ch?.name}.\n\nIMPORTANT: no real YouTube connection is configured. This publishes ONLY inside the local simulation — nothing is uploaded to YouTube or any external service.\n\nThis action cannot be undone in the game.`,
+      body: `"${p.title}" wordt gepubliceerd op ${ch?.name}.\n\nClaude krijgt de opdracht om titel, beschrijving, tags en thumbnail klaar te maken. Het uploaden naar YouTube doe je zelf in Studio.\n\nDit kan in de game niet ongedaan worden.`,
       confirmLabel: 'Publish (simulation)',
       onConfirm: () => s.publishProject(p.id),
     });
@@ -91,7 +91,7 @@ export default function ProjectDrawer() {
       </div>
 
       {!['Published', 'Cancelled'].includes(p.status) && (
-        <button className="btn-danger mt-5 text-xs" onClick={() => s.askConfirm({ title: 'Cancel project?', body: `"${p.title}" will be cancelled and all open tasks closed. Costs already spent are not refunded.`, confirmLabel: 'Cancel project', danger: true, onConfirm: () => s.cancelProject(p.id) })}>
+        <button className="btn-danger mt-5 text-xs" onClick={() => s.askConfirm({ title: 'Cancel project?', body: `"${p.title}" wordt gestopt en alle open taken worden gesloten. Claude krijgt de opdracht er niet verder aan te werken.`, confirmLabel: 'Cancel project', danger: true, onConfirm: () => s.cancelProject(p.id) })}>
           <XCircle size={14} />Cancel project
         </button>
       )}

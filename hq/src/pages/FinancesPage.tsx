@@ -44,7 +44,7 @@ export default function FinancesPage() {
         <StatCard label="Expenses" value={eur(f.expenses)} color="#f43f5e" />
         <StatCard label="Profit" value={<span className={f.profit < 0 ? 'text-rose-400' : 'text-emerald-300'}>{eur(f.profit)}</span>} color="#a855f7" />
         <StatCard label="Profit margin" value={pct(f.margin)} sub={`ROI ${pct(f.roi)}`} color="#f59e0b" />
-        <StatCard label="Break-even" value={<span className="text-base">{f.breakEven}</span>} sub={`${eur(f.dailyIncome, 2)} in / ${eur(f.dailyExpense, 2)} out per day`} color="#22d3ee" />
+        <StatCard label="Break-even" value={<span className="text-base">{f.breakEven}</span>} sub={`${eur(f.dailyIncome, 2)} erin / ${eur(f.dailyExpense, 2)} eruit per dag`} color="#22d3ee" />
       </div>
       {ch && <p className="mt-2 text-xs text-slate-500">Channel view shows only costs and revenue attributed to this channel; salaries, subscriptions and software are company overhead.</p>}
 

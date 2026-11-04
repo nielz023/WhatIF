@@ -108,7 +108,7 @@ export default function SettingsPage() {
                 const data = JSON.parse(await file.text()) as GameData;
                 if (!data.agents || !data.channels) throw new Error('Not a valid save file');
                 s.askConfirm({ title: 'Import save?', body: 'Your current progress will be replaced by the imported save.', confirmLabel: 'Replace progress', danger: true, onConfirm: () => { s.importSave({ ...data, settings: { ...data.settings, ...s.settings } }); s.toast('Save imported.', 'success'); } });
-              } catch (err) { s.toast(`Import failed: ${(err as Error).message}`, 'warning'); }
+              } catch (err) { s.toast(`Importeren mislukt: ${(err as Error).message}`, 'warning'); }
               e.target.value = '';
             }} />
             <button className="btn-ghost text-xs" disabled={!supa.isConfigured()} onClick={async () => { try { await supa.save('default', snapshot()); s.toast('Saved to Supabase.', 'success'); } catch (e) { s.toast((e as Error).message, 'warning'); } }}><CloudUpload size={14} />Save to Supabase</button>

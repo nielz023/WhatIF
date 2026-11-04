@@ -33,7 +33,7 @@ export function addCompanyXp(d: GameData, xp: number) {
   while (d.company.xp >= companyXpForLevel(d.company.level)) {
     d.company.xp -= companyXpForLevel(d.company.level);
     d.company.level += 1;
-    notify(d, `🏆 Company reached level ${d.company.level}!`, 'achievement');
+    notify(d, `🏆 Bedrijf bereikt niveau ${d.company.level}!`, 'achievement');
     d.company.reputation = clamp(d.company.reputation + 3, 0, 100);
   }
 }
@@ -45,7 +45,7 @@ export function addAgentXp(d: GameData, a: Agent, xp: number) {
     a.level += 1;
     a.salary += 4;
     Object.keys(a.skills).forEach((k) => (a.skills[k] = clamp(a.skills[k] + 3, 0, 100)));
-    notify(d, `⬆️ ${a.name} reached level ${a.level}.`, 'success', 'agents');
+    notify(d, `⬆️ ${a.name} bereikt niveau ${a.level}.`, 'success', 'agents');
   }
 }
 
@@ -88,12 +88,12 @@ export function createStageTask(d: GameData, p: Project, stage: StageId, note?: 
   const t: Task = {
     id: uid('tk'),
     title: `${s.label}: ${p.title}`,
-    description: `Produce the ${s.deliverableName} for "${p.title}".${note ? ` Feedback to address: ${note}` : ''}`,
+    description: `Maak de ${s.deliverableName} voor "${p.title}".${note ? ` Feedback to address: ${note}` : ''}`,
     agentId: null, projectId: p.id, stage, kind: 'pipeline', priority: p.priority,
     status: 'Pending', progress: 0, createdTick: d.tick,
     deadlineTick: d.tick + Math.max(6, Math.round(s.effort / 6)),
     dependencies: prevTaskOfPrevStage ? [prevTaskOfPrevStage.id] : [],
-    comments: note ? [{ id: uid('c'), authorId: 'system', text: `Returned with feedback: ${note}`, tick: d.tick }] : [],
+    comments: note ? [{ id: uid('c'), authorId: 'system', text: `Teruggestuurd met feedback: ${note}`, tick: d.tick }] : [],
     documents: [], result: null, quality: null, revision: prev.length,
   };
   d.tasks.push(t);
@@ -115,17 +115,17 @@ function advanceProject(d: GameData, p: Project, fromTask: Task) {
   const fromAgent = d.agents.find((a) => a.id === fromTask.agentId);
   const ns = stageById(nxt);
   // hand-off message
-  fromTask.comments.push({ id: uid('c'), authorId: fromTask.agentId ?? 'system', text: `Submitted ${s.deliverableName}. Handing off to ${ns.label}.`, tick: d.tick });
+  fromTask.comments.push({ id: uid('c'), authorId: fromTask.agentId ?? 'system', text: `${s.deliverableName} ingeleverd. Door naar ${ns.label}.`, tick: d.tick });
   if (nxt === 'approval') {
     p.status = 'Awaiting Approval';
     nt.status = 'Review';
     const ceo = d.agents.find((a) => a.role === 'ceo_agent');
     if (ceo) { nt.agentId = ceo.id; }
     nt.documents.push({ id: uid('doc'), name: 'Approval Memo', kind: 'analysis', content: simulateDeliverable('approval', p, d.channels.find((c) => c.id === p.channelId), projectQuality(p)) });
-    notify(d, `🧾 "${p.title}" is waiting for your CEO approval.`, 'approval', 'projects');
-    if (ceo) post(d, ceo.id, 'update', `"${p.title}" passed QC and is on the CEO's desk for final approval. Quality score ${projectQuality(p)}/100.`);
+    notify(d, `🧾 "${p.title}" wacht op jouw goedkeuring.`, 'approval', 'projects');
+    if (ceo) post(d, ceo.id, 'update', `"${p.title}" is door de kwaliteitscheck en ligt bij niels voor goedkeuring. Kwaliteit ${projectQuality(p)}/100.`);
   } else if (fromAgent && Math.random() < 0.35) {
-    post(d, fromAgent.id, 'handoff', `Just handed the ${s.deliverableName} for "${p.title}" to the ${ns.label} team ${celebration()}`);
+    post(d, fromAgent.id, 'handoff', `${s.deliverableName} voor "${p.title}" net doorgegeven aan ${ns.label} ${celebration()}`);
   }
 }
 
@@ -151,9 +151,9 @@ export function rejectProjectTo(d: GameData, p: Project, to: StageId, reason: st
   p.stage = to;
   p.status = 'Active';
   delete p.stageQuality[to];
-  p.history.push({ tick: d.tick, text: `Returned to ${stageById(to).label}: ${reason}` });
+  p.history.push({ tick: d.tick, text: `Terug naar ${stageById(to).label}: ${reason}` });
   createStageTask(d, p, to, reason);
-  notify(d, `↩️ "${p.title}" was sent back to ${stageById(to).label}.`, 'warning', 'projects');
+  notify(d, `↩️ "${p.title}" is teruggestuurd naar ${stageById(to).label}.`, 'warning', 'projects');
 }
 
 // ── reviews (fact check & QC gatekeepers) ──────────────────────
@@ -164,11 +164,11 @@ function runGateReview(d: GameData, p: Project, t: Task): boolean {
   const reviewBonus = upgradeLevel(d, 'meeting_pods') * 6;
   const passChance = clamp((targetQ + reviewBonus - 30) / 50, 0.25, 0.97);
   if (Math.random() < passChance || p.rejections >= 3) return true;
-  const reason = s.id === 'factcheck' ? `${randInt(2, 5)} claims need stronger sources` : pick(['pacing dips in act 2', 'audio levels inconsistent', 'b-roll does not match narration']);
+  const reason = s.id === 'factcheck' ? `${randInt(2, 5)} beweringen hebben betere bronnen nodig` : pick(['tempo zakt in deel 2', 'geluidsniveau wisselt', 'beeld past niet bij de voice-over']);
   t.result = `Rejected — ${reason}`;
   t.status = 'Completed';
   const reviewer = d.agents.find((a) => a.id === t.agentId);
-  if (reviewer) post(d, reviewer.id, 'alert', `Sent "${p.title}" back to ${stageById(s.rejectTo).label}: ${reason}. Let's tighten it up 🔁`);
+  if (reviewer) post(d, reviewer.id, 'alert', `"${p.title}" terug naar ${stageById(s.rejectTo).label}: ${reason}. Even strakker maken 🔁`);
   rejectProjectTo(d, p, s.rejectTo, reason, t.agentId);
   return false;
 }
@@ -198,7 +198,7 @@ export function simulateTick(d: GameData) {
       const a = findAgentFor(d, stageById(t.stage).roles, p?.channelId ?? null);
       if (a) {
         assignTask(d, t, a);
-        if (Math.random() < 0.2) post(d, a.id, 'update', `Picked up "${t.title}". ${pick(['Let’s go!', 'Coffee first ☕', 'This one looks fun.', 'Deadline noted.'])}`);
+        if (Math.random() < 0.2) post(d, a.id, 'update', `"${t.title}" opgepakt. ${pick(['Daar gaan we!', 'Eerst koffie ☕', 'Leuke klus.', 'Deadline genoteerd.'])}`);
       }
     }
   });
@@ -223,7 +223,7 @@ export function simulateTick(d: GameData) {
           const s = stageById(t.stage);
           t.documents.push({ id: uid('doc'), name: `${s.deliverableName}${t.revision ? ` (rev ${t.revision + 1})` : ''}`, kind: s.deliverable, content: simulateDeliverable(t.stage, p, d.channels.find((c) => c.id === p.channelId), t.quality) });
         } else {
-          t.documents.push({ id: uid('doc'), name: 'Deliverable', kind: 'report', content: `${t.title}\nCompleted by ${a.name} (${roleById(a.role).title}).\nQuality ${t.quality}/100.\n(Local simulation output)` });
+          t.documents.push({ id: uid('doc'), name: 'Deliverable', kind: 'report', content: `${t.title}\nAfgerond door ${a.name} (${roleById(a.role).title}).\nKwaliteit ${t.quality}/100.\n(Simulatie)` });
         }
         t.status = 'Review';
         t.comments.push({ id: uid('c'), authorId: a.id, text: 'Deliverable submitted — requesting feedback.', tick: d.tick });
@@ -258,7 +258,7 @@ export function simulateTick(d: GameData) {
   d.agents.forEach((a) => {
     if (a.state === 'training' && a.trainingUntil && d.tick >= a.trainingUntil) {
       a.state = 'idle'; a.trainingUntil = undefined;
-      notify(d, `🎓 ${a.name} finished training.`, 'success', 'agents');
+      notify(d, `🎓 ${a.name} is klaar met de training.`, 'success', 'agents');
     }
     if (a.state !== 'training' && !a.currentTaskId) {
       const inWar = d.warCases.some((w) => w.status === 'Investigating' && w.agentIds.includes(a.id));
@@ -271,9 +271,9 @@ export function simulateTick(d: GameData) {
   d.warCases.forEach((w) => {
     if (w.status === 'Investigating' && d.tick >= w.readyTick) {
       w.status = 'Ready';
-      notify(d, `🛡️ War Room analysis ready: ${w.title}`, 'approval', 'warroom');
+      notify(d, `🛡️ Analyse crisiskamer klaar: ${w.title}`, 'approval', 'warroom');
       const ceo = d.agents.find((a) => a.role === 'ceo_agent');
-      if (ceo) post(d, ceo.id, 'report', `War Room finished investigating "${w.title}". Recommendations are on the CEO's desk.`, { title: w.title, body: w.analysis.join('\n') });
+      if (ceo) post(d, ceo.id, 'report', `De crisiskamer is klaar met "${w.title}". De aanbevelingen liggen bij niels.`, { title: w.title, body: w.analysis.join('\n') });
     }
   });
 
@@ -282,11 +282,11 @@ export function simulateTick(d: GameData) {
     const a = pick(d.agents);
     if (a) {
       const lines = [
-        `Reminder: hooks under 15 seconds. Our retention data doesn't lie 📊`,
-        `Found a great reference channel for our ${pick(d.channels)?.niche ?? 'niche'} content — sharing in the research folder.`,
-        `Productive morning in the ${roleById(a.role).department} room ${celebration()}`,
-        `Anyone free for a quick feedback session on my latest deliverable?`,
-        `New personal best: ${randInt(3, 6)} tasks shipped this week.`,
+        `Herinnering: spannendste beeld binnen 5 seconden. De retentie van video 1 liegt niet 📊`,
+        `Sterk voorbeeldkanaal gevonden voor onze ${pick(d.channels)?.niche ?? 'niche'}. Staat in de onderzoeksmap.`,
+        `Productieve ochtend op de afdeling ${roleById(a.role).department} ${celebration()}`,
+        `Heeft iemand tijd voor feedback op mijn laatste oplevering?`,
+        `Persoonlijk record: ${randInt(3, 6)} taken af deze week.`,
       ];
       post(d, a.id, pick(['update', 'update', 'question']) as ThreadPost['kind'], pick(lines));
     }
@@ -324,20 +324,20 @@ export function dailyRollover(d: GameData, closedDay: number) {
     const revenue = c.monetized ? (views / 1000) * c.rpm : 0;
     c.views += views; c.subscribers += subs; c.revenue += revenue;
     d.stats.push({ day: closedDay, channelId: c.id, views, subs, revenue: Math.round(revenue * 100) / 100, ctr: n ? +(ctrSum / n).toFixed(2) : 0, avd: n ? +(avdSum / n).toFixed(1) : 0 });
-    if (revenue > 0) ledger(d, 'Ad Revenue', revenue, `Ad revenue · ${c.name}`, c.id, closedDay);
+    if (revenue > 0) ledger(d, 'Ad Revenue', revenue, `Advertentie-inkomsten · ${c.name}`, c.id, closedDay);
     if (!c.monetized && c.subscribers >= 1000) {
       c.monetized = true;
-      notify(d, `💸 ${c.name} is now monetized! Ad revenue starts flowing.`, 'achievement', 'channels');
+      notify(d, `💸 ${c.name} verdient nu geld! De advertentie-inkomsten komen binnen.`, 'achievement', 'channels');
       const fm = d.agents.find((a) => a.role === 'financial_manager' || a.role === 'ceo_agent');
-      if (fm) post(d, fm.id, 'celebration', `${c.name} just crossed 1,000 subscribers and is MONETIZED 💸 Huge work, team!`);
+      if (fm) post(d, fm.id, 'celebration', `${c.name} heeft 1.000 abonnees en verdient nu geld 💸 Topwerk, team!`);
     }
   });
   void totalSubs;
   const salaries = d.agents.reduce((s, a) => s + a.salary, 0) * SALARY_FACTOR;
-  ledger(d, 'Salaries', -salaries, `Daily agent compute & salaries (${d.agents.length} agents)`, null, closedDay);
+  ledger(d, 'Salaries', -salaries, `Dagelijkse kosten agents (${d.agents.length} agents)`, null, closedDay);
   if (closedDay % 30 === 0) {
-    ledger(d, 'AI Subscriptions', -(80 + d.agents.length * 4), 'Monthly LLM & voice plans');
-    ledger(d, 'Software', -65, 'Editing suite & stock footage library');
+    ledger(d, 'AI Subscriptions', -(80 + d.agents.length * 4), 'Maandelijkse AI- en stemabonnementen');
+    ledger(d, 'Software', -65, 'Software en bibliotheek');
   }
   // missions refresh
   d.missions = generateMissions();
@@ -353,13 +353,13 @@ export function detectIssues(d: GameData) {
   const day = dayOf(d.tick);
   const overdue = d.projects.filter((p) => p.status === 'Active' && p.deadlineTick < d.tick).length;
   if (overdue >= 2 && !d.warCases.some((w) => w.type === 'production_delays' && ['Investigating', 'Ready'].includes(w.status)))
-    notify(d, `⚠️ ${overdue} projects are overdue. Consider convening the War Room.`, 'warning', 'warroom');
+    notify(d, `⚠️ ${overdue} projecten zijn te laat. Roep misschien de crisiskamer bijeen.`, 'warning', 'warroom');
   d.channels.forEach((c) => {
     const s = d.stats.filter((x) => x.channelId === c.id && x.day > day - 15);
     if (s.length < 14) return;
     const a = s.slice(-7).reduce((t, x) => t + x.views, 0);
     const b = s.slice(-14, -7).reduce((t, x) => t + x.views, 0);
-    if (b > 0 && a < b * 0.85) notify(d, `📉 ${c.name}: views down ${Math.round((1 - a / b) * 100)}% week-over-week.`, 'warning', 'warroom');
+    if (b > 0 && a < b * 0.85) notify(d, `📉 ${c.name}: weergaven ${Math.round((1 - a / b) * 100)}% lager dan vorige week.`, 'warning', 'warroom');
   });
 }
 
@@ -387,7 +387,7 @@ export function checkAchievements(d: GameData) {
     if (!a.unlockedTick && checks[a.id]) {
       a.unlockedTick = d.tick;
       addCompanyXp(d, a.xp);
-      notify(d, `🏅 Achievement unlocked: ${a.title}`, 'achievement', 'achievements');
+      notify(d, `🏅 Prestatie behaald: ${a.title}`, 'achievement', 'achievements');
     }
   });
 }

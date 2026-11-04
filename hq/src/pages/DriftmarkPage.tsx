@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { ExternalLink, Film, Clapperboard, Users, Map, ListChecks, Lightbulb, Wrench, Mic, Youtube, Play, Building2 } from 'lucide-react';
 import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
-import { CHANNEL, VIDEOS, SHORTS, RULES, CAST, VOICES, TOOLS, LINKS, IDEAS, NEXT, UPDATED, threadUrl, type RealVideo } from '../data/driftmark';
+import { RULES, CAST, VOICES, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
+import { useLive, startLive } from '../services/live';
+import { useEffect } from 'react';
 import gallery from '../data/gallery.json';
 import { useReal } from '../services/real';
 
@@ -131,7 +133,11 @@ export default function DriftmarkPage() {
   const [castTab, setCastTab] = useState<Tab>('v3');
   const [setTab, setSetTab] = useState<Tab>('v3');
   const g = gallery as unknown as Record<string, [string, string][]> & { banner: string };
+  const live = useLive();
+  useEffect(() => { startLive(); }, []);
+  const { channel: CHANNEL, videos: VIDEOS, shorts: SHORTS, next: NEXT, ideas: IDEAS, links: LINKS, updated: UPDATED, activity } = live.data;
   const nu = VIDEOS.find((v) => v.status === 'In productie');
+  const srcLabel = live.source === 'live' ? ['● Live uit de projectbestanden', '#10b981'] : live.source === 'ingebouwd' ? ['Live stand laden…', '#94a3b8'] : live.source === 'geen-toegang' ? ['Geen toegang tot projectbestanden: ingebouwde stand', '#f59e0b'] : ['Live stand niet bereikbaar: ingebouwde stand', '#f59e0b'];
 
   return (
     <div className="h-full overflow-y-auto p-3 pb-28 md:p-6 md:pb-28">
@@ -143,7 +149,8 @@ export default function DriftmarkPage() {
           <div>
             <div className="text-[11px] font-bold uppercase tracking-[.2em] text-amber-300">Hoofdkwartier</div>
             <div className="font-display text-3xl font-bold text-white md:text-4xl">DRIFT<span className="text-gradient">MARK</span> HQ</div>
-            <div className="text-xs text-slate-300">{CHANNEL.handle} · {CHANNEL.slogan} · echte stand van {UPDATED}</div>
+            <div className="text-xs text-slate-300">{CHANNEL.handle} · {CHANNEL.slogan} · stand van {UPDATED}</div>
+            <div className="mt-1 flex items-center gap-2 text-[11px]" style={{ color: srcLabel[1] }}>{srcLabel[0]}{live.checkedAt ? <span className="text-slate-500">· gecontroleerd {new Date(live.checkedAt).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })}</span> : null}<button className="text-indigo-300 underline hover:text-white" onClick={() => void live.refresh()}>Nu verversen</button></div>
           </div>
           <div className="flex flex-wrap gap-2">
             <a className="btn-primary text-xs" href={CHANNEL.url} target="_blank" rel="noreferrer"><Youtube size={14} />Kanaal</a>
@@ -173,6 +180,25 @@ export default function DriftmarkPage() {
       </div>
 
       <OrdersPanel />
+
+      {activity.length > 0 && (
+        <section className="panel mb-4 p-4">
+          <div className="mb-2 text-sm font-bold uppercase tracking-wider text-slate-200">Live in het kantoor</div>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {activity.map((a) => {
+              const c = a.state === 'working' ? '#10b981' : a.state === 'blocked' ? '#f59e0b' : a.state === 'review_ready' ? '#38bdf8' : '#64748b';
+              const l = a.state === 'working' ? 'aan het werk' : a.state === 'blocked' ? 'wacht op jou' : a.state === 'review_ready' ? 'klaar voor controle' : a.state === 'done' ? 'klaar' : a.state;
+              return (
+                <a key={a.id} href={threadUrl(a.id)} target="_blank" rel="noreferrer" className="rounded-xl bg-white/[.03] p-2.5 hover:bg-white/[.07]">
+                  <div className="flex items-center justify-between gap-2"><span className="truncate text-xs font-semibold text-white">{a.title}</span><span className="flex shrink-0 items-center gap-1 text-[10px]" style={{ color: c }}><span className={`h-1.5 w-1.5 rounded-full ${a.state === 'working' ? 'animate-pulse' : ''}`} style={{ background: c }} />{l}</span></div>
+                  {a.doing && <div className="mt-0.5 line-clamp-2 text-[11px] text-slate-400">{a.doing}</div>}
+                  <div className="text-[10px] text-slate-500">laatst actief {a.last}</div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* VIDEOS */}
       <div className="mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-200"><Film size={16} />Video's</div>

@@ -31,7 +31,7 @@ export default function AgentDrawer() {
     setBusy(true); setOut('');
     try {
       const sys = `${a.instructions}\nPersonality: ${a.personality}\nCompany: Driftmark Studio (3D What If YouTube channel). Channels: ${s.channels.map((c) => `${c.name} (${c.niche})`).join(', ')}.`;
-      setOut(await llm.generate(sys, prompt || `Give me your best ${role.title.toLowerCase()} deliverable for our next video.`));
+      setOut(await llm.generate(sys, prompt || `Geef me je beste oplevering als ${role.title.toLowerCase()} voor onze volgende video.`));
     } catch (e) {
       setOut(`⚠️ ${(e as Error).message}`);
     } finally { setBusy(false); }
@@ -60,7 +60,7 @@ export default function AgentDrawer() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button className="btn-ghost text-xs" onClick={() => s.openModal('assignTask', { agentId: a.id })}><ClipboardList size={14} />Assign task</button>
-        <button className="btn-ghost text-xs" onClick={() => s.askConfirm({ title: `Upgrade ${a.name}?`, body: `Promote ${a.name} to level ${a.level + 1} for ${eur(250 * a.level)}. All skills +3; daily cost rises slightly.`, confirmLabel: 'Upgrade', onConfirm: () => s.promoteAgent(a.id) && s.toast(`${a.name} upgraded!`, 'success') })}><ArrowUpCircle size={14} />Upgrade ({eur(250 * a.level)})</button>
+        <button className="btn-ghost text-xs" onClick={() => s.askConfirm({ title: `Upgrade ${a.name}?`, body: `${a.name} naar niveau ${a.level + 1} voor ${eur(250 * a.level)}. Alle vaardigheden +3; dagkosten iets hoger.`, confirmLabel: 'Upgrade', onConfirm: () => s.promoteAgent(a.id) && s.toast(`${a.name} upgraded!`, 'success') })}><ArrowUpCircle size={14} />Upgrade ({eur(250 * a.level)})</button>
         <button className="btn-danger ml-auto text-xs" onClick={() => s.askConfirm({ title: `Let ${a.name} go?`, body: 'This agent will leave the company permanently. Their open tasks return to the queue. This cannot be undone.', confirmLabel: 'Remove agent', danger: true, onConfirm: () => s.fireAgent(a.id) })}><UserMinus size={14} />Remove</button>
       </div>
 
@@ -98,7 +98,7 @@ export default function AgentDrawer() {
       </Section>
 
       <Section title={<span className="flex items-center gap-2"><Sparkles size={13} />Work session · {llm.name}</span>}>
-        <textarea className="input min-h-[60px] text-xs" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={`Ask ${a.name.split(' ')[0]} for a deliverable, e.g. "10 title ideas for a video about the Bronze Age collapse"`} />
+        <textarea className="input min-h-[60px] text-xs" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={`Vraag ${a.name.split(' ')[0]} om iets, bv. "10 titelideeën voor de video over teleporteren"`} />
         <div className="mt-2 flex gap-2">
           <button className="btn-primary text-xs" onClick={generate} disabled={busy}>{busy ? 'Working…' : 'Generate'}</button>
           {out && !out.startsWith('⚠️') && <button className="btn-ghost text-xs" onClick={() => { s.createPost(`Report from ${a.name}:`, { title: `${role.title} deliverable`, body: out.slice(0, 1200) }); s.toast('Shared to internal Threads.', 'success'); }}><Share2 size={13} />Share to Threads</button>}
@@ -111,7 +111,7 @@ export default function AgentDrawer() {
         {current ? <div className="flex items-center justify-between gap-2 text-sm"><span className="text-white">{current.title}</span><StatusBadge status={current.status} /></div> : <div className="text-sm text-slate-500">{a.state === 'training' ? 'In training.' : 'Idle — waiting for work.'}</div>}
       </Section>
 
-      <Section title={`Task history · ${a.completed} completed`}>
+      <Section title={`Takengeschiedenis · ${a.completed} afgerond`}>
         <div className="space-y-1.5">
           {history.length === 0 && <div className="text-sm text-slate-500">No tasks yet.</div>}
           {history.map((t) => t && (

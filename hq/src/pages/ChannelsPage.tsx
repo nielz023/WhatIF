@@ -93,7 +93,7 @@ export default function ChannelsPage() {
             <div className="label mt-4">Assign a whole department</div>
             <div className="grid grid-cols-2 gap-1.5">
               {DEPARTMENTS.map((d) => (
-                <button key={d.id} className="rounded-lg border border-hq-line px-2 py-1.5 text-left text-xs text-slate-300 hover:border-indigo-400" onClick={() => s.askConfirm({ title: `Dedicate ${d.short} to ${c.name}?`, body: `All ${s.agents.filter((a) => a.department === d.id).length} agents in ${d.name} will only work on ${c.name} projects. Other channels' work in this department will wait.`, confirmLabel: 'Assign department', onConfirm: () => s.assignDeptToChannel(d.id, c.id) })}>
+                <button key={d.id} className="rounded-lg border border-hq-line px-2 py-1.5 text-left text-xs text-slate-300 hover:border-indigo-400" onClick={() => s.askConfirm({ title: `Dedicate ${d.short} to ${c.name}?`, body: `Alle ${s.agents.filter((a) => a.department === d.id).length} agents van ${d.name} werken alleen nog aan ${c.name}. Werk voor andere kanalen op deze afdeling wacht.`, confirmLabel: 'Assign department', onConfirm: () => s.assignDeptToChannel(d.id, c.id) })}>
                   {d.icon} {d.short}
                 </button>
               ))}

@@ -13,7 +13,7 @@ export type AdapterStatus = 'connected' | 'not_configured' | 'simulation' | 'stu
 
 export class NotConnectedError extends Error {
   constructor(service: string) {
-    super(`${service} is not connected. The app is running in local simulation mode.`);
+    super(`${service} is niet gekoppeld. De app draait als simulatie.`);
   }
 }
 
@@ -104,11 +104,11 @@ export class YouTubeDataAdapter implements YouTubeAdapter {
     if (!res.ok) throw new Error(`YouTube API error ${res.status}`);
     const j = (await res.json()) as { items?: { statistics: { subscriberCount: string; viewCount: string; videoCount: string } }[] };
     const st = j.items?.[0]?.statistics;
-    if (!st) throw new Error('Channel not found');
+    if (!st) throw new Error('Kanaal niet gevonden');
     return { subscribers: +st.subscriberCount, views: +st.viewCount, videos: +st.videoCount };
   }
   async uploadVideo(): Promise<never> {
-    throw new Error('YouTube uploads require OAuth 2.0 and are not implemented. Publishing stays in local simulation.');
+    throw new Error('Uploaden naar YouTube doet niels zelf in Studio.');
   }
 }
 
@@ -136,7 +136,7 @@ const stubAdapter = (service: string, configured: boolean): MediaAdapter => ({
 export function integrationOverview(s: IntegrationSettings): IntegrationInfo[] {
   const llm = getLLM(s);
   return [
-    { id: 'llm', name: 'Claude / OpenAI models', purpose: 'Agent reasoning & text deliverables', status: llm.status(), note: llm.status() === 'connected' ? `Using ${llm.name}. Calls go directly from your browser with your key.` : 'Agents use the local simulation for text output.' },
+    { id: 'llm', name: 'Claude / OpenAI models', purpose: 'Agent reasoning & text deliverables', status: llm.status(), note: llm.status() === 'connected' ? `Gebruikt ${llm.name}, rechtstreeks vanuit je browser met je eigen sleutel.` : 'Agents use the local simulation for text output.' },
     { id: 'youtube', name: 'YouTube Data API', purpose: 'Read channel statistics', status: new YouTubeDataAdapter(s.youtubeApiKey).status(), note: 'Read-only. Uploading is not implemented; publishing is simulated locally.' },
     { id: 'threads', name: 'Threads API', purpose: 'Cross-post internal updates', status: new MetaThreadsAdapter(s.threadsToken).status(), note: 'Adapter interface only. The internal Threads feed is simulated and never posts externally.' },
     { id: 'voice', name: 'Voice generation', purpose: 'AI voice-overs', status: stubAdapter('Voice', !!s.elevenLabsKey).status(), note: 'Interface prepared. Voice-over stage outputs simulated metadata.' },

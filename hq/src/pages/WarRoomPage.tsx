@@ -22,8 +22,8 @@ export default function WarRoomPage() {
   const signals: { type: WarIssueType; level: 'ok' | 'warn' | 'bad'; text: string }[] = [
     { type: 'declining_views', level: v0 && v1 < v0 * 0.9 ? 'bad' : v0 && v1 < v0 ? 'warn' : 'ok', text: `Views 7d: ${v1.toLocaleString()} (${v0 ? (((v1 - v0) / v0) * 100).toFixed(0) : '—'}% WoW)` },
     { type: 'low_ctr', level: ctr < 4 ? 'bad' : ctr < 4.8 ? 'warn' : 'ok', text: `Avg CTR: ${ctr.toFixed(2)}% (benchmark 4.5%)` },
-    { type: 'poor_retention', level: avd < 38 ? 'bad' : avd < 44 ? 'warn' : 'ok', text: `Avg view duration: ${avd.toFixed(1)}%` },
-    { type: 'production_delays', level: overdue >= 2 ? 'bad' : overdue === 1 ? 'warn' : 'ok', text: `${overdue} overdue projects` },
+    { type: 'poor_retention', level: avd < 38 ? 'bad' : avd < 44 ? 'warn' : 'ok', text: `Gem. kijkduur: ${avd.toFixed(1)}%` },
+    { type: 'production_delays', level: overdue >= 2 ? 'bad' : overdue === 1 ? 'warn' : 'ok', text: `${overdue} projecten te laat` },
     { type: 'falling_revenue', level: r0 && r1 < r0 * 0.9 ? 'bad' : r1 === 0 ? 'warn' : 'ok', text: `Revenue 7d: ${eur(r1, 2)}${r1 === 0 ? ' (not monetized yet)' : ''}` },
   ];
   const lvl = { ok: 'text-emerald-300 border-emerald-500/30', warn: 'text-amber-300 border-amber-500/30', bad: 'text-rose-300 border-rose-500/40' };
@@ -75,7 +75,7 @@ export default function WarRoomPage() {
                         <div className="flex items-center justify-between"><span className="font-semibold text-white">{r.title}</span><span className="text-xs text-amber-300">{eur(r.cost)}</span></div>
                         <div className="mt-1 text-xs text-slate-400">{r.detail}</div>
                         {w.status === 'Ready' && (
-                          <button className="btn-success mt-2 !py-1.5 text-xs" onClick={() => s.askConfirm({ title: 'Approve recommendation?', body: `"${r.title}" will be executed in the simulation for ${eur(r.cost)}.\n\n${r.detail}`, confirmLabel: 'Approve plan', onConfirm: () => s.approveRecommendation(w.id, r.id) })}>Approve plan</button>
+                          <button className="btn-success mt-2 !py-1.5 text-xs" onClick={() => s.askConfirm({ title: 'Approve recommendation?', body: `"${r.title}" kost ${eur(r.cost)} in de game en gaat als echte opdracht naar Claude.\n\n${r.detail}`, confirmLabel: 'Approve plan', onConfirm: () => s.approveRecommendation(w.id, r.id) })}>Approve plan</button>
                         )}
                         {w.chosen === r.id && <div className="mt-2 text-xs text-emerald-300">✓ Approved by CEO</div>}
                       </div>

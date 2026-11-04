@@ -30,13 +30,13 @@ export const UPGRADES: Upgrade[] = [
 ];
 
 const MISSION_TEMPLATES: { metric: MissionMetric; title: (n: number) => string; range: [number, number]; xp: number; cash: number }[] = [
-  { metric: 'start_video', title: (n) => `Start ${n} new video${n > 1 ? 's' : ''}`, range: [1, 2], xp: 40, cash: 100 },
+  { metric: 'start_video', title: (n) => `Start ${n} nieuwe video${n > 1 ? "'s" : ''}`, range: [1, 2], xp: 40, cash: 100 },
   { metric: 'publish', title: () => `Publish 1 video`, range: [1, 1], xp: 80, cash: 250 },
   { metric: 'approve', title: (n) => `Approve ${n} deliverable${n > 1 ? 's' : ''} as CEO`, range: [1, 2], xp: 50, cash: 120 },
-  { metric: 'like', title: (n) => `Like ${n} Threads posts`, range: [2, 4], xp: 25, cash: 50 },
+  { metric: 'like', title: (n) => `Like ${n} Threads-berichten`, range: [2, 4], xp: 25, cash: 50 },
   { metric: 'post', title: () => `Post an update on Threads`, range: [1, 1], xp: 25, cash: 50 },
   { metric: 'train', title: () => `Train an agent`, range: [1, 1], xp: 50, cash: 80 },
-  { metric: 'complete_tasks', title: (n) => `Complete ${n} tasks company-wide`, range: [4, 8], xp: 60, cash: 150 },
+  { metric: 'complete_tasks', title: (n) => `Rond ${n} taken af`, range: [4, 8], xp: 60, cash: 150 },
 ];
 
 export function generateMissions(): Mission[] {
