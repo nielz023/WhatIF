@@ -14,7 +14,7 @@ from lib import stad as ST3  # noqa: E402
 
 S = Scene3("n04a", "keuken", "nr_diner", exposure=0.2)
 # 4a 4.0 · 4b 3.0 · 4c tv 0.9 · 4c studio 3.0 · 4d 3.3
-sh = S.cuts([4.0, 3.0, 0.9, 3.0, 3.3])
+sh = S.cuts([4.0, 3.0, 0.9, 3.0, 3.55])
 END = sh[-1][1]
 t_b, t_tv, t_st, t_d = sh[1][0], sh[2][0], sh[3][0], sh[4][0]
 
