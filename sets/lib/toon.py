@@ -83,6 +83,39 @@ LOOK = os.environ.get("SET_LOOK", "glans")
 GLANS = LOOK == "glans"
 # materialen met deze woorden in de naam worden in de glans-look metaal
 METAL_WORDS = ("metaal", "rvs", "chroom", "staal", "kraan", "zilver", "goud")
+DETAIL = os.environ.get("SET_DETAIL", "1") == "1"
+
+# Glans 2: oppervlak per soort materiaal (op naam). Variatie = kleurvlekken,
+# Reliëf = bobbels, Schaal = grootte van de vlekken (per meter), Nerf = houtnerf.
+SURFACES = [
+    (("gras", "gazon", "grasveld", "moestuin_gras"), dict(Variatie=0.32, Reliëf=0.35, Schaal=1.6, Ruwheid=0.62, Coat=0.04)),
+    (("zand", "duin", "strand"), dict(Variatie=0.16, Reliëf=0.45, Schaal=2.5, Ruwheid=0.8, Coat=0.0)),
+    (("aarde", "grond", "moestuin"), dict(Variatie=0.3, Reliëf=0.6, Schaal=3.0, Ruwheid=0.85, Coat=0.0)),
+    (("asfalt", "rijbaan", "weg_", "snelweg"), dict(Variatie=0.14, Reliëf=0.3, Schaal=1.2, Ruwheid=0.72, Coat=0.04)),
+    (("stoep", "tegel", "plein", "steen", "beton", "tribune", "perron", "trottoir", "brug"),
+     dict(Variatie=0.12, Reliëf=0.18, Schaal=1.5, Ruwheid=0.6, Coat=0.06)),
+    (("baksteen", "gevel", "muur"), dict(Variatie=0.1, Reliëf=0.12, Schaal=2.0, Ruwheid=0.58, Coat=0.08)),
+    (("hout", "plank", "bank", "tafel", "schutting", "kraam", "kist", "trap", "bord_hout",
+      "regelbord", "toonbank", "vloer"), dict(Variatie=0.14, Reliëf=0.06, Schaal=2.2, Nerf=0.55,
+                                               Ruwheid=0.45, Coat=0.18)),
+    (("blad", "struik", "heg", "hedge", "boom"), dict(Variatie=0.25, Reliëf=0.3, Schaal=2.5, Ruwheid=0.55, Coat=0.06)),
+    (("stam", "schors"), dict(Variatie=0.2, Reliëf=0.5, Schaal=6.0, Nerf=0.3, Ruwheid=0.75, Coat=0.0)),
+    (("karton", "doos", "papier"), dict(Variatie=0.06, Reliëf=0.05, Schaal=10.0, Ruwheid=0.7, Coat=0.0)),
+    (("water", "oceaan", "zee"), dict(Variatie=0.12, Reliëf=0.08, Schaal=0.8, Ruwheid=0.08, Coat=0.4)),
+    (("stof", "kussen", "handdoek", "tentdoek", "dekbed", "kleed", "matras", "parasol"),
+     dict(Variatie=0.06, Reliëf=0.1, Schaal=30.0, Ruwheid=0.6, Coat=0.03)),
+]
+
+
+def surface_for(name):
+    n = name.lower()
+    for words, vals in SURFACES:
+        if any(w in n for w in words):
+            return vals
+    if any(w in n for w in METAL_WORDS):
+        return dict(Variatie=0.03, Reliëf=0.02, Schaal=12.0)
+    # al het andere: heel licht leven in vlakke kleuren (geen 'plastic CG')
+    return dict(Variatie=0.05, Reliëf=0.03, Schaal=4.0)
 _mood = None
 _mats = {}
 
@@ -165,6 +198,11 @@ def _glans_group():
     r.default_value = 0.38
     mt = ng.interface.new_socket("Metaal", in_out="INPUT", socket_type="NodeSocketFloat")
     mt.default_value = 0.0
+    # glans 2 (video 3): kleurvariatie, reliëf, houtnerf en coat per materiaal
+    for nm, dv in (("Variatie", 0.0), ("Reliëf", 0.0), ("Schaal", 8.0), ("Nerf", 0.0),
+                   ("Coat", 0.25)):
+        so = ng.interface.new_socket(nm, in_out="INPUT", socket_type="NodeSocketFloat")
+        so.default_value = dv
     ng.interface.new_socket("Licht", in_out="OUTPUT", socket_type="NodeSocketShader")
     N, L = ng.nodes, ng.links
     gi = N.new("NodeGroupInput")
@@ -173,13 +211,57 @@ def _glans_group():
     hs.inputs["Saturation"].default_value = 1.2
     b = N.new("ShaderNodeBsdfPrincipled")
     b.name = b.label = "Glans"
-    b.inputs["Coat Weight"].default_value = 0.25
     b.inputs["Coat Roughness"].default_value = 0.18
     b.inputs["Specular IOR Level"].default_value = 0.55
-    L.new(gi.outputs["Kleur"], hs.inputs["Color"])
-    L.new(hs.outputs["Color"], b.inputs["Base Color"])
+    L.new(gi.outputs["Coat"], b.inputs["Coat Weight"])
     L.new(gi.outputs["Ruwheid"], b.inputs["Roughness"])
     L.new(gi.outputs["Metaal"], b.inputs["Metallic"])
+
+    def math_(op, a, c):
+        n = N.new("ShaderNodeMath")
+        n.operation = op
+        for i, v in enumerate((a, c)):
+            if isinstance(v, (int, float)):
+                n.inputs[i].default_value = v
+            else:
+                L.new(v, n.inputs[i])
+        return n.outputs[0]
+    geo = N.new("ShaderNodeNewGeometry")
+    # grove vlekken (kleur) en fijn reliëf, op wereldpositie (statische sets)
+    nz = N.new("ShaderNodeTexNoise")
+    nz.inputs["Detail"].default_value = 4.0
+    nz.inputs["Roughness"].default_value = 0.6
+    L.new(geo.outputs["Position"], nz.inputs["Vector"])
+    L.new(gi.outputs["Schaal"], nz.inputs["Scale"])
+    fijn = N.new("ShaderNodeTexNoise")
+    fijn.inputs["Detail"].default_value = 3.0
+    L.new(geo.outputs["Position"], fijn.inputs["Vector"])
+    L.new(math_("MULTIPLY", gi.outputs["Schaal"], 9.0), fijn.inputs["Scale"])
+    # houtnerf: uitgerekte banden
+    wv = N.new("ShaderNodeTexWave")
+    wv.bands_direction = "X"
+    wv.inputs["Distortion"].default_value = 7.0
+    wv.inputs["Detail"].default_value = 2.0
+    wv.inputs["Detail Scale"].default_value = 1.5
+    L.new(geo.outputs["Position"], wv.inputs["Vector"])
+    L.new(math_("MULTIPLY", gi.outputs["Schaal"], 1.6), wv.inputs["Scale"])
+    vlek = math_("SUBTRACT", nz.outputs["Fac"], 0.5)
+    nerf = math_("MULTIPLY", math_("SUBTRACT", wv.outputs["Fac"], 0.5), gi.outputs["Nerf"])
+    k = math_("ADD", 1.0, math_("MULTIPLY", math_("ADD", vlek, nerf),
+                                math_("MULTIPLY", gi.outputs["Variatie"], 2.0)))
+    sc_ = N.new("ShaderNodeVectorMath")
+    sc_.operation = "SCALE"
+    L.new(gi.outputs["Kleur"], sc_.inputs[0])
+    L.new(k, sc_.inputs["Scale"])
+    L.new(sc_.outputs[0], hs.inputs["Color"])
+    L.new(hs.outputs["Color"], b.inputs["Base Color"])
+    bp = N.new("ShaderNodeBump")
+    bp.inputs["Distance"].default_value = 0.01
+    L.new(gi.outputs["Reliëf"], bp.inputs["Strength"])
+    L.new(math_("ADD", math_("MULTIPLY", fijn.outputs["Fac"], 0.8),
+                math_("MULTIPLY", wv.outputs["Fac"], math_("MULTIPLY", gi.outputs["Nerf"], 0.4))),
+          bp.inputs["Height"])
+    L.new(bp.outputs["Normal"], b.inputs["Normal"])
     # waas op afstand, net als in de toon-look
     cam = N.new("ShaderNodeCameraData")
     mr = N.new("ShaderNodeMapRange")
@@ -266,6 +348,9 @@ def toon(name, color):
     if GLANS and any(w in name.lower() for w in METAL_WORDS):
         g.inputs["Ruwheid"].default_value = 0.18
         g.inputs["Metaal"].default_value = 1.0
+    if GLANS and DETAIL and "Variatie" in g.inputs:
+        for k_, v_ in surface_for(name).items():
+            g.inputs[k_].default_value = v_
     mt.node_tree.links.new(g.outputs[0], out.inputs["Surface"])
     mt.diffuse_color = (*color, 1)
     _mats[key] = mt
@@ -797,6 +882,14 @@ def character(loc, rot_z=0.0, coll_name="Hoofdpersonage (schaal)"):
 def _glossify(mat):
     """Glans-materiaal voor de figuren, zelfde regels als cast/render_glans.py."""
     mat["glans"] = True
+    if DETAIL:
+        import sys as _sys
+        _c = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "cast")
+        if _c not in _sys.path:
+            _sys.path.insert(0, _c)
+        import render_glans as _RG
+        _RG.glossify(mat)
+        return
     b = mat.node_tree.nodes.get("Principled BSDF") if mat.use_nodes else None
     if b is None:
         return
@@ -851,8 +944,30 @@ def _rim_lights(cam):
 # ---------------------------------------------------------------------------
 # Opslaan en renderen
 # ---------------------------------------------------------------------------
+def check_cameras(cameras):
+    """Kwaliteitscheck: staat een camera ín een groot object (gebouw, kast, berg)? Dan print hij een
+    waarschuwing; zo'n render wordt zwart of kijkt door een muur."""
+    from mathutils import Vector
+    bad = []
+    for cam in cameras:
+        p = cam.matrix_world.translation
+        for o in bpy.data.objects:
+            if o.type != "MESH" or o.hide_render or min(o.dimensions) < 1.5:
+                continue
+            inv = o.matrix_world.inverted()
+            lp = inv @ p
+            bb = [Vector(c) for c in o.bound_box]
+            lo = Vector((min(c.x for c in bb), min(c.y for c in bb), min(c.z for c in bb)))
+            hi = Vector((max(c.x for c in bb), max(c.y for c in bb), max(c.z for c in bb)))
+            if all(lo[i] < lp[i] < hi[i] for i in range(3)):
+                bad.append((cam.name, o.name))
+                print(f"WAARSCHUWING: camera {cam.name} staat in object {o.name}")
+    return bad
+
+
 def finish(out_dir, name, cameras, percent=100, render=True):
     os.makedirs(out_dir, exist_ok=True)
+    check_cameras(cameras)
     bpy.context.preferences.filepaths.save_version = 0  # geen .blend1-reservekopieën
     sc = bpy.context.scene
     sc.render.resolution_percentage = percent
@@ -866,11 +981,18 @@ def finish(out_dir, name, cameras, percent=100, render=True):
         if GLANS:
             _rim_lights(cameras[0])
     blend = os.path.join(out_dir, name + ".blend")
+    for f in bpy.data.fonts:  # lettertypes inpakken, zodat de .blend ook op een andere pc klopt
+        if f.filepath and f.packed_file is None and f.name != "Bfont Regular":
+            try:
+                f.pack()
+            except RuntimeError:
+                pass
     bpy.ops.wm.save_as_mainfile(filepath=blend, compress=True)
     outs = []
     sc.render.resolution_percentage = int(os.environ.get("SET_PCT", percent))
     if render:
-        for cam in cameras:
+        maxc = int(os.environ.get("SET_MAXCAMS", 0)) or len(cameras)  # preview: alleen de eerste N camera's
+        for cam in cameras[:maxc]:
             sc.camera = cam
             if GLANS:
                 _rim_lights(cam)

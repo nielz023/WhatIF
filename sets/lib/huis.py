@@ -17,7 +17,7 @@ from . import props as P
 FONT_MARKER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fonts",
                            "PermanentMarker-Regular.ttf")
 MARKER = dict(blauw=(0.05, 0.18, 0.75), rood=(0.85, 0.06, 0.05), zwart=(0.03, 0.03, 0.04),
-              groen=(0.05, 0.50, 0.15))
+              groen=(0.05, 0.50, 0.15), wit=(0.95, 0.95, 0.92))
 PAPIER = [(0.95, 0.20, 0.25), (0.98, 0.55, 0.10), (0.98, 0.85, 0.15), (0.25, 0.70, 0.30),
           (0.15, 0.55, 0.95), (0.55, 0.30, 0.85), (0.98, 0.50, 0.70), (0.97, 0.96, 0.92)]
 

@@ -114,6 +114,12 @@ def face_point(x, z, lift=0.003):
     return p + n * lift, n
 
 
+def pants_stof(hexcol):
+    """Blauwige broeken zijn spijkerstof, de rest katoen."""
+    r, g, b = (int(hexcol.lstrip("#")[k:k + 2], 16) for k in (0, 2, 4))
+    return "denim" if b > r + 25 and b > g and r < 140 else "katoen"
+
+
 class Mats:
     """Materialen in dezelfde opbouw als het hoofdpersonage."""
 
@@ -122,11 +128,12 @@ class Mats:
         self.prefix = prefix
         self.cache = {}
 
-    def pbr(self, hexcol, rough=0.9, metal=0.0, key=None):
-        key = key or ("pbr", hexcol, rough, metal)
+    def pbr(self, hexcol, rough=0.9, metal=0.0, key=None, stof=None):
+        key = key or ("pbr", hexcol, rough, metal, stof)
         if key in self.cache:
             return self.cache[key]
-        m = bpy.data.materials.new(f"{self.prefix}_{hexcol.lstrip('#')}")
+        tag = f"_{stof}" if stof else ""
+        m = bpy.data.materials.new(f"{self.prefix}{tag}_{hexcol.lstrip('#')}")
         m.use_nodes = True
         b = m.node_tree.nodes.get("Principled BSDF")
         b.inputs["Base Color"].default_value = (*lin(hexcol), 1.0)
@@ -444,6 +451,7 @@ EYES = {
     "groen": ("#5E8F4E", "#4B763E"),
     "grijs": ("#7D8B99", "#66727F"),
     "donker": ("#4A2E1A", "#3A2313"),
+    "hero": ("#4A2E1A", "#3A2313"),   # niet gebruikt: hoofdpersonage houdt zijn eigen ogen
 }
 
 CAST = [
@@ -603,9 +611,273 @@ CAST_10X = [
 ]
 
 
+# Video 3 "What IF There Were NO RULES?": het hoofdpersonage in vier versies, nieuwe
+# figuren en grijzere ouders. Bouwen met --cast nr (bouwt ook de vaste CAST opnieuw,
+# met de details van glans 2).
+_HERO = dict(hoodie=True, eyes="hero", brows=dict(keep=True), skin="licht", mouth="smile",
+             shirt=dict(color="#EB7A2B", sleeves="long", cuff="#F6F2E9", stof="fleece"),
+             pants="#3B3F49", pants_stof="katoen", shoes="#F4F1E9")
+
+
+def _hero(key, naam, **kw):
+    d = dict(_HERO, key=key, naam=naam, rol="(hoofdpersonage)")
+    d.update(kw)
+    return d
+
+
+def _variant(base_key, key, naam, **kw):
+    d = dict(next(c for c in CAST if c["key"] == base_key))
+    d.update(key=key, naam=naam)
+    for k, v in kw.items():
+        if isinstance(v, dict) and isinstance(d.get(k), dict):
+            d[k] = dict(d[k], **v)
+        else:
+            d[k] = v
+    return d
+
+
+CAST_NR = [
+    _hero("hoofdpersonage_kind", "Hoofdpersonage (kind)", body=dict()),
+    _hero("hoofdpersonage_pyjama", "Hoofdpersonage in pyjamabroek", body=dict(),
+          pants="#4F6FB8", pants_stof="pyjama", pant_stripes="#DCE6FA", shoes="#8C96A3",
+          sole="#5C6470"),
+    _hero("hoofdpersonage_tiener", "Hoofdpersonage (tiener, jaar 5)",
+          body=dict(leg=1.12, torso=1.06, width=1.02, shoulders=1.07, arm=1.1, legt=1.06, head=0.94),
+          pants="#34507A", pants_stof="denim"),
+    _hero("hoofdpersonage_volwassen", "Hoofdpersonage (jongvolwassen, jaar 10)",
+          body=dict(leg=1.2, torso=1.12, width=1.08, shoulders=1.16, arm=1.18, legt=1.12, head=0.9),
+          shirt=dict(color="#EB7A2B", sleeves="long", sleeve_color="#22314F", cuff="#EB7A2B",
+                     stof="fleece", sleeve_stof="wol"),
+          blazer=dict(color="#22314F"), pants="#2E3440", shoes="#5A3B26",
+          beard=dict(color="#6B4A33")),
+    _variant("pestkop", "pestkop_volwassen", "Pestkop (volwassen, jaar 10)",
+             body=dict(leg=1.14, torso=1.14, width=1.26, shoulders=1.2, arm=1.32, legt=1.16,
+                       head=0.88, belly=0.15),
+             mouth="smile", beard=dict(color="#2A1A10"),
+             shirt=dict(color="#E8E4DA", sleeves="long", sleeve_color="#3B3B40", cuff="#3B3B40"),
+             jacket=dict(color="#3B3B40", stof="wol")),
+    dict(key="volgeling_a", naam="Volgeling 1 (muts)", rol="(geen tekst)",
+         body=dict(leg=1.06, torso=1.0, width=0.88, shoulders=0.92, arm=0.95, head=0.95),
+         skin="olijf", eyes="bruin", brows=dict(color="#2A1A10", angle=12, raise_=-0.004),
+         mouth="smirk",
+         shirt=dict(color="#7C8591", sleeves="long", stof="fleece"),
+         pants="#34507A", shoes="#1F1F22",
+         hair=dict(style="buzz", color="#2A1A10"), hat="beanie", beanie="#2E3440"),
+    dict(key="volgeling_b", naam="Volgeling 2 (pet)", rol="(geen tekst)",
+         body=dict(leg=1.02, torso=1.04, width=1.04, shoulders=1.06, arm=1.06, head=0.95),
+         skin="donker", eyes="donker", brows=dict(color="#1A110C", angle=15, raise_=-0.004),
+         mouth="flat",
+         shirt=dict(color="#1F1F22", sleeves="long", sleeve_color="#3B4A2F", cuff="#2A3321"),
+         jacket=dict(color="#3B4A2F", stof="nylon"),
+         pants="#2E3440", shoes="#F2F2F2",
+         hair=dict(style="buzz", color="#1A110C"), hat="cap",
+         cap=dict(color="#C8283A", visor="#1F1F22")),
+    dict(key="volgeling_c", naam="Volgeling 3 (groot)", rol="(geen tekst)",
+         body=dict(leg=1.08, torso=1.1, width=1.22, shoulders=1.16, arm=1.24, legt=1.14,
+                   head=0.92, belly=0.2),
+         skin="licht", eyes="blauw", brows=dict(color="#A87B3A", scale=1.2, angle=10),
+         mouth="flat",
+         shirt=dict(color="#B3362C", sleeves="long", stof="fleece"),
+         pants="#4B4F57", shoes="#1F1F22",
+         hair=dict(style="short", color="#C9A25A")),
+    dict(key="agent", naam="Agent", rol="AGENT",
+         body=dict(leg=1.06, torso=1.08, width=1.12, shoulders=1.1, arm=1.12, belly=0.22, head=0.98),
+         skin="midden", eyes="bruin", brows=dict(color="#2A1A10", scale=1.15),
+         mouth="smile", mustache="#2A1A10",
+         shirt=dict(color="#2B4170", sleeves="long", cuff="#22345E", stof="katoen"),
+         pants="#1D2742", pants_stof="katoen", pant_stripes="#E2B84B", shoes="#141414",
+         hair=dict(style="short", color="#2A1A10"), hat="peaked",
+         peaked=dict(color="#1D2742", band="#E8E8E8"), badge=True, whistle=True,
+         uniform=dict(pocket="#22345E", belt="#141414", metal="#C9CCD1", ribbons=False)),
+    dict(key="kassiere", naam="Kassière", rol="CASHIER",
+         body=dict(leg=1.0, torso=0.98, width=0.98, hips=1.06, shoulders=0.94, arm=0.9, head=0.97),
+         skin="bruin", eyes="donker", brows=dict(color="#24160F", raise_=0.004),
+         mouth="smile", lashes=True, earrings="#E2B84B",
+         shirt=dict(color="#2F9C5A", sleeves="short"), chest_logo="#F6D04D", name_tag=True,
+         pants="#2E3440", shoes="#1F1F22",
+         hair=dict(style="ponytail", color="#24160F")),
+    dict(key="buurman", naam="Buurman", rol="NEIGHBOR",
+         body=dict(leg=0.98, torso=1.08, width=1.16, shoulders=1.06, arm=1.08, belly=0.42, head=1.0),
+         skin="roze", eyes="blauw", brows=dict(color="#6B5A4A", scale=1.3, angle=14, raise_=-0.004),
+         mouth="flat", mustache="#7A6A5A",
+         glasses=dict(color="#2A2A2A", r=0.007),
+         shirt=dict(color="#8A3B2E", sleeves="long", cuff="#6E2F25", stof="katoen"),
+         vest=dict(color="#5B6B4A", stripes="#5B6B4A"),
+         pants="#6B5A45", shoes="#3A2A1A",
+         hair=dict(style="receding", color="#7A6A5A")),
+    dict(key="ruilmarktverkoper", naam="Ruilmarktverkoper", rol="TRADER",
+         body=dict(leg=0.96, torso=1.0, width=1.04, arm=1.0, head=1.0),
+         skin="olijf", eyes="groen", brows=dict(color="#9A9A9A", scale=1.2),
+         mouth="smile", beard=dict(color="#A8A39B"),
+         shirt=dict(color="#4A6B8A", sleeves="long", cuff="#3C5A75", stof="katoen"),
+         cardigan=dict(color="#7A5A3A", buttons="#2A1A10"),
+         pants="#4B4F57", shoes="#3A2A1A",
+         hair=dict(style="buzz", color="#A8A39B"), hat="beanie", beanie="#B0562E"),
+    dict(key="strandwacht", naam="Strandwacht", rol="(fluit)",
+         body=dict(leg=1.08, torso=1.06, width=1.06, shoulders=1.12, arm=1.1, head=0.97),
+         skin="midden", eyes="bruin", brows=dict(color="#2A1A10"),
+         mouth="smile",
+         shirt=dict(color="#E5483E", sleeves="short"), chest_logo="#FFFFFF",
+         shorts="#E5483E", shoes="#F6D04D", sole="#E9B93A",
+         hair=dict(style="short", color="#2A1A10"), whistle=True,
+         hat="cap", cap=dict(color="#FFFFFF", visor="#E5483E", logo="#E5483E")),
+    dict(key="hondenbaas", naam="Man met het hondje", rol="(geen tekst)",
+         body=dict(leg=1.0, torso=1.02, width=1.0, arm=0.98, head=1.0),
+         skin="licht", eyes="grijs", brows=dict(color="#8E8E8E", scale=1.15),
+         mouth="smile", mustache="#8E8E8E",
+         shirt=dict(color="#E8E2D2", sleeves="long", sleeve_color="#5D7A5B", cuff="#4E6A4C"),
+         cardigan=dict(color="#5D7A5B", buttons="#E8E2D2"),
+         pants="#5A5E66", shoes="#5A3B26",
+         hair=dict(style="bald_sides", color="#B5B5B5"), hat="flatcap"),
+    dict(key="figurant_a", naam="Figurant: vrouw met horloge", rol="(geen tekst)",
+         body=dict(leg=1.02, torso=0.98, width=0.94, hips=1.06, shoulders=0.92, arm=0.88, head=0.97),
+         skin="midden", eyes="bruin", brows=dict(color="#2A1A10"),
+         mouth="flat", lashes=True,
+         shirt=dict(color="#F2C14E", sleeves="long", cuff="#E0AE3C"),
+         pants="#3E5C8A", shoes="#C8283A", hair=dict(style="bob", color="#2A1A10")),
+    dict(key="figurant_b", naam="Figurant: man in pak", rol="(geen tekst)",
+         body=dict(leg=1.06, torso=1.04, width=1.04, shoulders=1.04, arm=1.04, head=0.98),
+         skin="licht", eyes="blauw", brows=dict(color="#5B3A24"),
+         mouth="flat",
+         shirt=dict(color="#F2F4F8", sleeves="long", sleeve_color="#5F6670", cuff="#5F6670"),
+         blazer=dict(color="#5F6670"), tie="#2D6CDF",
+         pants="#5F6670", pants_stof="wol", shoes="#1A1A1A",
+         hair=dict(style="short", color="#5B3A24")),
+    dict(key="figurant_c", naam="Figurant: sportieve vrouw", rol="(geen tekst)",
+         body=dict(leg=1.04, torso=0.96, width=0.9, hips=1.04, shoulders=0.92, arm=0.88, head=0.96),
+         skin="licht", eyes="groen", brows=dict(color="#C9772E"),
+         mouth="smile", lashes=True, freckles=True,
+         shirt=dict(color="#E86FA0", sleeves="short", stof="nylon"),
+         pants="#2E3440", pants_stof="nylon", shoes="#FFFFFF",
+         hair=dict(style="ponytail", color="#C9772E")),
+    dict(key="figurant_d", naam="Figurant: tiener met krullen", rol="(geen tekst)",
+         body=dict(leg=0.98, torso=0.94, width=0.9, arm=0.9, head=0.96),
+         skin="donker", eyes="donker", brows=dict(color="#1E1410"),
+         mouth="grin",
+         shirt=dict(color="#7A5BC9", sleeves="long", stof="fleece"),
+         pants="#3B3F49", shoes="#F6D04D",
+         hair=dict(style="curly", color="#1E1410")),
+    dict(key="figurant_e", naam="Figurant: strandganger", rol="(geen tekst)",
+         body=dict(leg=1.0, torso=1.04, width=1.08, arm=1.02, belly=0.3, head=1.0),
+         skin="roze", eyes="blauw", brows=dict(color="#C9A25A"),
+         mouth="grin",
+         shirt=dict(color="#2D9CDB", sleeves="short", dots=("#FFFFFF", "#F6D04D")),
+         shorts="#F2B33D", shoes="#2D6CDF",
+         hair=dict(style="short", color="#C9A25A")),
+    dict(key="figurant_f", naam="Figurant: vrouw met tas", rol="(geen tekst)",
+         body=dict(leg=0.96, torso=1.0, width=1.04, hips=1.1, shoulders=0.96, arm=0.92,
+                   belly=0.2, head=0.98),
+         skin="olijf", eyes="bruin", brows=dict(color="#3B2416"),
+         mouth="smile", lashes=True, earrings="#E2B84B",
+         shirt=dict(color="#F4E9F2", sleeves="long", cuff="#2F9C95"),
+         cardigan=dict(color="#2F9C95", buttons="#F4E9F2"),
+         skirt=dict(color="#3B4A6B", bottom=0.2), legs="#E8C3A5", shoes="#5B3A4E",
+         hair=dict(style="curly_bun", color="#3B2416")),
+    dict(key="kind_a", naam="Kind op het klimrek", rol="(geen tekst)",
+         body=dict(leg=0.54, torso=0.58, width=0.84, arm=0.78, legt=0.8, head=0.88),
+         skin="bruin", eyes="donker", brows=dict(color="#1E1410", raise_=0.006),
+         mouth="grin", shirt=dict(color="#F6D04D", sleeves="short"),
+         shorts="#2D6CDF", shoes="#E5483E", hair=dict(style="curly", color="#1E1410")),
+    dict(key="kind_b", naam="Kind met staartjes", rol="(geen tekst)",
+         body=dict(leg=0.5, torso=0.55, width=0.8, arm=0.75, legt=0.76, head=0.87),
+         skin="licht", eyes="blauw", brows=dict(color="#C9A25A", raise_=0.008),
+         mouth="smile", lashes=True, blush="#F08A8A",
+         shirt=dict(color="#5DB045", sleeves="short"),
+         skirt=dict(color="#2F9C95", bottom=0.36, flare=1.3), legs="SKIN", shoes="#F59AC2",
+         hair=dict(style="pigtails", color="#C9A25A", ribbon="#E5483E")),
+    _variant("broertje", "broertje_tiener", "Broertje (tiener, jaar 10)",
+             body=dict(leg=0.98, torso=0.94, width=0.94, arm=0.95, legt=0.96, head=0.95),
+             shirt=dict(color="#2D6CDF", sleeves="long", stof="fleece", stripes=None),
+             shorts=None, pants="#34507A"),
+    _variant("mama", "mama_grijs", "Mama (grijze plukken, jaar 5)",
+             hair=dict(color="#A2907E")),
+    _variant("papa", "papa_grijs", "Papa (grijzer, jaar 5)",
+             hair=dict(color="#8F857B"), beard=dict(color="#8F857B")),
+]
+
+
 # ---------------------------------------------------------------------------
 # Opbouw van één figuur
 # ---------------------------------------------------------------------------
+DETAILS = True
+
+
+def _darker(hexcol, k=0.82):
+    r, g, b = (int(hexcol.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+    return "#%02X%02X%02X" % (int(r * k), int(g * k), int(b * k))
+
+
+def _lighter(hexcol, k=0.35):
+    r, g, b = (int(hexcol.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+    return "#%02X%02X%02X" % tuple(int(c + (255 - c) * k) for c in (r, g, b))
+
+
+def slice_part(B, src, label, mat, keep, offset, cat, schoen=False):
+    """Kopie van een deel van een mesh (vlakken waarvan het midden voldoet aan keep(co)),
+    een paar mm naar buiten geschoven: zolen, zomen, boorden die precies passen."""
+    bm = bmesh.new()
+    bm.from_mesh(src.data)
+    bm.transform(src.matrix_world)
+    bm.normal_update()
+    kill = [f for f in bm.faces if not keep(f.calc_center_median())]
+    bmesh.ops.delete(bm, geom=kill, context="FACES")
+    loose = [v for v in bm.verts if not v.link_faces]
+    bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    if not bm.faces:
+        bm.free()
+        return None
+    for v in bm.verts:
+        v.co += v.normal * offset
+    ob = B._obj(bm, label, mat, cat)
+    if schoen:
+        ob["schoen"] = True
+    return ob
+
+
+def add_details(spec, B, parts, mats, M_shirt, M_legs):
+    key = spec["key"]
+    shoe = spec.get("shoes", "#F2EEE8")
+    r, g, b = (int(shoe.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+    dark = (r + g + b) / 3 < 110
+    sole = spec.get("sole") or ("#3A2E26" if dark and spec.get("dress_shoes", True) else "#EEEAE2")
+    if (r + g + b) / 3 > 215 and not spec.get("sole"):
+        sole = "#C9CDD3"   # witte sneakers: grijze zool zodat hij te zien is
+    M_sole = mats.pbr(sole, stof="rubber")
+    for i, s in ((1, "R"), (3, "L")):
+        if i not in parts:
+            continue
+        o = parts[i]
+        zmin = min((o.matrix_world @ Vector(c)).z for c in o.bound_box)
+        slice_part(B, o, f"schoen_zool_{s}", M_sole, lambda c, z=zmin: c.z < z + 0.032, 0.0035,
+                   part_cat(i), schoen=True)
+        if not dark:
+            # neus van de sneaker in de zoolkleur
+            ymin = min((o.matrix_world @ Vector(c)).y for c in o.bound_box)
+            slice_part(B, o, f"schoen_neus_{s}", M_sole,
+                       lambda c, z=zmin, y=ymin: c.y < y + 0.045 and c.z < z + 0.07, 0.0025,
+                       part_cat(i), schoen=True)
+    # zoom onderaan de broekspijpen (niet bij korte broek, rok of blote benen)
+    if not (spec.get("shorts") or spec.get("legs") or spec.get("skirt") or spec.get("onesie")):
+        pc = spec.get("pants") or "#333333"
+        M_z = mats.pbr(_darker(pc, 0.8), stof=pants_stof(pc))
+        for i, s in ((0, "R"), (2, "L")):
+            if i in parts:
+                o = parts[i]
+                zmin = min((o.matrix_world @ Vector(c)).z for c in o.bound_box)
+                slice_part(B, o, f"been_zoom_{s}", M_z, lambda c, z=zmin: c.z < z + 0.035, 0.003,
+                           part_cat(i))
+    # boord onderaan het shirt/de trui en om de hals (niet onder jassen en jurken)
+    covered = any(spec.get(k) for k in ("labcoat", "uniform", "blazer", "jacket", "onesie",
+                                        "cardigan", "vest", "shorts", "skirt"))
+    sh = spec["shirt"]
+    if not covered and 4 in parts:
+        o = parts[4]
+        M_rib = mats.pbr(_darker(sh["color"], 0.86), stof="breisel")
+        slice_part(B, o, "romp_boord", M_rib, lambda c: c.z < 0.655, 0.0035, "torso")
+        if not spec.get("tie") and not sh.get("zipper") and not spec.get("hoodie"):
+            slice_part(B, o, "romp_halsboord", M_rib, lambda c: c.z > 1.165, 0.003, "torso")
+
+
 def build_character(spec, base_parts, unlit_tpl, parent_coll):
     key = spec["key"]
     coll = bpy.data.collections.new(key)
@@ -614,21 +886,24 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
     B = Builder(coll, key, mats)
 
     skin, skin_dark = SKIN[spec["skin"]]
-    M_skin = mats.pbr(skin)
-    M_skin_dark = mats.pbr(skin_dark)
+    M_skin = mats.pbr(skin, stof="huid")
+    M_skin_dark = mats.pbr(skin_dark, stof="huid")
     shirt = spec["shirt"]
-    M_shirt = mats.pbr(shirt["color"])
-    M_sleeve = mats.pbr(shirt.get("sleeve_color", shirt["color"]))
-    M_cuff = mats.pbr(shirt.get("cuff", shirt.get("sleeve_color", shirt["color"])))
+    st_shirt = shirt.get("stof", "katoen")
+    M_shirt = mats.pbr(shirt["color"], stof=st_shirt)
+    M_sleeve = mats.pbr(shirt.get("sleeve_color", shirt["color"]),
+                        stof=shirt.get("sleeve_stof", st_shirt))
+    M_cuff = mats.pbr(shirt.get("cuff", shirt.get("sleeve_color", shirt["color"])),
+                      stof=shirt.get("sleeve_stof", st_shirt))
     pants_col = spec.get("pants") or spec.get("shorts") or "#333333"
     legs_col = spec.get("legs")
     if legs_col == "SKIN" or spec.get("shorts"):
         M_legs = M_skin
     elif legs_col:
-        M_legs = mats.pbr(legs_col)
+        M_legs = mats.pbr(legs_col, stof="nylon")
     else:
-        M_legs = mats.pbr(pants_col)
-    M_shoes = mats.pbr(spec.get("shoes", "#F2EEE8"))
+        M_legs = mats.pbr(pants_col, stof=spec.get("pants_stof") or pants_stof(pants_col))
+    M_shoes = mats.pbr(spec.get("shoes", "#F2EEE8"), stof="schoen")
     iris1, iris2 = EYES[spec.get("eyes", "bruin")]
     brows = spec.get("brows", {})
     M_brow = mats.unlit(brows.get("color", "#3B2416"))
@@ -640,7 +915,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
     # --- 1. kopie van het hoofdpersonage ------------------------------------
     parts = {}
     for i, src in base_parts.items():
-        if i in HOODIE_EXTRAS:
+        if i in HOODIE_EXTRAS and not spec.get("hoodie"):
             continue
         if long_hair and i in (29, 30, 31, 32):
             continue
@@ -679,15 +954,27 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
         setmat(i, M_skin)
     for i in (30, 32):
         setmat(i, M_skin_dark)
-    for i in (35, 42):
-        setmat(i, mats.unlit(iris1))
-    for i in (36, 43):
-        setmat(i, mats.unlit(iris2))
-    for i in (33, 40):
-        setmat(i, M_line)
-    for i in (47, 48, 49, 50, 51, 52):
-        setmat(i, M_brow)
-    setmat(53, M_mouth)
+    if spec.get("eyes") != "hero":
+        for i in (35, 42):
+            setmat(i, mats.unlit(iris1))
+        for i in (36, 43):
+            setmat(i, mats.unlit(iris2))
+        for i in (33, 40):
+            setmat(i, M_line)
+    if not brows.get("keep"):
+        for i in (47, 48, 49, 50, 51, 52):
+            setmat(i, M_brow)
+        setmat(53, M_mouth)
+    if spec.get("hoodie"):
+        # capuchon en buidelzak in de trui-kleur, koordjes in de kleur van de manchetten
+        for i in (5, 12):
+            setmat(i, M_shirt)
+        for i in (6, 7, 8, 9, 10, 11):
+            setmat(i, M_cuff)
+
+    # --- 1b. details (glans 2): rubberzolen, zomen ----------------------------
+    if DETAILS:
+        add_details(spec, B, parts, mats, M_shirt, M_legs)
 
     if sleeves == "short":
         # mouwzoom net boven de elleboog
@@ -737,8 +1024,14 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
                 c = base + d * 0.012
                 B.face_disc(f"wimper_{'L' if side > 0 else 'R'}{k}", M_lash, c.x, c.z,
                             0.013, 0.0035, lift=0.004, roll=-side * a)
+    if not spec.get("blush") and not spec.get("no_blush") and DETAILS:
+        # glans 2: iedereen een heel zachte blos, afgeleid van de eigen huidskleur
+        sr, sg, sb = (int(skin.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+        spec = dict(spec, blush="#%02X%02X%02X" % (int(sr * 0.7 + 0xE8 * 0.3),
+                                                   int(sg * 0.7 + 0x70 * 0.3),
+                                                   int(sb * 0.7 + 0x5F * 0.3)))
     if spec.get("blush"):
-        M_bl = mats.pbr(spec["blush"], rough=1.0)
+        M_bl = mats.pbr(spec["blush"], rough=1.0, stof="huid")
         for side in (-1, +1):
             B.face_disc(f"blos_{'L' if side > 0 else 'R'}", M_bl, side * 0.145, 1.42,
                         0.038, 0.022, lift=0.002)
@@ -762,7 +1055,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
                      (0.02, 0.02, 0.02))
 
     if spec.get("mustache"):
-        M_m = mats.pbr(spec["mustache"])
+        M_m = mats.pbr(spec["mustache"], stof="haar")
         for side in (-1, +1):
             p, n = face_point(side * 0.034, 1.402, 0.006)
             q = n.to_track_quat("-Y", "Z") @ Euler((0, side * math.radians(14), 0)).to_quaternion()
@@ -790,7 +1083,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
     # --- 3. haar ----------------------------------------------------------------
     hair = spec.get("hair")
     if hair and not spec.get("onesie"):
-        M_h = mats.pbr(hair["color"], rough=0.75)
+        M_h = mats.pbr(hair["color"], rough=0.75, stof="haar")
         st = hair["style"]
         if st == "short":
             thr = hairline(0.48, 0.42, 0.18, -0.38)
@@ -901,7 +1194,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
                          rot=(0, side * math.radians(-30), 0))
 
     if spec.get("beard"):
-        M_b = mats.pbr(spec["beard"]["color"], rough=0.8)
+        M_b = mats.pbr(spec["beard"]["color"], rough=0.8, stof="haar")
 
         def hi(a):   # onder de mond door, langs de wangen omhoog naar de bakkebaarden
             t = smoothstep((abs(a) - math.radians(16)) / math.radians(52))
@@ -916,8 +1209,9 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
     # --- 4. hoofddeksels -------------------------------------------------------
     hat = spec.get("hat")
     if hat == "peaked":
-        M_cr = mats.pbr("#5B6B3A")
-        M_band = mats.pbr("#2B2A22")
+        pk = spec.get("peaked", {})
+        M_cr = mats.pbr(pk.get("color", "#5B6B3A"), stof="wol")
+        M_band = mats.pbr(pk.get("band", "#2B2A22"))
         M_vis = mats.pbr("#141414", rough=0.3)
         M_gold = mats.pbr("#D4AF37", rough=0.3, metal=1.0)
         B.cylinder("pet_band", M_band, (0, 0.0, 1.60), (0, 0.0, 1.71), 0.288, cat="head", seg=48)
@@ -945,7 +1239,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
         if cc.get("logo"):
             B.face_disc("pet_logo", mats.pbr(cc["logo"]), 0.0, 1.66, 0.04, 0.03, lift=0.02)
     elif hat == "beanie":
-        M_bn = mats.pbr(spec.get("beanie", "#3A3F47"))
+        M_bn = mats.pbr(spec.get("beanie", "#3A3F47"), stof="breisel")
         B.shell("muts", M_bn, lambda a: 0.42, radius=HEAD_R * 1.06, scale=(1.0, 1.0, 1.08),
                 thick=0.016)
         B.torus("muts_rand", M_bn, (0, 0, HEAD_C.z + HEAD_R * 0.4), HEAD_R * 0.98, 0.028,
@@ -954,7 +1248,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
     # --- 4b. dinopyjama (onesie met capuchon, stekels, buik en staart) ----------
     if spec.get("onesie"):
         on = spec["onesie"]
-        M_on = mats.pbr(on["color"])
+        M_on = mats.pbr(on["color"], stof="pluche")
         M_sp = mats.pbr(on.get("spikes", "#F28C28"))
         M_bel = mats.pbr(on.get("belly", "#BFE3A0"))
         M_ew = mats.pbr("#FFFFFF")
@@ -1043,7 +1337,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
                   (0.006, 0.02, 0.62), cat="leg+" if side > 0 else "leg-", bevel=0)
 
     if spec.get("shorts"):
-        M_sh = mats.pbr(spec["shorts"])
+        M_sh = mats.pbr(spec["shorts"], stof=pants_stof(spec["shorts"]))
         for side in (-1, +1):
             B.cylinder(f"short_{'L' if side > 0 else 'R'}", M_sh, (side * 0.09, 0, 0.44),
                        (side * 0.087, 0, 0.7), 0.082, 0.078, cat="leg+" if side > 0 else "leg-")
@@ -1062,7 +1356,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
 
     if spec.get("cardigan"):
         c = spec["cardigan"]
-        M_c = mats.pbr(c["color"])
+        M_c = mats.pbr(c["color"], stof="breisel")
         rings = [torso_ring(z, 0.012) for z in (0.62, 0.65, 0.7, 0.8, 0.9, 1.0, 1.1, 1.15, 1.18)]
         rings[0] = (0.62, 0.2, 0.158)
         B.loft("vest", M_c, rings,
@@ -1074,7 +1368,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
     if spec.get("vest"):
         # veiligheidshesje zonder mouwen met twee reflecterende banden
         v = spec["vest"]
-        M_v = mats.pbr(v["color"])
+        M_v = mats.pbr(v["color"], stof="nylon")
         M_ref = mats.pbr(v.get("stripes", "#DADDE2"), rough=0.15, metal=0.6)
         rings = [torso_ring(z, 0.014) for z in (0.62, 0.65, 0.7, 0.8, 0.9, 1.0, 1.1, 1.15)]
         rings[0] = (0.62, 0.2, 0.16)
@@ -1103,7 +1397,8 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
 
     if spec.get("jacket") or spec.get("blazer"):
         c = spec.get("jacket") or spec.get("blazer")
-        M_j = mats.pbr(c["color"], rough=0.5 if spec.get("jacket") else 0.85)
+        M_j = mats.pbr(c["color"], rough=0.5 if spec.get("jacket") else 0.85,
+                       stof=c.get("stof", "leer" if spec.get("jacket") else "wol"))
         rings = [torso_ring(z, 0.013) for z in (0.63, 0.65, 0.7, 0.8, 0.9, 1.0, 1.1, 1.15, 1.18)]
         rings[0] = (0.6, 0.2, 0.158)
         rings.append((1.215, 0.095, 0.08))
@@ -1116,7 +1411,7 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
                             1.05, 0.01, thick=0.006, lift=0.02)
 
     if spec.get("labcoat"):
-        M_lc = mats.pbr("#FAFAFA")
+        M_lc = mats.pbr("#FAFAFA", stof="katoen")
         zs = [0.32, 0.45, 0.6, 0.65, 0.7, 0.8, 0.9, 1.0, 1.1, 1.15, 1.18]
         rings = []
         for z in zs:
@@ -1136,9 +1431,10 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
                     lift=0.02, sz=0.04)
 
     if spec.get("uniform"):
-        M_belt = mats.pbr("#4A3424", rough=0.5)
-        M_gold = mats.pbr("#D4AF37", rough=0.3, metal=1.0)
-        M_pk = mats.pbr("#4E5C32")
+        uf = spec["uniform"] if isinstance(spec["uniform"], dict) else {}
+        M_belt = mats.pbr(uf.get("belt", "#4A3424"), rough=0.5, stof="leer")
+        M_gold = mats.pbr(uf.get("metal", "#D4AF37"), rough=0.3, metal=1.0)
+        M_pk = mats.pbr(uf.get("pocket", "#4E5C32"), stof="katoen")
         B.loft("riem", M_belt, [torso_ring(0.66, 0.006), torso_ring(0.71, 0.006)], thick=0.006)
         B.box("gesp", M_gold, (0, -torso_r(0.685)[1] - 0.012, 0.685), (0.05, 0.01, 0.04), bevel=0.2)
         for side in (-1, +1):
@@ -1152,13 +1448,13 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
         for k, z in enumerate((0.78, 0.88, 0.98, 1.08)):
             B.body_disc(f"knoop{k}", M_gold, 0.0, z, 0.01, thick=0.005, lift=0.005)
         M_rib = [mats.pbr(c) for c in ("#C8283A", "#2D6CDF", "#F6D04D")]
-        for k in range(3):
+        for k in range(3 if uf.get("ribbons", True) else 0):
             B.body_disc(f"lintje{k}", M_rib[k], math.radians(26 + 7 * k), 1.07, 0.012, thick=0.004,
                         lift=0.008, sz=0.008)
 
     if spec.get("skirt"):
         sk = spec["skirt"]
-        M_sk = mats.pbr(sk["color"])
+        M_sk = mats.pbr(sk["color"], stof=sk.get("stof", "katoen"))
         bottom = sk.get("bottom", 0.4)
         fl = sk.get("flare", 1.0)
         top = 0.74
@@ -1175,10 +1471,21 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
         zc = 0.98
         yc = -torso_r(zc)[1] - 0.022
         B.cylinder("fluitje", M_wh, (-0.03, yc, zc), (0.03, yc, zc), 0.018, cat="torso")
-        B.sphere("fluitje_bol", M_wh, (0.012, yc, zc - 0.018), (0.022, 0.022, 0.022))
+        B.sphere("fluitje_bol", M_wh, (0.012, yc, zc - 0.018), (0.022, 0.022, 0.022), cat="torso")
         for side in (-1, +1):
-            B.cylinder(f"koord_{'L' if side > 0 else 'R'}", M_lan, (side * 0.07, -0.09, 1.19),
+            B.cylinder(f"fluitkoord_{'L' if side > 0 else 'R'}", M_lan, (side * 0.07, -0.09, 1.19),
                        (side * 0.012, yc + 0.006, zc + 0.012), 0.005, cat="torso", seg=8)
+
+    if spec.get("badge"):
+        # politiepenning: los object "badge", zodat hij later weg kan (drop=("badge",))
+        M_bd = mats.pbr("#D4AF37", rough=0.3, metal=1.0)
+        B.body_disc("badge", M_bd, math.radians(30), 1.105, 0.034, thick=0.007, lift=0.012,
+                    sz=0.04)
+        B.body_disc("badge_ster", mats.pbr("#F3D46A", rough=0.25, metal=1.0), math.radians(30),
+                    1.105, 0.016, thick=0.004, lift=0.019)
+    if spec.get("name_tag"):
+        B.body_disc("naamkaartje", mats.pbr("#FFFFFF"), math.radians(-26), 1.04, 0.026,
+                    thick=0.004, lift=0.006, sz=0.014)
 
     # --- 6. rekwisieten in de rechterhand (-x) ---------------------------------
     prop = spec.get("prop")
@@ -1390,7 +1697,7 @@ def main():
     hero_root = next(o for o in imported if o.type == "EMPTY" and o.parent is None)
     hero_root.name = "hoofdpersonage"
 
-    src = CAST_10X if opts["--cast"] == "10x" else CAST
+    src = {"10x": CAST_10X, "nr": CAST + CAST_NR}.get(opts["--cast"], CAST)
     specs = [s for s in src if not only or s["key"] in only]
     built = []
     for spec in specs:
@@ -1399,7 +1706,8 @@ def main():
         print("gebouwd:", spec["key"], "lengte %.2f m" % zmax)
 
     cam = setup_render(int(opts["--samples"]))
-    blend = "cast_10x_faster.blend" if opts["--cast"] == "10x" else "cast_video1.blend"
+    blend = {"10x": "cast_10x_faster.blend", "nr": "cast_no_rules.blend"}.get(opts["--cast"],
+                                                                             "cast_video1.blend")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(out, blend))
 
     for spec, coll, root, head_c, zmax in built:
