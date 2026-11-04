@@ -190,6 +190,10 @@ class Scene3(_v2.Scene2):
         super().post_cams()
         sc = self.sc
         sc.view_settings.exposure = self.exposure + (0.15 if _v2.ENGINE == "EEVEE" else 0.0)
+        try:                                   # grote sets: anders 'Shadow buffer full' en ontbrekende schaduwen
+            sc.eevee.shadow_pool_size = "1024"
+        except Exception:
+            pass
         if os.environ.get("WHATIF_NOQC") != "1":
             self.qc()
 
@@ -430,3 +434,115 @@ def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway
         for f in range(F(t0), F(t1) + 1, 2):
             A.crouch(ch, f, -0.12, lean + 10)
     ch.last = None
+
+
+# ---------------------------------------------------------------- dieren (hondje, hondje_oud, zebra)
+class Animal:
+    pass
+
+
+def animal(S, name, loc=(0, 0, 0), rot=0.0, scale=1.0):
+    """Laad een dier uit assets/dieren (kijkt bij rot 0 naar -y, net als de figuren)."""
+    before = set(bpy.data.objects)
+    acts_before = set(bpy.data.actions)
+    fps = S.sc.render.fps / S.sc.render.fps_base
+    bpy.ops.import_scene.gltf(filepath=os.path.join(R.ASSETS, "dieren", name + ".glb"))
+    new = [o for o in bpy.data.objects if o not in before]
+    for o in [o for o in new if o.name.startswith("Icosphere")]:
+        new.remove(o)
+        bpy.data.objects.remove(o, do_unlink=True)
+    an = Animal()
+    an.name = name
+    an.rig = [o for o in new if o.type == "ARMATURE"][0]
+    an.rig.name = f"DIER_{name}_{len([o for o in bpy.data.objects if o.name.startswith('DIER_')])}"
+    an.rig.animation_data_create()
+    an.rig.animation_data.action = None
+    an.acts = {a.name.split(".")[0]: a for a in bpy.data.actions if a not in acts_before}
+    an.fps = fps
+    an.rig.scale = (scale, scale, scale)
+    an.rig.location = tuple(loc)
+    an.rig.rotation_euler = (0, 0, math.radians(rot))
+    an.rig.keyframe_insert("location", frame=1)
+    an.rig.keyframe_insert("rotation_euler", frame=1)
+    for o in new:
+        if o.type == "MESH":
+            o.visible_shadow = True
+    return an
+
+
+def animal_act(an, t0, t1, action, speed=1.0):
+    """Speel een (lus)actie van t0 tot t1 (NLA, herhaald)."""
+    act = an.acts.get(action) or bpy.data.actions[action]
+    a0, a1 = act.frame_range
+    L = max(1e-3, a1 - a0)
+    sc = FPS / an.fps / speed
+    tr = an.rig.animation_data.nla_tracks.new()
+    st = tr.strips.new(action, F(t0), act)
+    st.scale = sc
+    st.repeat = max(0.05, (F(t1) - F(t0)) / (L * sc))
+    st.extrapolation = "NOTHING"
+    st.blend_in = st.blend_out = 0
+    return st
+
+
+def animal_path(an, t0, t1, pts, action=None, speed=1.0, ease=0.0):
+    """Beweeg een dier langs punten (z = vloer) met de neus in looprichting; optioneel met een lusactie."""
+    pts = [Vector(p) for p in pts]
+    segs = [(pts[i + 1] - pts[i]).length for i in range(len(pts) - 1)]
+    total = sum(segs) or 1e-6
+
+    def at(d):
+        for i, L in enumerate(segs):
+            if d <= L or i == len(segs) - 1:
+                w = min(1.0, d / L) if L > 0 else 1.0
+                return pts[i].lerp(pts[i + 1], w), pts[i + 1] - pts[i]
+        return pts[-1], pts[-1] - pts[-2]
+    rprev = an.rig.rotation_euler.z
+    f0, f1 = F(t0), F(t1)
+    for f in range(f0, f1 + 1, 2) if f1 > f0 else [f0]:
+        u = (f - f0) / max(1, f1 - f0)
+        if ease:
+            u = u * u * (3 - 2 * u) * ease + u * (1 - ease)
+        p, d = at(u * total)
+        r = math.atan2(d.x, -d.y) if d.length > 1e-6 else rprev
+        while r - rprev > math.pi:
+            r -= 2 * math.pi
+        while r - rprev < -math.pi:
+            r += 2 * math.pi
+        rprev = r
+        an.rig.location = p
+        an.rig.rotation_euler = (0, 0, r)
+        an.rig.keyframe_insert("location", frame=f)
+        an.rig.keyframe_insert("rotation_euler", frame=f)
+    if action:
+        animal_act(an, t0, t1, action, speed)
+
+
+def animal_place(an, t, loc, rot):
+    an.rig.location = tuple(loc)
+    an.rig.rotation_euler = (0, 0, math.radians(rot))
+    an.rig.keyframe_insert("location", frame=F(t))
+    an.rig.keyframe_insert("rotation_euler", frame=F(t))
+
+
+def leash(S, ch, an, t0, t1, side="R", step=0.125, color=(0.75, 0.12, 0.1)):
+    """Hondenlijn van de hand van ch naar de halsband van het dier (dun stokje dat per frame meegaat)."""
+    bpy.ops.mesh.primitive_cylinder_add(vertices=6, radius=0.008, depth=1.0)
+    o = bpy.context.active_object
+    o.name = f"Lijn_{an.rig.name}"
+    o.data.materials.append(S.mat("hondenlijn", color))
+    o.rotation_mode = "QUATERNION"
+    ring = [ob for ob in bpy.data.objects if ob.parent == an.rig and "lijnring" in ob.name]
+    t = t0
+    while t <= t1 + 1e-6:
+        a = S.bone_world(ch, f"hand.{side}", t, tail=False)
+        S.sc.frame_set(F(t))
+        b = ring[0].matrix_world.translation.copy() if ring else an.rig.matrix_world @ Vector((0, -0.2, 0.3))
+        d = b - a
+        o.location = (a + b) / 2
+        o.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(d.normalized())
+        o.scale = (1, 1, max(0.01, d.length * 0.97))
+        for p in ("location", "rotation_quaternion", "scale"):
+            o.keyframe_insert(p, frame=F(t))
+        t += step
+    return o
