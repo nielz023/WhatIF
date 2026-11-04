@@ -488,3 +488,43 @@ function evidenceFor(d: GameData, type: WarIssueType, channelId: string | null):
 
 // convenience selectors
 export const useData = useGame;
+
+// ── ECHT-MODUS ─────────────────────────────────────────────
+// Acties van de speler worden echte opdrachten voor Claude (zie services/real.ts).
+import { order } from '../services/real';
+import { stageById } from '../modules/workflows/pipeline';
+{
+  const g = useGame.getState();
+  const toast = (t: string, k?: 'success' | 'info' | 'warning') => useGame.getState().toast(t, k);
+  const proj = (id: string | null | undefined) => useGame.getState().projects.find((p) => p.id === id);
+  const task = (id: string) => useGame.getState().tasks.find((t) => t.id === id);
+  const agent = (id: string | null | undefined) => useGame.getState().agents.find((a) => a.id === id);
+  const chan = (id: string) => useGame.getState().channels.find((c) => c.id === id)?.name ?? id;
+  const wrap = <K extends keyof Actions>(k: K, describe: (...a: Parameters<Actions[K]>) => string | null) => {
+    const orig = g[k] as unknown as (...a: unknown[]) => unknown;
+    useGame.setState({ [k]: (...a: unknown[]) => {
+      const text = describe(...(a as Parameters<Actions[K]>));
+      const r = orig(...a);
+      if (text) order(text, toast);
+      return r;
+    } } as unknown as Partial<GameStore>);
+  };
+  wrap('startVideo', (i) => `Start een nieuwe video voor ${chan(i.channelId)}.\nTitel: ${i.title}\nOnderwerp: ${i.topic}\nPrioriteit: ${i.priority} · deadline over ${i.deadlineDays} dagen.\nBegin met het verloop (zoals bij video 3) volgens het productiehandboek.`);
+  wrap('assignManualTask', (i) => `Nieuwe taak: ${i.title}\n${i.description}\nRol: ${i.role ? roleById(i.role).title : agent(i.agentId) ? roleById(agent(i.agentId)!.role).title : 'vrij'} · prioriteit ${i.priority} · deadline ${i.deadlineDays} dagen${proj(i.projectId) ? ` · project: ${proj(i.projectId)!.title}` : ''}.`);
+  wrap('commentTask', (id, text) => `Opmerking bij taak "${task(id)?.title ?? id}": ${text}`);
+  wrap('reviewTask', (id, ok, note) => `${ok ? 'Goedgekeurd' : 'Afgekeurd'}: taak "${task(id)?.title ?? id}"${note ? `. Opmerking: ${note}` : ''}.`);
+  wrap('setTaskPriority', (id, p) => `Prioriteit van taak "${task(id)?.title ?? id}" naar ${p}.`);
+  wrap('approveProject', (id) => `Goedkeuring niels: "${proj(id)?.title}" is goed, ga door naar de volgende stap (klaarmaken voor upload).`);
+  wrap('rejectProject', (id, to, reason) => `Afgekeurd: "${proj(id)?.title}" moet terug naar ${stageById(to).label}. Reden: ${reason}`);
+  wrap('publishProject', (id) => `Publiceren: "${proj(id)?.title}". Maak titel, beschrijving, tags en thumbnail klaar. (Uploaden naar YouTube doet niels zelf in Studio.)`);
+  wrap('cancelProject', (id) => `Stop project: "${proj(id)?.title}". Niet verder aan werken.`);
+  wrap('updateAgent', (id, patch) => patch.instructions ? `Nieuwe werkregel voor ${roleById(agent(id)!.role).title}: ${patch.instructions}\nVoeg dit toe aan de werkwijze en het projectgeheugen.` : null);
+  wrap('createPost', (content) => `Bericht van niels aan het team: ${content}`);
+  wrap('commentPost', (_id, text) => `Reactie van niels: ${text}`);
+  wrap('updateChannel', (id, patch) => `Kanaal ${chan(id)} aanpassen: ${Object.entries(patch).map(([k, v]) => `${k} = ${v}`).join(', ')}.`);
+  wrap('approveRecommendation', (caseId, recId) => {
+    const c = useGame.getState().warCases.find((w) => w.id === caseId);
+    const r = c?.recommendations.find((x) => x.id === recId);
+    return r ? `War Room: voer deze aanbeveling echt uit voor Driftmark: ${r.title}. ${r.detail}` : null;
+  });
+}

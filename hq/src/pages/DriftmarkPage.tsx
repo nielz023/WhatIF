@@ -4,6 +4,59 @@ import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
 import { CHANNEL, VIDEOS, SHORTS, RULES, CAST, VOICES, TOOLS, LINKS, IDEAS, NEXT, UPDATED, threadUrl, type RealVideo } from '../data/driftmark';
 import gallery from '../data/gallery.json';
+import { useReal } from '../services/real';
+
+const AVAIL: Record<string, [string, string]> = {
+  laden: ['Verbinding controleren…', '#94a3b8'],
+  available: ['Claude luistert mee: knoppen in de app worden echte opdrachten', '#10b981'],
+  no_session: ['Claude luistert nu niet mee: opdrachten wachten tot je ze opnieuw verstuurt', '#f59e0b'],
+  writers_only: ['Alleen de eigenaar kan opdrachten sturen', '#f59e0b'],
+  off: ['Versturen naar Claude staat hier uit', '#f43f5e'],
+  geen: ['Alleen op de gepubliceerde pagina in claude.ai', '#f43f5e'],
+};
+
+function OrdersPanel() {
+  const { orders, avail, send, resend } = useReal();
+  const toast = useGame((s) => s.toast);
+  const [text, setText] = useState('');
+  const [label, color] = AVAIL[avail] ?? AVAIL.off;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    const o = await send(text.trim());
+    setText('');
+    toast(o.status === 'verstuurd' ? '✅ Opdracht naar Claude gestuurd' : `⏳ In de wachtrij: ${o.reason ?? ''}`, o.status === 'verstuurd' ? 'success' : 'warning');
+  };
+  return (
+    <section id="orders-anchor" className="panel mb-4 border-emerald-400/30 p-4">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="text-sm font-bold uppercase tracking-wider text-emerald-300">Echt-modus · opdrachten aan Claude</div>
+        <span className="flex items-center gap-1.5 text-[11px]" style={{ color }}><span className="h-2 w-2 rounded-full" style={{ background: color }} />{label}</span>
+      </div>
+      <p className="mb-3 text-xs text-slate-400">Wat je in de game doet, gebeurt ook echt. Start New Video, taken, goedkeuren, afkeuren, publiceren, werkregels van agents, berichten op Threads en War Room-aanbevelingen gaan als opdracht naar Claude, en Claude voert ze in het project uit. Uploaden naar YouTube blijft jouw eigen stap in Studio.</p>
+      <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
+        <label htmlFor="order-text" className="sr-only">Opdracht</label>
+        <input id="order-text" className="input min-w-0 flex-1" value={text} onChange={(e) => setText(e.target.value)} placeholder="Typ een opdracht, bv. 'Maak de thumbnail voor video 3'" />
+        <button className="btn-primary text-xs" type="submit">Stuur naar Claude</button>
+      </form>
+      {orders.length > 0 && (
+        <ul className="mt-3 max-h-56 space-y-1.5 overflow-y-auto">
+          {orders.slice(0, 20).map((o) => (
+            <li key={o.id} className="flex items-start justify-between gap-2 rounded-lg bg-white/[.03] px-2.5 py-1.5 text-[11px]">
+              <div className="min-w-0">
+                <div className="whitespace-pre-line text-slate-200">{o.text.split('\n')[0]}</div>
+                <div className="text-slate-500">{new Date(o.at).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{o.reason ? ` · ${o.reason}` : ''}</div>
+              </div>
+              {o.status === 'verstuurd'
+                ? <span className="shrink-0 text-emerald-300">✓ verstuurd</span>
+                : <button className="shrink-0 text-amber-300 hover:text-white" onClick={() => void resend(o.id)}>Opnieuw versturen</button>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 const STATUS_COLOR: Record<string, string> = { Online: '#10b981', Klaar: '#38bdf8', 'In productie': '#f59e0b', Idee: '#94a3b8' };
 const nice = (s: string) => s.replace(/^\d+_/, '').replace(/_/g, ' ');
@@ -119,6 +172,8 @@ export default function DriftmarkPage() {
         </div>
       </div>
 
+      <OrdersPanel />
+
       {/* VIDEOS */}
       <div className="mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-200"><Film size={16} />Video's</div>
       <div className="mb-4 grid gap-3 xl:grid-cols-3">{[...VIDEOS].reverse().map((v) => <VideoCard key={v.nr} v={v} />)}</div>
@@ -182,7 +237,7 @@ export default function DriftmarkPage() {
         </Section>
       </div>
 
-      <div className="mt-4 text-center text-[11px] text-slate-500">Deze pagina toont de echte stand. Het 3D-kantoor, Projects, Agents en Finances zijn de game: een simulatie die met jouw kanaal en video's speelt.</div>
+      <div className="mt-4 text-center text-[11px] text-slate-500">Deze pagina toont de echte stand. In het 3D-kantoor, Projects, Agents en Finances lopen de cijfers als simulatie, maar jouw acties daar worden echte opdrachten.</div>
     </div>
   );
 }
