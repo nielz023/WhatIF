@@ -10,6 +10,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402,F401
+from mathutils import Matrix, Vector  # noqa: E402
 from lib import toon as T  # noqa: E402
 from lib import props as P  # noqa: E402
 from lib import interior as I  # noqa: E402
@@ -28,10 +29,40 @@ T.use_collection(T.collection("Overloop"))
 I.room("Overloop", W, D, H, wall_color=(0.80, 0.74, 0.62), floor_color=(0.55, 0.38, 0.24),
        holes={"back": [(0.45, 1.35, 0, 2.08), (2.15, 3.05, 0, 2.08), (3.95, 4.85, 0, 2.08)],
               "right": [(0.85, 1.75, 0, 2.08)], "left": [(0.9, 1.9, 1.1, 1.9)]})
-I.door("Deur_jongen", W, D, "back", 0.9, color=(0.93, 0.92, 0.88))
-I.door("Deur_broertje", W, D, "back", 2.6, color=(0.93, 0.92, 0.88))
-I.door("Deur_opa", W, D, "back", 4.4, color=(0.93, 0.92, 0.88))
-I.door("Deur_ouders", W, D, "right", 1.3, color=(0.93, 0.92, 0.88))
+DONKER = T.toon("kamer_donker", (0.05, 0.05, 0.08))
+
+
+def door(name, side, a, width=0.9, height=2.05):
+    """Kozijn (vast) + deurblad met het scharnier als oorsprong (Deur_x_blad, rotation z +graden = open naar de kamer),
+    met een donkere kamer erachter zodat een open deur nooit in het niets kijkt."""
+    km = T.toon("kozijn", (0.95, 0.95, 0.93))
+    p = [T.box(name + "_kozijn_l", (-width / 2 - 0.04, 0, 0), (0.08, 0.08, height + 0.06), km, bevel=0, ol=0),
+         T.box(name + "_kozijn_r", (width / 2 + 0.04, 0, 0), (0.08, 0.08, height + 0.06), km, bevel=0, ol=0),
+         T.box(name + "_kozijn_b", (0, 0, height), (width + 0.16, 0.08, 0.08), km, bevel=0, ol=0)]
+    pos, rz = I.wall_point(W, D, side, a, 0, inset=0.03)
+    R = Matrix.Rotation(math.radians(rz), 4, "Z")
+    fr = T.merge(name, p, ol=0.008)
+    fr.location = pos
+    fr.rotation_euler.z = math.radians(rz)
+    leaf = T.merge(name + "_blad", [T.box(name + "_b", (width / 2, 0, 0), (width - 0.02, 0.045, height - 0.02),
+                                          T.toon("deur_" + name, (0.93, 0.92, 0.88)), bevel=0.01, ol=0),
+                                    T.sphere(name + "_klink", (width - 0.1, -0.06, 1.0), 0.035, P.m("metaal"), seg=10, ol=0)], ol=0.008)
+    leaf.location = pos + R @ Vector((-width / 2, 0, 0))
+    leaf.rotation_euler.z = math.radians(rz)
+    # donkere kamer achter de deur (achterwand, zijwanden, vloer, plafond)
+    for nm, c, sz in (("achter", (0, 1.35, 0), (2.2, 0.1, 2.6)), ("l", (-1.1, 0.7, 0), (0.1, 1.3, 2.6)),
+                      ("r", (1.1, 0.7, 0), (0.1, 1.3, 2.6)), ("vloer", (0, 0.7, -0.05), (2.2, 1.3, 0.05)),
+                      ("plafond", (0, 0.7, 2.6), (2.2, 1.3, 0.05))):
+        b = T.box(f"{name}_kamer_{nm}", (0, 0, 0), sz, DONKER, bevel=0, ol=0)
+        b.location = pos + R @ Vector(c)
+        b.rotation_euler.z = math.radians(rz)
+    return fr, leaf
+
+
+door("Deur_jongen", "back", 0.9)
+door("Deur_broertje", "back", 2.6)
+door("Deur_opa", "back", 4.4)
+door("Deur_ouders", "right", 1.3)
 I.window("Raampje", W, D, "left", 0.9, 1.9, 1.1, 1.9, curtains=None)
 I.ceiling_lamp("Overlooplamp", (0.6, 0, H), on=False)
 I.rug("Loper", (0.2, -0.2, 0), (3.6, 0.9), (0.55, 0.15, 0.15))
