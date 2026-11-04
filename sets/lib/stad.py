@@ -203,8 +203,9 @@ def crosswalk(name, center, width, length, rot_z=0.0, stripe=0.5):
 # ---------------------------------------------------------------------------
 # Auto (glans 2: velgen, grille, spiegels, deuren die open kunnen)
 # ---------------------------------------------------------------------------
-def car2(name, loc, rot=0.0, color=(0.1, 0.35, 0.8), kind="hatch", doors_open=(), lights=False, phone=False):
+def car2(name, loc, rot=0.0, color=(0.1, 0.35, 0.8), kind="hatch", doors_open=(), lights=False, phone=False, open_cab=False):
     """Auto van 4,2 m, kijkt naar +x. doors_open: ("L", "R") voor open voordeuren (scène 12a).
+    open_cab=True: holle cabine (dak, stijlen, doorzichtige ruiten) zodat je de bestuurder ziet zitten.
     Deuren zijn eigen objecten (<naam>_deur_L/_R) met hun scharnier aan de voorkant."""
     root = _empty(name, size=0.5)
     body = _m(f"autolak_{'%.2f%.2f%.2f' % color}", color)
@@ -216,13 +217,23 @@ def car2(name, loc, rot=0.0, color=(0.1, 0.35, 0.8), kind="hatch", doors_open=()
     cab_h = 0.62 if kind != "suv" else 0.72
     base_h = 0.62 if kind != "suv" else 0.78
     p = [T.box(name + "_onder", (0, 0, 0.3), (L, W, base_h), body, bevel=0.16, ol=0),
-         T.box(name + "_cabine", (cab_x, 0, 0.3 + base_h - 0.04), (cab_l, W - 0.16, cab_h), body, bevel=0.14, ol=0),
-         T.box(name + "_ruiten", (cab_x, 0, 0.3 + base_h + 0.02), (cab_l + 0.03, W - 0.13, cab_h - 0.14), glass, bevel=0.08, ol=0),
          T.box(name + "_bumper_v", (L / 2 - 0.05, 0, 0.26), (0.18, W - 0.05, 0.22), rub, bevel=0.06, ol=0),
          T.box(name + "_bumper_a", (-L / 2 + 0.05, 0, 0.26), (0.18, W - 0.05, 0.22), rub, bevel=0.06, ol=0),
          T.box(name + "_grille", (L / 2 + 0.01, 0, 0.5), (0.04, 0.8, 0.16), rub, bevel=0.02, ol=0),
          T.box(name + "_kenteken_v", (L / 2 + 0.05, 0, 0.3), (0.02, 0.5, 0.11), _m("kenteken_geel", (0.95, 0.8, 0.1)), bevel=0, ol=0),
          T.box(name + "_kenteken_a", (-L / 2 - 0.05, 0, 0.32), (0.02, 0.5, 0.11), _m("kenteken_geel", (0.95, 0.8, 0.1)), bevel=0, ol=0)]
+    z0, z1 = 0.3 + base_h - 0.04, 0.3 + base_h - 0.04 + cab_h
+    if open_cab:
+        # cabrio: geen dak, alleen een voorruit met stijlen (zo zie je de bestuurder helemaal)
+        gl = T.glass("autoruit_open", (0.70, 0.82, 0.92), 0.18)
+        x1, w2 = cab_x + cab_l / 2, (W - 0.16) / 2
+        for yy in (w2 - 0.04, -w2 + 0.04):
+            p.append(T.box(f"{name}_stijl{yy:.2f}", (x1 - 0.1, yy, z0), (0.06, 0.06, 0.42), body, rot=(0, -25, 0), bevel=0.02, ol=0))
+        p += [T.box(name + "_ruit_voor", (x1 - 0.1, 0, z0 + 0.02), (0.02, W - 0.3, 0.36), gl, rot=(0, -25, 0), bevel=0, ol=0),
+              T.box(name + "_ruitlijst", (x1 - 0.02, 0, z0 + 0.4), (0.06, W - 0.2, 0.05), body, rot=(0, -25, 0), bevel=0.02, ol=0)]
+    else:
+        p += [T.box(name + "_cabine", (cab_x, 0, z0), (cab_l, W - 0.16, cab_h), body, bevel=0.14, ol=0),
+              T.box(name + "_ruiten", (cab_x, 0, 0.3 + base_h + 0.02), (cab_l + 0.03, W - 0.13, cab_h - 0.14), glass, bevel=0.08, ol=0)]
     headl = _glowmat(f"{name}_koplampen", (1.0, 0.95, 0.85), 6.0 if lights else 0.0)
     for y in (0.6, -0.6):
         p.append(T.sphere(f"{name}_koplamp{y}", (L / 2 - 0.02, y, 0.62), 0.13, headl, scale=(0.35, 1.0, 0.55), seg=12, ol=0))
@@ -251,7 +262,8 @@ def car2(name, loc, rot=0.0, color=(0.1, 0.35, 0.8), kind="hatch", doors_open=()
         d = _empty(f"{name}_deur_{side}", (hinge_x, y * (W / 2 + 0.01), 0.3), size=0.15)
         d.parent = root
         dp = [T.box(f"{name}_deurpaneel_{side}", (-0.55, 0, 0.05), (1.1, 0.04, base_h - 0.1), body, bevel=0.03, ol=0),
-              T.box(f"{name}_deurruit_{side}", (-0.55, 0, base_h - 0.04), (1.0, 0.03, cab_h - 0.16), glass, bevel=0.02, ol=0),
+              T.box(f"{name}_deurruit_{side}", (-0.55, 0, base_h - 0.04), (1.0, 0.03, cab_h - 0.16), glass, bevel=0.02, ol=0) if not open_cab else
+              T.box(f"{name}_deurrand_{side}", (-0.55, 0, base_h - 0.06), (1.1, 0.05, 0.05), body, bevel=0.02, ol=0),
               T.box(f"{name}_deurgreep_{side}", (-0.85, y * 0.03, base_h - 0.2), (0.16, 0.03, 0.04), chrome, bevel=0.01, ol=0)]
         dm = T.merge(f"{name}_deurblad_{side}", dp, ol=0)
         dm.parent = d

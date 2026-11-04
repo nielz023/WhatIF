@@ -183,7 +183,7 @@ def kruispunt():
     elif VAR == "ochtend":
         # rij voor rood op de zuidelijke y-weg, rode auto voorop (scène 7b-7c)
         for i in range(5):
-            S.car2(f"Auto_wacht_{i}", (3.0, -ROAD_W / 2 - 6.6 - i * 5.6, 0), rot=90, color=cols[i] if i else cols[0],
+            S.car2(f"Auto_wacht_{i}", (3.0, -ROAD_W / 2 - 6.6 - i * 5.6, 0), rot=90, color=cols[i] if i else cols[0], open_cab=(i == 0),
                    kind="sedan" if i % 2 else "hatch", lights=True)
         for i in range(3):
             S.car2(f"Auto_wacht_x_{i}", (-ROAD_W / 2 - 6.6 - i * 5.6, -3.0, 0), rot=0, color=cols[(i + 3) % 6], lights=True)

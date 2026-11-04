@@ -185,8 +185,8 @@ S.cam(t_h, (HH + V(0.75, -1.7, 0.0), HH + V(0, 0, -0.1), 32), (HH + V(0.55, -1.4
 
 # ---------------------------------------------------------------- geluid
 S.sfx("sfx_alarm_nucleair", 0.0, 0.3, keys=[(0.0, 0.3), (t_g, 0.3), (t_g + 0.3, 0.12), (END, 0.1)], loop_to=END)
-S.sfx("sfx_deur_open", t_e - 0.05, 0.4)
-S.sfx("sfx_voetstappen_hout", t_e + 0.05, 0.35, cut=(0.0, 0.9))
+S.sfx("sfx_deurklink", t_e - 0.05, 0.4)
+S.sfx("sfx_vloer_kraak", t_e + 0.05, 0.35, cut=(0.0, 0.9))
 S.say("N05-04", at=t_h + 0.2)
 S.no_hud.append((0.0, END))
 S.finish(length=END, tail=0.0)
