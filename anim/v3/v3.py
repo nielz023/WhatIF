@@ -692,3 +692,44 @@ def male_scientist(S, ch):
         o.matrix_world = mw
     print("MAN: knot/wimpers/blos/klembord weg:", len(kill), "vlakken; baard op", tuple(round(x, 2) for x in c), "r", round(r, 3))
     return parts
+
+
+def no_phone(ch, screen="6FB7FF", case="1A1A1A"):
+    """Haal de telefoon uit de hand van een figuur (samengevoegd lichaam): het blauwe scherm en de zwarte behuizing
+    die het scherm raakt. Nodig als hij iets anders vasthoudt (een stuur)."""
+    import bmesh
+    body = next((o for o in bpy.data.objects if o.type == "MESH" and o.parent == ch.rig and o.name.endswith("_lichaam")), None)
+    if body is None:
+        return
+    mats = [m.name if m else "" for m in body.data.materials]
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+
+    def comps(key):
+        todo = {f for f in bm.faces if key in mats[f.material_index]}
+        out = []
+        while todo:
+            f0 = todo.pop()
+            grp, stack = [f0], [f0]
+            while stack:
+                for e in stack.pop().edges:
+                    for g in e.link_faces:
+                        if g in todo:
+                            todo.remove(g)
+                            grp.append(g)
+                            stack.append(g)
+            vs = {v for f in grp for v in f.verts}
+            out.append((grp, V([min(v.co[i] for v in vs) for i in range(3)]), V([max(v.co[i] for v in vs) for i in range(3)])))
+        return out
+
+    kill = set()
+    scr = comps(screen)
+    for grp, lo, hi in scr:
+        kill.update(grp)
+        for g2, l2, h2 in comps(case):
+            if all(l2[i] <= hi[i] + 0.02 and h2[i] >= lo[i] - 0.02 for i in range(3)) and max(h2 - l2) < 0.25:
+                kill.update(g2)
+    bmesh.ops.delete(bm, geom=list(kill), context="FACES")
+    bm.to_mesh(body.data)
+    bm.free()
+    print("TELEFOON WEG", ch.name, len(kill), "vlakken")
