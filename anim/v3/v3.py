@@ -467,7 +467,48 @@ def animal(S, name, loc=(0, 0, 0), rot=0.0, scale=1.0):
     for o in new:
         if o.type == "MESH":
             o.visible_shadow = True
+    _zebra_stripes(new)
     return an
+
+
+_STRIPES = {"zebra_streep_lijf": ("X", 6.5, 2.2), "zebra_streep_nek": ("Z", 9.0, 1.5), "zebra_streep_poot": ("Z", 14.0, 0.8)}
+
+
+def _zebra_stripes(objs):
+    """De zebrastrepen zijn procedureel en gaan verloren in de glb: hier opnieuw opbouwen (objectcoordinaten,
+    dus ze plakken op de delen die aan de botten hangen)."""
+    done = set()
+    for o in objs:
+        if o.type != "MESH":
+            continue
+        for m in o.data.materials:
+            if not m or m in done:
+                continue
+            key = next((k for k in _STRIPES if m.name.startswith(k)), None)
+            if key is None:
+                continue
+            done.add(m)
+            axis, scale, distort = _STRIPES[key]
+            m.use_nodes = True
+            nt = m.node_tree
+            b = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None)
+            if b is None:
+                continue
+            tc = nt.nodes.new("ShaderNodeTexCoord")
+            w = nt.nodes.new("ShaderNodeTexWave")
+            w.wave_type, w.bands_direction, w.wave_profile = "BANDS", axis, "SIN"
+            w.inputs["Scale"].default_value = scale
+            w.inputs["Distortion"].default_value = distort
+            w.inputs["Detail"].default_value = 1.5
+            w.inputs["Detail Scale"].default_value = 0.6
+            nt.links.new(tc.outputs["Object"], w.inputs["Vector"])
+            ramp = nt.nodes.new("ShaderNodeValToRGB")
+            ramp.color_ramp.elements[0].position = 0.46
+            ramp.color_ramp.elements[0].color = (0.88, 0.85, 0.80, 1)
+            ramp.color_ramp.elements[1].position = 0.54
+            ramp.color_ramp.elements[1].color = (0.008, 0.007, 0.009, 1)
+            nt.links.new(w.outputs["Fac"], ramp.inputs["Fac"])
+            nt.links.new(ramp.outputs["Color"], b.inputs["Base Color"])
 
 
 def animal_act(an, t0, t1, action, speed=1.0):
@@ -568,3 +609,86 @@ def cutlery(S, kind, name, scale=1.6):
                            ol=0))
     o = T.merge(name, parts, ol=0)
     return o
+
+
+def male_scientist(S, ch):
+    """De wetenschapper is in video 3 een MAN (niels 2026-11-04): knot met band, wimpers, blosjes en klembord uit het
+    samengevoegde lichaam halen, volle wenkbrauwen en een korte baard met snor aan het hoofdbot. Direct na S.actor."""
+    import bmesh
+    bpy.context.view_layer.update()
+    body = next((o for o in bpy.data.objects if o.type == "MESH" and o.parent == ch.rig and o.name.endswith("_lichaam")), None)
+    if body is None:
+        print("LET OP: geen lichaam voor", ch.name)
+        return
+    mats = [m.name if m else "" for m in body.data.materials]
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    bm.faces.ensure_lookup_table()
+
+    def comps(pred):
+        todo = {f for f in bm.faces if pred(mats[f.material_index])}
+        out = []
+        while todo:
+            f0 = todo.pop()
+            grp, stack = [f0], [f0]
+            while stack:
+                f = stack.pop()
+                for e in f.edges:
+                    for g in e.link_faces:
+                        if g in todo:
+                            todo.remove(g)
+                            grp.append(g)
+                            stack.append(g)
+            vs = {v for f in grp for v in f.verts}
+            lo = V([min(v.co[i] for v in vs) for i in range(3)])
+            hi = V([max(v.co[i] for v in vs) for i in range(3)])
+            out.append((grp, lo, hi))
+        return out
+
+    kill = set()
+    hair = comps(lambda n: "_haar_" in n)
+    if len(hair) > 1:
+        hair.sort(key=lambda c: (c[2] - c[1]).length)
+        for grp, lo, hi in hair[:-1]:                     # alles behalve de haarkap = de knot
+            kill.update(grp)
+    for grp, lo, hi in comps(lambda n: "2D6CDF" in n):    # haarband (pasje en pen zitten lager, op de jas)
+        if lo.z > 1.3:
+            kill.update(grp)
+    for grp, lo, hi in comps(lambda n: "1B1214" in n):    # wimpers: de kleinste zwarte vlakjes bij de ogen
+        if max(hi - lo) < 0.03:
+            kill.update(grp)
+    for grp, lo, hi in comps(lambda n: "E09C7D" in n or "A0703D" in n or "C0C0C0" in n or "_FFFFFF_" in n):
+        kill.update(grp)                                    # blosjes en klembord
+    bmesh.ops.delete(bm, geom=list(kill), context="FACES")
+    # hoofd (grootste huidkleurige bol) voor de baard
+    skin = comps(lambda n: "huid_DDB08A" in n)
+    head = max(skin, key=lambda c: (c[2] - c[1]).length) if skin else None
+    bm.to_mesh(body.data)
+    bm.free()
+    if head is None:
+        return
+    Mw = body.matrix_world
+    lo, hi = Mw @ head[1], Mw @ head[2]
+    c = (lo + hi) / 2
+    r = (hi.z - lo.z) / 2
+    M = ch.rig.matrix_world.to_3x3()
+    fwd, up = (M @ V(0, -1, 0)).normalized(), V(0, 0, 1)
+    side = fwd.cross(up).normalized()
+    hairm = S.mat("baard_wetenschapper", (0.13, 0.10, 0.08))
+    yaw = math.degrees(math.atan2(fwd.x, -fwd.y))
+    parts = [T.sphere(ch.name + "_baard", tuple(c + fwd * (r * 0.5) - up * (r * 0.74)), r * 0.58, hairm,
+                      scale=(1.0, 0.7, 0.55), rot=(0, 0, yaw), seg=20, ol=0.004),
+             T.sphere(ch.name + "_snor_L", tuple(c + fwd * (r * 0.93) - up * (r * 0.3) + side * (r * 0.14)), r * 0.16, hairm,
+                      scale=(1.5, 0.6, 0.55), rot=(0, 0, yaw - 12), seg=12, ol=0.003),
+             T.sphere(ch.name + "_snor_R", tuple(c + fwd * (r * 0.93) - up * (r * 0.3) - side * (r * 0.14)), r * 0.16, hairm,
+                      scale=(1.5, 0.6, 0.55), rot=(0, 0, yaw + 12), seg=12, ol=0.003)]
+    bpy.context.view_layer.update()
+    for o in parts:
+        mw = o.matrix_world.copy()
+        o.parent = ch.rig
+        o.parent_type = "BONE"
+        o.parent_bone = "head"
+        bpy.context.view_layer.update()
+        o.matrix_world = mw
+    print("MAN: knot/wimpers/blos/klembord weg:", len(kill), "vlakken; baard op", tuple(round(x, 2) for x in c), "r", round(r, 3))
+    return parts
