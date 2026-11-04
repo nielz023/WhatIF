@@ -471,7 +471,7 @@ def animal(S, name, loc=(0, 0, 0), rot=0.0, scale=1.0):
     return an
 
 
-_STRIPES = {"zebra_streep_lijf": ("X", 6.5, 2.2), "zebra_streep_nek": ("Z", 9.0, 1.5), "zebra_streep_poot": ("Z", 14.0, 0.8)}
+_STRIPES = {"zebra_streep_lijf": ("Y", 6.5, 2.2), "zebra_streep_nek": ("Z", 9.0, 1.5), "zebra_streep_poot": ("Z", 14.0, 0.8)}
 
 
 def _zebra_stripes(objs):
