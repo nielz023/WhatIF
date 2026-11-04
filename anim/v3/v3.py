@@ -53,6 +53,18 @@ class Scene3(_v2.Scene2):
         return ch
 
     # -- montage-ritme -----------------------------------------------------------
+    def turn(self, ch, t0, t1, rot, loc=None, via=None):
+        """Omdraaien zonder verrassingen: draait de korte kant op (of via=+1/-1 een vaste kant) en splitst
+        grote draaien in stukken < 120 graden, anders kiest _near soms de verkeerde kant (rug naar camera)."""
+        cur = math.degrees(self._rot_now(ch, t0))
+        d = (rot - cur + 180.0) % 360.0 - 180.0
+        if via is not None and d * via < 0:
+            d += 360.0 * via
+        n = max(1, int(abs(d) // 120) + 1) if abs(d) > 120 else 1
+        for k in range(n):
+            a, b = t0 + (t1 - t0) * k / n, t0 + (t1 - t0) * (k + 1) / n
+            _v2.Scene2.turn(self, ch, a, b, cur + d * (k + 1) / n, loc if k == n - 1 else None)
+
     def cuts(self, durs, t0=0.0):
         """Shotlijst: [3.0, 2.5, ...] -> [(t0, t1), ...] aaneengesloten vanaf t0."""
         out, t = [], t0

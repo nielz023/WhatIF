@@ -85,7 +85,8 @@ S.beat(held, t_e, "rennen", amount=0.5, face="geschrokken", face_amt=0.8, crouch
 S.beat(held, t_e + 0.8, "staan", face="nerveus", face_amt=0.9, crouch=(0.06, -6),
        arms=arms(arm("L", (0.45, 0.15, -0.8), (0.75, 0.1, -0.55)), arm("R", (0.45, 0.15, -0.8), (0.75, 0.1, -0.55))))
 S.beat(held, t_e + 1.1, "staan", face="nerveus", face_amt=0.9)
-S.turn(held, t_e + 1.1, t_e + 2.1, -179)
+# via de camerakant (-x) draaien, niet met zijn rug ernaartoe
+S.turn(held, t_e + 1.1, t_e + 2.1, -179, via=-1)
 S.beat(held, t_e + 2.2, "staan", face="verbaasd", face_amt=0.8, at=V(0, 81.6, 30))
 S.beat(held, sh[4][1], "staan", face="nerveus", face_amt=1.0, at=V(0, 81.6, 34))
 # ademt hijgend (borst op en neer)
