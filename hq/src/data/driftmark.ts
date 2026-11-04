@@ -159,3 +159,61 @@ export const NEXT: string[] = [
   'Video 1: slot-haakje in de titel fixen',
   'Onderwerp video 4 kiezen uit de ideeënlijst',
 ];
+
+// Laatst bekende threads (fallback als de live stand niet te lezen is)
+export const ACTIVITY: { title: string; id: string; state: string; last: string; doing?: string }[] = [
+ {
+  "title": "Animeer video 3: geen regels meer",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGTfi8z2mFAQH5Qa5zaASKk1",
+  "state": "working",
+  "last": "5 nov 00:42",
+  "doing": "Animeert scène 13 (de brug), stills checken"
+ },
+ {
+  "title": "Maak thumbnail voor video 3",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGTs2SxpLDEpFBKs9hyAGKot",
+  "state": "working",
+  "last": "5 nov 00:38",
+  "doing": "Eerste echte opdracht uit Driftmark HQ. Eigen thread start: jongen in rood licht, kruispunt bij nacht, tekst NO MORE RULES."
+ },
+ {
+  "title": "Driftmark HQ (dit hoofdscherm)",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGD3kJS5r6nXrqiC2f5NfjRQ",
+  "state": "working",
+  "last": "5 nov 00:17",
+  "doing": "Live data, echte tijd en alles in het Nederlands."
+ },
+ {
+  "title": "Bouw cast en sets voor geen-regels-video",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGCHT43zJaABsdPF4uv4swV5",
+  "state": "blocked",
+  "last": "5 nov 00:25",
+  "doing": "Cast (37 figuren), dieren en 36 set-varianten klaar in videos/geen-regels/ (cast, dieren, sets + overzicht_sets_no_rules.jpg). Wacht op jouw akkoord."
+ },
+ {
+  "title": "Schrijf titel, beschrijving en tags video 2",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGFt2jvrzboJ4GbK8fbcasKv",
+  "state": "blocked",
+  "last": "31 okt 15:23",
+  "doing": "Wacht op jouw reactie."
+ },
+ {
+  "title": "Bedenk ideeën voor teaser-shorts",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGS9PSyyns39jsYw5hE9SySp",
+  "state": "blocked",
+  "last": "28 okt 12:30",
+  "doing": "Wacht op jouw reactie."
+ },
+ {
+  "title": "Schrijf werkwijze-document",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WG3mkzfMZCLNKhwkm4CN7Tss",
+  "state": "done",
+  "last": "4 nov 21:49"
+ },
+ {
+  "title": "Verloop video 3",
+  "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WG8Td6Q42bhkx3TbQHgnSwbh",
+  "state": "done",
+  "last": "4 nov 15:33"
+ }
+];

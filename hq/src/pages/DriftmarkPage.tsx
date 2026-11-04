@@ -4,6 +4,7 @@ import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
 import { RULES, CAST, VOICES, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
 import { useLive, startLive } from '../services/live';
+import { ToolsPanel, CostsPanel, RepliesPanel, Outputs } from './DriftmarkExtra';
 import { useEffect } from 'react';
 import gallery from '../data/gallery.json';
 import { useReal } from '../services/real';
@@ -92,6 +93,7 @@ function VideoCard({ v }: { v: RealVideo }) {
         <div><span className="text-slate-500">Lengte:</span> {v.lengte}</div>
       </div>
       <ul className="mt-2 list-disc space-y-0.5 pl-4 text-[11px] text-slate-400">{v.notes.map((n) => <li key={n}>{n}</li>)}</ul>
+      <Outputs nr={v.nr} />
       <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-white/5 pt-2 text-[11px]">
         {v.youtube && <A href={v.youtube}>Op YouTube</A>}
         {v.threads.map((t) => <A key={t.id} href={threadUrl(t.id)}>{t.title}</A>)}
@@ -180,6 +182,7 @@ export default function DriftmarkPage() {
       </div>
 
       <OrdersPanel />
+      <RepliesPanel />
 
       {activity.length > 0 && (
         <section className="panel mb-4 p-4">
@@ -205,6 +208,8 @@ export default function DriftmarkPage() {
       <div className="mb-4 grid gap-3 xl:grid-cols-3">{[...VIDEOS].reverse().map((v) => <VideoCard key={v.nr} v={v} />)}</div>
 
       <div className="grid gap-4 xl:grid-cols-2">
+        <div className="xl:col-span-2"><ToolsPanel /></div>
+
         <Section icon={<Clapperboard size={16} />} title="Shorts">
           <div className="grid gap-2 sm:grid-cols-2">
             {SHORTS.map((s) => (
@@ -257,6 +262,8 @@ export default function DriftmarkPage() {
         <Section icon={<Wrench size={16} />} title="Gereedschap">
           <div className="space-y-1.5">{TOOLS.map((t) => <div key={t.name} className="text-xs"><span className="font-semibold text-white">{t.name}</span> <span className="text-slate-400">· {t.use}</span></div>)}</div>
         </Section>
+
+        <CostsPanel />
 
         <Section icon={<ExternalLink size={16} />} title="Documenten & links">
           <div className="grid gap-1.5 sm:grid-cols-2">{LINKS.map((l) => <div key={l.url} className="text-xs"><A href={l.url}>{l.title}</A></div>)}</div>

@@ -31,7 +31,7 @@ const D: Record<string, string> = {
   'Quality Controller': 'Kwaliteitscontroleur', 'Voice Director': 'Stemregisseur', 'Voice Generator': 'Stemmenmaker', 'Video Editor': 'Animator/editor', 'Visual Researcher': 'Beeldresearcher',
   'Editing Supervisor': 'Montagechef', 'Thumbnail Designer': 'Thumbnailontwerper', 'CTR Specialist': 'CTR-specialist', 'Upload Manager': 'Uploadmanager', 'SEO Specialist': 'SEO-specialist',
   'Social Media Manager': 'Socialemediamanager', 'CEO Agent': 'CEO-agent', 'Financial Manager': 'Financieel manager', 'Performance Analyst': 'Prestatie-analist',
-  'Attention to Detail': 'Oog voor detail', 'in meetings': 'in overleg', 'DEMO DATA ': 'DEMODATA',
+  'Attention to Detail': 'Oog voor detail', 'in meetings': 'in overleg', '⏳ Waiting for you (': '⏳ Wacht op jou (', 'Publish': 'Publiceren', 'Garage Startup': 'Garagebedrijf', 'Growing Studio': 'Groeiende studio', 'DEMO DATA ': 'DEMODATA',
   // crisiskamer
   'Declining Views': 'Dalende weergaven', 'Low CTR': 'Lage CTR', 'Poor Retention': 'Slechte kijkduur', 'Production Delays': 'Productievertraging', 'Falling Revenue': 'Dalende inkomsten',
   'Problem': 'Probleem', 'Scope': 'Bereik', 'Convene War Room': 'Crisiskamer bijeenroepen', 'Approve plan': 'Plan goedkeuren', '✓ Approved by CEO': '✓ Goedgekeurd door niels', 'Dismiss case': 'Zaak sluiten',

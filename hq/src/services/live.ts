@@ -8,11 +8,17 @@ import { create } from 'zustand';
 import * as B from '../data/driftmark';
 
 export interface Activity { title: string; id: string; state: string; last: string; doing?: string }
+export interface Output { name: string; path: string; kind?: 'image' | 'video' | 'file' }
+export interface Cost { datum: string; wat: string; bedrag?: number | null; credits?: string; notitie?: string }
+export interface Reply { at: string; opdracht: string; antwoord: string; thread?: string }
+export interface Blender { stand: string; wachtrij: { naam: string; status: string }[]; bijgewerkt: string }
+export interface YT { subscribers?: number; views?: number; videos?: { title: string; views?: number; date?: string; type?: 'long' | 'short' }[]; bron?: string; datum?: string }
 export interface Live {
   updated: string; channel: typeof B.CHANNEL; videos: B.RealVideo[]; shorts: B.ShortGroup[]; next: string[];
   ideas: typeof B.IDEAS; links: typeof B.LINKS; activity: Activity[];
+  outputs?: Record<string, Output[]>; costs?: Cost[]; replies?: Reply[]; blender?: Blender; youtube?: YT;
 }
-const builtIn: Live = { updated: B.UPDATED, channel: B.CHANNEL, videos: B.VIDEOS, shorts: B.SHORTS, next: B.NEXT, ideas: B.IDEAS, links: B.LINKS, activity: [] };
+const builtIn: Live = { updated: B.UPDATED, channel: B.CHANNEL, videos: B.VIDEOS, shorts: B.SHORTS, next: B.NEXT, ideas: B.IDEAS, links: B.LINKS, activity: B.ACTIVITY };
 
 type Src = 'ingebouwd' | 'live' | 'geen-toegang' | 'fout';
 interface S { data: Live; source: Src; checkedAt: number | null; refresh: () => Promise<void> }
@@ -36,7 +42,9 @@ export const useLive = create<S>((set) => ({
         try {
           const r = await fs.read(p);
           const j = JSON.parse(new TextDecoder().decode(r.bytes));
-          set({ data: { ...builtIn, ...j }, source: 'live', checkedAt: Date.now() });
+          const data = { ...builtIn, ...j };
+          set({ data, source: 'live', checkedAt: Date.now() });
+          try { (await import('./sync')).applyReal(data); } catch (e) { console.warn('sync', e); }
           return;
         } catch (e) { lastErr = e; }
       }
@@ -48,8 +56,15 @@ export const useLive = create<S>((set) => ({
 }));
 
 let started = false;
+export async function readFile(path: string): Promise<Uint8Array> {
+  if (!fs) throw new Error('geen toegang');
+  return (await fs.read(path)).bytes;
+}
+export async function downloadFile(path: string) { if (fs) await fs.download(path); }
+
 export function startLive() {
   if (started) return; started = true;
+  void import('./sync').then((m) => m.applyReal(builtIn));
   setTimeout(() => void useLive.getState().refresh(), 1500);
   setInterval(() => void useLive.getState().refresh(), 60000);
 }

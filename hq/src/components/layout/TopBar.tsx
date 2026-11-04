@@ -5,9 +5,11 @@ import { useGame } from '../../store/useGame';
 import { companyXpForLevel } from '../../modules/gameplay/progression';
 import { compact, eur, fmtTick, relTime } from '../../lib/util';
 import { DemoBadge } from '../ui';
+import { useLive } from '../../services/live';
 
 export default function TopBar() {
   const s = useGame();
+  const live = useLive((x) => x.data);
   const xpNeed = companyXpForLevel(s.company.level);
   const views = s.channels.reduce((a, c) => a + c.views, 0);
   const unread = s.notifications.filter((n) => !n.read).length;
@@ -32,10 +34,10 @@ export default function TopBar() {
           <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-800"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-500" style={{ width: `${(s.company.xp / xpNeed) * 100}%` }} /></div>
         </div>
       </button>
-      <Stat icon={<Users size={16} />} label="Agents" value={s.agents.length} color="#22d3ee" />
-      <Stat icon={<Wallet size={16} />} label="Balance" value={<span className={s.company.balance < 0 ? 'text-rose-400' : ''}>{eur(s.company.balance)}</span>} color="#22c55e" />
-      <Stat icon={<Eye size={16} />} label="Total views" value={compact(views)} color="#a855f7" />
-      <Stat icon={<Tv size={16} />} label="Channels" value={s.channels.length} color="#fb923c" />
+      <Stat icon={<Users size={16} />} label="Threads aan het werk" value={`${s.agents.filter((a) => a.state === 'working').length}/${s.agents.length}`} color="#22d3ee" />
+      <Stat icon={<Tv size={16} />} label="Abonnees" value={live.youtube?.subscribers ?? '—'} color="#fb923c" />
+      <Stat icon={<Eye size={16} />} label={live.youtube?.views != null ? 'Weergaven totaal' : 'Weergaven 28 d'} value={live.youtube?.views != null ? compact(live.youtube.views) : (live.channel.stats[0]?.value ?? '—')} color="#a855f7" />
+      <Stat icon={<Wallet size={16} />} label="Video's online" value={live.videos.filter((v) => v.status === 'Online').length} color="#22c55e" />
       {s.demoMode && <span className="hidden xl:inline"><DemoBadge /></span>}
 
       <div className="ml-auto flex items-center gap-2">

@@ -23,6 +23,8 @@ import WarRoomPage from './pages/WarRoomPage';
 import DriftmarkPage from './pages/DriftmarkPage';
 import type { PageId } from './types';
 import { realTick } from './lib/util';
+import { startLive } from './services/live';
+import { startTools } from './services/tools';
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
   driftmark: DriftmarkPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
@@ -35,10 +37,11 @@ function useSimulationLoop() {
   useEffect(() => {
     const sync = () => {
       const st = useGame.getState();
-      const gap = Math.min(realTick() - st.tick, 24 * 30);
-      if (gap > 0) st.fastForward(gap);
+      // geen nepvoortgang meer: alleen de klok volgt de echte tijd, de rest komt uit de echte stand
+      if (realTick() !== st.tick) useGame.setState({ tick: realTick() });
     };
     sync();
+    startLive(); startTools();
     const id = setInterval(sync, 10000);
     return () => clearInterval(id);
   }, []);
