@@ -42,15 +42,15 @@ for nm in ("Auto_verlaten",):
 VKL = ["VKL_zuid", "VKL_noord", "VKL_oost", "VKL_west"]
 for v in VKL:
     for col in ("rood", "oranje", "groen"):
-        emission_key(f"{v}_{col}", 0.0, 9.0)
+        emission_key(f"{v}_{col}", 0.0, 4.5)
 c0 = sh[2][0] + 0.5
 for v in VKL:
-    emission_key(f"{v}_rood", c0, 0.0)
-    emission_key(f"{v}_groen", c0, 0.0)
+    emission_key(f"{v}_rood", c0, 0.35)
+    emission_key(f"{v}_groen", c0, 0.35)
     k = 0
     t = c0
     while t < END:
-        emission_key(f"{v}_oranje", t, 9.0 if k % 2 == 0 else 0.4)
+        emission_key(f"{v}_oranje", t, 4.5 if k % 2 == 0 else 0.3)
         t += 0.5
         k += 1
 

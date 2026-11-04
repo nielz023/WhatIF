@@ -169,9 +169,10 @@ def kruispunt():
             S.street_lamp(f"Lantaarn_x_{k}", (d * s, ROAD_W / 2 + 0.6, 0.15), rot_z=0, on=NIGHT, block="B", energy=380)
             S.street_lamp(f"Lantaarn_y_{k}", (ROAD_W / 2 + 0.6, d * s, 0.15), rot_z=-90, on=NIGHT, block="C", energy=380)
             k += 1
-    for i, (x, y) in enumerate([(22, -8.5), (-22, 8.5), (35, 8.5), (-35, -8.5)]):
-        P.tree(f"Straatboom_{i}", (x, y, 0.15), h=6.5, r=2.2, seed=i)
-        P.bench(f"Bank_{i}", (x + 3, y + (0.9 if y > 0 else -0.9), 0.15), rot=180 if y > 0 else 0)
+    # bomen midden op de stoep (stoep y 6-10, gevel ~8,8): kroon klein genoeg om vrij van de gevel te blijven
+    for i, (x, y) in enumerate([(22, -6.6), (-22, 6.6), (35, 6.6), (-35, -6.6)]):
+        P.tree(f"Straatboom_{i}", (x, y, 0.15), h=5.6, r=1.25, seed=i)
+        P.bench(f"Bank_{i}", (x + 3, y + (0.5 if y > 0 else -0.5), 0.15), rot=180 if y > 0 else 0)
         P.bin_(f"Prullenbak_{i}", (x - 2.5, y, 0.15))
 
     T.use_collection(T.collection("Auto's"))

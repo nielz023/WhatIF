@@ -138,22 +138,32 @@ LIGHT_STATES = {"rood": (1, 0, 0), "oranje": (0, 1, 0), "groen": (0, 0, 1), "all
 
 def traffic_light(name, loc, rot_z=0.0, state="rood", arm=4.5, h=5.2):
     """Verkeerslicht met een arm over de weg (kijkt naar -y). De drie lampen hebben eigen
-    materialen <naam>_rood/_oranje/_groen: Emission Strength 0 = uit, ~8 = aan."""
+    materialen <naam>_rood/_oranje/_groen: Emission Strength ~0,35 = uit (donker getint glas), ~9 = aan.
+    De kasten hangen met een beugel ONDER de arm (arm loopt niet door de kast) en hebben alleen een
+    korte klep boven elke lamp, zodat je de lamp ook schuin van onderen ziet."""
     root = _empty(name)
     pole = _m("verkeerspaal", (0.20, 0.21, 0.23))
+    kast_m = _m("verkeerslicht_kast", (0.10, 0.10, 0.11))
+    x_out = arm - 0.25
+    za = h - 0.12                                   # hoogte van de arm
     parts = [T.cyl(name + "_paal", (0, 0, 0), 0.09, h, pole, seg=14, ol=0),
              T.cyl(name + "_voet", (0, 0, 0), 0.18, 0.25, pole, r2=0.12, seg=14, ol=0),
-             T.cyl(name + "_arm", (0, 0, h - 0.2), 0.065, arm, pole, rot=(0, 90, 0), seg=12, ol=0)]
+             T.cyl(name + "_arm", (0, 0, za), 0.065, x_out + 0.08, pole, rot=(0, 90, 0), seg=12, ol=0),
+             T.sphere(name + "_armdop", (x_out + 0.08, 0, za), 0.07, pole, seg=10, ol=0)]
     on = LIGHT_STATES[state]
-    for kx, x in enumerate((arm * 0.55, arm - 0.25)):
-        hz = h - 0.25
-        parts.append(T.box(f"{name}_kast{kx}", (x, 0, hz - 1.05), (0.42, 0.34, 1.15), _m("verkeerslicht_kast", (0.10, 0.10, 0.11)), bevel=0.05, ol=0))
-        parts.append(T.box(f"{name}_achterplaat{kx}", (x, 0.04, hz - 1.15), (0.62, 0.04, 1.35), _m("verkeerslicht_plaat", (0.08, 0.08, 0.09)), bevel=0.02, ol=0))
-        for i, (col_n, col) in enumerate((("rood", (1.0, 0.05, 0.02)), ("oranje", (1.0, 0.45, 0.02)), ("groen", (0.05, 1.0, 0.35)))):
-            mat = _glowmat(f"{name}_{col_n}", col, 9.0 if on[i] else 0.0)
-            zz = hz - 0.27 - i * 0.36
-            parts.append(T.cyl(f"{name}_lamp_{col_n}{kx}", (x, -0.17, zz), 0.13, 0.03, mat, rot=(90, 0, 0), seg=20, ol=0))
-            parts.append(T.cyl(f"{name}_kapje_{col_n}{kx}", (x, -0.2, zz + 0.06), 0.15, 0.16, _m("verkeerslicht_kast", (0.10, 0.10, 0.11)), rot=(90, 0, 0), seg=16, ol=0, cap=False))
+    top = za - 0.2                                  # bovenkant kast, 20 cm onder de arm
+    kh = 1.15
+    for kx, x in enumerate((arm * 0.55, x_out)):
+        zc = top - kh / 2
+        parts.append(T.box(f"{name}_beugel{kx}", (x, 0, top - 0.02), (0.08, 0.08, za - top + 0.02), pole, bevel=0.01, ol=0))
+        parts.append(T.box(f"{name}_kast{kx}", (x, 0, top - kh), (0.42, 0.34, kh), kast_m, bevel=0.05, ol=0))
+        parts.append(T.box(f"{name}_achterplaat{kx}", (x, 0.19, top - kh - 0.1), (0.62, 0.03, kh + 0.2), _m("verkeerslicht_plaat", (0.08, 0.08, 0.09)), bevel=0.02, ol=0))
+        for i, (col_n, col) in enumerate((("rood", (1.0, 0.03, 0.01)), ("oranje", (1.0, 0.38, 0.0)), ("groen", (0.0, 1.0, 0.3)))):
+            mat = _glowmat(f"{name}_{col_n}", col, 5.0 if on[i] else 0.3)
+            zz = zc + 0.36 - i * 0.36
+            parts.append(T.cyl(f"{name}_ring_{col_n}{kx}", (x, -0.175, zz), 0.15, 0.02, _m("verkeerslicht_plaat", (0.08, 0.08, 0.09)), rot=(90, 0, 0), seg=20, ol=0))
+            parts.append(T.cyl(f"{name}_lamp_{col_n}{kx}", (x, -0.2, zz), 0.13, 0.02, mat, rot=(90, 0, 0), seg=20, ol=0))
+            parts.append(T.box(f"{name}_kapje_{col_n}{kx}", (x, -0.27, zz + 0.145), (0.3, 0.16, 0.02), kast_m, rot=(-12, 0, 0), bevel=0.005, ol=0))
     for p in parts:
         p.parent = root
     _place(root, loc, rot_z)
