@@ -992,7 +992,8 @@ def finish(out_dir, name, cameras, percent=100, render=True):
     sc.render.resolution_percentage = int(os.environ.get("SET_PCT", percent))
     if render:
         maxc = int(os.environ.get("SET_MAXCAMS", 0)) or len(cameras)  # preview: alleen de eerste N camera's
-        for cam in cameras[:maxc]:
+        only = os.environ.get("SET_ONLYCAM")  # preview: alleen camera's met deze tekst in de naam
+        for cam in [c for c in cameras if not only or only in c.name][:maxc]:
             sc.camera = cam
             if GLANS:
                 _rim_lights(cam)

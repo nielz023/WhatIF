@@ -82,7 +82,7 @@ ns = [T.box("Nachtkastje_body", (0, 0, 0), (0.46, 0.4, 0.55), T.toon("nachtkastj
       T.sphere("Nachtkastje_knop", (0, -0.22, 0.38), 0.02, P.m("metaal"), seg=8, ol=0)]
 ns_o = T.merge("Nachtkastje", ns, ol=0.01)
 clock = [T.box("Wekker_body", (0, 0, 0), (0.16, 0.08, 0.11), T.toon("wekker_rood", (0.85, 0.12, 0.10)), bevel=0.03, ol=0),
-         T.box("Wekker_scherm", (0, -0.041, 0.025), (0.12, 0.005, 0.06), T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 2.5) if NIGHT else T.toon("wekker_scherm", (0.1, 0.1, 0.1)), bevel=0, ol=0)]
+         T.box("Wekker_scherm", (0, -0.041, 0.025), (0.12, 0.005, 0.06), T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 2.5) if NIGHT and not NR else T.toon("wekker_scherm", (0.05, 0.05, 0.05)), bevel=0, ol=0)]
 clock_o = T.merge("Wekker", clock, ol=0.006)
 if NR:
     T.text("Wekker_tijd", "23:59", (-0.012, -0.0445, 0.034), 0.034, T.glow("wekker_cijfers", (1.0, 0.25, 0.15), 6), extrude=0.001).parent = clock_o

@@ -315,7 +315,7 @@ if V2:
 if NR:
     from lib import stad as ST
     T.use_collection(T.collection("No Rules"))
-    ST.house_rules("HOUSE_RULES", (FX + 0.14, D / 2 - 0.737, 1.42), rot=(0, 0, 0),
+    ST.house_rules("HOUSE_RULES", (FX - 0.1, D / 2 - 0.737, 1.07), rot=(0, 0, 0),   # onder de kindertekening
                    extra="5. EVERYONE GETS A VOTE." if MOOD == "nr_oud" else None, yellowed=(MOOD == "nr_oud"))
     if CANDLES:
         for k, (dx, h) in enumerate(((-0.25, 0.2), (0.0, 0.14), (0.22, 0.24))):
@@ -327,7 +327,7 @@ if NR:
             T.box(f"Raamplank_{k}", ((x0 + x1) / 2 - W / 2, D / 2 - 0.08, z0 + 0.12 + k * 0.26), (x1 - x0 + 0.3, 0.025, 0.14),
                   T.toon("plank_steigerhout", (0.62, 0.48, 0.32)), rot=(0, (k % 2 * 2 - 1) * 4, 0), bevel=0.005, ol=0)
         T.area_light("Maanlicht_raam", (W / 2 - 2.6, D / 2 - 0.3, 1.6), (0, -1, 0.5), size=(1.3, 0.9), color=(0.45, 0.55, 1.0), energy=8)
-    cam_extra.append(T.camera("CAM_05_house_rules", (FX - 0.2, D / 2 - 1.5, 1.4), (FX + 0.14, D / 2 - 0.737, 1.3), lens=45))
+    cam_extra.append(T.camera("CAM_05_house_rules", (FX - 0.35, D / 2 - 1.6, 1.15), (FX - 0.1, D / 2 - 0.737, 1.07), lens=38))
 
 T.use_collection(None)
 if CANDLES:

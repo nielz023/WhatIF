@@ -167,14 +167,14 @@ def lab_binnen():
     T.to_mesh(T.tube("Bureaulamp_arm", [(0.9, 2.5, 0.98), (0.95, 2.45, 1.35), (0.75, 2.3, 1.45)], 0.015, metaal))
     T.cyl("Bureaulamp_kap", (0.75, 2.3, 1.35), 0.09, 0.12, T.toon("lampkap_groen", (0.15, 0.45, 0.30)), r2=0.04, seg=16, ol=0)
     T.spot_light("Bureaulamp_licht", (0.75, 2.3, 1.36), (0.2, 2.2, 0.9), color=(1.0, 0.82, 0.55), energy=180, angle=80)
-    T.point_light("Kamer_vul", (0, 0, 2.6), color=(0.55, 0.65, 1.0), energy=70, radius=1.0)
+    T.point_light("Kamer_vul", (0, 0, 2.6), color=(0.55, 0.65, 1.0), energy=180, radius=1.0)
     # medicijnkast met het doosje
     T.box("Medicijnkast", (2.6, 2.7, 0), (1.2, 0.5, 1.9), metaal, bevel=0.02, ol=0)
     for k, z in enumerate((0.5, 0.95, 1.4)):
         T.box(f"Kastplank_{k}", (2.6, 2.44, z), (1.1, 0.02, 0.02), metaal, bevel=0, ol=0)
     deur = S._empty("Medicijnkast_deur", (3.2, 2.44, 0.05), size=0.1)
     T.box("Medicijnkast_deurblad", (-0.6, 0, 0), (1.2, 0.03, 1.8), metaal, bevel=0.01, ol=0).parent = deur
-    deur.rotation_euler.z = math.radians(95)   # open, scharnier rechts (uit beeld van CAM_02)
+    deur.rotation_euler.z = math.radians(170)   # wijd open, scharnier rechts (uit beeld van CAM_02)
     S.medicijndoos("Medicijndoos_kast", (2.4, 2.4, 1.42), rot_z=0)
     for i in range(3):
         T.box(f"Kastpotje_{i}", (2.65 + i * 0.16, 2.5, 1.42), (0.1, 0.1, 0.14), T.toon("potje_bruin", (0.45, 0.25, 0.12)), bevel=0.01, ol=0)
