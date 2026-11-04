@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; overflow: clip; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 800px at 60% 40%, #111a3f 0%, #070b1a 60%);
+  color: #e2e8f0;
+  font-family: Inter, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #22305e; border-radius: 8px; }
+
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-hq-line/70 bg-hq-panel/80 backdrop-blur-md;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.35);
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all duration-150 active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply btn text-white;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    box-shadow: 0 0 18px rgba(139,92,246,.35);
+  }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+  .btn-ghost { @apply btn border border-hq-line bg-hq-panel2/60 text-slate-200 hover:border-indigo-400/60 hover:bg-hq-panel2; }
+  .btn-danger { @apply btn border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20; }
+  .btn-success { @apply btn border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20; }
+  .input {
+    @apply w-full rounded-xl border border-hq-line bg-hq-bg/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none;
+  }
+  .label { @apply mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400; }
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold; }
+  .h-title { @apply font-display text-xl font-bold tracking-tight text-white; }
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #22d3ee, #a855f7 50%, #fb923c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

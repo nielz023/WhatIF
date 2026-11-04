@@ -1,0 +1,81 @@
+import { useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useGame } from './store/useGame';
+import Sidebar from './components/layout/Sidebar';
+import TopBar from './components/layout/TopBar';
+import BottomActions from './components/layout/BottomActions';
+import { ConfirmDialog, Toasts } from './components/layout/Overlays';
+import { AllModals } from './components/modals/Modals';
+import AgentDrawer from './components/shared/AgentDrawer';
+import ProjectDrawer from './components/shared/ProjectDrawer';
+import DepartmentDrawer from './components/shared/DepartmentDrawer';
+import HQPage from './pages/HQPage';
+import ProjectsPage from './pages/ProjectsPage';
+import AgentsPage from './pages/AgentsPage';
+import ChannelsPage from './pages/ChannelsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import ThreadsPage from './pages/ThreadsPage';
+import FinancesPage from './pages/FinancesPage';
+import UpgradesPage from './pages/UpgradesPage';
+import AchievementsPage from './pages/AchievementsPage';
+import SettingsPage from './pages/SettingsPage';
+import WarRoomPage from './pages/WarRoomPage';
+import DriftmarkPage from './pages/DriftmarkPage';
+import type { PageId } from './types';
+
+const PAGES: Record<PageId, () => JSX.Element | null> = {
+  driftmark: DriftmarkPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
+  threads: ThreadsPage, finances: FinancesPage, upgrades: UpgradesPage, achievements: AchievementsPage,
+  settings: SettingsPage, warroom: WarRoomPage,
+};
+
+/** Drives the simulation clock. 1 tick = 1 game hour. */
+function useSimulationLoop() {
+  const paused = useGame((s) => s.paused);
+  const speed = useGame((s) => s.speed);
+  const anyModal = useGame((s) => !!s.modal || !!s.confirm);
+  useEffect(() => {
+    if (paused || anyModal) return;
+    const id = setInterval(() => useGame.getState().advance(), 1000 / speed);
+    return () => clearInterval(id);
+  }, [paused, speed, anyModal]);
+}
+
+export default function App() {
+  useSimulationLoop();
+  const page = useGame((s) => s.page);
+  const Page = PAGES[page] ?? DriftmarkPage;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.closest('input,textarea,select')) return;
+      if (e.code === 'Space') { e.preventDefault(); useGame.getState().togglePause(); }
+      if (e.key === 'Escape') { const st = useGame.getState(); st.selectAgent(null); st.selectProject(null); st.selectDept(null); st.setNotifOpen(false); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  return (
+    <div className="flex h-full w-full">
+      <Sidebar />
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        <TopBar />
+        <main className="relative min-h-0 flex-1">
+          <AnimatePresence mode="wait">
+            <motion.div key={page} className="absolute inset-0" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+              <Page />
+            </motion.div>
+          </AnimatePresence>
+          <BottomActions />
+        </main>
+      </div>
+      <DepartmentDrawer />
+      <ProjectDrawer />
+      <AgentDrawer />
+      <AllModals />
+      <ConfirmDialog />
+      <Toasts />
+    </div>
+  );
+}
