@@ -212,3 +212,11 @@ class Body:
 
     def hip_world(self, t):
         return self.S.bone_world(self.ch, "hips", t, tail=False)
+
+    def at(self, t):
+        """Wereldpositie van de heup volgens de keys van het draaipunt (voor camera's die meelopen)."""
+        loc = list(self.piv.location)
+        for fc in A._fcurves(self.piv):
+            if fc.data_path == "location":
+                loc[fc.array_index] = fc.evaluate(F(t))
+        return Vector(loc)
