@@ -130,9 +130,10 @@ function Section({ icon, title, children, right }: { icon: React.ReactNode; titl
 }
 
 type Tab = 'v1' | 'v2' | 'v3';
-type View = 'overzicht' | 'videos' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
+type View = 'overzicht' | 'threads' | 'videos' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
 const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'overzicht', label: 'Overzicht', uitleg: 'Wat er nu gebeurt en wat jij moet doen' },
+  { id: 'threads', label: 'Alle threads', uitleg: 'Elke Claude-thread in je project, per video. Klik om hem te openen' },
   { id: 'videos', label: "Video's", uitleg: 'Elke lange video met zijn stappen en bestanden' },
   { id: 'shorts', label: 'Shorts', uitleg: 'Welke shorts er zijn en wanneer ze online gaan' },
   { id: 'cast', label: 'Cast & sets', uitleg: 'De figuren en decors per video' },
@@ -248,6 +249,27 @@ export default function DriftmarkPage() {
         </div>
         <div className="panel p-3 text-xs text-slate-300"><span className="font-semibold text-amber-300">Wat de cijfers zeggen:</span> {CHANNEL.insight}</div>
       </>)}
+
+      {view === 'threads' && (
+        <div className="grid gap-4">
+          <div className="flex flex-wrap gap-3 text-xs text-slate-300">
+            <span>{activity.length} threads</span>
+            <span style={{ color: STATE.working[1] }}>● {bezig.length} aan het werk</span>
+            <span style={{ color: STATE.blocked[1] }}>● {wachten.length} wacht op jou</span>
+            <span className="text-slate-500">● {activity.filter((a) => a.state === 'done').length} klaar</span>
+          </div>
+          {[3, 2, 1, 0].map((nr) => {
+            const list = activity.filter((a) => (a.video ?? 0) === nr);
+            if (!list.length) return null;
+            const v = VIDEOS.find((x) => x.nr === nr);
+            return (
+              <Section key={nr} icon={<Users size={16} />} title={nr ? `Video ${nr}${v ? ` · ${v.werktitel}` : ''}` : 'Kanaal, HQ en overig'}>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">{list.map((a) => <ActCard key={a.id} a={a} />)}</div>
+              </Section>
+            );
+          })}
+        </div>
+      )}
 
       {view === 'videos' && <div className="grid gap-3 xl:grid-cols-3">{[...VIDEOS].reverse().map((v) => <VideoCard key={v.nr} v={v} />)}</div>}
 

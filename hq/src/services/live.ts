@@ -7,7 +7,7 @@
 import { create } from 'zustand';
 import * as B from '../data/driftmark';
 
-export interface Activity { title: string; id: string; state: string; last: string; doing?: string }
+export interface Activity { title: string; id: string; state: string; last: string; doing?: string; video?: number; lastIso?: string }
 export interface Output { name: string; path: string; kind?: 'image' | 'video' | 'file' }
 export interface Cost { datum: string; wat: string; bedrag?: number | null; credits?: string; notitie?: string }
 export interface Reply { at: string; opdracht: string; antwoord: string; thread?: string }
