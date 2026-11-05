@@ -22,7 +22,7 @@ function tipsFor(d: Live): Tip[] {
   const wacht = d.activity.filter((a) => a.state === 'blocked' || a.state === 'review_ready');
   if (wacht[0]) t.push({ text: `"${wacht[0].title}" wacht op jou. Even kijken, dan kan Claude door.` });
   const nu = d.videos.find((v) => v.status === 'In productie');
-  if (nu) t.push({ text: `Video ${nu.nr} (${nu.werktitel}) is in productie. Laat alvast de titel en thumbnail maken, dan ligt alles klaar voor de upload.`, doe: `Video ${nu.nr}: maak alvast 5 titels en 3 thumbnailvarianten zodat ze klaarliggen voor de upload.` });
+  if (nu && !(d.outputs?.[String(nu.nr)] ?? []).some((o) => /youtube_upload/.test(o.path))) t.push({ text: `Video ${nu.nr} (${nu.werktitel}) is in productie. Laat alvast de titel en thumbnail maken, dan ligt alles klaar voor de upload.`, doe: `Video ${nu.nr}: maak alvast 5 titels en 3 thumbnailvarianten zodat ze klaarliggen voor de upload.` });
   t.push(
     { text: 'Het spannendste beeld moet binnen 5 seconden in beeld. Bij video 1 haakte 2 op de 3 kijkers af in de eerste minuut.' },
     { text: 'Een getal in de titel werkt goed ("10x", "Day 1 to Day 40"). IFOLOGY scoort daar het best mee.' },
