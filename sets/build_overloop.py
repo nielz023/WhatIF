@@ -19,8 +19,12 @@ args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
 VAR = args[0] if args else "nacht"
 OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/geen-regels/sets/22_overloop"
 
-mood = dict(T.MOODS["nacht"])
-mood.update(sun_rot=(58, 0, 170), sun_strength=0.2, ambient=(0.07, 0.08, 0.14))
+DAY = VAR == "ochtend"          # video 4 (Never Die), scène 3d2: zonnige ochtend, lamp uit
+if DAY:
+    mood = dict(T.MOODS["ochtend"])
+else:
+    mood = dict(T.MOODS["nacht"])
+    mood.update(sun_rot=(58, 0, 170), sun_strength=0.2, ambient=(0.07, 0.08, 0.14))
 T.new_scene("Overloop_" + VAR, mood, samples=48)
 
 W, D, H = 5.6, 2.6, 2.6
@@ -82,8 +86,12 @@ for k, (a, z) in enumerate(((1.8, 1.55), (3.5, 1.6))):
     T.box(f"Lijstje_{k}", (-W / 2 + a, D / 2 - 0.02, z), (0.38, 0.03, 0.3), T.toon(f"lijstje_{k}", (0.25 + 0.3 * k, 0.4, 0.55)),
           bevel=0.01, ol=0.004)
 T.box("Kastje", (W / 2 - 0.35, -D / 2 + 0.35, 0), (0.5, 0.35, 0.8), T.toon("kastje", (0.85, 0.83, 0.78)), bevel=0.02, ol=0.006)
-T.area_light("Maanlicht_raampje", (-W / 2 + 0.3, 0.0, 1.6), (0.0, 0.0, -0.4), size=(1.0, 0.8), color=(0.45, 0.55, 1.0), energy=25)
-T.area_light("Vullicht_blauw", (0.0, -2.6, 2.2), (0, 0.6, 1.0), size=(3, 2), color=(0.45, 0.55, 1.0), energy=18)
+if DAY:
+    T.area_light("Ochtendlicht_raampje", (-W / 2 + 0.3, 0.0, 1.6), (0.0, 0.0, -0.4), size=(1.0, 0.8), color=(1.0, 0.85, 0.65), energy=140)
+    T.area_light("Vullicht_warm", (0.0, -2.6, 2.2), (0, 0.6, 1.0), size=(3, 2), color=(1.0, 0.92, 0.82), energy=90)
+else:
+    T.area_light("Maanlicht_raampje", (-W / 2 + 0.3, 0.0, 1.6), (0.0, 0.0, -0.4), size=(1.0, 0.8), color=(0.45, 0.55, 1.0), energy=25)
+    T.area_light("Vullicht_blauw", (0.0, -2.6, 2.2), (0, 0.6, 1.0), size=(3, 2), color=(0.45, 0.55, 1.0), energy=18)
 
 cams = [T.camera("CAM_01_overloop_wide", (0.0, -2.9, 1.6), (0.0, 0.6, 1.1), lens=20)]
 blend, renders = T.finish(OUT, "overloop_" + VAR, cams)
