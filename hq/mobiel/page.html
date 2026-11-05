@@ -1,12 +1,12 @@
 <title>Driftmark HQ Mobiel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-/* Staande telefoon-app: vaste kop, één kolom kaarten, tabbalk onderin (duim). Eén donkere Driftmark-look: nachtblauw met oranje/blauw randlicht. */
+/* Staande telefoon-app. Kop = Unreal Engine 5-stad bij nacht (uit de cold open van video 3), daaronder één kolom kaarten; tabbalk onderin met de opdrachtknop in het midden (duim). Eén donkere Driftmark-look: nachtblauw, oranje/blauw randlicht. */
 :root {
-  --bg: #070b1a; --panel: #0e1533; --panel2: #141d42; --line: #24326a;
-  --fg: #e8ecff; --muted: #8e9bc9; --orange: #ff9a4d; --blue: #5aa8ff;
+  --bg: #060a18; --panel: #0d1431; --panel2: #141d44; --line: #222f66;
+  --fg: #eef1ff; --muted: #8f9bcb; --orange: #ff9a4d; --blue: #5aa8ff;
   --ok: #34d399; --wait: #fbbf24; --look: #38bdf8; --bad: #fb7185;
   --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "Figtree", system-ui, -apple-system, sans-serif;
@@ -18,156 +18,197 @@ html, body { height: 100%; }
 body { background: var(--bg); color: var(--fg); font: 15px/1.45 var(--body); -webkit-tap-highlight-color: transparent; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 a { color: var(--blue); text-decoration: none; }
-button { font: inherit; color: inherit; }
+button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px);
-  padding-block: 12px 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
-.mark { width: 36px; height: 36px; border-radius: 10px; flex: none; background: url(img/banner.jpg) center/cover, var(--panel2); box-shadow: -2px 0 0 var(--orange) inset, 2px 0 0 var(--blue) inset; }
-.top h1 { margin: 0; font: 800 19px/1 var(--display); letter-spacing: .01em; }
-.top .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.live { margin-left: auto; display: flex; align-items: center; gap: 6px; font: 500 11px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); padding: 6px 9px; border-radius: 99px; }
+/* kop */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  padding-block: 10px; border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); display: flex; align-items: center; gap: 10px; }
+.top h1 { margin: 0; font: 800 18px/1 var(--display); }
+.top h1 span { color: var(--orange); }
+.live { margin-left: auto; display: flex; align-items: center; gap: 6px; font: 500 11px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); padding: 7px 10px; border-radius: 99px; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .live.on .dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.live.spin .dot { animation: pulse .8s ease-in-out infinite; }
 
-main { padding-block: 14px calc(88px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 560px; margin: 0 auto; display: grid; gap: 14px; }
-section[data-tab] { display: grid; gap: 14px; }
-h2 { margin: 6px 0 0; font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+main { padding-block: 0 calc(100px + env(safe-area-inset-bottom, 0px)); max-width: 560px; margin: 0 auto; }
+section[data-tab] { display: grid; gap: 14px; padding-block: 14px 0; }
+h2 { margin: 8px 0 -2px; font: 700 12px var(--body); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 h2 .n { font-family: var(--mono); color: var(--fg); background: var(--panel2); border-radius: 6px; padding: 1px 6px; letter-spacing: 0; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
-.card.hero { background: linear-gradient(160deg, var(--panel2), var(--panel)); border-color: color-mix(in srgb, var(--orange) 40%, var(--line)); }
-.muted { color: var(--muted); }
-.small { font-size: 13px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; min-width: 0; }
+.muted { color: var(--muted); } .small { font-size: 13px; }
 .stack { display: grid; gap: 10px; }
 
+/* hero met UE5-stad */
+.hero { position: relative; border-radius: 20px; overflow: hidden; min-height: 300px; display: flex; align-items: flex-end; border: 1px solid color-mix(in srgb, var(--orange) 35%, var(--line)); background: var(--panel2) url(img/ue_stad.jpg) center/cover; }
+.hero video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0%, transparent 30%, color-mix(in srgb, var(--bg) 70%, transparent) 62%, var(--bg) 100%); }
+.hero .in { position: relative; z-index: 1; padding: 16px; width: 100%; box-sizing: border-box; }
+.hello { font: 500 13px var(--body); color: var(--muted); }
+.hero .vtitle { font-size: 22px; margin: 4px 0 10px; }
+.big { display: flex; align-items: baseline; gap: 10px; }
+.big b { font: 800 40px/1 var(--display); font-variant-numeric: tabular-nums; }
+.big span { font-size: 13px; color: var(--muted); }
+.ue { position: absolute; top: 10px; right: 10px; z-index: 1; font: 500 10px var(--mono); color: var(--fg); background: color-mix(in srgb, var(--bg) 60%, transparent); border: 1px solid var(--line); border-radius: 99px; padding: 4px 8px; }
+
+.vtitle { font: 700 17px/1.2 var(--display); text-wrap: balance; margin: 2px 0 6px; }
+.eyebrow { font: 500 11px var(--mono); color: var(--orange); letter-spacing: .04em; }
+.bar { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--line) 80%, transparent); overflow: hidden; margin-top: 10px; }
+.bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--blue), var(--orange)); }
+.chipsteps { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.cs { font-size: 12px; padding: 4px 8px; border-radius: 8px; background: var(--panel2); color: var(--muted); border: 1px solid transparent; }
+.cs.d { color: var(--fg); } .cs.d::before { content: "✓ "; color: var(--blue); }
+.cs.a { color: #1a0d02; background: var(--orange); font-weight: 700; } .cs.a::before { content: "● "; }
+@keyframes pulse { 50% { opacity: .45; } }
+
+/* jouw beurt */
+.turn { border-color: color-mix(in srgb, var(--wait) 55%, var(--line)); background: linear-gradient(160deg, color-mix(in srgb, var(--wait) 10%, var(--panel)), var(--panel)); }
+.turn.calm { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); background: linear-gradient(160deg, color-mix(in srgb, var(--ok) 9%, var(--panel)), var(--panel)); }
+.turn .head { display: flex; align-items: center; gap: 10px; }
+.turn .ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--wait) 22%, transparent); color: var(--wait); font: 800 18px var(--display); flex: none; }
+.turn.calm .ic { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); }
+.turn .h { font: 700 16px var(--display); }
+.turn .s { font-size: 13px; color: var(--muted); }
+
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 11px; min-width: 0; }
 .stat b { display: block; font: 800 22px/1.1 var(--display); font-variant-numeric: tabular-nums; }
 .stat span { font-size: 11px; color: var(--muted); }
 
-.vtitle { font: 700 17px/1.25 var(--display); text-wrap: balance; margin: 2px 0 6px; }
-.eyebrow { font: 500 11px var(--mono); color: var(--orange); letter-spacing: .04em; }
-.steps { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin: 10px 0 6px; }
-.steps i { height: 6px; border-radius: 3px; background: var(--line); }
-.steps i.d { background: var(--blue); }
-.steps i.a { background: var(--orange); box-shadow: 0 0 8px var(--orange); animation: pulse 1.6s ease-in-out infinite; }
-@keyframes pulse { 50% { opacity: .45; } }
-@media (prefers-reduced-motion: reduce) { .steps i.a { animation: none; } }
-.stepline { font-size: 13px; color: var(--muted); }
-.stepline b { color: var(--fg); font-weight: 600; }
-
 .row { display: flex; gap: 10px; align-items: flex-start; padding: 11px 0; border-top: 1px solid var(--line); }
-.row:first-child { border-top: 0; padding-top: 0; }
-.row:last-child { padding-bottom: 0; }
+.row:first-child { border-top: 0; padding-top: 0; } .row:last-child { padding-bottom: 0; }
 .row .grow { flex: 1; min-width: 0; }
 .row .t { font-weight: 600; overflow-wrap: anywhere; }
 .row .d { font-size: 13px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pill { flex: none; font: 500 10.5px var(--mono); padding: 3px 7px; border-radius: 99px; border: 1px solid currentColor; white-space: nowrap; }
 .s-working { color: var(--ok); } .s-blocked { color: var(--wait); } .s-review_ready { color: var(--look); } .s-done { color: var(--muted); } .s-failed, .s-stopped { color: var(--bad); }
-.go { flex: none; align-self: center; color: var(--muted); font-size: 18px; }
 a.rowlink { color: inherit; }
-.empty { text-align: center; padding: 18px 10px; color: var(--muted); font-size: 14px; }
-.empty b { display: block; color: var(--fg); font: 700 16px var(--display); margin-bottom: 2px; }
+.empty { text-align: center; padding: 14px 10px; color: var(--muted); font-size: 14px; }
+
+details.card > summary { list-style: none; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::after { content: "▾"; margin-left: auto; color: var(--muted); transition: transform .2s; }
+details[open].card > summary::after { transform: rotate(180deg); }
+details.card > div { margin-top: 10px; }
+
+/* video-kaarten */
+.vcard { padding: 0; overflow: hidden; }
+.vcard img { display: block; width: 100%; aspect-ratio: 16/9; max-width: 100%; object-fit: cover; background: var(--panel2); }
+.vcard .body { padding: 14px; }
+.vcard details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.vcard summary { font-size: 13px; color: var(--blue); cursor: pointer; }
+.links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.lk { font-size: 13px; padding: 7px 10px; border-radius: 10px; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); }
+.lk.yt { background: color-mix(in srgb, var(--bad) 18%, var(--panel2)); }
 
 .chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .chips::-webkit-scrollbar { display: none; }
-.chip { flex: none; border: 1px solid var(--line); background: var(--panel); border-radius: 99px; padding: 7px 12px; font-size: 13px; cursor: pointer; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--panel); border-radius: 99px; padding: 8px 13px; font-size: 13px; }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
+/* opdracht */
 textarea { width: 100%; box-sizing: border-box; min-height: 110px; resize: vertical; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font: 16px/1.4 var(--body); }
 textarea:focus { border-color: var(--orange); outline: none; }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 0; border-radius: 12px; padding: 14px; font: 700 16px var(--display); background: var(--orange); color: #1a0d02; cursor: pointer; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 0; border-radius: 14px; padding: 15px; font: 700 16px var(--display); background: var(--orange); color: #1a0d02; }
 .btn:disabled { opacity: .5; }
-.btn.ghost { background: var(--panel2); color: var(--fg); font: 600 13px var(--body); padding: 8px 10px; width: auto; }
-.quick { display: flex; flex-wrap: wrap; gap: 6px; }
-.note { font-size: 12.5px; color: var(--muted); }
-.note.warn { color: var(--wait); }
+.btn.ghost { background: var(--panel2); color: var(--fg); font: 600 13px var(--body); padding: 8px 10px; width: auto; border-radius: 10px; }
+.quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.quick .chip { text-align: left; border-radius: 12px; padding: 10px 11px; line-height: 1.25; }
+.note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.note.warn { color: var(--wait); } .note.good { color: var(--ok); }
 .reply { border-left: 2px solid var(--blue); padding-left: 10px; }
 .reply .q { font-size: 12.5px; color: var(--muted); }
-.reply .a { margin-top: 3px; }
+.reply .a { margin-top: 3px; font-size: 14px; }
 .reply .w { font: 500 11px var(--mono); color: var(--muted); margin-top: 4px; }
-.order .st { font: 500 11px var(--mono); }
-.order .st.ok { color: var(--ok); } .order .st.q { color: var(--wait); }
-.thumb { width: 100%; aspect-ratio: 16/9; max-width: 100%; object-fit: cover; border-radius: 10px; background: var(--panel2); display: block; }
-.yt .v { font: 600 14px var(--mono); font-variant-numeric: tabular-nums; flex: none; }
-ol.next { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
-ol.next li::marker { color: var(--orange); font-family: var(--mono); }
+.order .st { font: 500 11px var(--mono); color: var(--ok); }
 
-nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(12px); border-top: 1px solid var(--line);
-  display: grid; grid-template-columns: repeat(5, 1fr);
+/* cijfers */
+.yt .v { font: 600 13px var(--mono); font-variant-numeric: tabular-nums; flex: none; text-align: right; }
+.vb { height: 4px; border-radius: 2px; background: var(--line); margin-top: 6px; overflow: hidden; }
+.vb i { display: block; height: 100%; background: var(--blue); }
+.vb i.long { background: var(--orange); }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+
+/* tabbalk */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(5, 1fr); align-items: end;
   padding-block: 6px calc(6px + env(safe-area-inset-bottom, 0px)); padding-left: max(6px, env(safe-area-inset-left, 0px)); padding-right: max(6px, env(safe-area-inset-right, 0px)); }
-nav.tabs button { background: none; border: 0; padding: 6px 2px; display: grid; justify-items: center; gap: 3px; font-size: 11px; color: var(--muted); cursor: pointer; position: relative; }
+nav.tabs button { background: none; border: 0; padding: 6px 2px; display: grid; justify-items: center; gap: 3px; font-size: 11px; color: var(--muted); position: relative; }
 nav.tabs svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 nav.tabs button[aria-selected="true"] { color: var(--fg); }
 nav.tabs button[aria-selected="true"] svg { stroke: var(--orange); }
-nav.tabs .badge { position: absolute; top: 2px; left: 55%; min-width: 16px; height: 16px; border-radius: 8px; background: var(--wait); color: #1a1200; font: 700 10px/16px var(--mono); text-align: center; padding: 0 4px; box-sizing: border-box; }
+nav.tabs .fab { margin-top: -26px; }
+nav.tabs .fab .c { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--orange); box-shadow: 0 6px 18px color-mix(in srgb, var(--orange) 45%, transparent), 0 0 0 4px var(--bg); }
+nav.tabs .fab svg, nav.tabs .fab[aria-selected="true"] svg { stroke: #1a0d02; }
+nav.tabs .badge { position: absolute; top: 2px; left: 56%; min-width: 16px; height: 16px; border-radius: 8px; background: var(--wait); color: #1a1200; font: 700 10px/16px var(--mono); text-align: center; padding: 0 4px; box-sizing: border-box; }
+@media (prefers-reduced-motion: reduce) { .live.spin .dot { animation: none; } }
 </style>
 
-<header class="top">
-  <div class="mark" aria-hidden="true"></div>
-  <div>
-    <h1>Driftmark HQ</h1>
-    <div class="sub" id="sub">telefoonversie</div>
-  </div>
-  <div class="live" id="live"><span class="dot"></span><span id="livetxt">laden…</span></div>
+<header class="top gut">
+  <h1>Driftmark <span>HQ</span></h1>
+  <button class="live" id="live" type="button" aria-label="Vernieuwen"><span class="dot"></span><span id="livetxt">laden…</span></button>
 </header>
 
-<main>
+<main class="gut">
   <!-- NU -->
-  <section data-tab="nu" id="tab-nu">
+  <section data-tab="nu">
+    <div class="hero" id="hero">
+      <video id="herovid" muted autoplay loop playsinline preload="auto" poster="img/ue_stad.jpg" aria-hidden="true"><source src="img/ue_stad.mp4" type="video/mp4"></video>
+      <span class="ue">Unreal Engine 5</span>
+      <div class="in" id="heroin"></div>
+    </div>
+    <div class="card turn" id="turn"></div>
     <div class="stats" id="stats"></div>
-    <div class="card hero" id="current"></div>
-    <h2>Wacht op jou <span class="n" id="waitn">0</span></h2>
-    <div class="card" id="waiting"></div>
-    <h2>Blender op je pc</h2>
-    <div class="card small" id="blender"></div>
-    <h2>Volgende stappen</h2>
-    <div class="card"><ol class="next" id="next"></ol></div>
+    <h2>Nu aan het werk <span class="n" id="workn">0</span></h2>
+    <div class="card" id="working"></div>
+    <details class="card" id="blenderbox"><summary>Blender op je pc</summary><div class="small" id="blender"></div></details>
+    <details class="card"><summary>Volgende stappen</summary><div id="next"></div></details>
   </section>
 
   <!-- VIDEO'S -->
-  <section data-tab="videos" id="tab-videos" hidden>
-    <div id="videos" class="stack"></div>
-  </section>
-
-  <!-- THREADS -->
-  <section data-tab="threads" id="tab-threads" hidden>
-    <div class="chips" id="tfilter" role="group" aria-label="Filter threads"></div>
-    <div class="card" id="threads"></div>
-  </section>
-
-  <!-- CIJFERS -->
-  <section data-tab="cijfers" id="tab-cijfers" hidden>
-    <div class="stats" id="stats2"></div>
-    <p class="note" id="ytsrc"></p>
-    <h2>Video's op YouTube</h2>
-    <div class="card yt" id="yt"></div>
-    <h2>Credits en kosten</h2>
-    <div class="card" id="costs"></div>
+  <section data-tab="videos" hidden>
+    <div id="videos" class="stack" style="gap:14px"></div>
   </section>
 
   <!-- OPDRACHT -->
-  <section data-tab="opdracht" id="tab-opdracht" hidden>
+  <section data-tab="opdracht" hidden>
     <div class="card stack" id="orders-anchor">
-      <label for="otext" class="vtitle" style="margin:0">Geef een opdracht</label>
-      <p class="note" style="margin:0">Gaat rechtstreeks naar Claude, die het in het project echt uitvoert. Het antwoord verschijnt hieronder.</p>
+      <label for="otext" class="vtitle" style="margin:0;font-size:20px">Wat moet er gebeuren?</label>
+      <p class="note">Claude voert het echt uit in het project. Het antwoord komt hieronder.</p>
       <div class="quick" id="quick"></div>
-      <textarea id="otext" maxlength="3500" placeholder="Bijv. Hoe ver is de render van video 3?"></textarea>
+      <textarea id="otext" maxlength="3500" placeholder="Typ je opdracht of vraag…"></textarea>
       <button class="btn" id="osend" type="button">Versturen</button>
       <p class="note" id="ostate"></p>
     </div>
-    <h2>Jouw opdrachten</h2>
-    <div class="card" id="orders"></div>
     <h2>Antwoorden</h2>
     <div class="card stack" id="replies"></div>
+    <details class="card"><summary>Jouw verstuurde opdrachten</summary><div id="orders"></div></details>
+  </section>
+
+  <!-- THREADS -->
+  <section data-tab="threads" hidden>
+    <div class="chips" id="tfilter" role="group" aria-label="Filter threads"></div>
+    <div id="threads" class="stack" style="gap:14px"></div>
+  </section>
+
+  <!-- CIJFERS -->
+  <section data-tab="cijfers" hidden>
+    <div class="stats" id="stats2"></div>
+    <p class="note" id="ytsrc"></p>
+    <h2>Weergaven per video</h2>
+    <div class="legend"><span><i style="background:var(--orange)"></i>lange video</span><span><i style="background:var(--blue)"></i>short</span></div>
+    <div class="card yt" id="yt"></div>
+    <details class="card"><summary>Credits en kosten</summary><div id="costs"></div></details>
   </section>
 </main>
 
 <nav class="tabs" role="tablist" aria-label="Onderdelen">
   <button role="tab" data-go="nu" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Nu<span class="badge" id="badge" hidden>0</span></button>
   <button role="tab" data-go="videos" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>Video's</button>
-  <button role="tab" data-go="opdracht" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4l2.5 8z"/><path d="M6.5 12H13"/></svg>Opdracht</button>
+  <button role="tab" data-go="opdracht" aria-selected="false" class="fab"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Opdracht</button>
   <button role="tab" data-go="threads" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Threads</button>
   <button role="tab" data-go="cijfers" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Cijfers</button>
 </nav>
@@ -177,10 +218,11 @@ nav.tabs .badge { position: absolute; top: 2px; left: 55%; min-width: 16px; heig
   "use strict";
   var PROJ = "https://claude.ai/code/project/chan_01LkmukDuDNkj8pXsDu4v8WG";
   var threadUrl = function (id) { return PROJ + "?thread=" + id; };
-  var STATE = { working: "aan het werk", blocked: "wacht op jou", review_ready: "kijk even", done: "klaar", failed: "mislukt", stopped: "gestopt" };
-  var QUICK = ["Hoe ver is video 3?", "Wat moet ik nu doen?", "Update de kanaalcijfers via vidIQ", "Kies een onderwerp voor video 4"];
+  var STATE = { working: "bezig", blocked: "wacht op jou", review_ready: "kijk even", done: "klaar", failed: "mislukt", stopped: "gestopt" };
+  var IMG = { 1: "img/v1.jpg", 2: "img/v2.jpg", 3: "img/v3.jpg" };
+  var QUICK = ["Hoe ver is video 3?", "Wat moet ik nu doen?", "Haal nieuwe kanaalcijfers op", "Kies een onderwerp voor video 4"];
 
-  var data = null, source = "laden", checkedAt = null, filter = "open";
+  var data = null, source = "laden", filter = "bezig";
   var fs, cm;
 
   function $(id) { return document.getElementById(id); }
@@ -196,109 +238,114 @@ nav.tabs .badge { position: absolute; top: 2px; left: 55%; min-width: 16px; heig
   }
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function greet() { var h = +new Date().toLocaleString("nl-NL", { timeZone: "Europe/Amsterdam", hour: "numeric", hour12: false }); return h < 6 ? "Goedenacht" : h < 12 ? "Goedemorgen" : h < 18 ? "Goedemiddag" : "Goedenavond"; }
 
-  /* ---------- tabs (#nu, #videos, ...) ---------- */
+  /* ---------- tabs ---------- */
   var TABS = ["nu", "videos", "opdracht", "threads", "cijfers"];
   function show(tab) {
     if (TABS.indexOf(tab) < 0) tab = "nu";
     document.querySelectorAll("section[data-tab]").forEach(function (s) { s.hidden = s.dataset.tab !== tab; });
     document.querySelectorAll("nav.tabs button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.go === tab ? "true" : "false"); });
+    var v = $("herovid"); if (v) { if (tab === "nu") { var p = v.play(); if (p && p.catch) p.catch(function () {}); } else v.pause(); }
     window.scrollTo(0, 0);
   }
-  document.querySelectorAll("nav.tabs button").forEach(function (b) {
-    b.addEventListener("click", function () { if (location.hash !== "#" + b.dataset.go) location.hash = b.dataset.go; else show(b.dataset.go); });
-  });
+  function go(tab) { if (location.hash !== "#" + tab) location.hash = tab; else show(tab); }
+  document.querySelectorAll("nav.tabs button").forEach(function (b) { b.addEventListener("click", function () { go(b.dataset.go); }); });
   window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
 
-  /* ---------- render ---------- */
-  function activeStep(v) {
-    var s = v.steps || [], a = s.filter(function (x) { return x.active; })[0];
-    var done = s.filter(function (x) { return x.done; }).length;
-    return { label: a ? a.label : (done === s.length && s.length ? "Klaar" : (s[done] || {}).label), done: done, total: s.length };
+  /* ---------- helpers voor de weergave ---------- */
+  function prog(v) {
+    var s = v.steps || [], a = s.filter(function (x) { return x.active; })[0], done = s.filter(function (x) { return x.done; }).length;
+    return { label: a ? a.label : (done === s.length && s.length ? "Klaar" : (s[done] || {}).label || "–"), done: done, total: s.length, pct: s.length ? Math.round(done / s.length * 100) : 0 };
   }
-  function stepsBar(v) { return '<div class="steps" aria-hidden="true">' + (v.steps || []).map(function (s) { return '<i class="' + (s.done ? "d" : s.active ? "a" : "") + '"></i>'; }).join("") + "</div>"; }
-  function statTiles(yt) {
-    var vids = (yt.videos || []);
-    var longs = vids.filter(function (v) { return v.type === "long"; });
-    var best = vids.filter(function (v) { return v.type === "short"; }).sort(function (a, b) { return (b.views || 0) - (a.views || 0); })[0];
-    return '<div class="stat"><b>' + nf(yt.subscribers) + '</b><span>abonnees</span></div>' +
-      '<div class="stat"><b>' + nf(yt.views) + '</b><span>weergaven</span></div>' +
-      '<div class="stat"><b>' + nf(best ? best.views : null) + '</b><span>beste short</span></div>' +
-      "";
-  }
-  function actRow(a) {
+  function chipSteps(v) { return '<div class="chipsteps">' + (v.steps || []).map(function (s) { return '<span class="cs ' + (s.done ? "d" : s.active ? "a" : "") + '">' + esc(s.label) + '</span>'; }).join("") + '</div>'; }
+  function actRow(a, full) {
     return '<a class="row rowlink" href="' + threadUrl(a.id) + '" target="_blank" rel="noreferrer"><div class="grow"><div class="t">' + esc(a.title) + '</div>' +
-      (a.doing ? '<div class="d">' + esc(a.doing) + '</div>' : "") +
-      '<div class="d">' + (a.lastIso ? ago(a.lastIso) : esc(a.last || "")) + (a.video ? " · video " + a.video : "") + '</div></div>' +
+      (a.doing ? '<div class="d' + (full ? "" : " clamp") + '">' + esc(a.doing) + '</div>' : "") +
+      '<div class="d">' + (a.lastIso ? ago(a.lastIso) : esc(a.last || "")) + '</div></div>' +
       '<span class="pill s-' + esc(a.state) + '">' + esc(STATE[a.state] || a.state) + '</span></a>';
   }
+  function byRecent(a, b) { return (Date.parse(b.lastIso || 0) || 0) - (Date.parse(a.lastIso || 0) || 0); }
 
   function render() {
     if (!data) return;
-    var d = data, yt = d.youtube || {}, acts = d.activity || [];
-    $("sub").textContent = "bijgewerkt " + (ago(d.updated) || "–");
+    var d = data, yt = d.youtube || {}, acts = d.activity || [], vids = yt.videos || [];
+    var bestShort = vids.filter(function (v) { return v.type === "short"; }).sort(function (a, b) { return (b.views || 0) - (a.views || 0); })[0];
 
-    /* Nu */
-    $("stats").innerHTML = statTiles(yt);
+    /* Nu: hero */
     var cur = (d.videos || []).filter(function (v) { return v.status !== "Online"; })[0] || (d.videos || [])[0];
     if (cur) {
-      var st = activeStep(cur), thumb = (d.outputs && d.outputs[String(cur.nr)] || []).filter(function (o) { return /thumbnail/i.test(o.name) && o.kind === "image"; })[0];
-      $("current").innerHTML = '<div class="eyebrow">VIDEO ' + cur.nr + ' · ' + esc((cur.status || "").toUpperCase()) + '</div>' +
-        '<div class="vtitle">' + esc(cur.title) + '</div>' + stepsBar(cur) +
-        '<div class="stepline">Nu: <b>' + esc(st.label) + '</b> · stap ' + Math.min(st.done + 1, st.total) + ' van ' + st.total + (cur.lengte ? " · " + esc(cur.lengte) : "") + '</div>' +
-        (thumb ? '<div id="thumbbox" style="margin-top:12px"></div>' : "");
-      if (thumb) loadImg(thumb.path, "thumbbox");
+      var p = prog(cur);
+      $("heroin").innerHTML = '<div class="hello">' + greet() + ', niels · bijgewerkt ' + (ago(d.updated) || "–") + '</div>' +
+        '<div class="eyebrow" style="margin-top:6px">VIDEO ' + cur.nr + ' · ' + esc((cur.status || "").toUpperCase()) + '</div>' +
+        '<div class="vtitle">' + esc(cur.title) + '</div>' +
+        '<div class="big"><b>' + p.pct + '%</b><span>Nu: <b style="font:600 13px var(--body);color:var(--fg)">' + esc(p.label) + '</b> · stap ' + Math.min(p.done + 1, p.total) + ' van ' + p.total + '</span></div>' +
+        '<div class="bar"><i style="width:' + p.pct + '%"></i></div>';
     }
-    var waiting = acts.filter(function (a) { return a.state === "blocked" || a.state === "review_ready"; });
-    $("waitn").textContent = waiting.length;
+    /* Nu: jouw beurt */
+    var waiting = acts.filter(function (a) { return a.state === "blocked" || a.state === "review_ready"; }).sort(byRecent);
     $("badge").hidden = !waiting.length; $("badge").textContent = waiting.length;
-    $("waiting").innerHTML = waiting.length ? waiting.map(actRow).join("") : '<div class="empty"><b>Er wacht niets op je</b>Alle threads kunnen zelf verder.</div>';
+    var turn = $("turn");
+    turn.className = "card turn" + (waiting.length ? "" : " calm");
+    turn.innerHTML = waiting.length
+      ? '<div class="head"><div class="ic">' + waiting.length + '</div><div><div class="h">Jouw beurt</div><div class="s">' + (waiting.length === 1 ? "Eén thread wacht" : waiting.length + " threads wachten") + ' op je antwoord of akkoord</div></div></div><div style="margin-top:10px">' + waiting.map(function (a) { return actRow(a, true); }).join("") + '</div>'
+      : '<div class="head"><div class="ic">✓</div><div><div class="h">Niets voor jou op dit moment</div><div class="s">Claude werkt zelf door' + ((d.next || [])[0] ? ". Hierna: " + esc(d.next[0]) : "") + '</div></div></div>';
+    /* Nu: cijfers */
+    $("stats").innerHTML = '<div class="stat"><b>' + nf(yt.subscribers) + '</b><span>abonnees</span></div><div class="stat"><b>' + nf(yt.views) + '</b><span>weergaven</span></div><div class="stat"><b>' + nf(bestShort ? bestShort.views : null) + '</b><span>beste short</span></div>';
+    var work = acts.filter(function (a) { return a.state === "working"; }).sort(byRecent);
+    $("workn").textContent = work.length;
+    $("working").innerHTML = work.length ? work.map(function (a) { return actRow(a); }).join("") : '<div class="empty">Er draait nu niets.</div>';
     var b = d.blender;
-    $("blender").innerHTML = b ? '<div>' + esc(b.stand) + '</div>' + (b.wachtrij ? '<div class="d muted" style="margin-top:6px">Wachtrij: ' + esc(Array.isArray(b.wachtrij) ? b.wachtrij.map(function (w) { return w.naam + " (" + w.status + ")"; }).join(", ") : b.wachtrij) + '</div>' : "") +
-      (b.bijgewerkt ? '<div class="note" style="margin-top:6px">' + ago(b.bijgewerkt.length <= 16 ? b.bijgewerkt + ":00+01:00" : b.bijgewerkt) + '</div>' : "") : '<span class="muted">Geen stand bekend.</span>';
-    $("next").innerHTML = (d.next || []).map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("");
+    $("blender").innerHTML = b ? '<div>' + esc(b.stand) + '</div>' + (b.wachtrij ? '<div class="muted" style="margin-top:6px">Wachtrij: ' + esc(Array.isArray(b.wachtrij) ? b.wachtrij.map(function (w) { return w.naam + " (" + w.status + ")"; }).join(", ") : b.wachtrij) + '</div>' : "") +
+      (b.bijgewerkt ? '<p class="note" style="margin-top:6px">' + ago(b.bijgewerkt.length <= 16 ? b.bijgewerkt + ":00+01:00" : b.bijgewerkt) + '</p>' : "") : '<span class="muted">Geen stand bekend.</span>';
+    $("next").innerHTML = (d.next || []).map(function (n, i) { return '<div class="row"><span class="eyebrow" style="flex:none">' + (i + 1) + '</span><div class="grow small">' + esc(n) + '</div></div>'; }).join("");
 
     /* Video's */
     $("videos").innerHTML = (d.videos || []).slice().reverse().map(function (v) {
-      var st = activeStep(v);
-      var links = [];
-      if (v.youtube) links.push('<a href="' + esc(v.youtube) + '" target="_blank" rel="noreferrer">Op YouTube ↗</a>');
-      (v.threads || []).forEach(function (t) { links.push('<a href="' + threadUrl(t.id) + '" target="_blank" rel="noreferrer">' + esc(t.title) + ' ↗</a>'); });
-      return '<article class="card"><div class="eyebrow">VIDEO ' + v.nr + ' · ' + esc((v.status || "").toUpperCase()) + (v.lengte ? " · " + esc(v.lengte) : "") + '</div>' +
-        '<div class="vtitle">' + esc(v.title) + '</div>' + stepsBar(v) +
-        '<div class="stepline">' + (st.label === "Klaar" ? "<b>Alle stappen klaar</b>" : 'Nu: <b>' + esc(st.label) + '</b>') + '</div>' +
-        (v.kern ? '<p class="small" style="margin:10px 0 4px">' + esc(v.kern) + '</p>' : "") +
+      var p = prog(v), links = [];
+      if (v.youtube) links.push('<a class="lk yt" href="' + esc(v.youtube) + '" target="_blank" rel="noreferrer">▶ YouTube</a>');
+      (v.threads || []).forEach(function (t) { links.push('<a class="lk" href="' + threadUrl(t.id) + '" target="_blank" rel="noreferrer">' + esc(t.title) + '</a>'); });
+      return '<article class="card vcard">' + (IMG[v.nr] ? '<img src="' + IMG[v.nr] + '" alt="" loading="lazy">' : "") + '<div class="body">' +
+        '<div class="eyebrow">VIDEO ' + v.nr + ' · ' + esc((v.status || "").toUpperCase()) + (v.lengte ? " · " + esc(v.lengte) : "") + '</div>' +
+        '<div class="vtitle">' + esc(v.title) + '</div>' +
+        (p.label === "Klaar" ? '<div class="small muted">Alle ' + p.total + ' stappen klaar</div>' : '<div class="bar"><i style="width:' + p.pct + '%"></i></div>' + chipSteps(v)) +
+        '<details><summary>Waar gaat hij over?</summary>' +
+        (v.kern ? '<p class="small" style="margin:8px 0 4px">' + esc(v.kern) + '</p>' : "") +
         (v.twist ? '<p class="small muted" style="margin:0">Twist: ' + esc(v.twist) + '</p>' : "") +
-        ((v.notes || []).length ? '<ul class="small muted" style="margin:8px 0 0;padding-left:18px">' + v.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + '</ul>' : "") +
-        (links.length ? '<div class="small" style="display:grid;gap:6px;margin-top:10px">' + links.join("") + '</div>' : "") + '</article>';
+        ((v.notes || []).length ? '<ul class="small muted" style="margin:8px 0 0;padding-left:18px">' + v.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + '</ul>' : "") + '</details>' +
+        (links.length ? '<div class="links">' + links.join("") + '</div>' : "") + '</div></article>';
     }).join("");
 
-    /* Threads */
-    var groups = [["open", "Bezig"], ["wacht", "Wacht op jou"], ["klaar", "Klaar"], ["alle", "Alle"]];
+    /* Threads, gegroepeerd per video */
+    var groups = [["bezig", "Bezig"], ["wacht", "Wacht op jou"], ["klaar", "Klaar"], ["alle", "Alle"]];
     $("tfilter").innerHTML = groups.map(function (g) { return '<button class="chip" type="button" data-f="' + g[0] + '" aria-pressed="' + (filter === g[0]) + '">' + g[1] + '</button>'; }).join("");
     var list = acts.filter(function (a) {
-      if (filter === "open") return a.state === "working"; if (filter === "wacht") return a.state === "blocked" || a.state === "review_ready";
+      if (filter === "bezig") return a.state === "working"; if (filter === "wacht") return a.state === "blocked" || a.state === "review_ready";
       if (filter === "klaar") return a.state === "done"; return true;
-    }).sort(function (a, b) { return (Date.parse(b.lastIso || 0) || 0) - (Date.parse(a.lastIso || 0) || 0); });
-    $("threads").innerHTML = list.length ? list.map(actRow).join("") : '<div class="empty"><b>Niets in deze groep</b>Kies een andere filter.</div>';
+    }).sort(byRecent);
+    var byV = {}; list.forEach(function (a) { var k = a.video || 0; (byV[k] = byV[k] || []).push(a); });
+    var keys = Object.keys(byV).sort(function (a, b) { return b - a; });
+    $("threads").innerHTML = keys.length ? keys.map(function (k) {
+      return '<div><h2 style="margin-bottom:8px">' + (+k ? "Video " + k : "Kanaal en HQ") + ' <span class="n">' + byV[k].length + '</span></h2><div class="card">' + byV[k].map(function (a) { return actRow(a); }).join("") + '</div></div>';
+    }).join("") : '<div class="card empty">Niets in deze groep. Kies een andere filter.</div>';
 
     /* Cijfers */
-    var vids = yt.videos || [];
     var longs = vids.filter(function (v) { return v.type === "long"; }), shorts = vids.filter(function (v) { return v.type === "short"; });
     var sv = shorts.reduce(function (s, v) { return s + (v.views || 0); }, 0), lv = longs.reduce(function (s, v) { return s + (v.views || 0); }, 0);
     $("stats2").innerHTML = '<div class="stat"><b>' + nf(yt.subscribers) + '</b><span>abonnees</span></div><div class="stat"><b>' + nf(sv) + '</b><span>views shorts</span></div><div class="stat"><b>' + nf(lv) + '</b><span>views lang</span></div>';
-    $("ytsrc").textContent = "Bron: " + (yt.bron || "status.json") + (yt.bijgewerkt ? ", " + ago(yt.bijgewerkt) : "") + ". Vraag via Opdracht om nieuwe cijfers.";
-    $("yt").innerHTML = vids.length ? vids.slice().sort(function (a, b) { return String(b.datum).localeCompare(String(a.datum)); }).map(function (v) {
-      return '<a class="row rowlink" href="' + esc(v.url || "#") + '" target="_blank" rel="noreferrer"><div class="grow"><div class="t small">' + esc(v.title) + '</div><div class="d">' + (v.type === "short" ? "short" : "lange video") + (v.datum ? " · " + esc(v.datum) : "") + (v.status && v.status !== "public" ? " · " + esc(v.status) : "") + '</div></div><span class="v">' + nf(v.views) + '</span></a>';
+    $("ytsrc").textContent = "Bron: " + (yt.bron || "projectstand") + (yt.bijgewerkt ? ", " + ago(yt.bijgewerkt) : "") + ". Tik op Opdracht en kies 'Haal nieuwe kanaalcijfers op' voor verse cijfers.";
+    var max = vids.reduce(function (m, v) { return Math.max(m, v.views || 0); }, 1);
+    $("yt").innerHTML = vids.length ? vids.slice().sort(function (a, b) { return (b.views || 0) - (a.views || 0); }).map(function (v) {
+      return '<a class="row rowlink" href="' + esc(v.url || "#") + '" target="_blank" rel="noreferrer"><div class="grow"><div class="t small">' + esc(v.title) + '</div><div class="d">' + (v.datum ? esc(v.datum) : "") + (v.status && v.status !== "public" ? " · " + esc(v.status) : "") + '</div><div class="vb"><i class="' + (v.type === "long" ? "long" : "") + '" style="width:' + Math.max(2, Math.round((v.views || 0) / max * 100)) + '%"></i></div></div><span class="v">' + nf(v.views) + '</span></a>';
     }).join("") : '<div class="empty">Nog geen video-cijfers.</div>';
     $("costs").innerHTML = (d.costs || []).map(function (c) {
-      return '<div class="row"><div class="grow"><div class="t small">' + esc(c.wat) + '</div><div class="d">' + esc(c.datum) + (c.notitie ? " · " + esc(c.notitie) : "") + '</div></div><span class="v small" style="font-family:var(--mono);text-align:right;max-width:40%">' + esc(c.bedrag != null ? "€ " + c.bedrag : (c.credits || "")) + '</span></div>';
+      return '<div class="row"><div class="grow"><div class="t small">' + esc(c.wat) + '</div><div class="d">' + esc(c.datum) + (c.notitie ? " · " + esc(c.notitie) : "") + '</div></div><span class="v small" style="font-family:var(--mono);max-width:40%;text-align:right">' + esc(c.bedrag != null ? "€ " + c.bedrag : (c.credits || "")) + '</span></div>';
     }).join("") || '<span class="muted">Geen kosten bekend.</span>';
 
     /* Antwoorden */
     var reps = (d.replies || []).slice().reverse().slice(0, 15);
     $("replies").innerHTML = reps.length ? reps.map(function (r) {
-      return '<div class="reply"><div class="q">“' + esc(r.opdracht) + '”</div><div class="a small">' + esc(r.antwoord) + '</div><div class="w">' + esc(r.at) + (r.thread ? ' · <a href="' + threadUrl(r.thread) + '" target="_blank" rel="noreferrer">thread ↗</a>' : "") + '</div></div>';
+      return '<div class="reply"><div class="q">“' + esc(r.opdracht) + '”</div><div class="a">' + esc(r.antwoord) + '</div><div class="w">' + esc(r.at) + (r.thread ? ' · <a href="' + threadUrl(r.thread) + '" target="_blank" rel="noreferrer">thread ↗</a>' : "") + '</div></div>';
     }).join("") : '<span class="muted small">Nog geen antwoorden.</span>';
   }
 
@@ -307,33 +354,26 @@ nav.tabs .badge { position: absolute; top: 2px; left: 55%; min-width: 16px; heig
     if (c) { filter = c.dataset.f; render(); }
   });
 
-  function setLive() {
-    var el = $("live"), t = $("livetxt");
-    el.classList.toggle("on", source === "live");
-    t.textContent = source === "live" ? "live" : source === "laden" ? "laden…" : source === "geen-toegang" ? "geen toegang" : "offline";
+  function setLive(busy) {
+    var el = $("live");
+    el.classList.toggle("on", source === "live"); el.classList.toggle("spin", !!busy);
+    $("livetxt").textContent = busy ? "vernieuwen…" : source === "live" ? "live" : source === "laden" ? "laden…" : source === "geen-toegang" ? "geen toegang" : "offline";
   }
 
   /* ---------- live data uit de projectbestanden ---------- */
-  var imgCache = {};
-  function loadImg(path, boxId) {
-    var box = $(boxId); if (!box || !fs) return;
-    if (imgCache[path]) { box.innerHTML = '<img class="thumb" alt="Thumbnail" src="' + imgCache[path] + '">'; return; }
-    fs.read(path).then(function (r) {
-      var url = URL.createObjectURL(new Blob([r.bytes], { type: /\.png$/i.test(path) ? "image/png" : "image/jpeg" }));
-      imgCache[path] = url; var b = $(boxId); if (b) b.innerHTML = '<img class="thumb" alt="Thumbnail" src="' + url + '">';
-    }).catch(function () {});
-  }
   function refresh() {
+    setLive(true);
     var p = (fs === undefined && window.claude && window.claude.use) ? window.claude.use("files").catch(function () { return null; }) : Promise.resolve(fs || null);
     return p.then(function (f) {
       fs = f;
       if (!fs) { source = "geen-toegang"; setLive(); return; }
       return fs.read("driftmark-hq/status.json").then(function (r) {
-        data = JSON.parse(new TextDecoder().decode(r.bytes)); source = "live"; checkedAt = Date.now();
+        data = JSON.parse(new TextDecoder().decode(r.bytes)); source = "live";
         lsSet("dm-mobiel-cache", data); setLive(); render();
       }).catch(function (e) { source = e && e.code === "not_granted" ? "geen-toegang" : "fout"; setLive(); });
     });
   }
+  $("live").addEventListener("click", function () { refresh(); });
 
   /* ---------- opdrachten naar Claude ---------- */
   var orders = lsGet("dm-mobiel-orders", []);
@@ -341,7 +381,7 @@ nav.tabs .badge { position: absolute; top: 2px; left: 55%; min-width: 16px; heig
   function renderOrders() {
     $("orders").innerHTML = orders.length ? orders.slice(0, 10).map(function (o) {
       return '<div class="row order"><div class="grow"><div class="small">' + esc(o.text) + '</div><div class="d">' + ago(new Date(o.at).toISOString()) + (o.reason ? " · " + esc(o.reason) : "") + '</div></div>' +
-        (o.status === "verstuurd" ? '<span class="st ok">verstuurd</span>' : '<button class="btn ghost" type="button" data-resend="' + o.id + '">Opnieuw</button>') + '</div>';
+        (o.status === "verstuurd" ? '<span class="st">verstuurd</span>' : '<button class="btn ghost" type="button" data-resend="' + o.id + '">Opnieuw</button>') + '</div>';
     }).join("") : '<span class="muted small">Nog geen opdrachten vanaf je telefoon.</span>';
   }
   function getCm() {
@@ -366,15 +406,15 @@ nav.tabs .badge { position: absolute; top: 2px; left: 55%; min-width: 16px; heig
   function send(text, id) {
     var o = id ? orders.filter(function (x) { return x.id === id; })[0] : { id: Math.random().toString(36).slice(2), at: Date.now(), text: text, status: "wachtrij" };
     if (!o) return;
-    if (!id) { orders.unshift(o); }
+    if (!id) orders.unshift(o);
     $("osend").disabled = true; $("ostate").className = "note"; $("ostate").textContent = "Versturen…";
     deliver(o.text).then(function (r) {
       o.status = r.ok ? "verstuurd" : "wachtrij"; o.reason = r.ok ? "" : r.reason;
       saveOrders(); renderOrders();
       $("osend").disabled = false;
-      $("ostate").className = r.ok ? "note" : "note warn";
-      $("ostate").textContent = r.ok ? "Verstuurd. Claude pakt het op; het antwoord komt bij Antwoorden." : r.reason + " De opdracht staat bij Jouw opdrachten.";
-      if (r.ok && !id) $("otext").value = "";
+      $("ostate").className = r.ok ? "note good" : "note warn";
+      $("ostate").textContent = r.ok ? "Verstuurd. Claude pakt het op; het antwoord komt bij Antwoorden." : r.reason + " Je vindt hem bij Jouw verstuurde opdrachten.";
+      if (r.ok && !id) { $("otext").value = ""; try { sessionStorage.removeItem("dm-mobiel-draft"); } catch (e) {} }
     });
   }
   $("quick").innerHTML = QUICK.map(function (q) { return '<button class="chip" type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join("");
