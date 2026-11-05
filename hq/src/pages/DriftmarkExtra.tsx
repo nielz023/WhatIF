@@ -45,6 +45,9 @@ export function ToolsPanel() {
           {vq.status === 'ok' ? (<>
             <div>Credits: <span className="text-white">{(vq.data as Any)?.totalCredits ?? '?'}</span> · vernieuwt {new Date((vq.data as Any)?.renewableResetsAt).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}</div>
             {vqAccount && <div>Account: {vqAccount}</div>}
+            {((vqc.data as Any)?.channels ?? []).filter((c: Any) => /drift/i.test(c.title ?? '')).map((c: Any) => (
+              <div key={c.channelId} className="text-emerald-300">Driftmark gekoppeld · {Number(c.subscriberCount).toLocaleString('nl-NL')} abonnees · {Number(c.viewCount).toLocaleString('nl-NL')} weergaven · {c.videoCount} video's</div>
+            ))}
             {!vqHasDrift && vqc.status === 'ok' && <div className="text-amber-300">Driftmark hangt niet aan dit vidIQ-account. Koppel vidIQ opnieuw met het Google-account van Driftmark.</div>}
           </>) : <div>{err(vq)}</div>}
         </Card>
