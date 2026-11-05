@@ -158,3 +158,57 @@ class Scene4(_v3.Scene3):
 def vis(obj, t0, t1=None):
     """Zichtbaar van t0 tot t1 (met kinderen)."""
     show(obj, t0, t1)
+
+
+class Body:
+    """Hele figuur kantelen om de heup: vallen, op de grond liggen, rechtop gaan zitten.
+    Het rig hangt onder een leeg object op de heup; beweeg dat met key(). Gebruik daarna geen
+    place/teleport/walk/at= meer voor dit figuur (die rekenen zonder ouder).
+    tilt = graden achterover (0 = rechtop, ~78 = plat op de rug met het grote hoofd op de grond)."""
+
+    def __init__(self, S, ch, hip, rot=0.0):
+        self.S, self.ch, self.rot = S, ch, rot
+        self.P = ch.J["pelvis"].z
+        self.L = self.P - ch.J["ankle.L"].z
+        piv = bpy.data.objects.new(S._fxname("Heup_draaipunt"), None)
+        T._link(piv)
+        piv.location = Vector(hip)
+        piv.rotation_euler = (0, 0, math.radians(rot))
+        ad = ch.rig.animation_data
+        if ad and ad.action:
+            for fc in list(A._fcurves(ch.rig)):
+                if fc.data_path in ("location", "rotation_euler"):
+                    try:
+                        ad.action.fcurves.remove(fc)
+                    except Exception:
+                        fc.keyframe_points.clear()
+        ch.rig.parent = piv
+        ch.rig.matrix_parent_inverse = Matrix.Identity(4)
+        ch.rig.location = (0, 0, -self.P)
+        ch.rig.rotation_euler = (0, 0, 0)
+        ch.rig.keyframe_insert("location", frame=1)
+        ch.rig.keyframe_insert("rotation_euler", frame=1)
+        ch.last = None
+        self.piv = piv
+
+    def key(self, t, hip, tilt=0.0, roll=0.0, yaw=None, interp=None):
+        p = self.piv
+        p.location = Vector(hip)
+        p.rotation_euler = (math.radians(-tilt), math.radians(roll), math.radians(self.rot if yaw is None else yaw))
+        p.keyframe_insert("location", frame=F(t))
+        p.keyframe_insert("rotation_euler", frame=F(t))
+        if interp:
+            for fc in A._fcurves(p):
+                for kp in fc.keyframe_points:
+                    if abs(kp.co[0] - F(t)) < 0.5:
+                        kp.interpolation = interp
+
+    def legs(self, tilt, spread=0.10, bend=0.97, lift=0.0):
+        """Benen plat vooruit over de grond bij kanteling tilt (zittend 0, liggend ~78). Voor beat(**...)."""
+        a = math.radians(tilt + lift)
+        fwd = bend * self.L * math.cos(a)
+        up = self.L - bend * self.L * math.sin(a)
+        return dict(crouch=(0.0, 0.0), feet=((spread * 0.3, fwd, up), (-spread * 0.3, fwd * 0.97, up)))
+
+    def hip_world(self, t):
+        return self.S.bone_world(self.ch, "hips", t, tail=False)
