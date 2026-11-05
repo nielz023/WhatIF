@@ -95,3 +95,15 @@ Bruikbaar in elke scène via `anim/lib/glans.py`:
   plooien, huid met blos, rubberen zolen, zomen en boorden. Uitzetten met `GLANS_DETAIL=0`.
 - `build_dieren.py` bouwt hondje, hondje_oud (grijze snuit) en zebra met een eigen rig en acties
   (`hond_loop/draf/kwispel/snuffel`, `zebra_loop/draf/schrik`). Glb's in `assets/dieren/`.
+
+## Video 4 (Never Die)
+
+- `build_cast.py --cast nd` bouwt `cast_never_die.blend` met 42 figuren. De wetenschapper is hier een man (key
+  `wetenschapper`). Hoofdpersonage per tijdperk: `hoofdpersonage_kind`, `_pak` (2051), `_2200`, `_ijs`,
+  `_zwerver` (1 miljoen jaar) en `_rafels` (1 miljard jaar). Leeftijdsvarianten: `mama_oud`, `papa_oud`,
+  `broertje_oud` (bijna 70), `beste_vriend_20`, `beste_vriend_40`, `pestkop_agent`, `pestkop_oud` (98) met `verpleger`.
+- Nieuwe opties in de specs: rimpels, sik, sjaal, oortje, bloem, helmen (brandweer, bewaker, bloemenhoed),
+  gloeiende toekomstkleding, mouwen over de handen, wanten, rafels, sleutels en hologram.
+- De glb's staan in `assets/cast_v4/`; de animatie gebruikt ze met `WHATIF_CAST=cast_v4`.
+- `render_nd_groepen.py --blend .../cast_never_die.blend --out map` rendert vijf groepsfoto's met de leeftijdsvarianten
+  naast elkaar; `--only gezinsfoto` rendert de gezinsfoto die als prop op de oude foto staat.

@@ -152,3 +152,37 @@ Schakelbare onderdelen voor de animatie (zichtbaarheid of Emission Strength keyf
 Kwaliteitscheck: `toon.finish` waarschuwt nu als een camera in een groot object staat (`WAARSCHUWING: camera ... staat in object ...`).
 Snel testen: `SET_PCT=40 SET_SAMPLES=12 SET_MAXCAMS=1` (alleen de eerste camera). Teksten op borden gebruiken
 Inter Display Bold (`fonts/`, OFL) en worden in de .blend ingepakt.
+
+## Video 4: What IF You Could Never Die?
+
+Alle uitvoer komt standaard in `/mnt/project-files/videos/nooit-dood/sets/`. Nieuwe props en decorstukken staan in
+`lib/nooitdood.py` (opa's zakhorloge, horlogedoosje, oude foto, politiepenning, rolstoel, eik per seizoen, banken,
+glazen torens, vliegende auto, grazer, kolonieschip, loopplank, sterrenveld, sterrenstelsel, zwart gat).
+
+| Script | Varianten | Scènes |
+|---|---|---|
+| `build_heuvel.py` | `2032`, `2051`, `2086`, `2110`, `3026`, `ijs`, `1mln`, `dood`, `super`, `zout` | 0, 2, 11-12, 15-19 (vaste tijdsprong-plek) |
+| `build_toekomst.py` | `toren2200`, `straat2200`, `museum` | 13, 14b |
+| `build_ruimte_nd.py` | `sterren`, `aarde`, `rode_reus`, `zwarte_gaten`, `donker` | 1d-f, 19a2, 19g, 20-22 |
+| `build_kleine_nd.py` | `schuur`, `skate`, `club`, `bruiloft`, `brand`, `vliegtuig`, `maisveld` | 4, 6, 8, 9, 10 |
+| `build_props_nd.py` | `horloge` (vier toestanden), `overzicht` | |
+
+De heuvel heeft in elke variant dezelfde camera `CAM_HEUVEL` (zelfde plek en lens), zodat een harde cut tussen
+tijdperken werkt. De hoofdpersoon is in elke set een stand-in voor schaal; de juiste tijdperk-variant komt uit de cast.
+
+Schakelbare onderdelen voor de animatie:
+
+- zakhorloge: `<naam>_klep` (rotation y, 0 = dicht, -160 graden = open), wijzers `_wijzer_uur/_min/_sec`, kroon `_kroon`,
+  ketting `_ketting`; `_barst` en `_rijp` (zichtbaarheid); materialen `<naam>_lume` en `<naam>_gravure` (Emission Strength)
+- oude foto: nodes `Vergeling` en `Verbleking` (0..1); de foto zelf is `00_props/gezinsfoto_14e_verjaardag.png`
+- sterrenveld: node `Sterren uit` in `Sterrenveld_mat` (0..1 zet de sterren één voor één uit); `Laatste_ster_gloed`,
+  `Zwart_gat_N_ring` en `Lichtpuntje_gloed` (Emission Strength); `Stelsel_N` (location)
+- dode aarde: `Vuurmuur` (scale x/y van 1 naar ~0.01 = de vuurmuur komt op hem af); eclips: `Maan` (location),
+  zonlicht keyframen van 1.2 naar 0.3 tijdens de verduistering
+- toren 2200: `Schuifdeur_blad` (location x, 0 = dicht), materiaal `alarm_gang` (rood alarm), `Eindraam_glas` /
+  `Eindraam_scherven` (wisselen bij de sprong)
+- kolonieschip: `<naam>_vlam` (Emission Strength), `Loopplank_plank` (rotation x)
+
+Let op: een render in de cloud met de bloom-compositor heeft `libegl1 libgl1 libegl-mesa0 libgles2` nodig.
+`check_cameras` meldt bij de heuvel "camera staat in Heuvel_grond"; dat komt door de bounding box van het terrein en
+mag je negeren.

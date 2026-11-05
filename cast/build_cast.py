@@ -796,6 +796,220 @@ CAST_NR = [
 ]
 
 
+# Video 4 "What IF You Could Never Die?": het hoofdpersonage per tijdperk (hij blijft 14),
+# leeftijdsvarianten van de vaste cast en nieuwe figuren. Bouwen met --cast nd; dat bouwt ook
+# de vaste cast opnieuw (met de wetenschapper als man) plus de vuilnisman en de agent.
+def _nr(key):
+    return dict(next(c for c in CAST_NR if c["key"] == key))
+
+
+def _10x(key):
+    return dict(next(c for c in CAST_10X if c["key"] == key))
+
+
+_FUT_A = "#5CF2FF"   # cyaan
+_FUT_B = "#FF5CD6"   # magenta
+_FUT_C = "#B6FF5C"   # limoen
+CAST_ND = [
+    # --- hoofdpersonage, altijd 14 ---
+    _hero("hoofdpersonage_kind", "Hoofdpersonage 2026 (hoodie)", body=dict()),
+    _hero("hoofdpersonage_pak", "Hoofdpersonage 2051 (te groot zwart pak)", body=dict(), hoodie=False,
+          shirt=dict(color="#F4F4F4", sleeves="long", sleeve_color="#1F2128", cuff="#1F2128", stof="katoen",
+                     sleeve_stof="wol"),
+          blazer=dict(color="#1F2128"), tie="#1F2128", sleeve_over=True,
+          pants="#1F2128", pants_stof="wol", shoes="#141414"),
+    _hero("hoofdpersonage_2200", "Hoofdpersonage 2200 (toekomstjas)", body=dict(),
+          jacket=dict(color="#E9EEF2", stof="nylon"), glow=dict(color=_FUT_A, rings=(0.68,), angle=24),
+          pants="#3B3F49", shoes="#E9EEF2", sole="#5CC9D6"),
+    _hero("hoofdpersonage_ijs", "Hoofdpersonage 50.000 (winterjas, sjaal, wanten)", body=dict(),
+          jacket=dict(color="#6B4E36", stof="wol"), scarf=dict(color="#B3362C", stripes="#E8DCC8"),
+          mittens="#B3362C", hat="beanie", beanie="#B3362C", pants="#4B4F57", shoes="#3A2A1A"),
+    _hero("hoofdpersonage_zwerver", "Hoofdpersonage 1 miljoen jaar (versleten)", body=dict(),
+          shirt=dict(color="#B8612E", sleeves="long", cuff="#D9C9B0", stof="fleece"),
+          rafels=dict(stains=5, patches=2), pants="#4A4D55", shoes="#9A938A"),
+    _hero("hoofdpersonage_rafels", "Hoofdpersonage 1 miljard jaar (rafels)", body=dict(),
+          shirt=dict(color="#8A4A2A", sleeves="long", cuff="#9A8A70", stof="fleece"),
+          rafels=dict(stains=9, patches=3, patch="#5A4A3A"), pants=None, shorts="#4A4740", shoes="#7A7268"),
+    # --- gezin ---
+    _variant("mama", "mama_oud", "Mama (grijs, 2051)", hair=dict(color="#C9C4BE"), wrinkles=True,
+             glasses=dict(color="#7A4E8A", r=0.006), cardigan=dict(color="#2F9C95", buttons="#F2EEE8"),
+             shirt=dict(color="#F2EEE8", sleeves="long", cuff="#2F9C95")),
+    _variant("papa", "papa_oud", "Papa (grijs, 2051)", hair=dict(style="receding", color="#D2CEC8"),
+             beard=dict(color="#D2CEC8"), wrinkles=True, glasses=dict(color="#2A2A2A", r=0.007),
+             body=dict(belly=0.45), shirt=dict(color="#2C8FC9", sleeves="long", cuff="#246F9C", dots=None),
+             blazer=dict(color="#5A5F6B"), pants="#5A5F6B"),
+    dict(key="broertje_oud", naam="Broertje (bijna 70, 2086)", rol="BROTHER",
+         body=dict(leg=1.0, torso=1.02, width=1.06, shoulders=1.0, arm=1.02, belly=0.28, head=0.98),
+         skin="licht", eyes="blauw", brows=dict(color="#E6E3E0", scale=1.3, angle=6), mouth="smile",
+         freckles=True, wrinkles=True, glasses=dict(color="#5A3B26", r=0.006),
+         shirt=dict(color="#DCE6F0", sleeves="long", sleeve_color="#3E4A5E", cuff="#34405A", sleeve_stof="wol"),
+         jacket=dict(color="#3E4A5E", stof="wol"), scarf=dict(color="#E5483E", stripes="#F2F2F2"),
+         pants="#5D5850", pants_stof="wol", shoes="#3A2A1A",
+         hair=dict(style="receding", color="#E6E3E0"), beard=dict(color="#E6E3E0"), prop="cane"),
+    # --- beste vriend ---
+    dict(key="beste_vriend_20", naam="Beste vriend (20, 2032)", rol="FRIEND",
+         body=dict(leg=1.14, torso=1.06, width=0.98, shoulders=1.07, arm=0.96, legt=1.04, head=0.93),
+         skin="donker", eyes="donker", brows=dict(color="#1E1410", raise_=0.004), mouth="grin",
+         goatee="#1E1410",
+         shirt=dict(color="#6CBF4B", sleeves="long", sleeve_color="#3E5F8A", cuff="#34507A", sleeve_stof="denim"),
+         jacket=dict(color="#3E5F8A", stof="denim"),
+         pants="#2E3440", shoes="#E9483B", hair=dict(style="curly", color="#1E1410"), prop="keys"),
+    dict(key="beste_vriend_40", naam="Beste vriend (bijna 40, bruidegom 2051)", rol="FRIEND",
+         body=dict(leg=1.14, torso=1.08, width=1.04, shoulders=1.07, arm=0.98, legt=1.04, belly=0.14, head=0.92),
+         skin="donker", eyes="donker", brows=dict(color="#2A2420", raise_=0.004), mouth="grin",
+         goatee="#5A544E", wrinkles=True,
+         shirt=dict(color="#FAFAFA", sleeves="long", sleeve_color="#2A2F3A", cuff="#2A2F3A", sleeve_stof="wol"),
+         blazer=dict(color="#2A2F3A"), tie="#C8A13A", flower="#FFFFFF",
+         pants="#2A2F3A", pants_stof="wol", shoes="#141414", hair=dict(style="curly", color="#46413D")),
+    # --- pestkop ---
+    dict(key="pestkop_agent", naam="Pestkop als agent (50+, 2066)", rol="BULLY",
+         body=dict(leg=1.06, torso=1.12, width=1.28, shoulders=1.16, hips=1.0, arm=1.28, legt=1.15, head=0.92,
+                   belly=0.42),
+         skin="midden", eyes="bruin", brows=dict(color="#4A3A30", scale=1.25, angle=8), mouth="flat",
+         mustache="#5A4A40", wrinkles=True,
+         shirt=dict(color="#2B4170", sleeves="long", cuff="#22345E", stof="katoen"),
+         pants="#1D2742", pants_stof="katoen", pant_stripes="#E2B84B", shoes="#141414",
+         hair=dict(style="buzz", color="#6A5E56"), hat="peaked", peaked=dict(color="#1D2742", band="#E8E8E8"),
+         badge=True, uniform=dict(pocket="#22345E", belt="#141414", metal="#C9CCD1", ribbons=False)),
+    dict(key="pestkop_oud", naam="Pestkop (98, rolstoel, 2110)", rol="BULLY",
+         body=dict(leg=0.98, torso=1.0, width=1.06, shoulders=1.0, hips=0.98, arm=1.1, legt=1.0, head=0.9),
+         skin="midden", eyes="bruin", brows=dict(color="#EDEDED", scale=1.4, angle=-4), mouth="smile",
+         wrinkles=True, glasses=dict(color="#C9CCD1", r=0.006, round_=True),
+         shirt=dict(color="#E8E4DA", sleeves="long", sleeve_color="#6E6B5A", cuff="#5E5B4A"),
+         cardigan=dict(color="#6E6B5A", buttons="#3A2A1A"),
+         pants="#5A5E66", shoes="#3A2A1A", hair=dict(style="bald_sides", color="#F2F2F2")),
+    dict(key="verpleger", naam="Verpleger (2110)", rol="(geen tekst)",
+         body=dict(leg=1.04, torso=1.02, width=1.0, arm=1.0, head=0.98),
+         skin="olijf", eyes="bruin", brows=dict(color="#2A1A10"), mouth="smile",
+         shirt=dict(color="#4FB3A9", sleeves="short", stof="katoen"), name_tag=True,
+         pants="#4FB3A9", pants_stof="katoen", shoes="#F2F2F2", hair=dict(style="short", color="#2A1A10")),
+    # --- wetenschapper (man, zoals in video 3) ---
+    dict(key="wetenschapper", naam="Wetenschapper (man)", rol="SCIENTIST",
+         body=dict(leg=1.02, torso=1.02, width=1.0, shoulders=1.0, arm=0.96, head=0.98),
+         skin="olijf", eyes="donker", brows=dict(color="#1E1612", scale=1.1), mouth="smile",
+         glasses=dict(color="#1A1A1A", r=0.008),
+         shirt=dict(color="#A9C7E8", sleeves="long", sleeve_color="#FAFAFA", cuff="#E8E8E8"), tie="#2D6CDF",
+         labcoat=True, pants="#2F3542", shoes="#2F3542",
+         hair=dict(style="short", color="#2A211C"), beard=dict(color="#2A211C"), prop="clipboard"),
+    # --- 2032-2066 ---
+    dict(key="portier", naam="Portier van de club", rol="BOUNCER",
+         body=dict(leg=1.08, torso=1.12, width=1.32, shoulders=1.24, hips=1.0, arm=1.34, legt=1.18, head=0.9),
+         skin="bruin", eyes="donker", brows=dict(color="#1A110C", scale=1.2, angle=12, raise_=-0.004),
+         mouth="flat", earpiece=True,
+         shirt=dict(color="#1A1A1E", sleeves="short"), chest_logo="#E8E8E8",
+         pants="#1A1A1E", shoes="#141414", hair=dict(style="buzz", color="#1A110C")),
+    dict(key="tante", naam="Oude tante (bruiloft)", rol="AUNT",
+         body=dict(leg=0.9, torso=0.95, width=1.06, hips=1.1, shoulders=0.95, arm=0.92, belly=0.25, head=0.97),
+         skin="roze", eyes="blauw", brows=dict(color="#BDBDBD", angle=-10, raise_=0.006), mouth="grin",
+         lashes=True, blush="#F08A8A", wrinkles=True, pearls=True,
+         glasses=dict(color="#C8283A", r=0.006),
+         shirt=dict(color="#9B59B6", sleeves="long", cuff="#8A4AA5", dots=("#F59AC2", "#FFFFFF")),
+         skirt=dict(color="#9B59B6", bottom=0.16), legs="#E8C3A5", shoes="#5B3A4E",
+         hair=dict(style="curly_bun", color="#D6D2CE"), hat="flowerhat", flowerhat=dict(color="#B58FC9")),
+    dict(key="brandweerman", naam="Brandweerman", rol="FIREFIGHTER",
+         body=dict(leg=1.06, torso=1.1, width=1.18, shoulders=1.14, arm=1.16, belly=0.15, head=0.97),
+         skin="licht", eyes="blauw", brows=dict(color="#8A5530", scale=1.2), mouth="flat", mustache="#8A5530",
+         shirt=dict(color="#C9A24A", sleeves="long", cuff="#2A2A2A", stof="nylon"),
+         vest=dict(color="#C9A24A", stripes="#E8F05A"),
+         pants="#C9A24A", pants_stof="nylon", pant_stripes="#E8F05A", shoes="#1A1A1A",
+         hair=dict(style="short", color="#8A5530"), hat="fire"),
+    dict(key="meisje_brand", naam="Meisje uit de brand (6)", rol="(geen tekst)",
+         body=dict(leg=0.5, torso=0.55, width=0.8, arm=0.75, legt=0.76, head=0.87),
+         skin="bruin", eyes="donker", brows=dict(color="#1E1410", raise_=0.008), mouth="small",
+         lashes=True, blush="#E07A6A",
+         shirt=dict(color="#F59AC2", sleeves="long", cuff="#FFFFFF", stof="pyjama", dots=("#FFFFFF", "#FFE14D")),
+         pants="#F59AC2", pants_stof="pyjama", shoes="#FFFFFF",
+         hair=dict(style="pigtails", color="#1E1410", ribbon="#FFE14D")),
+    dict(key="moeder_meisje", naam="Moeder van het meisje", rol="MOTHER",
+         body=dict(leg=1.0, torso=0.98, width=0.96, hips=1.06, shoulders=0.92, arm=0.88, head=0.97),
+         skin="bruin", eyes="donker", brows=dict(color="#1E1410", raise_=0.004), mouth="smile", lashes=True,
+         shirt=dict(color="#F2EEE8", sleeves="long", cuff="#C97A4A"), cardigan=dict(color="#C97A4A", buttons="#F2EEE8"),
+         pants="#5A6E8A", pants_stof="pyjama", shoes="#9A7A6A", hair=dict(style="ponytail", color="#1E1410")),
+    # --- 2200: EVERGREEN ---
+    dict(key="directeur", naam="EVERGREEN-directeur (wit pak)", rol="DIRECTOR",
+         body=dict(leg=1.08, torso=1.04, width=1.0, shoulders=1.04, arm=1.0, head=0.96),
+         skin="licht", eyes="grijs", brows=dict(color="#BFC4C9", angle=6), mouth="smirk",
+         shirt=dict(color="#F7F7F7", sleeves="long", sleeve_color="#F2F2F2", cuff="#E2E2E2", sleeve_stof="wol"),
+         blazer=dict(color="#F2F2F2"), tie="#1FA37A", chest_logo="#1FA37A",
+         pants="#F2F2F2", pants_stof="wol", shoes="#E8E8E8", sole="#B0B0B0",
+         hair=dict(style="short", color="#2A211C")),
+    dict(key="bewaker_a", naam="EVERGREEN-bewaker 1", rol="(geen tekst)",
+         body=dict(leg=1.1, torso=1.1, width=1.18, shoulders=1.18, arm=1.18, legt=1.12, head=0.94),
+         skin="midden", eyes="bruin", brows=dict(color="#2A1A10", angle=14, raise_=-0.004), mouth="flat",
+         shirt=dict(color="#E6EAEE", sleeves="long", cuff="#9AA3AD", stof="nylon"),
+         vest=dict(color="#B8C0C8", stripes="#1FA37A"), glow=dict(color=_FUT_C, rings=(0.68,), stripe=False),
+         pants="#3A3F47", pants_stof="nylon", shoes="#1A1A1E", hat="guard", helmet="#EEF1F4"),
+    dict(key="bewaker_b", naam="EVERGREEN-bewaker 2", rol="(geen tekst)",
+         body=dict(leg=1.08, torso=1.12, width=1.24, shoulders=1.2, arm=1.2, legt=1.12, head=0.94, belly=0.12),
+         skin="licht", eyes="blauw", brows=dict(color="#7A5236", angle=14, raise_=-0.004), mouth="flat",
+         shirt=dict(color="#E6EAEE", sleeves="long", cuff="#9AA3AD", stof="nylon"),
+         vest=dict(color="#B8C0C8", stripes="#1FA37A"), glow=dict(color=_FUT_C, rings=(0.68,), stripe=False),
+         pants="#3A3F47", pants_stof="nylon", shoes="#1A1A1E", hat="guard", helmet="#EEF1F4"),
+    dict(key="mens_2200_a", naam="Voorbijganger 2200 (vrouw)", rol="(geen tekst)",
+         body=dict(leg=1.06, torso=0.98, width=0.92, hips=1.04, shoulders=0.92, arm=0.88, head=0.96),
+         skin="olijf", eyes="groen", brows=dict(color="#3B2416"), mouth="flat", lashes=True,
+         shirt=dict(color="#2A2F3A", sleeves="long", cuff="#2A2F3A", stof="nylon"),
+         glow=dict(color=_FUT_A, rings=(0.9,), angle=-20), prop="holo",
+         pants="#E9EEF2", pants_stof="nylon", shoes="#2A2F3A", hair=dict(style="bob", color="#E9EEF2")),
+    dict(key="mens_2200_b", naam="Voorbijganger 2200 (man)", rol="(geen tekst)",
+         body=dict(leg=1.08, torso=1.04, width=1.02, shoulders=1.04, arm=1.0, head=0.96),
+         skin="bruin", eyes="donker", brows=dict(color="#1E1410"), mouth="flat",
+         shirt=dict(color="#E9EEF2", sleeves="long", sleeve_color="#3B3F49", cuff="#3B3F49", stof="nylon"),
+         jacket=dict(color="#3B3F49", stof="nylon"), glow=dict(color=_FUT_B, rings=(0.68,), angle=30),
+         prop="holo", pants="#3B3F49", pants_stof="nylon", shoes="#E9EEF2", hair=dict(style="buzz", color="#1E1410")),
+    # --- 3026 en later: toekomstmensen ---
+    dict(key="toekomst_a", naam="Graver 3026 (lichtgevende overall)", rol="(geen tekst)",
+         body=dict(leg=1.12, torso=1.0, width=0.94, shoulders=0.98, arm=0.96, head=0.92),
+         skin="bruin", eyes="groen", brows=dict(color="#E9EEF2"), mouth="flat",
+         shirt=dict(color="#3A2A5A", sleeves="long", cuff="#3A2A5A", stof="nylon"),
+         glow=dict(color=_FUT_B, rings=(0.66, 0.9, 1.12), angle=0),
+         pants="#3A2A5A", pants_stof="nylon", shoes="#E9EEF2", hair=dict(style="buzz", color="#E9EEF2")),
+    dict(key="toekomst_b", naam="Graver 3026 (vrouw)", rol="(geen tekst)",
+         body=dict(leg=1.12, torso=0.98, width=0.9, hips=1.02, shoulders=0.92, arm=0.9, head=0.92),
+         skin="licht", eyes="blauw", brows=dict(color="#5CB8FF"), mouth="flat", lashes=True,
+         shirt=dict(color="#F2F5F8", sleeves="long", cuff="#5CB8FF", stof="nylon"),
+         glow=dict(color=_FUT_A, rings=(0.7, 1.0), angle=-24),
+         pants="#5A6B7A", pants_stof="nylon", shoes="#5CB8FF", hair=dict(style="ponytail", color="#5CB8FF")),
+    dict(key="kind_holo", naam="Kind met hologramtelefoon (3026)", rol="KID",
+         body=dict(leg=0.6, torso=0.62, width=0.84, arm=0.8, legt=0.82, head=0.9),
+         skin="olijf", eyes="bruin", brows=dict(color="#2A1A10", raise_=0.008), mouth="grin", freckles=True,
+         shirt=dict(color="#F6D04D", sleeves="long", cuff="#3A2A5A", stof="nylon"),
+         glow=dict(color=_FUT_A, rings=(0.7, 1.0), angle=20), prop="holo",
+         pants="#3A2A5A", pants_stof="nylon", shoes="#F6D04D", hair=dict(style="spiky", color="#2A1A10")),
+    dict(key="museumkind_a", naam="Museumkind 1 (jaar 10.000)", rol="(geen tekst)",
+         body=dict(leg=0.56, torso=0.6, width=0.82, arm=0.78, legt=0.8, head=0.9),
+         skin="midden", eyes="groen", brows=dict(color="#E9EEF2", raise_=0.008), mouth="grin",
+         shirt=dict(color="#FFFFFF", sleeves="long", cuff="#FF5CD6", stof="nylon"),
+         glow=dict(color=_FUT_B, rings=(0.7,), angle=0), pants="#FFFFFF", pants_stof="nylon", shoes="#FF5CD6",
+         hair=dict(style="buzz", color="#FF5CD6")),
+    dict(key="museumkind_b", naam="Museumkind 2 (jaar 10.000)", rol="(geen tekst)",
+         body=dict(leg=0.52, torso=0.56, width=0.8, arm=0.75, legt=0.76, head=0.88),
+         skin="licht", eyes="blauw", brows=dict(color="#5CF2FF", raise_=0.008), mouth="small", lashes=True,
+         shirt=dict(color="#2A2F3A", sleeves="long", cuff="#5CF2FF", stof="nylon"),
+         glow=dict(color=_FUT_A, rings=(0.68, 0.95), angle=-20),
+         skirt=dict(color="#2A2F3A", bottom=0.36, flare=1.2), legs="#5CF2FF", shoes="#2A2F3A",
+         hair=dict(style="pigtails", color="#5CF2FF", ribbon="#FFFFFF")),
+    dict(key="museumkind_c", naam="Museumkind 3 (jaar 10.000)", rol="(geen tekst)",
+         body=dict(leg=0.58, torso=0.6, width=0.9, arm=0.8, legt=0.82, head=0.9, belly=0.12),
+         skin="donker", eyes="donker", brows=dict(color="#B6FF5C", raise_=0.006), mouth="grin",
+         shirt=dict(color="#B6FF5C", sleeves="long", cuff="#2A2F3A", stof="nylon"),
+         glow=dict(color=_FUT_C, rings=(0.72,), angle=24), pants="#2A2F3A", pants_stof="nylon", shoes="#B6FF5C",
+         hair=dict(style="curly", color="#1E1410")),
+    dict(key="toekomstvrouw", naam="Lange toekomstvrouw (1 miljoen jaar)", rol="FUTURE HUMAN",
+         body=dict(leg=1.4, torso=1.18, width=0.82, hips=0.96, shoulders=0.9, arm=1.2, legt=0.92, head=0.84),
+         skin="olijf", eyes="grijs", brows=dict(color="#E8E4DA", raise_=0.004), mouth="flat", lashes=True,
+         shirt=dict(color="#F2EEE6", sleeves="long", cuff="#D4AF37", stof="nylon"),
+         glow=dict(color="#FFD27A", rings=(0.7, 1.12), angle=0, stripe=False),
+         skirt=dict(color="#F2EEE6", bottom=0.05, flare=0.8, stof="nylon"), legs="#E8E4DA", shoes="#D4AF37",
+         hair=dict(style="bob", color="#E8E4DA"), earrings="#D4AF37"),
+]
+
+# Wie er in --cast nd zit: vaste cast (wetenschapper als man), vuilnisman, agent en CAST_ND
+def _cast_nd():
+    base = [c for c in CAST if c["key"] not in ("wetenschapper", "officier", "gymleraar", "zusje_pestkop")]
+    return base + [_10x("vuilnisman"), _nr("agent")] + CAST_ND
+
+
 # ---------------------------------------------------------------------------
 # Opbouw van één figuur
 # ---------------------------------------------------------------------------
@@ -1529,6 +1743,170 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
             B.sphere(f"suikerspin{k}", M_cc, hand + Vector((0, -0.04, 0.28)) + n * 0.06, (r, r, r),
                      cat="arm-", seg=12, rings=8)
 
+    # --- 6b. video 4 (Never Die): ouderdom, sjaal, sikje, helmen, gloeiende stof, rafels ---
+    def part_center(i):
+        o = parts.get(i)
+        if o is None:
+            return None
+        cs = [o.matrix_world @ Vector(c) for c in o.bound_box]
+        return sum(cs, Vector()) / 8, max((c - sum(cs, Vector()) / 8).length for c in cs)
+
+    if spec.get("wrinkles"):
+        # rimpels: lijntjes op het voorhoofd, kraaienpootjes en lachlijnen (in de donkere huidtint)
+        M_wr = mats.unlit(_darker(skin_dark, 0.92))
+        for k, (z, w) in enumerate(((1.628, 0.07), (1.648, 0.06))):
+            B.face_disc(f"rimpel_voorhoofd{k}", M_wr, 0.0, z, w, 0.0032, lift=0.003)
+        for side in (-1, +1):
+            s_ = "L" if side > 0 else "R"
+            for k, ang in enumerate((-18, 0, 18)):
+                a = math.radians(ang)
+                B.face_disc(f"kraaienpoot_{s_}{k}", M_wr, side * 0.142, 1.497 + 0.012 * k - 0.012, 0.017, 0.0028,
+                            lift=0.003, roll=side * a)
+            B.face_disc(f"lachlijn_{s_}", M_wr, side * 0.062, 1.395, 0.03, 0.003, lift=0.003,
+                        roll=-side * math.radians(62))
+
+    if spec.get("goatee"):
+        M_g = mats.pbr(spec["goatee"], stof="haar")
+        p, n = face_point(0.0, 1.318, 0.008)
+        B.sphere("sikje", M_g, p, (0.04, 0.02, 0.036), quat=n.to_track_quat("-Y", "Z"))
+        for side in (-1, +1):
+            p, n = face_point(side * 0.032, 1.402, 0.006)
+            q = n.to_track_quat("-Y", "Z") @ Euler((0, side * math.radians(12), 0)).to_quaternion()
+            B.sphere(f"snorretje_{'L' if side > 0 else 'R'}", M_g, p, (0.034, 0.011, 0.011), quat=q)
+
+    if spec.get("scarf"):
+        sc_ = spec["scarf"]
+        M_sc = mats.pbr(sc_["color"], stof="breisel")
+        B.torus("sjaal", M_sc, (0, 0.0, 1.19), 0.112, 0.042, normal=(0, 0.12, 1), cat="torso",
+                scale=(1.0, 0.92, 1.0))
+        yy = -torso_r(1.05)[1] - 0.03
+        B.box("sjaal_eind", M_sc, (0.07, yy, 1.02), (0.075, 0.026, 0.3), rot=(math.radians(-6), 0, math.radians(-4)),
+              cat="torso", bevel=0.4)
+        if sc_.get("stripes"):
+            M_ss = mats.pbr(sc_["stripes"], stof="breisel")
+            for k, z in enumerate((0.93, 0.98)):
+                B.box(f"sjaal_streep{k}", M_ss, (0.07, yy - 0.002, z), (0.078, 0.026, 0.018), cat="torso", bevel=0.4)
+
+    if spec.get("earpiece"):
+        M_ep = mats.pbr("#1A1A1A", rough=0.3)
+        B.sphere("oortje", M_ep, (-0.312, -0.01, 1.455), (0.016, 0.016, 0.02))
+        B.cylinder("oortje_draad", M_ep, (-0.31, -0.0, 1.43), (-0.17, 0.05, 1.17), 0.004, cat="head", seg=8)
+
+    if spec.get("flower"):
+        # corsage op de revers (bruidegom)
+        M_fl = mats.pbr(spec["flower"], rough=0.6)
+        B.body_disc("corsage", M_fl, math.radians(-30), 1.08, 0.026, thick=0.018, lift=0.03)
+        B.body_disc("corsage_hart", mats.pbr("#F2C94C"), math.radians(-30), 1.08, 0.009, thick=0.01, lift=0.045)
+
+    hat = spec.get("hat")
+    if hat == "fire":
+        # brandweerhelm: rood met brede klep achter en een gele schild-voorkant
+        M_h = mats.pbr(spec.get("helmet", "#C8283A"), rough=0.3)
+        B.shell("helm", M_h, lambda a: 0.18, radius=HEAD_R * 1.1, scale=(1.0, 1.04, 1.05), thick=0.02)
+        B.cylinder("helm_rand", M_h, (0, 0.04, HEAD_C.z + 0.05), (0, 0.04, HEAD_C.z + 0.068), HEAD_R * 1.32,
+                   cat="head", seg=48, squash=1.12)
+        B.box("helm_kam", M_h, (0, 0.0, HEAD_C.z + HEAD_R * 1.12), (0.03, 0.42, 0.04), cat="head", bevel=0.4)
+        B.box("helm_schild", mats.pbr("#F6D04D", rough=0.4), (0, -HEAD_R * 1.12, HEAD_C.z + 0.2),
+              (0.11, 0.012, 0.09), rot=(math.radians(-18), 0, 0), cat="head", bevel=0.2)
+    elif hat == "guard":
+        # helm van de bewakers: wit met een donker vizier boven de ogen
+        M_h = mats.pbr(spec.get("helmet", "#EEF1F4"), rough=0.25)
+        B.shell("helm", M_h, lambda a: 0.12 + 0.1 * math.cos(a), radius=HEAD_R * 1.08, scale=(1.0, 1.02, 1.04),
+                thick=0.02)
+        B.shell("helm_vizier", mats.pbr("#141B24", rough=0.08), lambda a: 0.22, lambda a: 0.42,
+                arange=(-math.radians(70), math.radians(70)), radius=HEAD_R * 1.12, thick=0.012)
+        if spec.get("glow"):
+            B.shell("helm_streep", mats.unlit(spec["glow"]["color"]), lambda a: 0.47, lambda a: 0.5,
+                    arange=(-math.radians(80), math.radians(80)), radius=HEAD_R * 1.11, thick=0.006)
+    elif hat == "flowerhat":
+        hf = spec.get("flowerhat", {})
+        M_h = mats.pbr(hf.get("color", "#B58FC9"), stof="wol")
+        B.shell("hoed", M_h, lambda a: 0.38, radius=HEAD_R * 1.06, scale=(1.0, 1.0, 1.08), thick=0.016)
+        B.cylinder("hoed_rand", M_h, (0, 0, HEAD_C.z + HEAD_R * 0.36), (0, 0, HEAD_C.z + HEAD_R * 0.36 + 0.014),
+                   HEAD_R * 1.6, cat="head", seg=48)
+        for k, (a, c) in enumerate(((0.5, "#F59AC2"), (0.8, "#FFFFFF"), (1.1, "#F6D04D"))):
+            B.sphere(f"hoed_bloem{k}", mats.pbr(c, rough=0.6),
+                     (math.sin(a) * HEAD_R * 1.04, -math.cos(a) * HEAD_R * 1.04, HEAD_C.z + HEAD_R * 0.48),
+                     (0.035, 0.035, 0.03))
+
+    def torso_ring2(z, pad):
+        rx, ry = torso_r(z)
+        return (z, rx + pad, ry + pad)
+
+    if spec.get("glow"):
+        # toekomstkleding: gloeiende banden om de romp en een streep over de borst
+        gl = spec["glow"]
+        M_gw = mats.unlit(gl["color"])
+        pad = 0.03 if any(spec.get(k) for k in ("jacket", "blazer", "vest", "labcoat", "cardigan")) else 0.006
+        for k, z in enumerate(gl.get("rings", (0.66, 1.1))):
+            B.loft(f"gloei_band{k}", M_gw, [torso_ring2(z - 0.008, pad), torso_ring2(z + 0.008, pad)], thick=0)
+        if gl.get("stripe", True):
+            for k, z in enumerate((0.74, 0.8, 0.86, 0.92, 0.98, 1.04)):
+                B.body_disc(f"gloei_streep{k}", M_gw, math.radians(gl.get("angle", 22)), z, 0.009, thick=0.003,
+                            lift=pad + 0.004, sz=0.03)
+        for i in (16, 23):
+            c = part_center(i)
+            if c:
+                side = 1 if i == 23 else -1
+                B.torus(f"gloei_manchet_{'L' if side > 0 else 'R'}", M_gw, c[0], c[1] * 0.62, 0.006,
+                        normal=(0, 0, 1), cat="arm+" if side > 0 else "arm-")
+
+    if spec.get("sleeve_over"):
+        # te groot pak: de mouwen hangen half over de handen
+        for cuff_i, hand_i, side in ((16, 17, -1), (23, 24, +1)):
+            c, h = part_center(cuff_i), part_center(hand_i)
+            if not (c and h):
+                continue
+            a = c[0]
+            b = c[0] + (h[0] - c[0]) * 0.62
+            B.cylinder(f"mouw_te_lang_{'L' if side > 0 else 'R'}", M_sleeve, a, b, c[1] * 0.78, c[1] * 0.86,
+                       cat="arm+" if side > 0 else "arm-", seg=20)
+
+    if spec.get("mittens"):
+        M_mt = mats.pbr(spec["mittens"], stof="breisel")
+        for hand_i, side in ((17, -1), (24, +1)):
+            h = part_center(hand_i)
+            if h:
+                B.sphere(f"want_{'L' if side > 0 else 'R'}", M_mt, h[0] + Vector((0, 0, -0.012)),
+                         (0.055, 0.05, 0.075), cat="arm+" if side > 0 else "arm-")
+
+    if spec.get("rafels"):
+        # versleten kleren: donkere vlekken, lapjes en rafels aan de zoom
+        rf = spec["rafels"] if isinstance(spec["rafels"], dict) else {}
+        rnd = random.Random(hash(key) & 0xFFFF)
+        M_vl = mats.pbr(_darker(shirt["color"], 0.6), stof=st_shirt)
+        M_lap = mats.pbr(rf.get("patch", "#6B5A45"), stof="katoen")
+        for k in range(rf.get("stains", 6)):
+            B.body_disc(f"vlek{k}", M_vl, rnd.uniform(-1.4, 1.4), rnd.uniform(0.7, 1.08), rnd.uniform(0.02, 0.04),
+                        thick=0.002, lift=0.003, sz=rnd.uniform(0.015, 0.035))
+        for k in range(rf.get("patches", 2)):
+            B.body_disc(f"lapje{k}", M_lap, rnd.uniform(-1.0, 1.0), rnd.uniform(0.72, 1.0), 0.04, thick=0.004,
+                        lift=0.005, sz=0.035)
+        M_hem = mats.pbr(_darker(shirt["color"], 0.85), stof=st_shirt)
+        for k in range(28):
+            t = 2 * math.pi * k / 28 + rnd.uniform(-0.05, 0.05)
+            rx, ry = torso_r(0.62)
+            L = rnd.uniform(0.02, 0.055)
+            B.box(f"rafel{k}", M_hem, ((rx + 0.004) * math.sin(t), -(ry + 0.004) * math.cos(t), 0.62 - L / 2),
+                  (0.022, 0.006, L), rot=(0, 0, -t), cat="torso", bevel=0)
+
+    if prop == "keys":
+        M_k = mats.pbr("#C9CCD1", rough=0.25, metal=1.0)
+        B.torus("sleutelring", M_k, hand + Vector((0.0, -0.06, -0.05)), 0.022, 0.003, normal=(1, 0, 0), cat="arm-")
+        for k, ang in enumerate((-25, 10)):
+            a = math.radians(ang)
+            B.box(f"sleutel{k}", M_k, hand + Vector((0.0, -0.06 + 0.03 * math.sin(a), -0.09 - 0.02 * math.cos(a))),
+                  (0.004, 0.012, 0.05), rot=(a, 0, 0), cat="arm-", bevel=0.2)
+        B.box("autosleutel", mats.pbr("#1A1A1A", rough=0.4), hand + Vector((0.0, -0.075, -0.035)),
+              (0.012, 0.025, 0.04), cat="arm-", bevel=0.4)
+    elif prop == "holo":
+        # zwevend hologramscherm boven de hand (toekomst)
+        M_ho = mats.unlit(spec.get("glow", {}).get("color", "#5CF2FF"))
+        B.box("hologram", M_ho, hand + Vector((0.0, -0.12, 0.2)), (0.004, 0.16, 0.11),
+              rot=(math.radians(-10), 0, 0), cat="arm-", bevel=0)
+        B.box("hologram_band", mats.pbr("#2A2F3A", rough=0.3), hand + Vector((0.0, 0.0, 0.07)), (0.07, 0.07, 0.02),
+              cat="arm-", bevel=0.4)
+
     # --- 7. lichaamsbouw toepassen -------------------------------------------
     apply, head_c = make_warp(spec["body"])
     for ob, cat in B.items:
@@ -1697,7 +2075,7 @@ def main():
     hero_root = next(o for o in imported if o.type == "EMPTY" and o.parent is None)
     hero_root.name = "hoofdpersonage"
 
-    src = {"10x": CAST_10X, "nr": CAST + CAST_NR}.get(opts["--cast"], CAST)
+    src = {"10x": CAST_10X, "nr": CAST + CAST_NR, "nd": _cast_nd()}.get(opts["--cast"], CAST)
     specs = [s for s in src if not only or s["key"] in only]
     built = []
     for spec in specs:
@@ -1706,7 +2084,7 @@ def main():
         print("gebouwd:", spec["key"], "lengte %.2f m" % zmax)
 
     cam = setup_render(int(opts["--samples"]))
-    blend = {"10x": "cast_10x_faster.blend", "nr": "cast_no_rules.blend"}.get(opts["--cast"],
+    blend = {"10x": "cast_10x_faster.blend", "nr": "cast_no_rules.blend", "nd": "cast_never_die.blend"}.get(opts["--cast"],
                                                                              "cast_video1.blend")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(out, blend))
 
