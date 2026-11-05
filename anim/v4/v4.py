@@ -20,7 +20,7 @@ import math
 import os
 import sys
 
-os.environ.setdefault("WHATIF_CAST", "cast_v4")
+os.environ.setdefault("WHATIF_CAST", "cast_v4,cast_v3")   # figuranten uit video 3 als achtergrond
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "v3"))
 from v3 import *  # noqa: E402,F401,F403
