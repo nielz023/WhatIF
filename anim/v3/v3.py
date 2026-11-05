@@ -733,3 +733,96 @@ def no_phone(ch, screen="6FB7FF", case="1A1A1A"):
     bm.to_mesh(body.data)
     bm.free()
     print("TELEFOON WEG", ch.name, len(kill), "vlakken")
+
+
+def night_sky(stars=1.0, milky=1.0, band=(0.95, 0.3, 0.12), width=0.16):
+    """Sterren en een Melkweg in de wereld (op de lucht die de camera ziet). band = normaal van het Melkwegvlak."""
+    w = bpy.context.scene.world
+    N, L = w.node_tree.nodes, w.node_tree.links
+    bg = next(n for n in N if n.type == "BACKGROUND" and n.inputs["Color"].is_linked)
+    sky = bg.inputs["Color"].links[0].from_socket
+    tc = next(n for n in N if n.type == "TEX_COORD")
+    nrm = N.new("ShaderNodeVectorMath")
+    nrm.operation = "NORMALIZE"
+    L.new(tc.outputs["Generated"], nrm.inputs[0])
+
+    def stars_layer(scale, size, gain):
+        vor = N.new("ShaderNodeTexVoronoi")
+        vor.inputs["Scale"].default_value = scale
+        L.new(nrm.outputs["Vector"], vor.inputs["Vector"])
+        mr = N.new("ShaderNodeMapRange")
+        mr.inputs["From Min"].default_value = size
+        mr.inputs["From Max"].default_value = 0.0
+        mr.inputs["To Max"].default_value = gain
+        L.new(vor.outputs["Distance"], mr.inputs["Value"])
+        return mr.outputs["Result"]
+
+    s1 = stars_layer(260.0, 0.05, 6.0 * stars)
+    s2 = stars_layer(700.0, 0.06, 2.5 * stars)
+    dot = N.new("ShaderNodeVectorMath")
+    dot.operation = "DOT_PRODUCT"
+    bn = V(band).normalized()
+    dot.inputs[1].default_value = tuple(bn)
+    L.new(nrm.outputs["Vector"], dot.inputs[0])
+    ab = N.new("ShaderNodeMath")
+    ab.operation = "ABSOLUTE"
+    L.new(dot.outputs["Value"], ab.inputs[0])
+    bandm = N.new("ShaderNodeMapRange")
+    bandm.inputs["From Min"].default_value = width
+    bandm.inputs["From Max"].default_value = 0.0
+    bandm.interpolation_type = "SMOOTHSTEP"
+    L.new(ab.outputs["Value"], bandm.inputs["Value"])
+    noise = N.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 7.0
+    noise.inputs["Detail"].default_value = 10.0
+    L.new(nrm.outputs["Vector"], noise.inputs["Vector"])
+    nmr = N.new("ShaderNodeMapRange")
+    nmr.inputs["From Min"].default_value = 0.42
+    nmr.inputs["From Max"].default_value = 0.75
+    L.new(noise.outputs["Fac"], nmr.inputs["Value"])
+    glow = N.new("ShaderNodeMath")
+    glow.operation = "MULTIPLY"
+    L.new(bandm.outputs["Result"], glow.inputs[0])
+    L.new(nmr.outputs["Result"], glow.inputs[1])
+    g2 = N.new("ShaderNodeMath")
+    g2.operation = "MULTIPLY"
+    g2.inputs[1].default_value = 0.35 * milky
+    L.new(glow.outputs[0], g2.inputs[0])
+    dense = N.new("ShaderNodeMath")
+    dense.operation = "MULTIPLY"
+    L.new(s2, dense.inputs[0])
+    L.new(bandm.outputs["Result"], dense.inputs[1])
+    tot = N.new("ShaderNodeMath")
+    tot.operation = "ADD"
+    L.new(s1, tot.inputs[0])
+    L.new(dense.outputs[0], tot.inputs[1])
+    # alleen boven de horizon
+    sep = N.new("ShaderNodeSeparateXYZ")
+    L.new(nrm.outputs["Vector"], sep.inputs[0])
+    hz = N.new("ShaderNodeMapRange")
+    hz.inputs["From Min"].default_value = 0.02
+    hz.inputs["From Max"].default_value = 0.2
+    L.new(sep.outputs["Z"], hz.inputs["Value"])
+    star_col = N.new("ShaderNodeCombineColor")
+    for i in range(3):
+        mm = N.new("ShaderNodeMath")
+        mm.operation = "MULTIPLY_ADD"
+        L.new(tot.outputs[0], mm.inputs[0])
+        mm.inputs[1].default_value = (1.0, 1.0, 1.0)[i]
+        L.new(g2.outputs[0], mm.inputs[2])
+        m2 = N.new("ShaderNodeMath")
+        m2.operation = "MULTIPLY"
+        L.new(mm.outputs[0], m2.inputs[0])
+        L.new(hz.outputs["Result"], m2.inputs[1])
+        m3 = N.new("ShaderNodeMath")
+        m3.operation = "MULTIPLY"
+        m3.inputs[1].default_value = (0.85, 0.9, 1.05)[i]
+        L.new(m2.outputs[0], m3.inputs[0])
+        L.new(m3.outputs[0], star_col.inputs[i])
+    add = N.new("ShaderNodeMix")
+    add.data_type = "RGBA"
+    add.blend_type = "ADD"
+    add.inputs["Factor"].default_value = 1.0
+    L.new(sky, add.inputs["A"])
+    L.new(star_col.outputs[0], add.inputs["B"])
+    L.new(add.outputs["Result"], bg.inputs["Color"])
