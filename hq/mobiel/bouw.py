@@ -7,5 +7,13 @@ src = (here / "page.html").read_text()
 out = src.replace("<script>\n(function", "<script>window.__DM_SEED__=" + seed + ";</script>\n<script>\n(function", 1)
 d = here / "dist"; (d / "img").mkdir(parents=True, exist_ok=True)
 (d / "page.html").write_text(out)
-for f in (here / "assets").iterdir(): shutil.copy(f, d / "img" / f.name)
+for f in (here / "assets").iterdir():
+    if f.is_file(): shutil.copy(f, d / "img" / f.name)
+shutil.rmtree(d / "kantoor", ignore_errors=True)
+shutil.copytree(here / "assets" / "kantoor", d / "kantoor")
+import re
+for name in sorted(set(re.findall(r"\./img/([a-z0-9_]+\.jpg)", (here.parent / "src/components/office/DriftmarkDecor.tsx").read_text()))):
+    shutil.copy(here.parent / "public/img" / name, d / "img" / name)
+(d / "models").mkdir(exist_ok=True)
+shutil.copy(here.parent / "public/models/hoofdpersonage.gltf.json", d / "models/hoofdpersonage.gltf.json")
 print("ok", len(out))

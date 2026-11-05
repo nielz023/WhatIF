@@ -132,6 +132,20 @@ textarea:focus { border-color: var(--orange); outline: none; }
 .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
 .legend i { display: inline-block; width: 10px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
 
+/* kantoor */
+section[data-tab="kantoor"] { padding-block: 0; }
+.office { position: relative; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  height: calc(100dvh - 58px - 74px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); min-height: 360px; background: var(--bg); overflow: hidden; touch-action: none; }
+.office > #kantoor-root { position: absolute; inset: 0; }
+.office .hint { position: absolute; left: 12px; top: 10px; z-index: 2; font: 500 11px var(--mono); color: var(--muted); background: color-mix(in srgb, var(--bg) 70%, transparent); border: 1px solid var(--line); border-radius: 99px; padding: 5px 9px; pointer-events: none; }
+.office [class*="text-[10px]"] { display: none; }
+.office [class*="text-[12px]"] { font-size: 11px !important; }
+.office .loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 14px; text-align: center; padding: 20px; }
+.sheet { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 3; background: color-mix(in srgb, var(--panel) 96%, transparent); border: 1px solid var(--line); border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.sheet .x { position: absolute; top: 8px; right: 8px; background: var(--panel2); border: 0; border-radius: 50%; width: 30px; height: 30px; color: var(--muted); }
+.sheet .acts { display: flex; gap: 8px; margin-top: 12px; }
+.sheet .acts > * { flex: 1; text-align: center; }
+
 /* tabbalk */
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line);
   display: grid; grid-template-columns: repeat(5, 1fr); align-items: end;
@@ -168,9 +182,26 @@ nav.tabs .badge { position: absolute; top: 2px; left: 56%; min-width: 16px; heig
     <details class="card"><summary>Volgende stappen</summary><div id="next"></div></details>
   </section>
 
-  <!-- VIDEO'S -->
+  <!-- KANTOOR -->
+  <section data-tab="kantoor" hidden>
+    <div class="office" id="office">
+      <div id="kantoor-root"></div>
+      <div class="loading" id="kload">3D-kantoor laden…</div>
+      <span class="hint">Sleep, knijp of tik op iemand</span>
+      <div class="sheet" id="sheet" hidden></div>
+    </div>
+  </section>
+
+  <!-- VIDEO'S EN CIJFERS -->
   <section data-tab="videos" hidden>
     <div id="videos" class="stack" style="gap:14px"></div>
+    <h2>Kanaalcijfers</h2>
+    <div class="stats" id="stats2"></div>
+    <p class="note" id="ytsrc"></p>
+    <h2>Weergaven per video</h2>
+    <div class="legend"><span><i style="background:var(--orange)"></i>lange video</span><span><i style="background:var(--blue)"></i>short</span></div>
+    <div class="card yt" id="yt"></div>
+    <details class="card"><summary>Credits en kosten</summary><div id="costs"></div></details>
   </section>
 
   <!-- OPDRACHT -->
@@ -194,23 +225,14 @@ nav.tabs .badge { position: absolute; top: 2px; left: 56%; min-width: 16px; heig
     <div id="threads" class="stack" style="gap:14px"></div>
   </section>
 
-  <!-- CIJFERS -->
-  <section data-tab="cijfers" hidden>
-    <div class="stats" id="stats2"></div>
-    <p class="note" id="ytsrc"></p>
-    <h2>Weergaven per video</h2>
-    <div class="legend"><span><i style="background:var(--orange)"></i>lange video</span><span><i style="background:var(--blue)"></i>short</span></div>
-    <div class="card yt" id="yt"></div>
-    <details class="card"><summary>Credits en kosten</summary><div id="costs"></div></details>
-  </section>
 </main>
 
 <nav class="tabs" role="tablist" aria-label="Onderdelen">
   <button role="tab" data-go="nu" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Nu<span class="badge" id="badge" hidden>0</span></button>
-  <button role="tab" data-go="videos" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>Video's</button>
+  <button role="tab" data-go="kantoor" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Kantoor</button>
   <button role="tab" data-go="opdracht" aria-selected="false" class="fab"><span class="c"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Opdracht</button>
+  <button role="tab" data-go="videos" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>Video's</button>
   <button role="tab" data-go="threads" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Threads</button>
-  <button role="tab" data-go="cijfers" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Cijfers</button>
 </nav>
 
 <script>
@@ -240,12 +262,39 @@ nav.tabs .badge { position: absolute; top: 2px; left: 56%; min-width: 16px; heig
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function greet() { var h = +new Date().toLocaleString("nl-NL", { timeZone: "Europe/Amsterdam", hour: "numeric", hour12: false }); return h < 6 ? "Goedenacht" : h < 12 ? "Goedemorgen" : h < 18 ? "Goedemiddag" : "Goedenavond"; }
 
+  /* ---------- 3D-kantoor (pas geladen als je het tabblad opent) ---------- */
+  var K = null, kLoading = false;
+  function openOffice() {
+    if (K) { K.mount($("kantoor-root"), onAgent); return; }
+    if (kLoading) return; kLoading = true;
+    if (!document.getElementById("kcss")) { var l = document.createElement("link"); l.id = "kcss"; l.rel = "stylesheet"; l.href = "kantoor/kantoor.css"; document.head.appendChild(l); }
+    import(new URL("kantoor/kantoor.js", document.baseURI).href).then(function (m) {
+      K = m; kLoading = false; $("kload").hidden = true;
+      if (location.hash.slice(1) === "kantoor") K.mount($("kantoor-root"), onAgent);
+    }).catch(function (e) { kLoading = false; $("kload").textContent = "Het kantoor kon niet laden (" + (e && e.message || "fout") + "). Tik op Kantoor om het opnieuw te proberen."; });
+  }
+  function closeOffice() { if (K) { K.unmount(); onAgent(null); } }
+  function onAgent(a) {
+    var s = $("sheet");
+    if (!a) { s.hidden = true; return; }
+    var act = (data && data.activity || []).filter(function (x) { return x.id === a.id; })[0] || {};
+    s.innerHTML = '<button class="x" type="button" id="sheetx" aria-label="Sluiten">✕</button><div class="t" style="font:700 16px var(--display);padding-right:34px">' + esc(a.name) + '</div>' +
+      '<div style="margin-top:4px"><span class="pill s-' + esc(act.state || "") + '">' + esc(STATE[act.state] || a.state) + '</span> <span class="note" style="display:inline">' + (act.lastIso ? ago(act.lastIso) : "") + '</span></div>' +
+      (a.doing ? '<p class="small" style="margin:8px 0 0">' + esc(a.doing) + '</p>' : "") +
+      '<div class="acts">' + (/^cmsg_/.test(a.id) ? '<a class="lk" href="' + threadUrl(a.id) + '" target="_blank" rel="noreferrer">Open thread ↗</a>' : "") + '<button class="btn ghost" type="button" id="sheetask">Geef opdracht</button></div>';
+    s.hidden = false;
+    $("sheetx").onclick = function () { if (K) K.deselect(); };
+    $("sheetask").onclick = function () { $("otext").value = "Voor thread \"" + a.name + "\": "; go("opdracht"); setTimeout(function () { $("otext").focus(); }, 50); };
+  }
+
   /* ---------- tabs ---------- */
-  var TABS = ["nu", "videos", "opdracht", "threads", "cijfers"];
+  var TABS = ["nu", "kantoor", "opdracht", "videos", "threads"];
   function show(tab) {
+    if (tab === "cijfers") tab = "videos";
     if (TABS.indexOf(tab) < 0) tab = "nu";
     document.querySelectorAll("section[data-tab]").forEach(function (s) { s.hidden = s.dataset.tab !== tab; });
     document.querySelectorAll("nav.tabs button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.go === tab ? "true" : "false"); });
+    if (tab === "kantoor") openOffice(); else closeOffice();
     var v = $("herovid"); if (v) { if (tab === "nu") { var p = v.play(); if (p && p.catch) p.catch(function () {}); } else v.pause(); }
     window.scrollTo(0, 0);
   }
@@ -333,7 +382,7 @@ nav.tabs .badge { position: absolute; top: 2px; left: 56%; min-width: 16px; heig
     var longs = vids.filter(function (v) { return v.type === "long"; }), shorts = vids.filter(function (v) { return v.type === "short"; });
     var sv = shorts.reduce(function (s, v) { return s + (v.views || 0); }, 0), lv = longs.reduce(function (s, v) { return s + (v.views || 0); }, 0);
     $("stats2").innerHTML = '<div class="stat"><b>' + nf(yt.subscribers) + '</b><span>abonnees</span></div><div class="stat"><b>' + nf(sv) + '</b><span>views shorts</span></div><div class="stat"><b>' + nf(lv) + '</b><span>views lang</span></div>';
-    $("ytsrc").textContent = "Bron: " + (yt.bron || "projectstand") + (yt.bijgewerkt ? ", " + ago(yt.bijgewerkt) : "") + ". Tik op Opdracht en kies 'Haal nieuwe kanaalcijfers op' voor verse cijfers.";
+    $("ytsrc").textContent = "Bron: " + (yt.bron || "projectstand") + (yt.bijgewerkt ? ", " + ago(yt.bijgewerkt) : "") + ". Tik op de oranje knop en kies 'Haal nieuwe kanaalcijfers op' voor verse cijfers.";
     var max = vids.reduce(function (m, v) { return Math.max(m, v.views || 0); }, 1);
     $("yt").innerHTML = vids.length ? vids.slice().sort(function (a, b) { return (b.views || 0) - (a.views || 0); }).map(function (v) {
       return '<a class="row rowlink" href="' + esc(v.url || "#") + '" target="_blank" rel="noreferrer"><div class="grow"><div class="t small">' + esc(v.title) + '</div><div class="d">' + (v.datum ? esc(v.datum) : "") + (v.status && v.status !== "public" ? " · " + esc(v.status) : "") + '</div><div class="vb"><i class="' + (v.type === "long" ? "long" : "") + '" style="width:' + Math.max(2, Math.round((v.views || 0) / max * 100)) + '%"></i></div></div><span class="v">' + nf(v.views) + '</span></a>';

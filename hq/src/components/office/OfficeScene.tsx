@@ -15,7 +15,8 @@ const cell = (c: number, r: number): [number, number, number] => [(c - 1) * (ROO
 
 function ResponsiveZoom() {
   const { size, camera } = useThree();
-  const z = Math.min(size.width / 52, size.height / 46);
+  // op een smal (telefoon)scherm verder inzoomen, anders is het kantoor piepklein
+  const z = Math.min(size.width / (size.width < 600 ? 34 : 52), size.height / 46);
   if ((camera as { zoom: number }).zoom !== z) {
     (camera as { zoom: number }).zoom = z;
     camera.updateProjectionMatrix();
