@@ -1,4 +1,4 @@
-import { u as b, b as A, d as w, e as O } from "./kantoor-mobiel-Cq3VlZLS.js";
+import { u as b, b as A, d as w, e as O } from "./kantoor-mobiel-D8nsu0GD.js";
 const x = [
   [/thumbnail|banner|branding/i, "thumbnail_designer"],
   [/titel|beschrijving|tags/i, "seo_specialist"],

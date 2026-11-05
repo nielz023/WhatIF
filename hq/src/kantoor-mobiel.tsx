@@ -3,7 +3,7 @@
  * bestand pas als je het tabblad Kantoor opent: mount(el, onAgent).
  * Medewerkers = echte threads uit driftmark-hq/status.json (via services/live + sync).
  */
-import { lazy, StrictMode, Suspense } from 'react';
+import { Component, lazy, StrictMode, Suspense, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import './kantoor.css';
 import { useGame } from './store/useGame';
@@ -12,6 +12,13 @@ import { realTick } from './lib/util';
 import { startDutch } from './lib/nl';
 
 const OfficeScene = lazy(() => import('./components/office/OfficeScene'));
+
+const MSG = { display: 'grid', placeItems: 'center', height: '100%', color: '#8f9bcb', font: '14px system-ui', textAlign: 'center' as const, padding: 20 };
+class Boundary extends Component<{ children: ReactNode }, { err: string | null }> {
+  state = { err: null as string | null };
+  static getDerivedStateFromError(e: unknown) { return { err: (e as Error)?.message ?? 'onbekende fout' }; }
+  render() { return this.state.err ? <div style={MSG}>Het kantoor kon niet starten ({this.state.err}). Open het tabblad Kantoor opnieuw.</div> : this.props.children; }
+}
 
 export interface AgentInfo { id: string; name: string; doing: string; state: string; department: string }
 let root: Root | null = null;
@@ -35,9 +42,11 @@ export function mount(el: HTMLElement, onAgent?: (a: AgentInfo | null) => void) 
   root = createRoot(el);
   root.render(
     <StrictMode>
-      <Suspense fallback={<div style={{ display: 'grid', placeItems: 'center', height: '100%', color: '#8f9bcb', font: '14px system-ui' }}>Kantoor laden…</div>}>
-        <OfficeScene />
-      </Suspense>
+      <Boundary>
+        <Suspense fallback={<div style={MSG}>Kantoor laden…</div>}>
+          <OfficeScene />
+        </Suspense>
+      </Boundary>
     </StrictMode>,
   );
 }

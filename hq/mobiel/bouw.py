@@ -16,5 +16,5 @@ import re
 for name in sorted(set(re.findall(r"\./img/([a-z0-9_]+\.jpg)", (here.parent / "src/components/office/DriftmarkDecor.tsx").read_text()))):
     shutil.copy(here.parent / "public/img" / name, d / "img" / name)
 (d / "models").mkdir(exist_ok=True)
-shutil.copy(here.parent / "public/models/hoofdpersonage.gltf.json", d / "models/hoofdpersonage.gltf.json")
+for m in (here.parent / "public/models").iterdir(): shutil.copy(m, d / "models" / m.name)
 print("ok", len(out))
