@@ -19,7 +19,7 @@ const err = (t: { status: string; error?: string }) => t.status === 'laden' ? 'L
 export function ToolsPanel() {
   const { tools, refresh } = useTools();
   const blender = useLive((s) => s.data.blender);
-  const el = tools.elevenlabs, vq = tools.vidiq, vqc = tools.vidiqch, hf = tools.higgsfield, gh = tools.github, nl = tools.nexlev;
+  const el = tools.elevenlabs, vq = tools.vidiq, vqc = tools.vidiqch, hf = tools.higgsfield, nl = tools.nexlev;
   const vqAccount = (vqc.data as Any)?.authenticatedAs as string | undefined;
   const vqHasDrift = ((vqc.data as Any)?.channels ?? []).some((c: Any) => /drift/i.test(c.title ?? ''));
   return (
@@ -54,11 +54,6 @@ export function ToolsPanel() {
         <Card title="Higgsfield" status={hf.status}>
           {hf.status === 'ok' ? <div>Credits: <span className="text-white">{(hf.data as Any)?.credits ?? '?'}</span> · abonnement {(hf.data as Any)?.subscription_plan_type ?? '?'}</div> : <div>{err(hf)}</div>}
           <div>Ook als add-on in Blender op je pc.</div>
-        </Card>
-        <Card title="GitHub (scripts)" status={gh.status}>
-          {gh.status === 'ok' ? ((gh.data as Any) ?? []).slice(0, 3).map((c: Any) => (
-            <a key={c.sha} href={c.html_url} target="_blank" rel="noreferrer" className="block truncate text-indigo-300 hover:text-white">{new Date(c.commit?.author?.date).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })} · {String(c.commit?.message ?? '').split('\n')[0]}</a>
-          )) : <div>{err(gh)}</div>}
         </Card>
         <Card title="NexLev (kanaal Driftmark)" status={nl.status}>
           {nl.status === 'ok' ? (<>

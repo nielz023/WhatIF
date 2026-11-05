@@ -16,7 +16,6 @@ const CALLS: { key: string; server: string; tool: string; input: Record<string, 
   { key: 'vidiq', server: 'vidIQ', tool: 'vidiq_balance', input: {}, stale: 30 * MIN },
   { key: 'vidiqch', server: 'vidIQ', tool: 'vidiq_user_channels', input: {}, stale: 60 * MIN },
   { key: 'higgsfield', server: 'Higgsfield', tool: 'balance', input: {}, stale: 30 * MIN },
-  { key: 'github', server: 'github', tool: 'list_commits', input: { owner: 'nielz023', repo: 'WhatIF', sha: 'claude/project-thread-maefml', perPage: 5, fields: ['sha', 'html_url', 'commit'] }, stale: 10 * MIN },
   // NexLev heeft een weeklimiet (gratis: 50 calls), dus maximaal 1x per 6 uur
   { key: 'nexlev', server: 'NexLev', tool: 'youtube_channel_about', input: { channel_id: CHANNEL_ID }, stale: 360 * MIN },
 ];
