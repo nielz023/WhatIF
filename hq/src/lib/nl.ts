@@ -43,7 +43,7 @@ const D: Record<string, string> = {
   'The executive crisis room. Management agents investigate declining metrics and bring recommendations for your approval.': 'De crisiskamer. Management-agents onderzoeken dalende cijfers en leggen aanbevelingen aan jou voor.',
   'No active cases. Convene the War Room to investigate a problem.': 'Geen open zaken. Roep de crisiskamer bijeen om een probleem te onderzoeken.', 'Open War Room dashboard': 'Crisiskamer openen',
   // modals
-  'Greenlight project': 'Project starten', 'Channel': 'Kanaal', 'Topic': 'Onderwerp', 'Working title': 'Werktitel', 'Priority': 'Prioriteit', 'Deadline (game days)': 'Deadline (speldagen)',
+  'Greenlight project': 'Project starten', 'Channel': 'Kanaal', 'Topic': 'Onderwerp', 'Working title': 'Werktitel', 'Priority': 'Prioriteit', 'Deadline (game days)': 'Deadline (dagen, echte tijd)',
   'The project enters the pipeline at': 'Het project begint bij', 'and flows through all 11 stages. You\'ll be asked to approve it at': 'en gaat door alle 11 stappen. Je keurt het goed bij',
   'and to confirm before': 'en bevestigt vóór', 'Assign': 'Toewijzen', 'Title': 'Titel', 'Description / instructions': 'Beschrijving / instructies', 'Assigned agent': 'Agent',
   'Deadline (days)': 'Deadline (dagen)', 'Link to project': 'Koppel aan project', '— none —': '— geen —', 'Depends on': 'Hangt af van', '— no dependency —': '— niets —',
