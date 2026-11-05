@@ -32,7 +32,11 @@ OUT = args[1] if len(args) > 1 else ("/mnt/project-files/videos/10x-sneller/sets
 NR = MOOD in ("nr_diner", "nr_kaarsen", "nr_oud")
 if NR:
     OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/geen-regels/sets/08_keuken"
-DINNER = MOOD in ("zondagsdiner", "nr_diner", "nr_oud")
+# Video 4 (Never Die): nd_verjaardag (scène 5, 14e verjaardag 's middags: taart met 14 kaarsjes, gezin aan tafel)
+ND = MOOD == "nd_verjaardag"
+if ND:
+    OUT = args[1] if len(args) > 1 else "/mnt/project-files/videos/nooit-dood/sets/05_keuken"
+DINNER = MOOD in ("zondagsdiner", "nr_diner", "nr_oud", "nd_verjaardag")
 CANDLES = MOOD == "nr_kaarsen"
 DAWN = MOOD == "dageraad"
 CRANES = MOOD in ("kraanvogels", "natuurkundige", "knal", "verjaardag")
@@ -44,6 +48,9 @@ elif DAWN:
     mood = dict(T.MOODS["nacht"])
     mood.update(sky_top=(0.04, 0.07, 0.2), sky_horizon=(0.35, 0.32, 0.5), sun_rot=(85, 0, 160), sun_strength=0.15,
                 ambient=(0.08, 0.09, 0.16), fog_max=0.0, bloom=0.5, exposure=-1.0)
+elif ND:
+    mood = dict(T.MOODS["ochtend"])
+    mood.update(sun_rot=(60, 0, 210), sun_strength=1.2, ambient=(0.34, 0.30, 0.30), fog_max=0.0, bloom=0.4)
 elif DINNER:
     mood = dict(T.MOODS["zonsondergang"])
     mood.update(sun_rot=(78, 0, 200), sun_strength=0.7, ambient=(0.22, 0.18, 0.22), fog_max=0.0, bloom=0.5)
@@ -194,6 +201,17 @@ if MOOD in ("ochtend", "dag1"):
     T.cyl("Fruitschaal", (TX + 0.05, TY + 0.05, TZ), 0.1, 0.06, T.toon("schaal", (0.85, 0.85, 0.9)), r2=0.16, seg=24, ol=0.004)
     for k, (c, dx, dy) in enumerate([((0.85, 0.1, 0.1), -0.05, 0), ((0.95, 0.55, 0.05), 0.05, 0.03), ((0.98, 0.85, 0.15), 0.0, -0.06), ((0.4, 0.75, 0.2), 0.02, 0.07)]):
         T.sphere(f"Fruit_{k}", (TX + 0.05 + dx, TY + 0.05 + dy, TZ + 0.1), 0.045, T.toon(f"fruit{k}", c), seg=12, ol=0.003)
+elif ND:
+    T.box("Tafelkleed", (TX, TY, TZ - 0.001), (TL + 0.2, 1.05, 0.004), T.toon("tafelkleed", (0.95, 0.94, 0.9)), bevel=0, ol=0.003)
+    for k, (x, s) in enumerate(seats):
+        T.cyl(f"Taartbordje_{k + 1}", (TX + x, TY + s * 0.28, TZ), 0.09, 0.012, P.m("wit"), seg=20, ol=0.002)
+        T.cyl(f"Glas_{k}", (TX + x + 0.15, TY + s * 0.18, TZ), 0.03, 0.11, T.glass("drinkglas", (0.8, 0.9, 1.0), alpha=0.5), seg=14, ol=0.002)
+    HU.taart("Verjaardagstaart", (TX - 0.35, TY - 0.05, TZ), kaarsjes=14, aan=True)
+    HU.cadeau("Cadeau_ouders", (TX + 0.75, TY - 0.05, TZ), rot_z=-12)
+    HU.vlaggenlijn("Slinger_1", (-W / 2 + 0.05, -1.2, 2.45), (W / 2 - 0.05, 0.6, 2.45), sag=0.35, n=18)
+    HU.vlaggenlijn("Slinger_2", (-W / 2 + 0.05, 1.0, 2.45), (W / 2 - 0.05, -1.6, 2.45), sag=0.3, n=18)
+    from lib import street as ST_  # noqa: E402
+    ST_.balloons("Ballonnen", (-1.95, -1.45, 0.0), n=5, seed=3, height=1.35)
 elif DINNER:
     for k, (x, s) in enumerate(seats):
         plate(f"Bord_{k + 1}", TX + x, TY + s * 0.28, food="diner")
@@ -348,7 +366,7 @@ cams = [
     T.camera("CAM_03_aanrecht_mokken", (0.6, 0.4, 1.45), (0.8, D / 2, 1.2), lens=30),
     T.camera("CAM_04_koelkast", (FX - 0.6, 0.2, 1.5), (FX, D / 2 - 0.75, 1.3), lens=30),
 ]
-if NR:
+if NR or ND:
     cams = cams + cam_extra
 if V2:
     keep = {"dag1": ("CAM_01", "CAM_02", "CAM_04"), "dageraad": ("CAM_01", "CAM_02"), "kraanvogels": ("CAM_01",),
