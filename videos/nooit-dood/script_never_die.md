@@ -267,7 +267,7 @@ Hij drukt zijn neus tegen het glas, het kwalletje drijft vlak voor zijn oog.
 - **VO:** "It's the closest thing to immortal that scientists have ever found. Until you."
 
 **7e · CLOSE · wetenschapper · 3 s**
-Ze haalt haar bril af, zacht:
+Hij haalt zijn bril af, zacht:
 - **WETENSCHAPPER:** "You'll outlive everyone you know."
 
 **7f · CLOSE · mama · 2,5 s**
@@ -399,7 +399,7 @@ Hij kruipt uit de krater, spuugt een maïskorrel uit.
 **HUD:** `YEAR 2086 · AGE 14`. **Set:** de heuvel, winter, kale eik, sneeuw op de bank. De stad heeft vliegende lichtjes boven de daken. **Muziek:** horlogethema, cello erbij.
 
 **11a · WIDE · CAM_HEUVEL · statisch · 3,5 s**
-Op de bank: hij (14) en een oude man van 80 met grijze baard, wandelstok en dikke sjaal. Twee lege plekken aan het eind van de bank, met elk een bosje bloemen in de sneeuw.
+Op de bank: hij (14) en een oude man van bijna 70 met grijze baard, wandelstok en dikke sjaal. Twee lege plekken aan het eind van de bank, met elk een bosje bloemen in de sneeuw.
 - **VO:** "Mom and Dad are gone now."
 
 **11b · MEDIUM · 3 s**
@@ -412,11 +412,11 @@ De oude man legt een hand op zijn hoofd en woelt door zijn haar. (Zelfde render 
 
 **11c2 · WIDE · CAM_HEUVEL · statisch · 4 s**
 Ze zitten naast elkaar en kijken naar de stad. Het broertje haalt een papieren zak met snoep tevoorschijn, net als vroeger, en geeft hem de helft.
-- **VO:** "Seventy-two years ago, he wanted you to get his football off the roof."
+- **VO:** "Sixty years ago, he wanted you to get his football off the roof."
 
 **11d · DETAIL · 4 s**
 De oude man geeft hem een vergeelde foto: het gezin aan de keukentafel op zijn 14e verjaardag, taart, opa met het doosje.
-- **VO:** "He kept it for seventy years. Just for you."
+- **VO:** "He kept it for sixty years. Just for you."
 
 **11e · CLOSE · trage push-in · 4 s**
 Hij kijkt naar de foto. Zijn duim gaat over mama's gezicht.
@@ -639,7 +639,7 @@ Bij een loopplank van een schip staat een lange, slanke toekomstmens (hoofdperso
 
 **16c2 · DETAIL · 4,5 s**
 Op een enorm scherm op de zijkant van het schip: **GOODBYE, EARTH**, en daaronder een aftelling die op nul springt.
-- **VO:** "Seven billion years of history. And they leave it with you."
+- **VO:** "Three hundred thousand years of human history. And they leave it with you."
 
 **16d · WIDE · LOW · 4 s**
 Het laatste schip stijgt op. De luchtdruk blaast zijn haar en jas naar achteren. Het geluid zwelt aan en ebt weg.
@@ -917,7 +917,7 @@ Driftmark-logo. Geen verwijzing naar een volgende video en geen titel van een an
 ## B. Cast
 
 - **Hoofdpersonage:** altijd 14. Kleding verandert per tijdperk (hoodie 2026, te groot pak 2051, toekomstjas 2200, rafels vanaf 1 miljard jaar). Geen leeftijdsvarianten.
-- **Gezin:** mama (ook grijs, 2051), papa (ook grijs), opa (alleen 2026), oma (2026), broertje (2026 en als man van 80 in 2086).
+- **Gezin:** mama (ook grijs, 2051), papa (ook grijs), opa (alleen 2026), oma (2026), broertje (2026 en als man van bijna 70 in 2086).
 - **Vaste cast:** beste vriend (2026, 20 jaar in 2032, rond de 40 bij de bruiloft), pestkop (2026, als agent van 50+ in 2066, 98 jaar in rolstoel in 2110), wetenschapper, nieuwslezeres, vuilnisman (video 2).
 - **Nieuw/overig:** portier, tante, brandweerman, meisje uit de brand, EVERGREEN-directeur en bewakers, toekomstmensen (3026 en 1 mln), kind met hologramtelefoon, museumkinderen, moeder van het meisje, de lange toekomstvrouw, vreemde grazers (silhouetten), kwalletje.
 
