@@ -208,7 +208,7 @@ HW = S.headpos(wet, t_g)
 dW = (TC - HW).normalized()
 dW.z = 0
 dW.normalize()
-S.cam(t_g, (HW + dW * 1.2 + V(0, 0, -0.04), HW + V(0, 0, -0.04), 34), (HW + dW * 1.1 + V(0, 0, -0.04), HW + V(0, 0, -0.04), 36))
+S.cam(t_g, (HW + dW * 1.4 + V(0, 0, -0.02), HW + V(0, 0, -0.02), 32), (HW + dW * 1.3 + V(0, 0, -0.02), HW + V(0, 0, -0.02), 33))
 # 21h DETAIL push-in PHASE 2
 S.cam(t_h, ((0.0, 10.0, 11.5), SCR, 35), ((0.0, 14.5, 12.8), SCR, 40))
 # 21i WIDE trage pull-back naar het zuiden: het rode plein, de blauwe streep aan de horizon
@@ -217,7 +217,7 @@ S.cam(t_i, ((0.0, 12.0, 5.0), (0.0, -60.0, 3.0), 24), ((0.0, 19.0, 8.0), (0.0, -
 HU_ = S.headpos(held, t_j)
 S.cam(t_j, (HU_ + V(0.25, -1.3, -0.02), HU_ + V(0, 0, -0.04), 32), (HU_ + V(0.22, -1.2, -0.02), HU_ + V(0, 0, -0.04), 34))
 # 21k CLOSE trage push-in
-S.cam(t_k, (HU_ + V(-0.3, -1.1, 0.0), HU_ + V(0, 0, -0.02), 40), (HU_ + V(-0.22, -0.8, 0.0), HU_ + V(0, 0, -0.02), 48))
+S.cam(t_k, (HU_ + V(-0.3, -1.4, 0.0), HU_ + V(0, 0, -0.02), 36), (HU_ + V(-0.25, -1.2, 0.0), HU_ + V(0, 0, -0.02), 40))
 
 # ---------------------------------------------------------------- geluid en stem (geen HUD)
 T_STOP = t_h + 1.6

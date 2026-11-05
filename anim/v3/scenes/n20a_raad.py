@@ -128,7 +128,7 @@ S.cam(t_a, ((8.0, -24.0, 9.0), (0.0, 5.0, 1.2), 24), ((6.0, -13.0, 3.4), (0.0, 5
 S.cam(t_b, ((-0.9, 3.9, 1.35), HH + V(0, 0, -0.15), 28), ((-0.4, 3.95, 1.3), HH + V(0, 0, -0.12), 30))
 # 20c CLOSE de jongen
 HC = S.headpos(held, t_c + 1.5)
-S.cam(t_c, ((0.85, HC.y - 0.2, HC.z + 0.02), HC + V(0, 0, -0.04), 32), ((0.95, HC.y - 0.18, HC.z + 0.02), HC + V(0, 0, -0.04), 34))
+S.cam(t_c, ((0.85, HC.y - 0.2, HC.z + 0.06), HC + V(0, 0, 0.03), 30), ((0.95, HC.y - 0.18, HC.z + 0.06), HC + V(0, 0, 0.03), 31))
 # 20d WIDE: het broertje met de hond, papa en mama op het bankje
 S.cam(t_d, ((16.0, -4.0, 2.2), (8.3, 2.4, 0.9), 20), ((15.6, -3.8, 2.2), (8.0, 2.4, 0.9), 20))
 # 20e CLOSE: de jongen kijkt naar het bord; insert regel 1
