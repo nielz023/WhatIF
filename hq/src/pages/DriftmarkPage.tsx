@@ -185,8 +185,8 @@ export default function DriftmarkPage() {
     <div className="h-full overflow-y-auto p-3 pb-10 md:p-6 md:pb-10">
       {/* KOP */}
       <div className="panel relative mb-4 overflow-hidden">
-        <img src={g.banner} alt="Driftmark banner" className="h-28 w-full object-cover opacity-60 md:h-36" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#070b1d] via-[#070b1d]/50 to-transparent" />
+        <img src="./img/hq_header.jpg" alt="Het hoofdpersonage tussen twee portalen in de nachtstad (Unreal Engine 5)" className="h-40 w-full object-cover object-[70%_45%] md:h-56" onError={(e) => { (e.currentTarget as HTMLImageElement).src = g.banner; }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#070b1d] via-[#070b1d]/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 flex flex-wrap items-end justify-between gap-3 p-4">
           <div>
             <div className="font-display text-2xl font-bold text-white md:text-3xl">DRIFT<span className="text-gradient">MARK</span> HQ</div>
