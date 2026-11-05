@@ -37,9 +37,9 @@ export function NewVideoModal() {
           <label className="label">Channel</label>
           <div className="grid grid-cols-2 gap-2">
             {channels.map((c) => (
-              <button key={c.id} onClick={() => { setChannelId(c.id); const t = suggestTopic(c.niche); setTopic(t); setTitle(t); }} className={`flex items-center gap-2 rounded-xl border p-2.5 text-left text-sm transition ${channelId === c.id ? 'border-indigo-400 bg-indigo-500/15' : 'border-hq-line hover:border-slate-500'}`}>
+              <button key={c.id} onClick={() => { setChannelId(c.id); const t = suggestTopic(c.niche); setTopic(t); setTitle(t); }} className={`flex items-center gap-2 rounded-xl border p-2.5 text-left text-sm transition ${channelId === c.id ? 'border-sky-400 bg-sky-500/15' : 'border-hq-line hover:border-slate-500'}`}>
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg text-lg" style={{ background: `${c.logo.color}33` }}>{c.logo.emoji}</span>
-                <span><span className="block font-semibold text-white">{c.name}</span><span className="text-xs text-slate-400">{c.niche}</span></span>
+                <span><span className="block font-semibold text-white">{c.name}</span><span className="text-[13px] text-slate-400">{c.niche}</span></span>
               </button>
             ))}
           </div>
@@ -65,7 +65,7 @@ export function NewVideoModal() {
             <input className="input" type="number" min={1} max={30} value={deadline} onChange={(e) => setDeadline(Math.max(1, +e.target.value))} />
           </div>
         </div>
-        <p className="rounded-xl bg-indigo-500/10 p-3 text-xs text-indigo-200">The project enters the pipeline at <b>Research</b> and flows through all 11 stages. You'll be asked to approve it at <b>CEO Approval</b> and to confirm before <b>Publishing</b>.</p>
+        <p className="rounded-xl bg-sky-500/10 p-3 text-[13px] text-sky-200">The project enters the pipeline at <b>Research</b> and flows through all 11 stages. You'll be asked to approve it at <b>CEO Approval</b> and to confirm before <b>Publishing</b>.</p>
       </div>
     </Modal>
   );
@@ -137,7 +137,7 @@ export function HireAgentModal() {
   return (
     <Modal open={open} onClose={s.closeModal} title="👋 Hire AI Agent" width={680} footer={
       <>
-        <span className="mr-auto self-center text-xs text-slate-400">Desks: {s.agents.length}/{slots} · Balance {eur(s.company.balance)}</span>
+        <span className="mr-auto self-center text-[13px] text-slate-400">Desks: {s.agents.length}/{slots} · Balance {eur(s.company.balance)}</span>
         <button className="btn-ghost" onClick={s.closeModal}>Cancel</button>
         <button className="btn-primary" disabled={full || s.company.balance < def.hireCost} onClick={() => { if (s.hireAgent(role, channelId ? [channelId] : [])) s.closeModal(); }}>Hire for {eur(def.hireCost)}</button>
       </>
@@ -147,16 +147,16 @@ export function HireAgentModal() {
           {DEPARTMENTS.map((d) => (
             <button key={d.id} onClick={() => { setDept(d.id); setRole(ROLES.find((r) => r.department === d.id)!.id); }} className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${dept === d.id ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5'}`}>
               <span>{d.icon}</span>{d.short}
-              <span className="ml-auto text-xs text-slate-500">{s.agents.filter((a) => a.department === d.id).length}</span>
+              <span className="ml-auto text-[13px] text-slate-500">{s.agents.filter((a) => a.department === d.id).length}</span>
             </button>
           ))}
         </div>
         <div className="space-y-3">
           <div className="grid gap-2">
             {ROLES.filter((r) => r.department === dept).map((r) => (
-              <button key={r.id} onClick={() => setRole(r.id)} className={`rounded-xl border p-3 text-left transition ${role === r.id ? 'border-indigo-400 bg-indigo-500/10' : 'border-hq-line hover:border-slate-500'}`}>
-                <div className="flex items-center justify-between"><span className="font-semibold text-white">{r.title}</span><span className="text-xs text-emerald-300">{eur(r.hireCost)} · {eur(r.baseSalary * SALARY_FACTOR, 2)}/day</span></div>
-                <div className="mt-1 text-xs text-slate-400">{r.description}</div>
+              <button key={r.id} onClick={() => setRole(r.id)} className={`rounded-xl border p-3 text-left transition ${role === r.id ? 'border-sky-400 bg-sky-500/10' : 'border-hq-line hover:border-slate-500'}`}>
+                <div className="flex items-center justify-between"><span className="font-semibold text-white">{r.title}</span><span className="text-[13px] text-emerald-300">{eur(r.hireCost)} · {eur(r.baseSalary * SALARY_FACTOR, 2)}/day</span></div>
+                <div className="mt-1 text-[13px] text-slate-400">{r.description}</div>
                 <div className="mt-2 flex flex-wrap gap-1">{r.skills.map((sk) => <span key={sk} className="chip bg-slate-700/40 text-slate-300">{sk}</span>)}</div>
               </button>
             ))}
@@ -168,7 +168,7 @@ export function HireAgentModal() {
               {s.channels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          {full && <p className="text-xs text-amber-300">All desks are taken. Buy an Office Expansion upgrade to hire more agents.</p>}
+          {full && <p className="text-[13px] text-amber-300">All desks are taken. Buy an Office Expansion upgrade to hire more agents.</p>}
         </div>
       </div>
     </Modal>
@@ -200,7 +200,7 @@ export function NewChannelModal() {
           <div><label className="label">Expected RPM (€)</label><input className="input" type="number" step={0.5} min={0.5} value={f.rpm} onChange={(e) => setF({ ...f, rpm: +e.target.value })} /></div>
           <div><label className="label">Uploads per week</label><input className="input" type="number" min={1} max={14} value={f.perWeek} onChange={(e) => setF({ ...f, perWeek: Math.max(1, +e.target.value) })} /></div>
         </div>
-        <p className="text-xs text-slate-500">This creates a simulated channel. Linking a real YouTube channel requires the YouTube Data API (see Settings).</p>
+        <p className="text-[13px] text-slate-500">This creates a simulated channel. Linking a real YouTube channel requires the YouTube Data API (see Settings).</p>
       </div>
     </Modal>
   );

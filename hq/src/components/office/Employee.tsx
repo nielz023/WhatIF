@@ -117,7 +117,7 @@ export function Employee({ agent, seat, meet, meetCenter, idleSpot, onSelect }: 
       </mesh>
       {hover && (
         <Html position={[0, 2.25, 0]} center distanceFactor={undefined} zIndexRange={[40, 0]}>
-          <div className="pointer-events-none whitespace-nowrap rounded-lg border border-white/10 bg-slate-950/90 px-2 py-1 text-[11px] text-white shadow-xl">
+          <div className="pointer-events-none whitespace-nowrap rounded-lg border border-white/10 bg-slate-950/90 px-2 py-1 text-[13px] text-white shadow-xl">
             <div className="font-semibold">{agent.name}</div>
             <div className="text-slate-400">Lv {agent.level} · {agent.state}</div>
           </div>

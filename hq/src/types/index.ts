@@ -284,7 +284,7 @@ export interface WarCase {
 
 export type PageId =
   | 'driftmark' | 'hq' | 'projects' | 'agents' | 'channels' | 'analytics' | 'threads'
-  | 'finances' | 'upgrades' | 'achievements' | 'settings' | 'warroom';
+  | 'finances' | 'upgrades' | 'achievements' | 'settings' | 'warroom' | 'videos' | 'kanaal' | 'meer';
 
 export interface IntegrationSettings {
   anthropicKey: string;

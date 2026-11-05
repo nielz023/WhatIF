@@ -28,11 +28,11 @@ export default function FinancesPage() {
         title="Finances"
         subtitle={<span className="flex items-center gap-2">Simulated P&L in EUR {s.demoMode && <DemoBadge label="INCLUDES DEMO DATA" />}</span>}
         actions={<>
-          <select className="input !w-auto !py-1.5 text-xs" value={channel} onChange={(e) => setChannel(e.target.value)}>
+          <select className="input !w-auto !py-1.5 text-[13px]" value={channel} onChange={(e) => setChannel(e.target.value)}>
             <option value="all">All channels (incl. company overhead)</option>
             {s.channels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-          <select className="input !w-auto !py-1.5 text-xs" value={month} onChange={(e) => setMonth(e.target.value)}>
+          <select className="input !w-auto !py-1.5 text-[13px]" value={month} onChange={(e) => setMonth(e.target.value)}>
             <option value="all">All months</option>
             {months(s).map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
@@ -46,7 +46,7 @@ export default function FinancesPage() {
         <StatCard label="Profit margin" value={pct(f.margin)} sub={`ROI ${pct(f.roi)}`} color="#f59e0b" />
         <StatCard label="Break-even" value={<span className="text-base">{f.breakEven}</span>} sub={`${eur(f.dailyIncome, 2)} erin / ${eur(f.dailyExpense, 2)} eruit per dag`} color="#22d3ee" />
       </div>
-      {ch && <p className="mt-2 text-xs text-slate-500">Channel view shows only costs and revenue attributed to this channel; salaries, subscriptions and software are company overhead.</p>}
+      {ch && <p className="mt-2 text-[13px] text-slate-500">Channel view shows only costs and revenue attributed to this channel; salaries, subscriptions and software are company overhead.</p>}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2">
         <ChartPanel title="Monthly P&L"><Bars data={monthly} x="month" keys={[{ key: 'income', color: '#22c55e', name: 'Income' }, { key: 'expenses', color: '#f43f5e', name: 'Expenses' }, { key: 'profit', color: '#a855f7', name: 'Profit' }]} fmt={(v) => `€${v}`} /></ChartPanel>
@@ -62,7 +62,7 @@ export default function FinancesPage() {
             ))}
           </div>
           <div className="mt-4 text-sm font-semibold text-white">Video ROI</div>
-          <div className="mt-2 space-y-1 text-xs">
+          <div className="mt-2 space-y-1 text-[13px]">
             {perVideo.length === 0 && <div className="text-slate-500">Publish a video to track its ROI.</div>}
             {perVideo.map(({ p, v, roi }) => (
               <div key={p.id} className="flex justify-between gap-2"><span className="truncate text-slate-300">{p.title}</span><span className="shrink-0 text-slate-400">cost {eur(p.cost)} · rev {eur(v?.revenue ?? 0, 2)} · <span className={roi < 0 ? 'text-rose-300' : 'text-emerald-300'}>{pct(roi, 0)}</span></span></div>
@@ -72,7 +72,7 @@ export default function FinancesPage() {
         <div className="panel p-4">
           <div className="mb-3 text-sm font-semibold text-white">Ledger ({f.rows.length})</div>
           <div className="max-h-[440px] overflow-y-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-[13px]">
               <thead className="sticky top-0 bg-hq-panel"><tr className="text-left uppercase tracking-wider text-slate-500"><th className="py-1.5">Date</th><th>Category</th><th>Note</th><th className="text-right">Amount</th></tr></thead>
               <tbody>
                 {[...f.rows].reverse().slice(0, 200).map((r) => (

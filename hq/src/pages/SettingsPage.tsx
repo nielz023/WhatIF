@@ -72,16 +72,16 @@ export default function SettingsPage() {
             {ov.map((i) => (
               <div key={i.id} className="rounded-xl bg-white/[.03] p-3">
                 <div className="flex items-center justify-between gap-2"><span className="font-semibold text-white">{i.name}</span><span className={`chip ${STATUS[i.status]}`}>{LABEL[i.status]}</span></div>
-                <div className="text-xs text-slate-400">{i.purpose} — {i.note}</div>
+                <div className="text-[13px] text-slate-400">{i.purpose} — {i.note}</div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-slate-500">Uploaden naar YouTube gebeurt nooit automatisch: dat doe je zelf in YouTube Studio.</p>
+          <p className="mt-3 text-[13px] text-slate-500">Uploaden naar YouTube gebeurt nooit automatisch: dat doe je zelf in YouTube Studio.</p>
         </div>
 
         <div className="panel p-5">
           <div className="mb-3 font-semibold text-white">API credentials</div>
-          <p className="mb-3 rounded-lg bg-amber-500/10 p-2.5 text-xs text-amber-200">Keys are stored only in this browser's local storage and sent directly to the provider you choose. Use restricted keys and never share your save file if it contains keys.</p>
+          <p className="mb-3 rounded-lg bg-amber-500/10 p-2.5 text-[13px] text-amber-200">Keys are stored only in this browser's local storage and sent directly to the provider you choose. Use restricted keys and never share your save file if it contains keys.</p>
           <div className="grid gap-3">
             <div>
               <label className="label">Agent AI provider</label>
@@ -127,13 +127,13 @@ export default function SettingsPage() {
         <div className="panel p-5">
           <div className="mb-3 font-semibold text-white">Save data</div>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-ghost text-xs" onClick={() => {
+            <button className="btn-ghost text-[13px]" onClick={() => {
               const data = snapshot();
               data.settings = { ...data.settings, anthropicKey: '', openaiKey: '', youtubeApiKey: '', threadsToken: '', elevenLabsKey: '', supabaseAnonKey: '' };
               const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
               const a = document.createElement('a'); a.href = url; a.download = `faceless-hq-save-day${Math.floor(s.tick / 24)}.json`; a.click(); URL.revokeObjectURL(url);
             }}><Download size={14} />Export save (keys stripped)</button>
-            <button className="btn-ghost text-xs" onClick={() => fileRef.current?.click()}><Upload size={14} />Import save</button>
+            <button className="btn-ghost text-[13px]" onClick={() => fileRef.current?.click()}><Upload size={14} />Import save</button>
             <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={async (e) => {
               const file = e.target.files?.[0]; if (!file) return;
               try {
@@ -143,13 +143,13 @@ export default function SettingsPage() {
               } catch (err) { s.toast(`Importeren mislukt: ${(err as Error).message}`, 'warning'); }
               e.target.value = '';
             }} />
-            <button className="btn-ghost text-xs" disabled={!supa.isConfigured()} onClick={async () => { try { await supa.save('default', snapshot()); s.toast('Saved to Supabase.', 'success'); } catch (e) { s.toast((e as Error).message, 'warning'); } }}><CloudUpload size={14} />Save to Supabase</button>
-            <button className="btn-ghost text-xs" disabled={!supa.isConfigured()} onClick={async () => { try { const d = await supa.load('default'); if (d) { s.importSave(d as GameData); s.toast('Loaded from Supabase.', 'success'); } else s.toast('No cloud save found.', 'warning'); } catch (e) { s.toast((e as Error).message, 'warning'); } }}><CloudDownload size={14} />Load from Supabase</button>
+            <button className="btn-ghost text-[13px]" disabled={!supa.isConfigured()} onClick={async () => { try { await supa.save('default', snapshot()); s.toast('Saved to Supabase.', 'success'); } catch (e) { s.toast((e as Error).message, 'warning'); } }}><CloudUpload size={14} />Save to Supabase</button>
+            <button className="btn-ghost text-[13px]" disabled={!supa.isConfigured()} onClick={async () => { try { const d = await supa.load('default'); if (d) { s.importSave(d as GameData); s.toast('Loaded from Supabase.', 'success'); } else s.toast('No cloud save found.', 'warning'); } catch (e) { s.toast((e as Error).message, 'warning'); } }}><CloudDownload size={14} />Load from Supabase</button>
           </div>
-          <p className="mt-2 text-xs text-slate-500">Progress autosaves to this browser. Supabase requires the table in <code>supabase/schema.sql</code>.</p>
+          <p className="mt-2 text-[13px] text-slate-500">Progress autosaves to this browser. Supabase requires the table in <code>supabase/schema.sql</code>.</p>
           <div className="mt-5 border-t border-hq-line/60 pt-4">
             <div className="mb-2 text-sm font-semibold text-rose-300">Danger zone</div>
-            <button className="btn-danger text-xs" onClick={() => s.askConfirm({ title: 'Reset the whole company?', body: 'All progress, agents, channels and history will be permanently replaced with a fresh demo company. This cannot be undone.', confirmLabel: 'Reset everything', danger: true, onConfirm: () => { s.resetGame(); s.toast('Company reset to demo state.', 'info'); } })}><RotateCcw size={14} />Reset game</button>
+            <button className="btn-danger text-[13px]" onClick={() => s.askConfirm({ title: 'Reset the whole company?', body: 'All progress, agents, channels and history will be permanently replaced with a fresh demo company. This cannot be undone.', confirmLabel: 'Reset everything', danger: true, onConfirm: () => { s.resetGame(); s.toast('Company reset to demo state.', 'info'); } })}><RotateCcw size={14} />Reset game</button>
           </div>
         </div>
       </div>

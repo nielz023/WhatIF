@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from './store/useGame';
-import Sidebar from './components/layout/Sidebar';
+import Sidebar, { MobileNav, StudioTabs, STUDIO } from './components/layout/Sidebar';
+import Coach from './components/shared/Coach';
+import Tour from './components/shared/Tour';
 import TopBar from './components/layout/TopBar';
 import BottomActions from './components/layout/BottomActions';
 import { ConfirmDialog, Toasts } from './components/layout/Overlays';
@@ -20,14 +22,15 @@ import UpgradesPage from './pages/UpgradesPage';
 import AchievementsPage from './pages/AchievementsPage';
 import SettingsPage from './pages/SettingsPage';
 import WarRoomPage from './pages/WarRoomPage';
-import DriftmarkPage from './pages/DriftmarkPage';
+import DriftmarkPage, { VideosPage, MeerPage } from './pages/DriftmarkPage';
+import KanaalPage from './pages/KanaalPage';
 import type { PageId } from './types';
 import { realTick } from './lib/util';
 import { startLive } from './services/live';
 import { startTools } from './services/tools';
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
-  driftmark: DriftmarkPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
+  driftmark: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
   threads: ThreadsPage, finances: FinancesPage, upgrades: UpgradesPage, achievements: AchievementsPage,
   settings: SettingsPage, warroom: WarRoomPage,
 };
@@ -66,15 +69,19 @@ export default function App() {
       <Sidebar />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <TopBar />
-        <main className="relative min-h-0 flex-1">
+        {STUDIO.some((x) => x.id === page) && <StudioTabs />}
+        <main className="relative min-h-0 flex-1 pb-[64px] md:pb-0">
           <AnimatePresence mode="wait">
             <motion.div key={page} className="absolute inset-0" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
               <Page />
             </motion.div>
           </AnimatePresence>
-          {page !== 'driftmark' && <BottomActions />}
+          {STUDIO.some((x) => x.id === page) && <BottomActions />}
         </main>
       </div>
+      <MobileNav />
+      <Coach />
+      <Tour />
       <DepartmentDrawer />
       <ProjectDrawer />
       <AgentDrawer />

@@ -5,8 +5,9 @@
 html, body, #root { height: 100%; overflow: clip; }
 body {
   margin: 0;
-  background: radial-gradient(1200px 800px at 60% 40%, #111a3f 0%, #070b1a 60%);
-  color: #e2e8f0;
+  background: radial-gradient(1200px 700px at 50% -10%, #12224d 0%, #070b1a 60%);
+  color: #e6ebff;
+  font-size: 15px;
   font-family: Inter, system-ui, sans-serif;
   overflow: hidden;
 }
@@ -17,7 +18,7 @@ body {
 
 @layer components {
   .panel {
-    @apply rounded-2xl border border-hq-line/70 bg-hq-panel/80 backdrop-blur-md;
+    @apply rounded-2xl border border-hq-line bg-hq-panel/90 backdrop-blur-md;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 30px rgba(0,0,0,.35);
   }
   .btn {
@@ -25,15 +26,15 @@ body {
   }
   .btn-primary {
     @apply btn text-white;
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    box-shadow: 0 0 18px rgba(139,92,246,.35);
+    background: linear-gradient(135deg, #ff8a3d, #ff5f3d);
+    box-shadow: 0 0 18px rgba(255,138,61,.35);
   }
   .btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
-  .btn-ghost { @apply btn border border-hq-line bg-hq-panel2/60 text-slate-200 hover:border-indigo-400/60 hover:bg-hq-panel2; }
+  .btn-ghost { @apply btn border border-hq-line bg-hq-panel2/60 text-slate-200 hover:border-sky-400/60 hover:bg-hq-panel2; }
   .btn-danger { @apply btn border border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20; }
   .btn-success { @apply btn border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20; }
   .input {
-    @apply w-full rounded-xl border border-hq-line bg-hq-bg/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none;
+    @apply w-full rounded-xl border border-hq-line bg-hq-bg/70 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-orange-400 focus:outline-none;
   }
   .label { @apply mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-400; }
   .chip { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold; }
@@ -41,8 +42,14 @@ body {
 }
 
 .text-gradient {
-  background: linear-gradient(90deg, #22d3ee, #a855f7 50%, #fb923c);
+  background: linear-gradient(90deg, #3db8ff, #ff8a3d);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
+
+/* Driftmark-stijl: leesbare tekst, kaarten met lucht */
+.glow-orange { box-shadow: 0 0 0 1px rgba(255,138,61,.55), 0 0 28px rgba(255,138,61,.22); }
+.glow-blue { box-shadow: 0 0 0 1px rgba(61,184,255,.45), 0 0 24px rgba(61,184,255,.18); }
+@keyframes dm-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+.dm-pop { animation: dm-pop .22s ease-out both; }

@@ -37,7 +37,7 @@ export default function WarRoomPage() {
           <button key={sg.type} onClick={() => setType(sg.type)} className={`panel border p-3 text-left ${lvl[sg.level]} ${type === sg.type ? 'ring-1 ring-rose-400/60' : ''}`}>
             <div className="text-xl">{ISSUE_META[sg.type].icon}</div>
             <div className="mt-1 text-sm font-semibold text-white">{ISSUE_META[sg.type].label}</div>
-            <div className="mt-0.5 text-xs">{sg.text}</div>
+            <div className="mt-0.5 text-[13px]">{sg.text}</div>
           </button>
         ))}
       </div>
@@ -46,7 +46,7 @@ export default function WarRoomPage() {
         <div><label className="label">Problem</label><select className="input !w-56" value={type} onChange={(e) => setType(e.target.value as WarIssueType)}>{Object.entries(ISSUE_META).map(([k, m]) => <option key={k} value={k}>{m.icon} {m.label}</option>)}</select></div>
         <div><label className="label">Scope</label><select className="input !w-56" value={channel} onChange={(e) => setChannel(e.target.value)}><option value="">All channels</option>{s.channels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
         <button className="btn-danger !py-2.5" disabled={!hasMgmt} onClick={() => { s.openWarCase(type, channel || null); s.toast('War Room convened — analysis in ~6 hours (game time).', 'info'); }}><ShieldAlert size={15} />Convene War Room</button>
-        {!hasMgmt && <span className="text-xs text-amber-300">Hire a CEO Agent, Performance Analyst or Financial Manager first.</span>}
+        {!hasMgmt && <span className="text-[13px] text-amber-300">Hire a CEO Agent, Performance Analyst or Financial Manager first.</span>}
       </div>
 
       <div className="mt-5 space-y-3">
@@ -60,28 +60,28 @@ export default function WarRoomPage() {
                 <span className="text-2xl">{ISSUE_META[w.type].icon}</span>
                 <div className="flex-1">
                   <div className="font-semibold text-white">{w.title}</div>
-                  <div className="text-xs text-slate-400">Opened {fmtTick(w.openedTick)} · Evidence: {w.evidence}</div>
+                  <div className="text-[13px] text-slate-400">Opened {fmtTick(w.openedTick)} · Evidence: {w.evidence}</div>
                 </div>
                 <div className="flex -space-x-2">{agents.map((a) => a && <Avatar key={a.id} agent={a} size={28} />)}</div>
                 <span className={`chip ${w.status === 'Ready' ? 'bg-rose-500/20 text-rose-200' : w.status === 'Resolved' ? 'bg-emerald-500/15 text-emerald-300' : w.status === 'Dismissed' ? 'bg-slate-600/30 text-slate-400' : 'bg-sky-500/15 text-sky-300'}`}>{w.status}</span>
               </div>
-              {w.status === 'Investigating' && <div className="mt-3"><div className="mb-1 flex items-center gap-1.5 text-xs text-sky-300"><Search size={12} className="animate-pulse" />Agents are gathering data in the War Room…</div><Progress value={pctDone} color="#ef4444" /></div>}
+              {w.status === 'Investigating' && <div className="mt-3"><div className="mb-1 flex items-center gap-1.5 text-[13px] text-sky-300"><Search size={12} className="animate-pulse" />Agents are gathering data in the War Room…</div><Progress value={pctDone} color="#ef4444" /></div>}
               {w.status !== 'Investigating' && (
                 <>
                   <div className="mt-3 space-y-1.5">{w.analysis.map((l, i) => <div key={i} className="rounded-lg bg-white/[.03] px-3 py-1.5 text-sm text-slate-300">{l}</div>)}</div>
                   <div className="mt-3 grid gap-2 md:grid-cols-2">
                     {w.recommendations.map((r) => (
                       <div key={r.id} className={`rounded-xl border p-3 ${w.chosen === r.id ? 'border-emerald-400/60 bg-emerald-500/10' : 'border-hq-line'}`}>
-                        <div className="flex items-center justify-between"><span className="font-semibold text-white">{r.title}</span><span className="text-xs text-amber-300">{eur(r.cost)}</span></div>
-                        <div className="mt-1 text-xs text-slate-400">{r.detail}</div>
+                        <div className="flex items-center justify-between"><span className="font-semibold text-white">{r.title}</span><span className="text-[13px] text-amber-300">{eur(r.cost)}</span></div>
+                        <div className="mt-1 text-[13px] text-slate-400">{r.detail}</div>
                         {w.status === 'Ready' && (
-                          <button className="btn-success mt-2 !py-1.5 text-xs" onClick={() => s.askConfirm({ title: 'Approve recommendation?', body: `"${r.title}" kost ${eur(r.cost)} in de game en gaat als echte opdracht naar Claude.\n\n${r.detail}`, confirmLabel: 'Approve plan', onConfirm: () => s.approveRecommendation(w.id, r.id) })}>Approve plan</button>
+                          <button className="btn-success mt-2 !py-1.5 text-[13px]" onClick={() => s.askConfirm({ title: 'Approve recommendation?', body: `"${r.title}" kost ${eur(r.cost)} in de game en gaat als echte opdracht naar Claude.\n\n${r.detail}`, confirmLabel: 'Approve plan', onConfirm: () => s.approveRecommendation(w.id, r.id) })}>Approve plan</button>
                         )}
-                        {w.chosen === r.id && <div className="mt-2 text-xs text-emerald-300">✓ Approved by CEO</div>}
+                        {w.chosen === r.id && <div className="mt-2 text-[13px] text-emerald-300">✓ Approved by CEO</div>}
                       </div>
                     ))}
                   </div>
-                  {w.status === 'Ready' && <button className="btn-ghost mt-3 text-xs" onClick={() => s.dismissCase(w.id)}>Dismiss case</button>}
+                  {w.status === 'Ready' && <button className="btn-ghost mt-3 text-[13px]" onClick={() => s.dismissCase(w.id)}>Dismiss case</button>}
                 </>
               )}
             </div>

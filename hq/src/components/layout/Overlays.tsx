@@ -18,7 +18,7 @@ export function Toasts() {
             exit={{ opacity: 0, y: -8 }}
             onClick={() => dismiss(t.id)}
             className={`pointer-events-auto rounded-xl border px-4 py-2 text-sm font-medium shadow-2xl backdrop-blur-xl ${
-              t.kind === 'success' ? 'border-emerald-400/40 bg-emerald-950/80 text-emerald-100' : t.kind === 'warning' ? 'border-amber-400/40 bg-amber-950/80 text-amber-100' : 'border-indigo-400/40 bg-indigo-950/80 text-indigo-100'
+              t.kind === 'success' ? 'border-emerald-400/40 bg-emerald-950/80 text-emerald-100' : t.kind === 'warning' ? 'border-amber-400/40 bg-amber-950/80 text-amber-100' : 'border-sky-400/40 bg-sky-950/80 text-sky-100'
             }`}
           >
             {t.text}

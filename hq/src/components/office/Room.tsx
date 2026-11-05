@@ -121,7 +121,7 @@ export function Room({ id, name, icon, color, wall, floor, position, agents, pen
           style={{ borderColor: `${color}88`, background: 'rgba(8,12,30,.82)', boxShadow: `0 0 ${lit ? 26 : 14}px ${color}55`, transform: `scale(${lit ? 1.08 : 1})` }}
         >
           <div className="text-[12px] font-bold tracking-wide text-white">{icon} {name}</div>
-          <div className="mt-0.5 flex items-center justify-center gap-2 text-[10px] text-slate-300">
+          <div className="mt-0.5 flex items-center justify-center gap-2 text-[12px] text-slate-300">
             <span><span className="text-emerald-400">●</span> {working} working</span>
             <span>👥 {agents.length}</span>
             {pending > 0 && <span className="text-amber-300">⏳ {pending}</span>}

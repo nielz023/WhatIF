@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
         title="CEO Dashboard"
         subtitle={<span className="flex items-center gap-2">Company-wide performance, production and finances {s.demoMode && <DemoBadge label="INCLUDES DEMO DATA" />}</span>}
         actions={<>
-          <select className="input !w-auto !py-1.5 text-xs" value={channel} onChange={(e) => setChannel(e.target.value)}>
+          <select className="input !w-auto !py-1.5 text-[13px]" value={channel} onChange={(e) => setChannel(e.target.value)}>
             <option value="all">All channels</option>
             {s.channels.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
         <div className="panel p-4">
           <div className="mb-3 text-sm font-semibold text-white">Channels</div>
           <table className="w-full text-sm">
-            <thead><tr className="text-left text-[11px] uppercase tracking-wider text-slate-500"><th className="pb-2">Channel</th><th>Subs</th><th>Views</th><th>Videos</th><th>CTR</th><th>AVD</th><th>RPM</th></tr></thead>
+            <thead><tr className="text-left text-[13px] uppercase tracking-wider text-slate-500"><th className="pb-2">Channel</th><th>Subs</th><th>Views</th><th>Videos</th><th>CTR</th><th>AVD</th><th>RPM</th></tr></thead>
             <tbody>
               {channelTable.map(({ c, videos, ctr, avd }) => (
                 <tr key={c.id} className="border-t border-hq-line/50 text-slate-300">
@@ -87,9 +87,9 @@ export default function AnalyticsPage() {
               return (
                 <div key={v.id} className="flex items-center gap-3 text-sm">
                   <span className="w-5 text-center font-display font-bold text-slate-500">{i + 1}</span>
-                  <span className="flex-1 truncate text-white">{v.title}<span className="ml-2 text-xs text-slate-500">{c?.name}{v.projectId === 'demo' ? ' · demo' : ''}</span></span>
-                  <span className="text-xs text-slate-400">{compact(v.views)} views</span>
-                  <span className="w-14 text-right text-xs text-amber-300">{v.ctr}%</span>
+                  <span className="flex-1 truncate text-white">{v.title}<span className="ml-2 text-[13px] text-slate-500">{c?.name}{v.projectId === 'demo' ? ' · demo' : ''}</span></span>
+                  <span className="text-[13px] text-slate-400">{compact(v.views)} views</span>
+                  <span className="w-14 text-right text-[13px] text-amber-300">{v.ctr}%</span>
                 </div>
               );
             })}

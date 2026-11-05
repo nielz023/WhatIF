@@ -30,7 +30,7 @@ export function Avatar({ agent, size = 36, ring }: { agent?: Agent | null; size?
 const STATUS_STYLE: Record<TaskStatus, string> = {
   Pending: 'bg-slate-500/15 text-slate-300 ring-slate-400/30',
   Assigned: 'bg-sky-500/15 text-sky-300 ring-sky-400/30',
-  'In Progress': 'bg-indigo-500/15 text-indigo-300 ring-indigo-400/30',
+  'In Progress': 'bg-sky-500/15 text-sky-300 ring-sky-400/30',
   Review: 'bg-amber-500/15 text-amber-300 ring-amber-400/30',
   Approved: 'bg-teal-500/15 text-teal-300 ring-teal-400/30',
   Rejected: 'bg-rose-500/15 text-rose-300 ring-rose-400/30',
@@ -48,7 +48,7 @@ export const PriorityBadge = ({ p }: { p: Priority }) => <span className={`chip 
 
 export const StateDot = ({ state }: { state: Agent['state'] }) => {
   const c = { working: 'bg-emerald-400', meeting: 'bg-sky-400', idle: 'bg-slate-400', training: 'bg-purple-400' }[state];
-  return <span className="inline-flex items-center gap-1.5 text-xs capitalize text-slate-300"><span className={`h-2 w-2 rounded-full ${c} shadow-[0_0_8px_currentColor]`} />{state}</span>;
+  return <span className="inline-flex items-center gap-1.5 text-[13px] capitalize text-slate-300"><span className={`h-2 w-2 rounded-full ${c} shadow-[0_0_8px_currentColor]`} />{state}</span>;
 };
 
 export function Progress({ value, color = '#6366f1', h = 6 }: { value: number; color?: string; h?: number }) {
@@ -61,14 +61,14 @@ export function Progress({ value, color = '#6366f1', h = 6 }: { value: number; c
 
 export function StatCard({ label, value, sub, icon, color = '#6366f1', onClick }: { label: string; value: ReactNode; sub?: ReactNode; icon?: ReactNode; color?: string; onClick?: () => void }) {
   return (
-    <button onClick={onClick} disabled={!onClick} className="panel group relative overflow-hidden p-4 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-indigo-400/50 disabled:cursor-default">
+    <button onClick={onClick} disabled={!onClick} className="panel group relative overflow-hidden p-4 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-sky-400/50 disabled:cursor-default">
       <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-25 blur-2xl" style={{ background: color }} />
-      <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+      <div className="flex items-center justify-between text-[13px] font-semibold uppercase tracking-wider text-slate-400">
         {label}
         {icon && <span style={{ color }}>{icon}</span>}
       </div>
       <div className="mt-1.5 font-display text-2xl font-bold text-white">{value}</div>
-      {sub && <div className="mt-0.5 text-xs text-slate-400">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[13px] text-slate-400">{sub}</div>}
     </button>
   );
 }
@@ -79,7 +79,7 @@ export function Modal({ open, onClose, title, children, width = 560, footer }: {
       {open && (
         <motion.div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose}>
           <motion.div
-            className="panel flex max-h-[90vh] w-full flex-col border-indigo-500/30"
+            className="panel flex max-h-[90vh] w-full flex-col border-sky-500/30"
             style={{ maxWidth: width }}
             initial={{ y: 24, scale: 0.97 }} animate={{ y: 0, scale: 1 }} exit={{ y: 16, opacity: 0 }}
             onMouseDown={(e) => e.stopPropagation()}
@@ -102,7 +102,7 @@ export function Drawer({ open, onClose, children, width = 520, title }: { open: 
     <AnimatePresence>
       {open && (
         <motion.aside
-          className="panel fixed bottom-20 right-3 top-[76px] z-[60] flex flex-col rounded-2xl border-indigo-500/30"
+          className="panel fixed bottom-20 right-3 top-[76px] z-[60] flex flex-col rounded-2xl border-sky-500/30"
           style={{ width: `min(${width}px, calc(100vw - 24px))` }}
           initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
           transition={{ type: 'spring', damping: 26, stiffness: 260 }}
@@ -119,11 +119,11 @@ export function Drawer({ open, onClose, children, width = 520, title }: { open: 
 }
 
 export const DemoBadge = ({ label = 'DEMO DATA' }: { label?: string }) => (
-  <span className="chip bg-amber-500/15 text-[10px] tracking-wider text-amber-300 ring-1 ring-amber-400/30">{label}</span>
+  <span className="chip bg-amber-500/15 text-[12px] tracking-wider text-amber-300 ring-1 ring-amber-400/30">{label}</span>
 );
 
 export const SimBadge = () => (
-  <span className="chip bg-cyan-500/10 text-[10px] tracking-wider text-cyan-300 ring-1 ring-cyan-400/30">LOCAL SIMULATION</span>
+  <span className="chip bg-cyan-500/10 text-[12px] tracking-wider text-cyan-300 ring-1 ring-cyan-400/30">LOCAL SIMULATION</span>
 );
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
@@ -138,7 +138,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   );
 }
 
-export const RoleLabel = ({ agent }: { agent: Agent }) => <span className="text-xs text-slate-400">{roleById(agent.role).title}</span>;
+export const RoleLabel = ({ agent }: { agent: Agent }) => <span className="text-[13px] text-slate-400">{roleById(agent.role).title}</span>;
 
 export function Empty({ children }: { children: ReactNode }) {
   return <div className="rounded-xl border border-dashed border-hq-line p-6 text-center text-sm text-slate-500">{children}</div>;
@@ -148,7 +148,7 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
   return (
     <div className="inline-flex flex-wrap gap-1 rounded-xl border border-hq-line bg-hq-bg/60 p-1">
       {items.map((i) => (
-        <button key={i.id} onClick={() => onChange(i.id)} className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${value === i.id ? 'bg-indigo-500/25 text-white shadow-neon' : 'text-slate-400 hover:text-white'}`}>
+        <button key={i.id} onClick={() => onChange(i.id)} className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold transition ${value === i.id ? 'bg-sky-500/25 text-white shadow-neon' : 'text-slate-400 hover:text-white'}`}>
           {i.label}
         </button>
       ))}

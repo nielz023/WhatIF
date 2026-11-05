@@ -13,7 +13,7 @@ export interface Output { name: string; path: string; kind?: 'image' | 'video' |
 export interface Cost { datum: string; wat: string; bedrag?: number | null; credits?: string; notitie?: string }
 export interface Reply { at: string; opdracht: string; antwoord: string; thread?: string }
 export interface Blender { stand: string; wachtrij: { naam: string; status: string }[]; bijgewerkt: string }
-export interface YT { subscribers?: number; views?: number; videos?: { title: string; views?: number; date?: string; type?: 'long' | 'short' }[]; bron?: string; datum?: string }
+export interface YT { subscribers?: number; views?: number; videoCount?: number; videos?: { id?: string; title: string; views?: number; date?: string; datum?: string; status?: string; url?: string; type?: 'long' | 'short' }[]; bron?: string; datum?: string }
 export interface Live {
   updated: string; channel: typeof B.CHANNEL; videos: B.RealVideo[]; shorts: B.ShortGroup[]; next: string[];
   ideas: typeof B.IDEAS; links: typeof B.LINKS; activity: Activity[];
