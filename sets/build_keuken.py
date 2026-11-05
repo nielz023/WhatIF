@@ -316,7 +316,7 @@ if NR:
     from lib import stad as ST
     T.use_collection(T.collection("No Rules"))
     ST.house_rules("HOUSE_RULES", (FX - 0.1, D / 2 - 0.737, 1.07), rot=(0, 0, 0),   # onder de kindertekening
-                   extra="5. EVERYONE GETS A VOTE." if MOOD == "nr_oud" else None, yellowed=(MOOD == "nr_oud"))
+                   extra="5. ALWAYS LISTEN TO OMA." if MOOD == "nr_oud" else None, yellowed=(MOOD == "nr_oud"))
     if CANDLES:
         for k, (dx, h) in enumerate(((-0.25, 0.2), (0.0, 0.14), (0.22, 0.24))):
             ST.kaars(f"Kaars_tafel_{k}", (TX + dx, TY, TZ), h=h, lit=True, energy=18)
