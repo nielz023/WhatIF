@@ -8,6 +8,7 @@ import type { GameData } from '../store/state';
 import type { IntegrationSettings } from '../types';
 import { useTools } from '../services/tools';
 import { useLive } from '../services/live';
+import { useDb } from '../services/db';
 import { useReal } from '../services/real';
 
 type St = 'connected' | 'stub' | 'not_configured';
@@ -17,6 +18,7 @@ type Any = any;
 function useRealConnections() {
   const tools = useTools((x) => x.tools);
   const live = useLive();
+  const db = useDb();
   const avail = useReal((x) => x.avail);
   const ok = (k: string): St => (tools[k]?.status === 'ok' ? 'connected' : tools[k]?.status === 'laden' ? 'stub' : 'not_configured');
   const vqc = (tools.vidiqch?.data as Any)?.channels ?? [];
@@ -32,6 +34,7 @@ function useRealConnections() {
     { id: 'voice', name: 'Stemmen (ElevenLabs v4)', purpose: 'Voice-overs', status: ok('elevenlabs'), note: ok('elevenlabs') === 'connected' ? `Verbonden, ${el.length} recente flows. Claude maakt de stemmen.` : 'ElevenLabs is nog niet bereikbaar vanaf deze pagina; Claude gebruikt hem wel.' },
     { id: 'image', name: 'Beelden (Higgsfield)', purpose: 'Thumbnails en upgrades', status: ok('higgsfield'), note: ok('higgsfield') === 'connected' ? `Verbonden, ${hf?.credits ?? 0} credits (${hf?.subscription_plan_type ?? 'gratis'}). Ook als add-on in Blender.` : 'Higgsfield is nog niet bereikbaar vanaf deze pagina.' },
     { id: 'video', name: 'Blender op je pc', purpose: 'Animatie en renders', status: (bl ? 'connected' : 'stub') as St, note: bl ? `${bl.stand} (bijgewerkt ${bl.bijgewerkt})` : 'Draait via Remote Control op je pc; de animatie-thread zet de stand hier neer.' },
+    { id: 'db', name: 'Database (ingebouwd)', purpose: 'Cijfergeschiedenis, logboek, reserve-kopie', status: (db.ready ? 'connected' : db.offline ? 'stub' : 'stub') as St, note: db.ready ? `${db.stats.length} meetpunten, laatste ronde ${db.engine?.lastRun ? new Date(db.engine.lastRun).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' }) : 'nog niet'}.` : 'Nog niet bereikbaar.' },
     { id: 'files', name: 'Projectbestanden', purpose: 'Opslag van alles', status: (live.source === 'live' ? 'connected' : 'stub') as St, note: 'Scripts, cast, sets en renders staan in de projectbestanden. Je spelvoortgang staat in deze browser.' },
   ];
 }

@@ -4,7 +4,7 @@ import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
 import { RULES, CAST, VOICES, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
 import { useLive, startLive } from '../services/live';
-import { ToolsPanel, CostsPanel, RepliesPanel, Outputs } from './DriftmarkExtra';
+import { ToolsPanel, CostsPanel, RepliesPanel, Outputs, AutomationPanel } from './DriftmarkExtra';
 import { useEffect } from 'react';
 import gallery from '../data/gallery.json';
 import { useReal } from '../services/real';
@@ -167,7 +167,7 @@ export default function DriftmarkPage() {
   const nu = VIDEOS.find((v) => v.status === 'In productie');
   const wachten = activity.filter((a) => a.state === 'blocked' || a.state === 'review_ready');
   const bezig = activity.filter((a) => a.state === 'working');
-  const srcLabel = live.source === 'live' ? ['● Live: ververst elke minuut', '#10b981'] : live.source === 'ingebouwd' ? ['Stand laden…', '#94a3b8'] : ['Live stand niet bereikbaar, je ziet de laatst bekende stand', '#f59e0b'];
+  const srcLabel = live.source === 'live' ? ['● Live: ververst elke minuut', '#10b981'] : live.source === 'database' ? ['● Live via de database (elk uur bijgewerkt)', '#3db8ff'] : live.source === 'ingebouwd' ? ['Stand laden…', '#94a3b8'] : ['Live stand niet bereikbaar, je ziet de laatst bekende stand', '#f59e0b'];
   const cur = VIEWS.find((v) => v.id === view)!;
 
   const ActCard = ({ a }: { a: (typeof activity)[number] }) => {
@@ -235,6 +235,7 @@ export default function DriftmarkPage() {
 
         <OrdersPanel />
         <RepliesPanel />
+        <AutomationPanel />
 
         <div className="mb-4 grid gap-4 lg:grid-cols-3">
           <section className="panel p-4 lg:col-span-2">

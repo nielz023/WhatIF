@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ExternalLink, Cpu, Coins, MessageSquareReply, Image as ImageIcon, Download } from 'lucide-react';
+import { Bot, ExternalLink, Cpu, Coins, MessageSquareReply, Image as ImageIcon, Download } from 'lucide-react';
 import { useTools, findNum } from '../services/tools';
 import { useLive, readFile, downloadFile, type Output } from '../services/live';
+import { useDb, type StatRow } from '../services/db';
 
 const Card = ({ title, status, children }: { title: string; status: string; children: React.ReactNode }) => {
   const c = status === 'ok' ? '#10b981' : status === 'laden' ? '#94a3b8' : '#f59e0b';
@@ -117,3 +118,61 @@ export function Outputs({ nr }: { nr: number }) {
 }
 
 export { ExternalLink };
+
+/* ---------- Automatisering: routine, controles, cijfergeschiedenis en logboek ---------- */
+function Spark({ rows, k, color, label }: { rows: StatRow[]; k: 'subscribers' | 'views'; color: string; label: string }) {
+  const pts = rows.filter((r) => typeof r[k] === 'number');
+  const last = pts[pts.length - 1]?.[k];
+  const first = pts[0]?.[k];
+  const W = 240, H = 56;
+  let d = '';
+  if (pts.length > 1) {
+    const vals = pts.map((r) => r[k] as number);
+    const min = Math.min(...vals), max = Math.max(...vals), span = max - min || 1;
+    d = vals.map((v, i) => `${i ? 'L' : 'M'}${((i / (vals.length - 1)) * W).toFixed(1)},${(H - 4 - ((v - min) / span) * (H - 8)).toFixed(1)}`).join(' ');
+  }
+  const diff = last != null && first != null ? last - first : null;
+  return (
+    <div className="min-w-0 rounded-xl bg-white/[.03] p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[11px] uppercase tracking-wider text-slate-400">{label}</span>
+        {diff != null && pts.length > 1 && <span className="text-xs font-semibold" style={{ color: diff >= 0 ? '#3ddc97' : '#ff4d6d' }}>{diff >= 0 ? '+' : ''}{diff.toLocaleString('nl-NL')}</span>}
+      </div>
+      <div className="font-display text-2xl font-bold text-white">{last != null ? last.toLocaleString('nl-NL') : '—'}</div>
+      {d ? <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 h-14 w-full" preserveAspectRatio="none"><path d={d} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" /></svg>
+        : <div className="mt-1 text-[11px] text-slate-500">De grafiek groeit vanzelf: elk uur komt er een meetpunt bij.</div>}
+      {pts.length > 0 && <div className="text-[10px] text-slate-500">{pts.length} meetpunten sinds {fmt(pts[0].at)}</div>}
+    </div>
+  );
+}
+const fmt = (iso?: string) => { if (!iso) return '—'; try { return new Date(iso).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' }); } catch { return iso; } };
+const KIND: Record<string, string> = { info: '#3db8ff', waarschuwing: '#ff8a3d', fout: '#ff4d6d' };
+
+export function AutomationPanel() {
+  const { ready, offline, stats, log, engine } = useDb();
+  return (
+    <section className="panel mb-4 p-4">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-200"><Bot size={16} />Automatisering</div>
+        <span className="text-[11px] text-slate-400">
+          {engine?.lastRun ? <>Laatste ronde {fmt(engine.lastRun)} · volgende {fmt(engine.nextRun)}</> : ready ? 'Wacht op de eerste ronde' : offline ? 'Database nu niet bereikbaar' : 'Laden…'}
+        </span>
+      </div>
+      <p className="mb-3 text-[11px] text-slate-400">Elk uur draait er vanzelf een ronde. Die haalt je kanaalcijfers op, controleert alle taken en meldt het meteen als iets vastloopt. Je hoeft er niets voor te doen.</p>
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <Spark rows={stats} k="subscribers" color="#ff8a3d" label="Abonnees" />
+        <Spark rows={stats} k="views" color="#3db8ff" label="Weergaven" />
+      </div>
+      {!!engine?.checks?.length && (
+        <div className="mb-3 flex flex-wrap gap-1.5">{engine.checks.map((c) => (
+          <span key={c.naam} title={c.notitie} className="rounded-full px-2.5 py-1 text-[11px] font-medium" style={{ background: c.ok ? 'rgba(61,220,151,.12)' : 'rgba(255,77,109,.14)', color: c.ok ? '#3ddc97' : '#ff4d6d' }}>{c.ok ? '✓' : '!'} {c.naam}</span>
+        ))}</div>
+      )}
+      {log.length > 0 && (
+        <ul className="space-y-1">{log.slice(0, 6).map((l, i) => (
+          <li key={i} className="flex gap-2 text-[11px]"><span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: KIND[l.kind] ?? '#94a3b8' }} /><span className="shrink-0 text-slate-500">{fmt(l.at)}</span><span className="min-w-0 text-slate-300">{l.text}</span></li>
+        ))}</ul>
+      )}
+    </section>
+  );
+}

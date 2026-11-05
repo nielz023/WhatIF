@@ -6,6 +6,7 @@
  */
 import { create } from 'zustand';
 import * as B from '../data/driftmark';
+import { useDb, startDb } from './db';
 
 export interface Activity { title: string; id: string; state: string; last: string; doing?: string; video?: number; lastIso?: string }
 export interface Output { name: string; path: string; kind?: 'image' | 'video' | 'file' }
@@ -20,7 +21,7 @@ export interface Live {
 }
 const builtIn: Live = { updated: B.UPDATED, channel: B.CHANNEL, videos: B.VIDEOS, shorts: B.SHORTS, next: B.NEXT, ideas: B.IDEAS, links: B.LINKS, activity: B.ACTIVITY, youtube: B.YOUTUBE };
 
-type Src = 'ingebouwd' | 'live' | 'geen-toegang' | 'fout';
+type Src = 'ingebouwd' | 'live' | 'database' | 'geen-toegang' | 'fout';
 interface S { data: Live; source: Src; checkedAt: number | null; refresh: () => Promise<void> }
 
 const PATHS = ['driftmark-hq/status.json', '/driftmark-hq/status.json'];
@@ -36,7 +37,7 @@ export const useLive = create<S>((set) => ({
         const c = (window as any).claude;
         fs = c?.use ? await c.use('files') : null;
       }
-      if (!fs) { set({ source: 'geen-toegang', checkedAt: Date.now() }); return; }
+      if (!fs) { if (!fromDb()) set({ source: 'geen-toegang', checkedAt: Date.now() }); return; }
       let lastErr: unknown = null;
       for (const p of PATHS) {
         try {
@@ -50,10 +51,22 @@ export const useLive = create<S>((set) => ({
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const code = (lastErr as any)?.code;
+      if (fromDb()) return;
       set({ source: code === 'not_granted' ? 'geen-toegang' : 'fout', checkedAt: Date.now() });
-    } catch { set({ source: 'fout', checkedAt: Date.now() }); }
+    } catch { if (!fromDb()) set({ source: 'fout', checkedAt: Date.now() }); }
   },
 }));
+
+/** Reserve: de kopie uit de ingebouwde database (hq/state), als de projectbestanden niet te lezen zijn. */
+function fromDb(): boolean {
+  const st = useDb.getState().state as Partial<Live> | null;
+  if (!st || !st.activity) return false;
+  const data = { ...builtIn, ...st } as Live;
+  useLive.setState({ data, source: 'database', checkedAt: Date.now() });
+  void import('./sync').then((m) => m.applyReal(data)).catch(() => {});
+  return true;
+}
+useDb.subscribe((s, p) => { if (s.state && s.state !== p.state && useLive.getState().source !== 'live') fromDb(); });
 
 let started = false;
 export async function readFile(path: string): Promise<Uint8Array> {
@@ -64,6 +77,7 @@ export async function downloadFile(path: string) { if (fs) await fs.download(pat
 
 export function startLive() {
   if (started) return; started = true;
+  void startDb();
   void import('./sync').then((m) => m.applyReal(builtIn));
   setTimeout(() => void useLive.getState().refresh(), 1500);
   setInterval(() => void useLive.getState().refresh(), 60000);
