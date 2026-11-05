@@ -258,7 +258,7 @@ export default function DriftmarkPage() {
             <span style={{ color: STATE.blocked[1] }}>● {wachten.length} wacht op jou</span>
             <span className="text-slate-500">● {activity.filter((a) => a.state === 'done').length} klaar</span>
           </div>
-          {[3, 2, 1, 0].map((nr) => {
+          {[...new Set([...VIDEOS.map((v) => v.nr).sort((a, b) => b - a), 0])].map((nr) => {
             const list = activity.filter((a) => (a.video ?? 0) === nr);
             if (!list.length) return null;
             const v = VIDEOS.find((x) => x.nr === nr);
