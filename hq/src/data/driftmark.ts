@@ -15,10 +15,10 @@ export const CHANNEL = {
   slogan: 'A NEW 3D WHAT IF EVERY WEEK',
   format: 'Eén lange 3D What If-video per week (15-18 min) + teaser-shorts (30-45 s)',
   stats: [
-    { label: 'Weergaven (28 dagen)', value: '10,4K', note: 'stand 2 nov' },
-    { label: 'Nieuwe abonnees (28 dagen)', value: '+16', note: 'stand 2 nov' },
-    { label: 'Views per short', value: '1,1-1,5K', note: '10 shorts online' },
-    { label: 'Video 1 views', value: '48', note: 'gem. kijkduur 6:40 (26,3%)' },
+    { label: 'Abonnees', value: '25', note: 'via vidIQ, 5 nov 01:00' },
+    { label: 'Weergaven totaal', value: '13.566', note: '16 openbare video\u2019s' },
+    { label: 'Views per short', value: '1,2-1,8K', note: 'beste: teleport-short 1.811' },
+    { label: 'Lange video\u2019s', value: '52 / 19', note: 'video 1 / video 2' },
   ],
   insight: 'Shorts trekken kijkers, maar sturen nog weinig door naar de lange video. In de eerste 30-60 s van video 1 haakt ~2/3 af; daarna blijft 25-35% tot het eind.',
 };
@@ -53,7 +53,7 @@ export const VIDEOS: RealVideo[] = [
   },
   {
     nr: 2, title: 'What IF You Got 10x FASTER Every Day?', werktitel: 'Elke dag 10x sneller',
-    status: 'Klaar', lengte: '12:55',
+    status: 'Online', lengte: '12:56', youtube: 'https://youtu.be/XZip23B4Q2M',
     kern: 'Elke keer dat hij wakker wordt is hij 10x sneller. Al zijn dagen passen vóór dinsdag 09:00:00, als zijn broertje de kaarsjes uitblaast.',
     twist: 'Wakker blijven is de enige weg ernaartoe. "So… can you stay awake?"',
     folder: 'videos/10x-sneller/', script: 'videos/10x-sneller/script_10x_faster.md', repoBranch: 'claude/project-thread-fdaxoy',
@@ -64,7 +64,7 @@ export const VIDEOS: RealVideo[] = [
       { title: 'Maak 7 shorts uit video 2', id: 'cmsg_01LkmukDuDNkj8pXsDu4v8WGMQM7kDpE2gpgLgMAovYDUq' },
       { title: 'Analyseer video 2', id: 'cmsg_01LkmukDuDNkj8pXsDu4v8WGRmJDkcSLjBnCebSWiTjgHW' },
     ],
-    steps: S(STEPS, 11),
+    steps: S(STEPS, 12),
     notes: ['Render klaar (1 nov); niels vindt hem top', 'Upload-tekst: videos/10x-sneller/youtube_upload.md', 'Blijft ongewijzigd; lessen gelden vanaf video 3', '7 shorts V2S1-V2S7 klaar (uploadvolgorde 1,2,7,3,6,5,4)'],
   },
   {
@@ -155,7 +155,6 @@ export const NEXT: string[] = [
   'Video 3: scènes 10-22 animeren en renderen op de pc',
   'Video 3: teaser, flash-forwards en eindmontage (-14 LUFS)',
   'Video 3: titel, thumbnail, beschrijving en 7 shorts',
-  'Video 2 openbaar zetten en de shorts eraan koppelen',
   'Video 1: slot-haakje in de titel fixen',
   'Onderwerp video 4 kiezen uit de ideeënlijst',
 ];
@@ -193,14 +192,14 @@ export const ACTIVITY: { title: string; id: string; state: string; last: string;
  {
   "title": "Schrijf titel, beschrijving en tags video 2",
   "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGFt2jvrzboJ4GbK8fbcasKv",
-  "state": "blocked",
+  "state": "done",
   "last": "31 okt 15:23",
   "doing": "Wacht op jouw reactie."
  },
  {
   "title": "Bedenk ideeën voor teaser-shorts",
   "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGS9PSyyns39jsYw5hE9SySp",
-  "state": "blocked",
+  "state": "done",
   "last": "28 okt 12:30",
   "doing": "Wacht op jouw reactie."
  },
@@ -217,3 +216,5 @@ export const ACTIVITY: { title: string; id: string; state: string; last: string;
   "last": "4 nov 15:33"
  }
 ];
+
+export const YOUTUBE = { subscribers: 25, views: 13566, bron: 'vidIQ', datum: '5 nov 01:00' };

@@ -72,7 +72,7 @@ export default function App() {
               <Page />
             </motion.div>
           </AnimatePresence>
-          <BottomActions />
+          {page !== 'driftmark' && <BottomActions />}
         </main>
       </div>
       <DepartmentDrawer />

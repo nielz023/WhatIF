@@ -1,11 +1,12 @@
-import { Star, Building2, FolderKanban, Users, Tv, BarChart3, MessagesSquare, Wallet, Wrench, Trophy, Settings, ShieldAlert } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, Star, Building2, FolderKanban, Users, Tv, BarChart3, MessagesSquare, Wallet, Wrench, Trophy, Settings, ShieldAlert } from 'lucide-react';
 import type { PageId } from '../../types';
 import { useGame } from '../../store/useGame';
 import { rankTitle } from '../../modules/gameplay/progression';
 
 export const NAV: { id: PageId; label: string; icon: typeof Building2 }[] = [
-  { id: 'driftmark', label: 'Driftmark HQ', icon: Star },
-  { id: 'hq', label: '3D-kantoor (game)', icon: Building2 },
+  { id: 'driftmark', label: 'Overzicht', icon: Star },
+  { id: 'hq', label: '3D-kantoor', icon: Building2 },
   { id: 'projects', label: 'Projects', icon: FolderKanban },
   { id: 'agents', label: 'Agents', icon: Users },
   { id: 'channels', label: 'Channels', icon: Tv },
@@ -26,7 +27,26 @@ export default function Sidebar() {
   const warReady = useGame((s) => s.warCases.filter((w) => w.status === 'Ready').length);
   const unreadPosts = useGame((s) => s.posts.filter((p) => s.tick - p.tick < 6).length);
 
+  const [gameOpen, setGameOpen] = useState(page !== 'driftmark');
   const badge = (id: PageId) => (id === 'projects' ? approvals : id === 'warroom' ? warReady : id === 'threads' ? unreadPosts : 0);
+
+  const item = ({ id, label, icon: Icon }: (typeof NAV)[number]) => {
+    const active = page === id;
+    const b = badge(id);
+    return (
+      <button
+        key={id}
+        onClick={() => setPage(id)}
+        title={label}
+        className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${active ? 'bg-gradient-to-r from-indigo-500/25 to-fuchsia-500/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+      >
+        {active && <span className="absolute left-0 top-2 h-[calc(100%-16px)] w-[3px] rounded-r bg-gradient-to-b from-cyan-400 to-fuchsia-500 shadow-[0_0_10px_#a855f7]" />}
+        <Icon size={18} className={id === 'warroom' ? 'text-rose-400' : active ? 'text-cyan-300' : ''} />
+        <span className="hidden lg:inline">{label}</span>
+        {b > 0 && <span className="absolute right-2 top-1.5 min-w-[18px] rounded-full bg-rose-500 px-1 text-center text-[10px] font-bold text-white lg:static lg:ml-auto">{b}</span>}
+      </button>
+    );
+  };
 
   return (
     <aside className="z-40 flex h-full w-[68px] shrink-0 flex-col border-r border-hq-line/60 bg-[#080d22]/90 backdrop-blur-xl lg:w-[220px]">
@@ -40,29 +60,14 @@ export default function Sidebar() {
         </div>
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-2">
-        {NAV.map(({ id, label, icon: Icon }) => {
-          const active = page === id;
-          const b = badge(id);
-          return (
-            <button
-              key={id}
-              onClick={() => setPage(id)}
-              title={label}
-              className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${active ? 'bg-gradient-to-r from-indigo-500/25 to-fuchsia-500/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
-            >
-              {active && <span className="absolute left-0 top-2 h-[calc(100%-16px)] w-[3px] rounded-r bg-gradient-to-b from-cyan-400 to-fuchsia-500 shadow-[0_0_10px_#a855f7]" />}
-              <Icon size={18} className={id === 'warroom' ? 'text-rose-400' : active ? 'text-cyan-300' : ''} />
-              <span className="hidden lg:inline">{label}</span>
-              {b > 0 && <span className="absolute right-2 top-1.5 min-w-[18px] rounded-full bg-rose-500 px-1 text-center text-[10px] font-bold text-white lg:static lg:ml-auto">{b}</span>}
-            </button>
-          );
-        })}
+        <div className="hidden px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-emerald-300 lg:block">Jouw kanaal · echt</div>
+        {NAV.slice(0, 1).map(item)}
+        <button onClick={() => setGameOpen(!gameOpen)} className="mt-4 hidden w-full items-center justify-between px-3 pb-1 text-left text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-slate-300 lg:flex">
+          <span>Spel · simulatie</span><ChevronDown size={12} className={gameOpen ? 'rotate-180' : ''} />
+        </button>
+        {gameOpen && <div className="mx-3 mb-1 hidden text-[10px] leading-snug text-slate-500 lg:block">Een speels kantoor met jouw echte video's en threads. De cijfers hier zijn een spel, je knoppen worden wel echte opdrachten.</div>}
+        {(gameOpen || page !== 'driftmark') && NAV.slice(1).map(item)}
       </nav>
-      <div className="m-2 hidden rounded-xl border border-hq-line/70 bg-hq-panel/70 p-3 lg:block">
-        <div className="text-[10px] uppercase tracking-wider text-slate-500">Company rank</div>
-        <div className="font-display text-sm font-semibold text-white">{rankTitle(level)}</div>
-        <div className="mt-1 text-[11px] text-slate-400">Driftmark HQ is echt · de game is een simulatie</div>
-      </div>
     </aside>
   );
 }

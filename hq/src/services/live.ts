@@ -18,7 +18,7 @@ export interface Live {
   ideas: typeof B.IDEAS; links: typeof B.LINKS; activity: Activity[];
   outputs?: Record<string, Output[]>; costs?: Cost[]; replies?: Reply[]; blender?: Blender; youtube?: YT;
 }
-const builtIn: Live = { updated: B.UPDATED, channel: B.CHANNEL, videos: B.VIDEOS, shorts: B.SHORTS, next: B.NEXT, ideas: B.IDEAS, links: B.LINKS, activity: B.ACTIVITY };
+const builtIn: Live = { updated: B.UPDATED, channel: B.CHANNEL, videos: B.VIDEOS, shorts: B.SHORTS, next: B.NEXT, ideas: B.IDEAS, links: B.LINKS, activity: B.ACTIVITY, youtube: B.YOUTUBE };
 
 type Src = 'ingebouwd' | 'live' | 'geen-toegang' | 'fout';
 interface S { data: Live; source: Src; checkedAt: number | null; refresh: () => Promise<void> }
