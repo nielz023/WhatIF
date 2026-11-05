@@ -43,13 +43,13 @@ for i, (n, ch) in enumerate(K.items()):
     S.hold(ch, END)
 
 # ---------------------------------------------------------------- oma en de wetenschapper voor de klas
-oma = S.actor("oma", V(-3.65, 0.9, 0), 90)
+oma = S.actor("oma", V(-4.05, 0.95, 0), 90)            # vlak naast het bord: korte armen
 wet = S.actor("wetenschapper", V(-3.45, -1.35, 0), 75)
 male_scientist(S, wet)
 S.beat(oma, 0.0, "wijzen", face="blij", face_amt=0.6, at=V(0.4, 0.0, 1.0))
-S.reach(oma, 0.0, "R", BOARD + V(0.12, 0.3, 0.05))
-S.reach(oma, 1.4, "R", BOARD + V(0.12, -0.2, -0.2))
-S.reach(oma, 2.4, "R", BOARD + V(0.12, 0.6, -0.2))
+S.reach(oma, 0.0, "R", BOARD + V(0.12, 0.25, 0.0))
+S.reach(oma, 1.4, "R", BOARD + V(0.12, 0.05, -0.15))
+S.reach(oma, 2.4, "R", BOARD + V(0.12, 0.4, -0.1))
 S.beat(oma, 1.6, "staan", face="lach", face_amt=0.6, at=S.headpos(K["kind_b"], 0.0))
 S.hold(oma, END)
 # de wetenschapper houdt een potje met een boonplantje omhoog
@@ -59,10 +59,10 @@ for k in range(3):
              scale=(1.4, 0.4, 0.8), seg=8, ol=0.002).parent = pot
 T.cyl("Boonsteel", (0, 0, 0.1), 0.006, 0.12, S.mat("blad_boon", (0.3, 0.7, 0.25)), seg=6, ol=0).parent = pot
 S.beat(wet, 0.0, "staan", face="blij", face_amt=0.6, at=S.headpos(K["broertje"], 0.0))
-POT = S.headpos(wet, 0.0) + V(0.45, 0.12, -0.25)
+POT = S.headpos(wet, 0.0) + V(0.3, -0.12, -0.45)        # voor zijn rechterschouder
 S.reach(wet, 0.0, "R", POT)
-S.reach(wet, 1.8, "R", POT + V(0.0, 0.25, 0.08))
-S.reach(wet, END, "R", POT + V(0.0, 0.25, 0.08))
+S.reach(wet, 1.8, "R", POT + V(0.0, 0.08, 0.1))
+S.reach(wet, END, "R", POT + V(0.0, 0.08, 0.1))
 grab(S, pot, wet, 0.0, "hand.R", loc=(0.0, 0.0, -0.08), rot=(0, 0, 0))
 S.hold(wet, END)
 
@@ -71,7 +71,7 @@ bro = K["broertje"]
 S.beat(bro, 0.0, face="verdrietig", face_amt=0.5, at=WIN, body={"spine": (10, 0, 0), "head": (6, 0, -8)}, **bro.spec)
 HB = S.headpos(bro, 0.0)
 RIGHT = V(0, 1, 0)                 # hij kijkt naar -x, zijn rechterkant is +y
-CHIN = HB + RIGHT * 0.1 + V(-0.12, 0, -0.2)
+CHIN = HB + RIGHT * 0.12 + V(-0.2, 0, -0.26)      # ver genoeg voor het hoofd, anders de elleboog erin
 S.reach(bro, 0.0, "R", CHIN)
 S.reach(bro, t_e + 0.6, "R", CHIN)
 # zucht: borst omhoog, dan zakt alles

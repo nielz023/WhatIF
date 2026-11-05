@@ -26,10 +26,10 @@ for o in list(bpy.data.objects):
 SIGN = V(1.0, -14.5, 1.65)
 
 # ---------------------------------------------------------------- opa en oma in hun strandstoelen (zoals scène 3c)
-OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.72, -2.02, 0)
+OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.86, -2.02, 0)
 _st = S.obj("Strandstoel_oma")
 if _st is not None:
-    _st.location.x, _st.location.y = -3.72, -2.07         # stoel schuift mee: oma zit dichter bij opa
+    _st.location.x, _st.location.y = -3.86, -2.07         # stoel schuift mee: oma zit dicht tegen opa aan (korte armen)
 opa = S.actor("opa", OPA_AT, -5, drop=("wandelstok",))        # stok laat hij bij het strand liggen
 oma = S.actor("oma", OMA_AT, 5)
 SEAT = {}
@@ -41,21 +41,23 @@ krant = T.box("Krant_opa", (0, 0, 0), (0.46, 0.012, 0.32), S.mat("krantenpapier"
 attach(krant, opa, "hand.R", (0.22, 0.05, 0.02), (90, 0, 0))
 READ = arms(arm("L", (0.30, 0.75, -0.55), (-0.35, 0.85, 0.35)), arm("R", (0.30, 0.75, -0.55), (-0.35, 0.85, 0.35)))
 S.beat(opa, 0.0, **SEAT[opa], arms=READ, face="neutraal", face_amt=0.5, at=krant.matrix_world.translation + V(0, -0.4, 0.1))
-S.beat(opa, t_e + 0.3, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.4, look=(0.0, -0.3), body={"head": (14, 0, 0)})
+# opa buigt een beetje naar oma toe, zodat ze bij zijn neus kan
+S.beat(opa, t_e + 0.3, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.4, look=(0.0, -0.3), body={"head": (14, 0, 0), "spine": (0, 0, -12)})
 NOSE = S.headpos(opa, t_e + 0.6) + V(0.05, -0.32, -0.05)
 S.beat(oma, 0.0, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
 k = 1.4                                                  # trager dan in scène 3
 S.reach(oma, 0.0, "R", inf=0.0)
-S.reach(oma, t_e + 0.2, "R", inf=0.0)
+S.reach(oma, t_e + 0.2 + 0.2 * k, "R", inf=0.0)
 S.reach(oma, t_e + 0.2 + 0.4 * k, "R", NOSE + V(0.15, -0.05, 0))
-S.reach(oma, t_e + 0.2 + 0.8 * k, "R", NOSE + V(0.05, 0, 0.02))
-S.reach(oma, t_e + 0.2 + 1.1 * k, "R", NOSE + V(0.05, 0, -0.02))
-S.reach(oma, t_e + 0.2 + 1.4 * k, "R", NOSE + V(0.05, 0, 0.02))
-S.reach(oma, t_e + 0.2 + 1.9 * k, "R", inf=0.0)
-S.beat(oma, t_e + 0.2 + 0.5 * k, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (4, 0, -20)})
+S.reach(oma, t_e + 0.2 + 0.8 * k, "R", NOSE + V(0.08, 0, 0.02))
+S.reach(oma, t_e + 0.2 + 1.1 * k, "R", NOSE + V(0.08, 0, -0.02))
+S.reach(oma, t_e + 0.2 + 1.4 * k, "R", NOSE + V(0.08, 0, 0.02))
+S.reach(oma, t_e + 0.2 + 1.5 * k, "R", NOSE + V(0.12, -0.04, 0.0))
+S.reach(oma, t_e + 0.2 + 1.62 * k, "R", inf=0.0)
+S.beat(oma, t_e + 0.2 + 0.3 * k, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (6, 0, -28)})
 S.beat(oma, t_e + 0.2 + 1.9 * k, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
-S.beat(opa, t_e + 0.2 + 0.75 * k, **SEAT[opa], arms=READ, face="boos", face_amt=0.6, look=(0.6, 0.1), body={"head": (6, 0, 14)})
-S.beat(opa, t_e + 0.2 + 1.6 * k, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.6, look=(0.0, -0.3), body={"head": (12, 0, 0)})
+S.beat(opa, t_e + 0.2 + 0.75 * k, **SEAT[opa], arms=READ, face="boos", face_amt=0.6, look=(0.6, 0.1), body={"head": (6, 0, 14), "spine": (0, 0, -12)})
+S.beat(opa, t_e + 0.2 + 1.6 * k, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.6, look=(0.0, -0.3), body={"head": (12, 0, 0), "spine": (0, 0, -12)})
 A.blink_at(opa, F(t_e + 0.2 + 0.85 * k), closed=5)
 # en dan lacht hij toch even (anders dan in scène 3)
 S.beat(opa, t_f, **SEAT[opa], arms=READ, face="blij", face_amt=0.6, at=S.head(oma))

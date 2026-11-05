@@ -77,6 +77,9 @@ for k, (n, x, col) in enumerate((("figurant_b", -1.3, (0.2, 0.6, 0.6)), ("kind_b
     ch = S.actor(n, V(x, 8.0, 0), 180, label=f"fietser_b{k}")
     _, crank = bike(S, ch, color=col, name=f"Fiets_bord_{k}")
     ride_path(S, ch, crank, t_b - 0.6 + 0.5 * k, t_c + 0.2, [V(x, 6.0 - 2 * k, 0), V(x, 24.0, 0)], cadence=1.3, lean=8)
+    if k:                                           # het kind staat op de trappers: anders haalt hij het stuur niet
+        for f in range(F(t_b - 0.1), F(t_c + 0.2) + 1):
+            A.crouch(ch, f, -0.12, 18)
     S.face(ch, t_b, "lach", 0.6)
 
 # ---------------------------------------------------------------- 19b: het bord en de auto die omkeert
@@ -130,15 +133,18 @@ T_KNOB0, T_KNOB1 = t_c + 1.2, t_c + 2.0
 for t, a in ((0.0, 0), (T_KNOB0, 0), (T_KNOB1, -110)):
     knob.rotation_euler.y = math.radians(a)
     knob.keyframe_insert("rotation_euler", index=1, frame=F(t))
-man = S.actor("buurman", RB + V(0.1, 0.58, -0.36), -10)
+man = S.actor("buurman", RB + V(0.1, 0.36, -0.36), -10)           # vlak achter de krat: knop binnen bereik
 S.beat(man, t_c, "staan", face="blij", face_amt=0.6, at=RB + V(0, 0, 0.1), body={"spine": (8, 0, 0)})
 S.beat(man, t_c + 0.6, "staan", face="twijfel", face_amt=0.6, at=M_SIGN + V(0, 0, 1.5))
-S.beat(man, T_KNOB0 - 0.2, "staan", face="neutraal", face_amt=0.5, at=RB, body={"spine": (14, 0, 0)}, crouch=(0.06, 8))
+S.beat(man, T_KNOB0 - 0.3, "staan", face="neutraal", face_amt=0.5, at=RB, body={"spine": (22, 0, 0)}, crouch=(0.14, 14))
 S.reach(man, t_c, "R", inf=0.0)
-S.reach(man, T_KNOB0 - 0.3, "R", RB + V(0.0, -0.05, 0.3))
+S.hold(man, T_KNOB1 + 0.25)                                  # gebukt blijven zolang hij draait
+S.reach(man, T_KNOB0 - 0.6, "R", inf=0.0)                  # pas naar de knop als hij al voorover buigt
+S.reach(man, T_KNOB0 - 0.25, "R", RB + V(0.0, -0.05, 0.3))
 S.reach(man, T_KNOB1, "R", RB + V(0.0, -0.05, 0.3))
-S.reach(man, T_KNOB1 + 0.4, "R", inf=0.0)
-S.beat(man, T_KNOB1 + 0.3, "staan", face="blij", face_amt=0.5, at=M_SIGN + V(0, 0, 1.5))
+S.reach(man, T_KNOB1 + 0.2, "R", RB + V(0.0, -0.05, 0.3))
+S.reach(man, T_KNOB1 + 0.35, "R", inf=0.0)
+S.beat(man, T_KNOB1 + 0.55, "staan", face="blij", face_amt=0.5, at=M_SIGN + V(0, 0, 1.5))
 S.hold(man, END)
 S.reach(man, 0.0, "R", inf=0.0)
 

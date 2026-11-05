@@ -61,7 +61,7 @@ for k, (n, p, rot, act) in enumerate(GARDENERS):
         grab(S, g, ch, 0.0, "hand.R", loc=(0.0, 0.0, -0.06), rot=(0, 0, 0))
         tilt = 0
         for j, t in enumerate(frange(0.0, END, 0.6)):
-            hp = p + fwd * 0.5 + (M.to_3x3() @ V(-0.22, 0, 0)) + V(0, 0, 0.62 if j % 2 else 0.68)
+            hp = p + fwd * 0.38 + (M.to_3x3() @ V(-0.22, 0, 0)) + V(0, 0, 0.8 if j % 2 else 0.86)
             S.reach(ch, t, "R", hp, rot=(0, 0, 0))
         S.reach(ch, 0.0, "L", inf=0.0)
 
@@ -74,8 +74,9 @@ ring = lambda ang, z, r: KC + V(math.cos(ang) * r, math.sin(ang) * r, z)     # n
 a0 = math.atan2(u.y, u.x)
 for k, t in enumerate(frange(0.0, END, 0.7)):
     hi = k % 2
-    S.reach(kidA, t, "L", ring(a0 + 0.18, 1.75 if hi else 1.27, 1.06 if hi else 1.46))
-    S.reach(kidA, t, "R", ring(a0 - 0.18, 1.27 if hi else 1.75, 1.46 if hi else 1.06))
+    # buizen vlak bij de schouders (korte kinderarmen): om de beurt een hand hoger
+    S.reach(kidA, t, "L", ring(a0 - 0.12, 1.45 if hi else 1.1, 1.4 if hi else 1.5))
+    S.reach(kidA, t, "R", ring(a0 + 0.12, 1.1 if hi else 1.45, 1.5 if hi else 1.4))
     A.crouch(kidA, F(t), 0.05 - 0.04 * hi, 10)
 S.hold(kidA, END)
 kidB = S.actor("kind_b", KC + V(-0.75, -2.35, 0), 20)
@@ -114,26 +115,30 @@ for k, t in enumerate((t_c + 1.8, t_c + 2.25, t_c + 2.7)):        # aankloppen: 
 bord.location.z = 0.0
 bord.keyframe_insert("location", index=2, frame=F(0.0))
 bpy.context.view_layer.update()
-B_C = ROOT + V(0.66, 0.12, 0)
+B_C = ROOT + V(0.68, 0.41, 0)       # naast het scheve plankje; schuifelt mee als het rechtop komt
+B_C2 = ROOT + V(0.68, 0.10, 0)
 S.teleport(bro, t_c, B_C, face_dir := math.degrees(math.atan2(ROOT.x - B_C.x, -(ROOT.y - B_C.y))))
 bro.rig.location = tuple(B_C)
 bro.rig.keyframe_insert("location", frame=F(t_c))
+S.turn(bro, T_PUSH0, T_PUSH1, math.degrees(math.atan2(ROOT.x - B_C2.x, -(ROOT.y - B_C2.y))), loc=B_C2)
 S.beat(bro, t_c, "staan", face="vastberaden", face_amt=0.6, at=ROOT + V(0, 0, 0.6), crouch=(0.08, 12))
-S.beat(bro, T_PUSH0 + 0.2, "staan", face="inspanning", face_amt=0.8, at=ROOT + V(0, 0, 0.6), crouch=(0.14, 18),
-       body={"spine": (14, 0, 0)})
+S.beat(bro, T_PUSH0 + 0.2, "staan", face="inspanning", face_amt=0.8, at=ROOT + V(0, 0, 0.6), crouch=(0.1, 14),
+       body={"spine": (5, 0, 0)})
 S.beat(bro, T_PUSH1 + 0.2, "staan", face="vastberaden", face_amt=0.7, at=ROOT + V(0, 0, 0.7), crouch=(0.06, 8))
 S.beat(bro, t_c + 2.9, "staan", face="blij", face_amt=0.8, at=ROOT + V(0, 0, 0.75))
 for t in frange(t_c, T_PUSH1 + 0.3, 0.1):
     S.sc.frame_set(F(t))
     Mb = bord.matrix_world
-    S.reach(bro, t, "L", Mb @ V(0.07, -0.03, 0.62))
-    S.reach(bro, t, "R", Mb @ V(0.07, 0.03, 0.5))
-# aankloppen met de rechterhand op de bovenkant van de paal
+    # korte armen: hij duwt aan het uiteinde van het krijtplankje (de paal is buiten bereik)
+    # (onderkant, onder zijn grote hoofd door)
+    S.reach(bro, t, "L", Mb @ V(0.42, -0.04, 0.70))
+    S.reach(bro, t, "R", Mb @ V(0.42, 0.04, 0.68))
+# aankloppen met de linkerhand (camerakant) tegen het uiteinde van het krijtplankje
 for t in (t_c + 1.8, t_c + 2.25, t_c + 2.7):
-    S.reach(bro, t - 0.15, "R", ROOT + V(0.07, -0.02, 0.86))
-    S.reach(bro, t, "R", ROOT + V(0.07, -0.02, 0.76))
-S.reach(bro, t_c + 2.9, "R", inf=0.0)
-S.reach(bro, T_PUSH1 + 0.5, "L", inf=0.0)
+    S.reach(bro, t - 0.15, "L", ROOT + V(0.48, -0.08, 0.70))
+    S.reach(bro, t, "L", ROOT + V(0.43, -0.05, 0.72))
+S.reach(bro, t_c + 2.9, "L", inf=0.0)
+S.reach(bro, T_PUSH1 + 0.34, "R", inf=0.0)
 S.reach(bro, 0.0, "L", inf=0.0)
 S.reach(bro, 0.0, "R", inf=0.0)
 S.reach(bro, t_c - 0.05, "L", inf=0.0)

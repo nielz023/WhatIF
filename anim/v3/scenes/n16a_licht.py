@@ -209,6 +209,7 @@ S.beat(wet, t_c, "staan", face="vastberaden", face_amt=0.6, at=S.headpos(held, t
 S.say("N16-01", who=wet, at=t_d + 0.3)
 SW = lever.location.copy()
 S.beat(held, t_c, "staan", face="nerveus", face_amt=0.5, at=SW, feet="keep")
+S.reach(held, t_c - 0.05, "R", inf=0.0)                          # arm blijft hangen tot de snede (niet 3 s langzaam heffen)
 S.reach(held, t_c, "R", SW + V(0.0, -0.09, 0.0))
 S.reach(held, t_d + 1.5, "R", SW + V(0.0, -0.09, 0.01))
 S.reach(held, t_d + 1.75, "R", SW + V(0.0, -0.1, 0.03))          # duim trekt even terug (anticipatie)

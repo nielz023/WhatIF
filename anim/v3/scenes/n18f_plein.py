@@ -33,18 +33,19 @@ def lad(zl, x=0.0):
 
 
 # ---------------------------------------------------------------- de man klimt naar boven
-man = S.actor("figurant_c", V(2.2, 10.75, 0), 180)
+man = S.actor("figurant_c", V(2.2, 10.9, 0), 180)
 S.beat(man, 0.0, "staan", face="vastberaden", face_amt=0.5, at=V(1.8, 12.0, 3.0))
 RUNG = lambda k: 0.25 + 0.28 * k                                   # noqa: E731
-T_CL = [0.5 + 0.34 * k for k in range(6)]                          # elke 0,34 s een sport hoger
-S.place(man, 0.4, V(2.2, 10.75, 0), 180)
+T_CL = [0.5 + 0.34 * k for k in range(8)]                          # elke 0,34 s een sport hoger, tot vlak bij het bord
+S.place(man, 0.4, V(2.2, 10.9, 0), 180)
 for k, t in enumerate(T_CL):
     zl = RUNG(k)
-    p = lad(zl) + V(0, -0.2, 0.0)
+    p = lad(zl) + V(0, -0.1, 0.0)                                  # voeten op de sporten, dicht bij het bord
     S.place(man, t, p, 180)
     side = "L" if k % 2 else "R"
-    S.reach(man, t - 0.1, side, lad(zl + 1.05, -0.22 if side == "R" else 0.22) + V(0, -0.05, 0))
-    S.reach(man, t + 0.15, side, lad(zl + 1.05, -0.22 if side == "R" else 0.22) + V(0, -0.05, 0))
+    # zijn rechterhand aan de rechterboom (+x), anders kruisen de armen
+    S.reach(man, t - 0.1, side, lad(zl + 1.05, 0.22 if side == "R" else -0.22) + V(0, -0.05, 0))
+    S.reach(man, t + 0.15, side, lad(zl + 1.05, 0.22 if side == "R" else -0.22) + V(0, -0.05, 0))
     A.foot(man, F(t - 0.15), "L" if k % 2 else "R", (0, 0, 0.12))
     A.foot(man, F(t), "L" if k % 2 else "R", (0, 0, 0))
 TOP = T_CL[-1]
@@ -53,20 +54,21 @@ S.reach(man, 0.0, "R", inf=0.0)
 S.reach(man, 0.35, "L", inf=0.0)
 S.reach(man, 0.35, "R", inf=0.0)
 # boven: linkerhand aan de ladder, rechterhand schrijft
-S.reach(man, END, "L", lad(RUNG(5) + 1.05, 0.22) + V(0, -0.05, 0))
-S.beat(man, TOP + 0.2, "staan", face="vastberaden", face_amt=0.7, at=V(1.6, 12.0, 2.9), body={"spine": (10, 0, 0)})
+S.reach(man, END, "L", lad(RUNG(7) + 1.05, -0.22) + V(0, -0.05, 0))
+S.beat(man, TOP + 0.2, "staan", face="vastberaden", face_amt=0.7, at=V(2.3, 12.0, 3.2), body={"spine": (18, 0, 0)})
 S.hold(man, END)
 
 # ---------------------------------------------------------------- de nieuwe regel, woord voor woord
 WORDS = ["13.", "SWAP,", "DON'T", "STEAL."]
-X0, Z = 1.0, lad(RUNG(5)).z + 1.45
+# kleine letters recht voor zijn rechterschouder: verder reiken kan hij niet vanaf de ladder
+X0, Z = 1.9, lad(RUNG(7)).z + 1.1
 objs, x = [], X0
 for i, w in enumerate(WORDS):
-    o = HU.marker_text(f"Nieuwe_regel_{i}", w, (x, 11.965, Z), 0.12, "blauw", align="LEFT")
+    o = HU.marker_text(f"Nieuwe_regel_{i}", w, (x, 11.965, Z), 0.1, "blauw", align="LEFT")
     bpy.context.view_layer.update()
     xs = [(o.matrix_world @ V(c)).x for c in o.bound_box]
     objs.append((o, x, max(xs)))
-    x = max(xs) + 0.07
+    x = max(xs) + 0.06
 T_W0 = TOP + 0.5
 T_W1 = END - 0.9
 dt = (T_W1 - T_W0) / len(objs)
@@ -78,8 +80,8 @@ for i, (o, xa, xb) in enumerate(objs):
     visible(o, ta + dt * 0.8, True)
     for k, u in enumerate((0.0, 0.33, 0.66, 0.95)):
         S.reach(man, ta + dt * u, "R", V(xa + (xb - xa) * u, 11.9, Z + (0.03 if k % 2 else -0.02)))
-S.reach(man, T_W0 - 0.3, "R", inf=0.0)
-S.reach(man, T_W1 + 0.4, "R", V(xb + 0.1, 11.8, Z - 0.15))
+# rechterhand gaat in één beweging van de sport naar het bord (geen IK-overgang die halverwege blijft hangen)
+S.reach(man, T_W1 + 0.4, "R", V(xb - 0.15, 11.75, Z - 0.15))
 
 # ---------------------------------------------------------------- mensen lezen mee
 for n, p, act in (("figurant_a", V(-1.6, 9.6, 0), "lees"), ("figurant_e", V(-0.4, 9.2, 0), "wijs"),
@@ -90,7 +92,7 @@ for n, p, act in (("figurant_a", V(-1.6, 9.6, 0), "lees"), ("figurant_e", V(-0.4
         S.beat(ch, 2.5, "staan", face="lach", face_amt=0.6, at=V(-1.5, 12.0, 3.0))
     else:
         S.beat(ch, 0.0, "staan", face="neutraal", face_amt=0.5, at=V(p.x * 0.5, 12.0, 3.4))
-        S.beat(ch, 3.2, "staan", face="blij", face_amt=0.5, at=V(1.6, 12.0, Z))
+        S.beat(ch, 3.2, "staan", face="blij", face_amt=0.5, at=V(2.3, 12.0, Z))
     S.hold(ch, END)
 
 # ---------------------------------------------------------------- camera: trage pull-back

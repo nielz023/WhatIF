@@ -182,7 +182,7 @@ S.walk(zus, t_c - 0.4, t_d, [za, zb], stride=0.2, turn=False, arms=0.0)
 S.beat(zus, t_c - 0.4, "armen_over", face="bang", face_amt=0.6, look=(0.0, -0.3), feet="keep")
 S.hold(zus, t_d)
 Z_HIDE = P_STOP + V(-0.6, 0.05, 0)
-Z_OUT = P_STOP + V(-0.3, 0.68, 0)
+Z_OUT = P_STOP + V(-0.15, 0.45, 0)         # vlak naast hem: korte armpjes
 S.teleport(zus, t_e, Z_HIDE, 90)
 zus.rig.location = tuple(Z_HIDE)
 zus.rig.keyframe_insert("location", frame=F(t_e))
@@ -243,7 +243,10 @@ puff(pest, t_e + 4.2)
 S.beat(zus, t_e, "staan", face="bang", face_amt=0.6, look=(0.0, -0.2))
 S.walk(zus, t_e + 3.4, t_e + 4.3, [Z_HIDE, Z_OUT], stride=0.18, turn=False)
 S.beat(zus, t_e + 4.3, "staan", face="bang", face_amt=0.7, at=S.headpos(papa, t_e), feet="keep")
-S.reach(zus, t_e + 4.3, "R", S.bone_world(pest, "upper_arm.L", t_e + 4.3, tail=True) + V(0.0, -0.05, -0.12))
+Z_GRIP = S.bone_world(pest, "upper_arm.L", t_e + 4.3, tail=True) + V(0.0, -0.05, -0.2)     # zijn jas, onder de elleboog
+S.reach(zus, t_e + 4.3, "R", Z_GRIP)
+S.reach(zus, t_i - 0.9, "R", Z_GRIP)                                  # laat los als hij naar voren stapt
+S.reach(zus, t_i - 0.6, "R", inf=0.0)
 S.reach(zus, t_e + 3.9, "R", inf=0.0)
 S.reach(zus, 0.0, "R", inf=0.0)
 for ch in (pest, zus):
@@ -255,6 +258,7 @@ for n in ("volgeling_a", "volgeling_b", "volgeling_c"):
 # fiets: in 17c rechts voor de pestkop, daarna staat hij naast hem; in 17i duwt hij hem naar de vriend
 P_I = P_STOP + V(0.9, 0, 0)                # 17i: na de slagboom stapt hij een meter naar voren
 T_PUSH0, T_PUSH1 = t_i + 0.5, t_i + 1.4
+BIKE_OFS = V(-0.55, 0.1, 0)                # fiets rechts naast hem, stuur net voor hem: binnen bereik van zijn rechterhand
 PUSH = V(0.7, 0, 0)
 S.walk(pest, t_i - 0.9, t_i + 0.2, [P_STOP, P_I], stride=0.3, turn=False)
 WR = 0.33
@@ -265,11 +269,11 @@ for f in range(F(t_c - 0.4), F(END) + 1):
     t = (f - 1) / FPS
     M = S._root_matrix(pest, t)
     yaw = math.degrees(M.to_euler().z) - 90.0
-    loc = M @ V(-0.55, -0.4, 0)
+    loc = M @ BIKE_OFS
     if t > T_PUSH0:
         u = min(1.0, (t - T_PUSH0) / (T_PUSH1 - T_PUSH0))
         u = u * u * (3 - 2 * u)
-        loc = (S._root_matrix(pest, T_PUSH0) @ V(-0.55, -0.4, 0)) + PUSH * u
+        loc = (S._root_matrix(pest, T_PUSH0) @ BIKE_OFS) + PUSH * u
     if prev is not None and (loc - prev).length < 0.5:
         roll += (loc - prev).length / WR
     prev = loc.copy()
@@ -283,14 +287,14 @@ for f in range(F(t_c - 0.4), F(END) + 1):
 T_REL = T_PUSH0 + 0.15
 for t in frange(t_c - 0.4, T_REL, 0.2):
     S.sc.frame_set(F(t))
-    S.reach(pest, t, "L", grip(fv, "L"))
+    S.reach(pest, t, "R", grip(fv, "L"))
 S.sc.frame_set(F(T_REL))
-S.reach(pest, T_REL, "L", grip(fv, "L"))
-S.reach(pest, T_REL + 0.3, "L", inf=0.0)
-S.reach(pest, 0.0, "L", inf=0.0)
+S.reach(pest, T_REL, "R", grip(fv, "L"))
+S.reach(pest, T_REL + 0.3, "R", inf=0.0)
+S.reach(pest, 0.0, "R", inf=0.0)
 
 # ---------------------------------------------------------------- 17f: de vriend kijkt naar de fiets
-BIKE_E = S._root_matrix(pest, t_f) @ V(-0.55, -0.4, 0) + V(0, 0, 0.6)
+BIKE_E = S._root_matrix(pest, t_f) @ BIKE_OFS + V(0, 0, 0.6)
 S.beat(vr, t_f, "staan", face="verdrietig", face_amt=0.6, at=BIKE_E)
 A.blink_at(vr, F(t_f + 1.2))
 S.beat(vr, t_f + 1.6, "staan", face="twijfel", face_amt=0.7, at=BIKE_E)
@@ -307,25 +311,25 @@ S.beat(oma, t_g + 1.4, "staan", face="vastberaden", face_amt=0.5, at=HP)
 S.beat(oma, t_g + 2.4, "staan", face="blij", face_amt=0.3, at=HP)
 
 # ---------------------------------------------------------------- 17h: oma loopt naar de slagboom en tilt hem op
-O0, O1 = V(*CROWD["oma"], 0), V(-29.38, 2.0, 0)
+O0, O1 = V(*CROWD["oma"], 0), V(-29.58, 2.0, 0)       # vlak bij de slagboom (korte armen)
 S.walk(oma, t_h + 0.2, t_h + 1.9, [O0, O1], stride=0.32, turn=False)
 S.turn(oma, t_h + 1.9, t_h + 2.2, -90)
 S.beat(oma, t_h + 0.2, "staan", face="vastberaden", face_amt=0.6, at=HP, feet="keep")
 bpy.context.view_layer.update()
 S.sc.frame_set(F(t_h))
 Minv = ARM.matrix_world.inverted()
-GRIP_L = Minv @ V(-30.0, 2.22, 1.1)
-GRIP_R = Minv @ V(-30.0, 1.77, 1.1)
+GRIP_L = Minv @ V(-30.0, 1.77, 1.1)          # ze kijkt naar -x: haar linkerhand is de -y-kant
+GRIP_R = Minv @ V(-30.0, 2.22, 1.1)
 S.reach(oma, 0.0, "L", inf=0.0)
 S.reach(oma, 0.0, "R", inf=0.0)
-S.reach(oma, t_h + 1.7, "L", inf=0.0)
-S.reach(oma, t_h + 1.7, "R", inf=0.0)
-for t in frange(t_h + 2.1, T_LIFT0 + 0.75, 0.1):
+S.reach(oma, t_h + 1.95, "L", inf=0.0)
+S.reach(oma, t_h + 1.95, "R", inf=0.0)
+for t in frange(t_h + 2.1, T_LIFT0 + 0.25, 0.1):        # tot boven haar schouders, dan zwaait hij vanzelf door
     S.sc.frame_set(F(t))
     S.reach(oma, t, "L", ARM.matrix_world @ GRIP_L)
     S.reach(oma, t, "R", ARM.matrix_world @ GRIP_R)
-S.reach(oma, T_LIFT0 + 1.1, "L", inf=0.0)
-S.reach(oma, T_LIFT0 + 1.1, "R", inf=0.0)
+S.reach(oma, T_LIFT0 + 0.38, "L", inf=0.0)
+S.reach(oma, T_LIFT0 + 0.38, "R", inf=0.0)
 S.beat(oma, t_h + 2.2, "staan", face="inspanning", face_amt=0.6, look=(0.0, 0.1), feet="keep")
 S.beat(oma, T_LIFT1 + 0.1, "staan", face="blij", face_amt=0.6, at=HP, feet="keep")
 S.say("N17-04", who=oma, at=t_h + 2.1)
@@ -340,7 +344,7 @@ S.beat(pest, T_LIFT1 + 2.3, "staan", face="verdrietig", face_amt=0.4, at=S.headp
 S.beat(zus, T_LIFT1 + 0.8, "staan", face="blij", face_amt=0.5, at=S.headpos(oma, T_LIFT1))
 
 # ---------------------------------------------------------------- 17i: de fiets terug
-V_I = V(-28.55, 2.1, 0)
+V_I = V(-29.49, 2.35, 0)                   # naast het voorwiel (camerakant), stuur binnen bereik
 S.walk(vr, t_i - 1.0, t_i + 0.3, [V(*CROWD["beste_vriend"], 0), V_I], stride=0.32, turn=False)
 S.turn(vr, t_i + 0.3, t_i + 0.5, -90)
 S.beat(pest, t_i, "staan", face="verdrietig", face_amt=0.5, look=(0.0, -0.5), body={"head": (-14, 0, 0)}, feet="keep")
@@ -349,10 +353,10 @@ S.hold(pest, END)
 S.beat(vr, t_i, "staan", face="twijfel", face_amt=0.6, look=(0.0, -0.4), body={"head": (-12, 0, 0)}, feet="keep")
 for t in frange(T_PUSH1 - 0.2, END, 0.2):
     S.sc.frame_set(F(t))
-    S.reach(vr, t, "L", grip(fv, "L"))
-    S.reach(vr, t, "R", grip(fv, "R"))
-S.reach(vr, T_PUSH1 - 0.5, "L", inf=0.0)
-S.reach(vr, T_PUSH1 - 0.5, "R", inf=0.0)
+    S.reach(vr, t, "L", S.obj(fv.name + "_stuurdeel").matrix_world @ V(0, 0.0, 0.1))
+    S.reach(vr, t, "R", grip(fv, "L"))
+S.reach(vr, T_PUSH1 - 0.3, "L", inf=0.0)
+S.reach(vr, T_PUSH1 - 0.3, "R", inf=0.0)
 S.reach(vr, 0.0, "L", inf=0.0)
 S.reach(vr, 0.0, "R", inf=0.0)
 # ze kijken elkaar niet aan, dan knikt de vriend één keer

@@ -74,7 +74,7 @@ S.beat(held, T_PH + 0.2, "staan", face="verbaasd", face_amt=0.5, at=LOW)
 S.beat(held, T_PH + 1.0, "staan", face="nerveus", face_amt=0.4, at=UP_)
 # de duim (linkerhand) beweegt langzaam naar het scherm
 S.reach(held, 0.0, "L", inf=0.0)
-S.reach(held, T_PH + 1.3, "L", inf=0.0)
+S.reach(held, T_PH + 1.6, "L", inf=0.0)                     # korte overgang: anders hangt de arm halverwege
 S.reach(held, T_PH + 1.9, "L", UP_ + V(0.1, -0.06, 0.02))
 S.reach(held, t_d, "L", UP_ + V(0.05, -0.05, 0.03))
 S.hold(held, END)

@@ -31,13 +31,13 @@ TC = V(0.0, 4.0, 0)                      # midden van de raadstafel
 BOARD1 = V(-2.4, 11.95, 4.9)             # regel 1 bovenaan het grote bord
 
 
-def chair(k):
+def chair(k, r=2.15):
     a = k / 7 * math.tau + 0.2
-    return V(math.cos(a) * 2.15, 4 + math.sin(a) * 2.15, 0)
+    return V(math.cos(a) * r, 4 + math.sin(a) * r, 0)
 
 
-def seat(name, k, **kw):
-    p = chair(k)
+def seat(name, k, r=2.15, **kw):
+    p = chair(k, r)
     d = TC - p
     ch = S.actor(name, p, math.degrees(math.atan2(d.x, -d.y)), **kw)
     spec, z = sit(ch, seat_top=0.46)
@@ -48,7 +48,12 @@ def seat(name, k, **kw):
 
 
 # ---------------------------------------------------------------- de stadsraad
-held = seat("hoofdpersonage_volwassen", 0)
+# de jongen schuift aan tot tegen de tafel (korte armen): stoel, papier en pen mee naar binnen
+held = seat("hoofdpersonage_volwassen", 0, r=1.95)
+for _n, _dr in (("Raadsstoel_0", -0.2), ("Papier_0", 0.18), ("Pen_jongen", 0.18)):
+    _o = S.obj(_n)
+    if _o is not None:
+        _o.location += V(math.cos(0.2), math.sin(0.2), 0) * _dr
 pest = seat("pestkop_volwassen", 6)
 wet = seat("wetenschapper", 2)
 male_scientist(S, wet)
@@ -64,15 +69,16 @@ for i, ch in enumerate((pest, wet, oma, buur, ag)):
 
 # de jongen tikt met zijn pen op het papier, kijkt op en glimlacht naar de oud-pestkop
 pen = S.obj("Pen_jongen")
-PAPER = V(math.cos(0.2) * 1.25, 4 + math.sin(0.2) * 1.25, 0.81)
+PAPER = V(math.cos(0.2) * 1.43, 4 + math.sin(0.2) * 1.43, 0.81)
 grab(S, pen, held, 0.0, "hand.R", loc=(0.0, 0.0, -0.04), rot=(90, 0, 0))
-S.beat(held, 0.0, face="neutraal", face_amt=0.5, at=PAPER, body={"spine": (8, 0, 0)}, **held.spec)
+S.beat(held, 0.0, face="neutraal", face_amt=0.5, at=PAPER, body={"spine": (16, 0, 0)}, **held.spec)
 for k, t in enumerate(frange(0.0, t_b + 1.4, 0.32)):
-    S.reach(held, t, "R", PAPER + V(0.05, -0.12, 0.1 if k % 2 else 0.03))
-S.reach(held, t_b + 1.7, "R", PAPER + V(0.08, -0.14, 0.12))
-S.reach(held, END, "R", PAPER + V(0.08, -0.14, 0.12))
-S.reach(held, 0.0, "L", PAPER + V(0.0, 0.2, 0.03))
-S.reach(held, END, "L", PAPER + V(0.0, 0.2, 0.03))
+    S.reach(held, t, "R", PAPER + V(0.05, 0.12, 0.1 if k % 2 else 0.03))
+# hij kijkt naar -x: zijn rechterhand is de +y-kant; na het tikken rusten beide handen vlak bij de tafelrand
+S.reach(held, t_b + 1.7, "R", PAPER + V(0.15, 0.14, 0.08))
+S.reach(held, END, "R", PAPER + V(0.15, 0.14, 0.08))
+S.reach(held, 0.0, "L", PAPER + V(0.18, -0.22, 0.03))
+S.reach(held, END, "L", PAPER + V(0.18, -0.22, 0.03))
 S.beat(held, t_b + 1.6, face="neutraal", face_amt=0.4, at=S.headpos(pest, t_b), **held.spec)
 S.beat(held, t_b + 2.2, face="blij", face_amt=0.7, at=S.headpos(pest, t_b), **held.spec)
 S.beat(pest, t_b + 2.4, face="blij", face_amt=0.7, at=HH, **pest.spec)
