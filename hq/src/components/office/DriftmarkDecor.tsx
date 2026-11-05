@@ -5,6 +5,7 @@
  */
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 type V3 = [number, number, number];
@@ -117,6 +118,33 @@ export function Portal({ p, rot = 0, color, r = 2.2 }: { p: V3; rot?: number; co
 function Vinyl({ color, ...rest }: { color: string } & Partial<THREE.MeshPhysicalMaterialParameters>) {
   return <meshPhysicalMaterial color={color} roughness={0.38} clearcoat={0.8} clearcoatRoughness={0.25} sheen={0.4} {...rest} />;
 }
+/* het echte hoofdpersonage (hoofdpersonage.glb uit de projectbestanden) */
+const HERO_URL = './models/hoofdpersonage.gltf.json';
+function HeroModel({ height = 2.9 }: { height?: number }) {
+  const { scene } = useGLTF(HERO_URL);
+  const obj = useMemo(() => {
+    const c = scene.clone(true);
+    c.traverse((o) => {
+      const m = o as THREE.Mesh;
+      if (m.isMesh) {
+        m.castShadow = true; m.receiveShadow = true;
+        const mats = (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[];
+        mats.forEach((mt) => { if ('roughness' in mt) { mt.roughness = Math.min(mt.roughness ?? 0.6, 0.45); mt.envMapIntensity = 1.2; } });
+      }
+    });
+    const box = new THREE.Box3().setFromObject(c);
+    const size = box.getSize(new THREE.Vector3());
+    const k = height / (size.y || 1);
+    c.scale.setScalar(k);
+    const box2 = new THREE.Box3().setFromObject(c);
+    const ctr = box2.getCenter(new THREE.Vector3());
+    c.position.set(-ctr.x, -box2.min.y, -ctr.z);
+    return c;
+  }, [scene, height]);
+  return <primitive object={obj} />;
+}
+useGLTF.preload(HERO_URL);
+
 export function Mascot({ p, rot = 0, s = 1 }: { p: V3; rot?: number; s?: number }) {
   const g = useRef<THREE.Group>(null);
   useFrame(({ clock }) => { if (g.current) { g.current.position.y = Math.sin(clock.elapsedTime * 1.4) * 0.08; g.current.rotation.y = Math.sin(clock.elapsedTime * 0.5) * 0.15; } });
@@ -128,35 +156,7 @@ export function Mascot({ p, rot = 0, s = 1 }: { p: V3; rot?: number; s?: number 
       {M([0, 0.52, 0], <torusGeometry args={[1.28, 0.05, 8, 60]} />, <meshStandardMaterial color={DM.orange} emissive={DM.orange} emissiveIntensity={2.5} toneMapped={false} />, [Math.PI / 2, 0, 0])}
       <group ref={g}>
         <group position={[0, 0.5, 0]}>
-          {/* sneakers */}
-          {[-0.22, 0.22].map((x) => M([x, 0.08, 0.06], <boxGeometry args={[0.26, 0.16, 0.42]} />, <Vinyl color="#f8fafc" />))}
-          {/* benen (jeans) */}
-          {[-0.22, 0.22].map((x) => M([x, 0.5, 0], <capsuleGeometry args={[0.13, 0.55, 6, 16]} />, <Vinyl color="#2b4c8c" />))}
-          {/* hoodie */}
-          {M([0, 1.25, 0], <capsuleGeometry args={[0.42, 0.55, 8, 24]} />, <Vinyl color={DM.orange} />)}
-          {M([0, 1.05, 0.38], <boxGeometry args={[0.5, 0.18, 0.06]} />, <Vinyl color="#ea580c" />)}
-          {/* armen */}
-          {M([-0.55, 1.25, 0.05], <capsuleGeometry args={[0.12, 0.55, 6, 16]} />, <Vinyl color={DM.orange} />, [0, 0, 0.35])}
-          {M([0.55, 1.45, 0.05], <capsuleGeometry args={[0.12, 0.55, 6, 16]} />, <Vinyl color={DM.orange} />, [0, 0, -2.4])}
-          {M([0.82, 1.92, 0.05], <sphereGeometry args={[0.13, 16, 16]} />, <Vinyl color={DM.skin} />)}
-          {M([-0.73, 0.92, 0.05], <sphereGeometry args={[0.13, 16, 16]} />, <Vinyl color={DM.skin} />)}
-          {/* capuchon */}
-          {M([0, 1.86, -0.22], <sphereGeometry args={[0.5, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />, <Vinyl color="#ea580c" side={THREE.DoubleSide} />, [-0.9, 0, 0])}
-          {/* hoofd */}
-          {M([0, 2.25, 0.02], <sphereGeometry args={[0.55, 32, 24]} />, <Vinyl color={DM.skin} roughness={0.5} sheen={0.8} />)}
-          {/* haar */}
-          {M([0, 2.5, -0.04], <sphereGeometry args={[0.54, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2.6]} />, <Vinyl color="#5a3420" />)}
-          {/* ogen */}
-          {[-0.19, 0.19].map((x) => (
-            <group key={x} position={[x, 2.3, 0.48]}>
-              <mesh><sphereGeometry args={[0.13, 16, 16]} /><Vinyl color="#ffffff" /></mesh>
-              <mesh position={[0, 0, 0.09]}><sphereGeometry args={[0.065, 12, 12]} /><meshStandardMaterial color="#111" roughness={0.2} /></mesh>
-              <mesh position={[0.02, 0.025, 0.14]}><sphereGeometry args={[0.02, 8, 8]} /><meshBasicMaterial color="#fff" /></mesh>
-            </group>
-          ))}
-          {/* glimlach + blos */}
-          {M([0, 2.05, 0.5], <torusGeometry args={[0.12, 0.022, 8, 20, Math.PI]} />, <meshStandardMaterial color="#7a2e1f" />, [0, 0, Math.PI])}
-          {[-0.33, 0.33].map((x) => M([x, 2.12, 0.42], <sphereGeometry args={[0.07, 12, 12]} />, <meshStandardMaterial color="#f28b82" transparent opacity={0.6} />))}
+          <HeroModel />
         </group>
       </group>
     </group>
