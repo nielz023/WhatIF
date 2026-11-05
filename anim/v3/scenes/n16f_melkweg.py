@@ -60,7 +60,7 @@ def lie(ch, x, feet_y, back=0.16):
 
 
 held = S.actor("hoofdpersonage_kind", (0.55, -0.8, 7.0), 0)
-opa = S.actor("opa", (-0.55, -0.8, 7.0), 0)
+opa = S.actor("opa", (-0.55, -0.8, 7.0), 0, drop=("wandelstok",))
 lie(held, 0.55, -0.55)
 lie(opa, -0.55, -0.15)
 bpy.context.view_layer.update()

@@ -46,7 +46,9 @@ class Scene3(_v2.Scene2):
         self.qc_skip = set()             # namen van figuren die niet in beeld hoeven (silhouetten e.d.)
 
     # -- figuren ---------------------------------------------------------------
-    def actor(self, name, loc=(0, 0, 0), rot=0.0, energy=1.0, rim=None, frozen=False, **kw):
+    def actor(self, name, loc=(0, 0, 0), rot=0.0, energy=1.0, rim=None, frozen=False, cane=False, **kw):
+        if name == "opa" and not cane:                   # stok alleen als hij staat/loopt (cane=True), anders door tafels
+            kw["drop"] = tuple(kw.get("drop") or ()) + ("wandelstok",)
         if rim is None:
             rim = name.startswith("hoofdpersonage")
         ch = super().actor(name, loc, rot, energy, rim=rim, frozen=frozen, **kw)
@@ -298,6 +300,13 @@ class Scene3(_v2.Scene2):
                         hp = M @ pb[bn].tail
                         if (hp - hcen).length < hr * 0.6:
                             warn("HAND_DOOR_HOOFD", t, ch.name)
+                    # hand haalt zijn doel niet (arm te kort): figuur/doel dichterbij zetten
+                    ik = pb.get(f"hand_ik.{side}")
+                    fa = pb.get(f"forearm.{side}")
+                    if ik is not None and fa is not None and "Hand_IK" in fa.constraints \
+                            and fa.constraints["Hand_IK"].influence > 0.5:
+                        if ((M @ fa.tail) - (M @ ik.head)).length > 0.12:
+                            warn("ARM_REIKT_NIET", t, f"{ch.name} {side}")
                     # hele arm (boven- en onderarm, 5 punten per bot) mag niet in de hoofdbol zitten
                     hit = False
                     for ab in (f"upper_arm.{side}", f"forearm.{side}"):

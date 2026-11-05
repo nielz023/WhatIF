@@ -38,7 +38,7 @@ T.box("Foto_zand", (-2.072, 0.85, 1.45), (0.004, 0.42, 0.1), S.mat("foto_zand", 
 
 # ---------------------------------------------------------------- opa op de rand van het bed
 O_AT = V(-1.06, 0.38, 0)
-opa = S.actor("opa", O_AT, 90)
+opa = S.actor("opa", O_AT, 90, drop=("wandelstok",))
 spec, rz = sit(opa, seat_top=0.6, lean=-8)
 opa.rig.location.z = rz
 opa.rig.keyframe_insert("location", frame=F(0.0))

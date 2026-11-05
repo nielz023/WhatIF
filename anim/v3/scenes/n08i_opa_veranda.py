@@ -23,7 +23,7 @@ for o in list(bpy.data.objects):
 
 # ---------------------------------------------------------------- opa op de veranda, kijkt de straat in (-y)
 OPA_AT = V(-0.95, 11.95, 0.0)
-opa = S.actor("opa", OPA_AT, 0)
+opa = S.actor("opa", OPA_AT, 0, cane=True)
 FAR = V(-30.0, 1.0, 1.4)                                    # de straat in, naar links
 S.beat(opa, 0.0, "staan", face="neutraal", face_amt=0.6, at=FAR)
 S.beat(opa, 1.2, "staan", face="boos", face_amt=0.4, at=FAR + V(0, 0, 0.2))

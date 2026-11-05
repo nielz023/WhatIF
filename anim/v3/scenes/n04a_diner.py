@@ -38,7 +38,7 @@ stoel_b = T.box("Stoel_broertje", BRO_AT + V(0, 0.08, 0.0), (0.42, 0.42, 0.46), 
 bpy.context.view_layer.update()
 
 # ---------------------------------------------------------------- het gezin
-opa = S.actor("opa", OPA_AT, 0)
+opa = S.actor("opa", OPA_AT, 0, drop=("wandelstok",))       # stok niet door de tafel
 oma = S.actor("oma", OMA_AT, 0)
 held = S.actor("hoofdpersonage_kind", HERO_AT, 0)
 mama = S.actor("mama", MAMA_AT, 90)
@@ -51,13 +51,14 @@ for ch, at, r in ((opa, OPA_AT, 0), (oma, OMA_AT, 0), (held, HERO_AT, 0), (mama,
     SEAT[ch] = spec
     S.place(ch, 0, at + V(0, 0, z), r)
 PLATE = {opa: V(OPA_AT.x, TY + 0.25, TZ), oma: V(OMA_AT.x, TY + 0.25, TZ), held: V(HERO_AT.x, TY + 0.25, TZ),
-         mama: V(TX - 1.35, TY, TZ), papa: V(TX + 1.35, TY, TZ)}
+         mama: V(TX - 0.9, TY, TZ), papa: V(TX + 0.9, TY, TZ)}          # = Bord_kop_1/2 van de set (tafel TL 2.2)
 
 # schaal aardappels naast papa
-schaal = T.cyl("Schaal_aardappels", (TX + 1.0, TY - 0.05, TZ), 0.15, 0.08, S.mat("schaal_wit", (0.95, 0.94, 0.9)), seg=24, ol=0.003)
+SX, SY = TX + 0.98, TY - 0.28                       # schaal op tafel, naast papa's bord
+schaal = T.cyl("Schaal_aardappels", (SX, SY, TZ), 0.15, 0.08, S.mat("schaal_wit", (0.95, 0.94, 0.9)), seg=24, ol=0.003)
 rnd = __import__("random").Random(3)
 for k in range(9):
-    T.sphere(f"Aardappel_{k}", (TX + 1.0 + rnd.uniform(-0.09, 0.09), TY - 0.05 + rnd.uniform(-0.09, 0.09), TZ + 0.1),
+    T.sphere(f"Aardappel_{k}", (SX + rnd.uniform(-0.08, 0.08), SY + rnd.uniform(-0.08, 0.08), TZ + 0.1),
              0.035, S.mat("aardappel", (0.93, 0.78, 0.4)), scale=(1.2, 1, 0.9), seg=12, ol=0)
 pile = T.sphere("Aardappel_op_bord", PLATE[papa] + V(0, 0, 0.04), 0.035, S.mat("aardappel", (0.93, 0.78, 0.4)), scale=(1.3, 1, 0.8),
                 seg=12, ol=0)
@@ -68,7 +69,7 @@ pile.keyframe_insert("hide_render", frame=F(2.6))
 
 # ---------------------------------------------------------------- 4a: papa schept op (lepel goed vast, bolle kant naar beneden)
 lepel = cutlery(S, "opscheplepel", "Opscheplepel_papa")
-grab(S, lepel, papa, 0.0, "hand.R", loc=(0, 0.06, 0.0), rot=(-70, 0, 0))
+grab(S, lepel, papa, 0.0, "hand.R", loc=(0, 0.06, 0.0), rot=(-70, 0, 0), release=None)   # losgelaten bij 4b (zie lepel_rest)
 S.beat(papa, 0.0, **SEAT[papa], face="blij", face_amt=0.6, at=schaal.location + V(0, 0, 0.1))
 S.reach(papa, 0.3, "R", schaal.location + V(0.05, -0.05, 0.28))
 S.reach(papa, 0.9, "R", schaal.location + V(0.0, 0.0, 0.16))
@@ -106,8 +107,18 @@ for k, t in enumerate(frange(0.2, t_b + 0.6, 0.35)):
 
 # ---------------------------------------------------------------- 4b: papa steekt zijn hand uit, palm omhoog
 S.beat(papa, t_b, **SEAT[papa], face="zelfverzekerd", face_amt=0.6, at=S.head(bro))
-S.reach(papa, t_b - 0.1, "R", inf=0.0)
-lepel_rest = V(TX + 1.15, TY + 0.15, TZ + 0.01)
+S.reach(papa, t_b - 0.05, "R", inf=0.0)
+lepel_rest = V(TX + 0.98, TY + 0.0, TZ + 0.01)
+# hij legt de lepel op tafel vóór hij zijn hand uitsteekt (niet mee onder de tafel)
+S.reach(papa, t_b - 0.45, "R", lepel_rest + V(0.0, -0.04, 0.07))
+for c in lepel.constraints:
+    if c.type == "COPY_TRANSFORMS":
+        c.keyframe_insert("influence", frame=F(t_b - 0.3) - 1)
+        c.influence = 0.0
+        c.keyframe_insert("influence", frame=F(t_b - 0.3))
+lepel.location = lepel_rest
+lepel.rotation_euler = (0.0, 0.0, math.radians(90))
+lepel.scale = (1, 1, 1)
 S.beat(papa, t_b + 0.2, **SEAT[papa], face="zelfverzekerd", face_amt=0.7, at=S.head(bro),
        arms=arm("L", (0.25, 0.75, -0.45), (0.0, 1.0, 0.05), (0.0, 1.0, -0.2)), body={"spine": (6, 0, 0)})
 pl = S.say("N04-01", who=papa, at=t_b + 0.25)

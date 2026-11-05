@@ -317,10 +317,10 @@ def _setup_ik(rig):
         c.chain_count = 2
         c.pole_angle = math.radians(-90)
         c.influence = 0.0
-        c.use_stretch = True
-        # armen mogen een beetje rekken als iets net buiten bereik ligt (cartoon)
-        pbs["upper_arm." + s].ik_stretch = 0.12
-        pbs["forearm." + s].ik_stretch = 0.12
+        c.use_stretch = False
+        # armen rekken NOOIT (feedback niels 2026-11-05: uitgerekte armen); te ver = arm gestrekt richting doel
+        pbs["upper_arm." + s].ik_stretch = 0.0
+        pbs["forearm." + s].ik_stretch = 0.0
         cr = pbs["hand." + s].constraints.new("COPY_ROTATION")
         cr.name = "Hand_IK_rot"
         cr.target, cr.subtarget = rig, "hand_ik." + s
