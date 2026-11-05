@@ -128,9 +128,15 @@ for k in range(4):
     T.box(f"Kaart_vlag_{k}", tuple(p + V(0.018, 0, 0.065)), (0.035, 0.002, 0.022), S.mat(f"vlag_{k}", COLS[(k * 2) % 6]), base=False, bevel=0, ol=0)
 
 # ---------------------------------------------------------------- 15c: batterijen op tafel, een kaars terug
+# de markttafels smaller (0,5 m diep) en iedereen er vlak tegenaan: met hun korte armen halen ze anders het midden niet
+for k in range(3):
+    S.obj(f"Markttafel_{k}").scale.y = 0.625
+    for sx in ("-0.8", "0.8"):
+        for sy, dy in (("-0.32", -0.2), ("0.32", 0.2)):
+            S.obj(f"Markttafel_{k}_poot{sx}{sy}").location.y = 7.3 + dy
 TB = V(-16.0, 7.3, 0.9)
-koper = S.actor("figurant_a", V(-16.25, 6.45, 0.12), 180)            # kijkt naar +y, naar de tafel
-verk1 = S.actor("figurant_c", V(-15.75, 8.15, 0.12), 0)              # achter de tafel, kijkt naar -y
+koper = S.actor("figurant_a", V(-16.25, 6.8, 0.12), 180)             # kijkt naar +y, naar de tafel
+verk1 = S.actor("figurant_c", V(-15.75, 7.8, 0.12), 0)               # achter de tafel, kijkt naar -y
 for ch in (koper, verk1):
     S.beat(ch, 0.0, "staan", face="neutraal", face_amt=0.5, at=TB)
 bat = ST3.batterijen("Batterijen_koper", (0, 0, 0), n=6, seed=9)
@@ -145,7 +151,7 @@ bat.keyframe_insert("location", frame=F(T_PUT))
 # de kaars: de verkoper schuift hem naar de koper
 kaars = S.obj("Marktkaars_1")
 K0 = kaars.location.copy()
-K1 = V(-15.75, 7.0, K0.z)
+K1 = V(-15.7, 7.3, K0.z)                                            # naar het midden (verder reikt hij niet)
 T_PUSH0, T_PUSH1 = t_c + 1.3, t_c + 2.1
 for t, p in ((0.0, K0), (T_PUSH0, K0), (T_PUSH1, K1)):
     kaars.location = p
@@ -155,18 +161,18 @@ S.reach(verk1, T_PUSH0 - 0.3, "L", K0 + V(0, 0.08, 0.12))
 S.reach(verk1, T_PUSH0, "L", K0 + V(0, 0.06, 0.08))
 S.reach(verk1, T_PUSH1, "L", K1 + V(0, 0.06, 0.08))
 S.reach(verk1, T_PUSH1 + 0.4, "L", inf=0.0)
-S.beat(verk1, t_c + 0.4, "staan", face="neutraal", face_amt=0.6, at=bat.location + V(0, 0, 0))
+S.beat(verk1, t_c + 0.4, "staan", face="neutraal", face_amt=0.6, at=bat.location + V(0, 0, 0), body={"spine": (12, 0, 0)})
 S.beat(koper, t_c + 1.6, "staan", face="blij", face_amt=0.4, at=K1)
 
 # ---------------------------------------------------------------- 15d: de jongen ruilt strips voor kaarsen en water
 TS = V(-12.0, 7.3, 0.9)
-held = S.actor("hoofdpersonage_kind", V(-12.48, 6.45, 0.12), 180)    # (lantaarnpaal staat op x -12)
-ruil = S.actor("ruilmarktverkoper", V(-11.85, 8.15, 0.12), 0)
+held = S.actor("hoofdpersonage_kind", V(-12.48, 6.8, 0.12), 180)     # (lantaarnpaal staat op x -12)
+ruil = S.actor("ruilmarktverkoper", V(-12.0, 7.8, 0.12), 0)
 strips = ST3.stripboeken("Strips_jongen", (0, 0, 0), n=7, seed=11)
 T_LAY = t_d + 0.6
 grab(S, strips, held, 0.0, "hand.R", loc=(0.0, 0.08, 0.0), rot=(90, 0, 0), release=T_LAY)
 strips.rotation_mode = "XYZ"
-LAY = TS + V(-0.4, -0.15, 0.0)
+LAY = TS + V(-0.25, -0.15, 0.0)
 strips.location, strips.rotation_euler = LAY, (0, 0, math.radians(8))
 strips.keyframe_insert("location", frame=F(T_LAY))
 strips.keyframe_insert("rotation_euler", frame=F(T_LAY))
@@ -177,28 +183,28 @@ S.reach(held, t_d, "L", inf=0.0)
 S.beat(held, t_d, "staan", face="nerveus", face_amt=0.4, at=S.headpos(ruil, 0.0))
 S.beat(held, t_d + 1.0, "staan", face="nerveus", face_amt=0.5, at=LAY)
 # verkoper: likt aan zijn vinger, bladert, knikt, schuift de kaarsen en de fles terug
-MOUTH = S.bone_world(ruil, "head", t_d, tail=False) + V(0, -0.14, 0.05)
-for t, p in ((t_d + 0.6, MOUTH), (t_d + 0.85, MOUTH), (t_d + 1.15, LAY + V(0.06, 0.05, 0.06)), (t_d + 1.4, LAY + V(-0.04, 0.05, 0.07)),
-             (t_d + 1.65, LAY + V(0.06, 0.05, 0.06)), (t_d + 1.9, LAY + V(-0.04, 0.05, 0.07))):
+MOUTH = S.headpos(ruil, t_d + 0.6) + V(0.05, -0.36, -0.12)       # vinger vóór zijn mond (de arm blijft buiten het grote hoofd)
+for t, p in ((t_d + 0.6, MOUTH), (t_d + 0.85, MOUTH), (t_d + 1.15, LAY + V(0.06, 0.12, 0.06)), (t_d + 1.4, LAY + V(-0.04, 0.12, 0.07)),
+             (t_d + 1.65, LAY + V(0.06, 0.12, 0.06)), (t_d + 1.9, LAY + V(-0.04, 0.12, 0.07))):
     S.reach(ruil, t, "R", p)
 S.reach(ruil, t_d, "R", inf=0.0)
-S.beat(ruil, t_d, "staan", face="twijfel", face_amt=0.5, at=LAY)
+S.beat(ruil, t_d, "staan", face="twijfel", face_amt=0.5, at=LAY, body={"spine": (14, 0, 0)})
 for t, a in ((t_d + 2.1, 0), (t_d + 2.3, 14), (t_d + 2.5, 0), (t_d + 2.7, 12), (t_d + 2.9, 0)):
     A.bone_rot(ruil, F(t), "head", (a, 0, 0))
-S.beat(ruil, t_d + 2.1, "staan", face="blij", face_amt=0.6, at=S.headpos(held, 0.0))
+S.beat(ruil, t_d + 2.1, "staan", face="blij", face_amt=0.6, at=S.headpos(held, 0.0), body={"spine": (10, 0, 0)})
 ITEMS = []
 for k in range(3):
-    ITEMS.append(ST3.kaars(f"Ruilkaars_{k}", (TS.x + 0.2 + k * 0.07, TS.y + 0.22, TS.z), lit=False))
-fles = T.cyl("Ruilfles", (TS.x + 0.42, TS.y + 0.2, TS.z), 0.04, 0.3, T.glass("fles_water", (0.75, 0.9, 1.0), alpha=0.5), seg=12, ol=0)
+    ITEMS.append(ST3.kaars(f"Ruilkaars_{k}", (TS.x + 0.05 + k * 0.07, TS.y + 0.18, TS.z), lit=False))
+fles = T.cyl("Ruilfles", (TS.x + 0.27, TS.y + 0.16, TS.z), 0.04, 0.3, T.glass("fles_water", (0.75, 0.9, 1.0), alpha=0.5), seg=12, ol=0)
 ITEMS.append(fles)
 T_GIVE0, T_GIVE1 = t_d + 2.3, t_d + 3.1
 for o in ITEMS:
     p0 = o.location.copy()
-    for t, p in ((0.0, p0), (T_GIVE0, p0), (T_GIVE1, p0 + V(0, -0.3, 0))):
+    for t, p in ((0.0, p0), (T_GIVE0, p0), (T_GIVE1, p0 + V(0, -0.2, 0))):
         o.location = p
         o.keyframe_insert("location", frame=F(t))
-S.reach(ruil, T_GIVE0 - 0.2, "R", TS + V(0.3, 0.32, 0.1))
-S.reach(ruil, T_GIVE1, "R", TS + V(0.3, 0.02, 0.1))
+S.reach(ruil, T_GIVE0 - 0.2, "R", TS + V(0.12, 0.28, 0.1))
+S.reach(ruil, T_GIVE1, "R", TS + V(0.12, 0.08, 0.1))
 S.reach(ruil, T_GIVE1 + 0.4, "R", inf=0.0)
 S.beat(held, t_d + 2.6, "staan", face="blij", face_amt=0.6, at=TS + V(0.3, -0.1, 0))
 for ch in (held, ruil, koper, verk1, bv):
@@ -211,9 +217,9 @@ S.cam(0.0, ((-26.2, -2.6, 1.7), (-31.0, 2.8, 1.2), 24), ((-26.4, -2.2, 1.7), (-3
 S.cam(t_b1, ((MP.x, MP.y - 0.35, 2.6), MP, 28), ((MP.x, MP.y - 0.3, 2.3), MP, 28))
 S.cam(t_b2, ((MP.x - 0.2, MP.y - 0.9, 0.75), MP + V(-0.1, 0.0, 0), 30), ((MP.x - 0.15, MP.y - 0.8, 0.65), MP + V(-0.1, 0.05, 0), 32))
 # 15c DETAIL de tafel met batterijen en kaars
-S.cam(t_c, ((TB.x - 0.95, TB.y - 0.35, 2.0), TB + V(0.05, -0.08, 0.0), 30), ((TB.x - 0.88, TB.y - 0.32, 1.92), TB + V(0.05, -0.08, 0.0), 31))
+S.cam(t_c, ((TB.x - 2.2, TB.y - 0.3, 1.55), TB + V(0.1, 0.0, 0.4), 28), ((TB.x - 2.1, TB.y - 0.28, 1.55), TB + V(0.1, 0.0, 0.4), 29))   # langs de tafel: koper en verkoper staan er nu vlak tegenaan   # langs de tafel: de koper staat er nu vlak tegenaan
 # 15d MEDIUM de ruil, van opzij langs de tafel
-S.cam(t_d, ((TS.x - 1.95, TS.y - 1.25, 1.45), TS + V(-0.05, 0.05, 0.3), 30), ((TS.x - 1.85, TS.y - 1.18, 1.45), TS + V(-0.05, 0.05, 0.3), 31))
+S.cam(t_d, ((TS.x - 2.1, TS.y - 0.3, 1.45), TS + V(-0.05, 0.0, 0.4), 30), ((TS.x - 2.0, TS.y - 0.28, 1.45), TS + V(-0.05, 0.0, 0.4), 31))
 
 # ---------------------------------------------------------------- HUD, geluid en stem
 S.counter("DAY 14", 6, t0=0.0)

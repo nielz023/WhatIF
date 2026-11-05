@@ -29,7 +29,7 @@ T0, T1 = 0.2, 3.9
 for t, y in ((0.0, Y_START), (T0, Y_START), (T1, Y_END), (END, Y_END)):
     hek.location.y = y
     hek.keyframe_insert("location", frame=F(t))
-GAP = 0.55
+GAP = 0.4                                   # dicht bij het hek: de armen rekken niet
 pullers = []
 for k, (nm, dx) in enumerate((("volgeling_a", -0.55), ("volgeling_b", 0.55))):
     p0 = V(X9 + dx, Y_START - GAP, 0)
@@ -39,8 +39,8 @@ for k, (nm, dx) in enumerate((("volgeling_a", -0.55), ("volgeling_b", 0.55))):
     S.beat(e, T0, "staan", face="inspanning", face_amt=0.8, at=V(X9, Y_START, 0.9), body={"spine": (-10, 0, 0)}, feet="keep")
     S.beat(e, T1, "staan", face="inspanning", face_amt=0.6, at=V(X9, Y_END, 0.9), body={"spine": (-8, 0, 0)}, feet="keep")
     S.beat(e, T1 + 0.5, "staan", face="grijns", face_amt=0.6, at=V(1.0, -14.6, 1.5), feet="keep")
-    for side, sx in (("L", -0.18), ("R", 0.18)):
-        # personage kijkt naar +y: zijn linkerhand zit aan +x
+    for side, sx in (("L", 0.18), ("R", -0.18)):
+        # personage kijkt naar +y: zijn linkerhand zit aan -x
         hx = X9 + dx - sx
         for j in range(7):
             u = j / 6

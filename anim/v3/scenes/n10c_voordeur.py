@@ -70,14 +70,15 @@ S.beat(held, t_4 + 4.6, "staan", face="twijfel", face_amt=0.6, at=V(-2.0, 11.5, 
 # 10c5: papa trekt hem aan zijn onderarm naar binnen
 IN0 = V(-0.95, 12.4, 0.3)
 S.teleport(held, t_5, IN0, 20)
-S.walk(held, t_5 + 0.55, t_5 + 1.0, [IN0, V(-1.35, 12.75, 0.3)], stride=0.4, turn=False)
+S.walk(held, t_5 + 0.55, t_5 + 1.0, [IN0, V(-1.25, 12.8, 0.3)], stride=0.4, turn=False)
 visible(held.body, 0.0, True)
 visible(held.body, t_5 + 1.05, False)
 S.hold(held, END)
 
 # ---------------------------------------------------------------- de agent stapt uit het donker
 agent = S.actor("agent", (-5.2, 10.3, 0.02), 110)
-S.walk(agent, 0.55, 1.95, [V(-5.2, 10.3, 0.02), V(-3.3, 10.9, 0.02), V(-2.0, 11.75, 0.05)], stride=0.62)
+AG_END = V(-1.78, 12.0, 0.05)                              # vlak achter de jongen: zijn arm rekt niet
+S.walk(agent, 0.55, 1.95, [V(-5.2, 10.3, 0.02), V(-3.3, 10.9, 0.02), AG_END], stride=0.62)
 S.beat(agent, 1.95, "staan", face="neutraal", face_amt=0.5, at=S.head(held, 2.0), feet="keep")
 S.reach(agent, 0.0, "L", inf=0.0)
 S.reach(agent, 1.75, "L", inf=0.0)
@@ -88,7 +89,7 @@ S.reach(agent, t_4 + 0.45, "L", inf=0.0)
 S.beat(agent, t_4 + 0.5, "staan", face="neutraal", face_amt=0.6, at=S.head(held, t_4 + 0.5), feet="keep")
 S.beat(agent, t_4 + 1.5, "staan", face="blij", face_amt=0.25, at=S.head(held, t_4 + 1.5), feet="keep")
 S.beat(agent, t_5, "staan", face="neutraal", face_amt=0.5, at=V(-1.4, 12.6, 1.3), feet="keep")
-S.walk(agent, t_5 + 1.0, END, [V(-2.0, 11.75, 0.05), V(-2.5, 10.3, 0.02), V(-1.6, 8.6, 0.02)], stride=0.6)
+S.walk(agent, t_5 + 1.0, END, [AG_END, V(-2.5, 10.3, 0.02), V(-1.6, 8.6, 0.02)], stride=0.6)
 S.hold(agent, END)
 # zaklamp in zijn rechterhand, knipt aan en schijnt naar de grond
 zl = [T.cyl("Zaklamp_romp", (0, 0, -0.1), 0.022, 0.2, S.mat("zaklamp_zwart", (0.08, 0.08, 0.09)), seg=12, ol=0),
@@ -123,16 +124,18 @@ for f in range(F(0.0), F(END) + 1):
 S.reach(agent, 0.0, "R", inf=0.0)
 
 # ---------------------------------------------------------------- papa in de deuropening
-papa = S.actor("papa", (-1.6, 12.78, 0.3), 10)
+papa = S.actor("papa", (-1.45, 12.75, 0.3), 10)
 visible(papa.body, 0.0, False)
 visible(papa.body, T_OPEN + 0.1, True)
 visible(papa.body, T_SHUT - 0.15, False)
 S.beat(papa, T_OPEN, "staan", face="bang", face_amt=0.6, at=S.head(held, t_5 + 0.3))
-S.reach(papa, 0.0, "R", inf=0.0)
-S.reach(papa, T_OPEN + 0.2, "R", inf=0.0)
-FA = IN0 + V(-0.24, -0.05, 0.72)                        # rechteronderarm van de jongen (staat met zijn gezicht naar ons)
-S.reach(papa, T_OPEN + 0.35, "R", FA)
-S.reach(papa, t_5 + 1.0, "R", V(-1.35, 12.85, 1.0))
+S.reach(papa, 0.0, "L", inf=0.0)
+S.reach(papa, T_OPEN + 0.2, "L", inf=0.0)
+# rechterbovenarm van de jongen (staat met zijn gezicht naar ons), met papa's linkerhand: die is dichterbij
+FA = (S.bone_world(held, "upper_arm.R", t_5 + 0.3, tail=False) + S.bone_world(held, "upper_arm.R", t_5 + 0.3)) / 2
+S.reach(papa, T_OPEN + 0.35, "L", FA)
+S.reach(papa, t_5 + 1.0, "L", V(-1.3, 12.85, 1.1))
+S.walk(papa, t_5 + 0.5, t_5 + 1.0, [V(-1.45, 12.75, 0.3), V(-1.6, 13.15, 0.3)], stride=0.35, turn=False)   # stapt achteruit naar binnen
 S.hold(papa, END)
 
 # ---------------------------------------------------------------- camera's

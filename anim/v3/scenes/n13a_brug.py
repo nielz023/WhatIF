@@ -54,6 +54,7 @@ def grip(b, side):
 S.reach(held, 0.0, "L", grip(fh, "R"))
 S.reach(held, t_g - 0.05, "L", grip(fh, "R"))
 S.reach(held, 0.0, "R", inf=0.0)
+S.reach(held, t_g - 1.0 / FPS, "R", inf=0.0)               # rechterhand pas op de snede naar het stuur (geen trage overgang)
 S.beat(held, 0.0, "staan", face="vastberaden", face_amt=0.5, at=S.headpos(pest, 0.0), feet="keep")
 S.beat(held, t_c, "staan", face="vastberaden", face_amt=0.7, at=S.headpos(pest, 0.0), feet="keep")
 S.beat(held, t_e + 0.2, "staan", face="twijfel", face_amt=0.6, at=S.headpos(vr, 0.0), feet="keep")
@@ -64,7 +65,11 @@ S.say("N13-02", who=held, at=t_c + 0.3)
 for side in ("L", "R"):
     S.reach(vr, 0.0, side, grip(fv, side))
     S.reach(vr, t_e + 1.3, side, grip(fv, side))
-    S.reach(vr, t_e + 2.6, side, inf=0.0)
+    # langzaam loslaten: de hand glijdt van het stuur naar zijn zij (IK-doel binnen bereik), dan IK uit
+    sh_ = S.bone_world(vr, f"upper_arm.{side}", t_e + 2.6, tail=False)
+    S.reach(vr, t_e + 2.6, side, S._root_matrix(vr, t_e + 2.6) @ V(0.22 if side == "L" else -0.22, -0.06, 0) + V(0, 0, sh_.z - 0.42))
+    S.reach(vr, t_e + 2.75, side, inf=0.0)
+    S.reach(vr, t_f - 1.0 / FPS, side, inf=0.0)            # pas op de snede weer aan het stuur (vriend staat dan elders)
 S.beat(vr, 0.0, "staan", face="nerveus", face_amt=0.5, at=S.headpos(pest, 0.0), feet="keep")
 S.beat(vr, t_d + 0.9, "staan", face="geschrokken", face_amt=0.7, at=grip(fv, "L") + V(0.2, 0.3, 0), feet="keep")
 S.beat(vr, t_e, "staan", face="twijfel", face_amt=0.8, at=S.headpos(held, 0.0), feet="keep")
@@ -92,7 +97,7 @@ S.walk(vr, t_f + 0.1, T_WALK1, [F_START, F_STOP], stride=0.36, turn=False)
 OFF_B = V(-0.32, 0.16, 0)                     # fiets rechts naast hem, stuur net voor hem
 BIKE_TAKE = F_STOP + OFF_B
 # de pestkop komt een stap naar voren en pakt het stuur
-P1 = V(0.25, 1.15, 0)
+P1 = V(0.85, 0.5, 0)                         # vlak voor het stuur (linkerhandvat binnen bereik van zijn rechterhand)
 S.walk(pest, t_f + 1.6, T_TAKE - 0.05, [P0, P1], stride=0.3, turn=False)
 S.beat(pest, t_f + 1.2, "staan", face="grijns", face_amt=0.9, at=BIKE_TAKE + V(0, 0, 0.8), feet="keep")
 # daarna stapt hij met de fiets opzij (naar -x), de volgelingen gaan ook opzij
@@ -122,9 +127,9 @@ for f in range(F(0.0), F(END) + 1):
     else:
         M = S._root_matrix(pest, t)
         yaw = math.degrees(M.to_euler().z) - 90.0                  # pestkop kijkt (sin, -cos); fiets wijst dezelfde kant op
-        loc = M @ V(-0.55, -0.4, 0)                                # rechts voor hem
-        if t < T_TAKE + 0.25:                                      # zachte overgang van vriend naar pestkop
-            u = (t - T_TAKE) / 0.25
+        loc = M @ V(-0.5, 0.21, 0)                                 # rechts naast hem, handvat net voor zijn rechterschouder
+        if t < T_TAKE + 0.5:                                       # zachte overgang van vriend naar pestkop
+            u = (t - T_TAKE) / 0.5
             loc = (S._root_matrix(vr, T_TAKE) @ OFF_B).lerp(loc, u)
             yaw = 90.0 + (yaw - 90.0) * u
     if prev is not None:
@@ -142,9 +147,9 @@ for t in frange(t_f, END, 0.2):
     if t < T_TAKE:
         for side in ("L", "R"):
             S.reach(vr, t, side, grip(fv, side))
-    if t >= T_TAKE - 0.3:
-        S.reach(pest, t, "L", grip(fv, "L"))
-S.reach(pest, T_TAKE - 0.6, "L", inf=0.0)
+    if t >= T_TAKE - 0.15:                                   # pas als hij er staat
+        S.reach(pest, t, "R", grip(fv, "L"))
+S.reach(pest, T_TAKE - 0.4, "R", inf=0.0)
 S.reach(pest, 0.0, "L", inf=0.0)
 S.reach(pest, 0.0, "R", inf=0.0)
 S.reach(vr, T_TAKE + 0.15, "L", inf=0.0)

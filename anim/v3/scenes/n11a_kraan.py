@@ -22,15 +22,19 @@ for o in list(bpy.data.objects):
             c.hide_render = c.hide_viewport = True
 
 # ---------------------------------------------------------------- kraan: hendel bovenop, druppels uit de tuit
-TIP = V(-0.2, 1.845, 1.172)                                  # onderkant van de tuit
+# spoelbak en kraan 14 cm naar voren: met haar korte armen haalt mama de hendel achterop het aanrecht anders niet
+DY = -0.14
+for nm in ("Keukenkraan", "Keukenkraan_boog", "Spoelbak"):
+    S.obj(nm).location.y += DY
+TIP = V(-0.2, 1.845 + DY, 1.172)                             # onderkant van de tuit
 SINK_Z = 0.927                                               # bodem van de spoelbak (op de donkere binnenbak)
-T.box("Spoelbak_rand", (-0.2, 1.75, 0.921), (0.56, 0.4, 0.004), S.mat("spoelbak_rand", (0.8, 0.82, 0.86)), base=False, bevel=0.01, ol=0)
-T.box("Spoelbak_binnen", (-0.2, 1.75, 0.923), (0.48, 0.32, 0.004), S.mat("spoelbak_binnen", (0.32, 0.35, 0.4)), base=False, bevel=0.02, ol=0)
-T.cyl("Spoelbak_putje", (-0.2, 1.75, 0.9255), 0.02, 0.002, S.mat("putje", (0.15, 0.15, 0.17)), seg=16, ol=0)
+T.box("Spoelbak_rand", (-0.2, 1.75 + DY, 0.921), (0.56, 0.4, 0.004), S.mat("spoelbak_rand", (0.8, 0.82, 0.86)), base=False, bevel=0.01, ol=0)
+T.box("Spoelbak_binnen", (-0.2, 1.75 + DY, 0.923), (0.48, 0.32, 0.004), S.mat("spoelbak_binnen", (0.32, 0.35, 0.4)), base=False, bevel=0.02, ol=0)
+T.cyl("Spoelbak_putje", (-0.2, 1.75 + DY, 0.9255), 0.02, 0.002, S.mat("putje", (0.15, 0.15, 0.17)), seg=16, ol=0)
 STEEL = S.mat("kraan_staal", (0.78, 0.80, 0.84))
 piv = bpy.data.objects.new("Kraan_hendel_as", None)
 bpy.context.scene.collection.objects.link(piv)
-piv.location = (-0.2, 2.01, 1.225)
+piv.location = (-0.2, 2.01 + DY, 1.225)
 lever = T.box("Kraan_hendel", (0.045, 0, 0.012), (0.09, 0.016, 0.012), STEEL, base=False, bevel=0.004, ol=0.002)
 knob = T.sphere("Kraan_hendel_knop", (0.09, 0, 0.012), 0.012, STEEL, seg=10, ol=0)
 cap = T.cyl("Kraan_hendel_voet", (0, 0, 0.004), 0.022, 0.016, STEEL, seg=16, ol=0.002)
@@ -47,8 +51,9 @@ for t, a in LEV:
 
 
 def lever_tip(t):
+    """Waar ze de hendel vastpakt (iets voor de knop, dichter bij haar)."""
     S.sc.frame_set(F(t))
-    return piv.matrix_world @ V(0.09, 0, 0.012)
+    return piv.matrix_world @ V(0.06, 0, 0.012)
 
 
 WATER = S.mat("waterdruppel", (0.62, 0.82, 0.98), 0.6)
@@ -110,37 +115,37 @@ drop("Druppel_2", 1.85, 2.5, r=0.009)
 drop("Druppel_3", 2.75, END + 1, r=0.007, stay=True)        # blijft hangen, valt niet meer
 
 # ---------------------------------------------------------------- mama aan het aanrecht
-M_AT = V(-0.12, 1.12, 0)
+M_AT = V(-0.36, 1.34, 0)                                  # tegen het aanrecht, links van de kraan; ze leunt erover
 mama = S.actor("mama", M_AT, 180)
 for o in [mama.rig] + list(mama.rig.children_recursive):      # 11a is een detail van de kraan: mama pas in 11b in beeld
     visible(o, 0.0, False)
     visible(o, t_b, True)
 LOOK = TIP + V(0, 0.1, 0.22)                                # naar de kraan, niet steil omlaag
-S.beat(mama, 0.0, "staan", face="twijfel", face_amt=0.6, at=LOOK, body={"spine": (5, 0, 0)})
+S.beat(mama, 0.0, "staan", face="twijfel", face_amt=0.6, at=LOOK, body={"spine": (14, 0, 0)})
 S.reach(mama, 0.0, "L", inf=0.0)
 S.reach(mama, END, "L", inf=0.0)
 for t, a in LEV:
     S.reach(mama, t, "R", lever_tip(t) + V(0.0, -0.03, 0.03))
 # knokkel: tikt twee keer op de tuit, dan valt de hand en zucht ze
-TAP = V(-0.2, 1.93, 1.24)
-for t, dz in ((t_b + 2.45, 0.08), (t_b + 2.6, 0.0), (t_b + 2.72, 0.07), (t_b + 2.84, 0.0)):
+TAP = V(-0.2, 1.93 + DY, 1.24)
+for t, dz in ((t_b + 2.45, 0.05), (t_b + 2.6, 0.0), (t_b + 2.72, 0.045), (t_b + 2.84, 0.0)):   # korte tikjes: arm blijft onder het hoofd uit
     S.reach(mama, t, "R", TAP + V(0.0, -0.04, dz))
 S.reach(mama, t_b + 3.1, "R", inf=0.0)
 S.reach(mama, END, "R", inf=0.0)
-S.beat(mama, t_b + 0.6, "staan", face="nerveus", face_amt=0.6, at=LOOK, body={"spine": (5, 0, 0)})
-S.beat(mama, t_b + 1.5, "staan", face="verbaasd", face_amt=0.5, at=LOOK, body={"spine": (5, 0, 0)})
-S.beat(mama, t_b + 2.4, "staan", face="boos", face_amt=0.4, at=LOOK, body={"spine": (9, 0, 0)})
-S.beat(mama, t_b + 3.0, "staan", face="twijfel", face_amt=0.8, at=LOOK + V(0.1, 0, -0.08), body={"spine": (4, 0, 0), "chest": (6, 0, 0)})
+S.beat(mama, t_b + 0.6, "staan", face="nerveus", face_amt=0.6, at=LOOK, body={"spine": (14, 0, 0)})
+S.beat(mama, t_b + 1.5, "staan", face="verbaasd", face_amt=0.5, at=LOOK, body={"spine": (14, 0, 0)})
+S.beat(mama, t_b + 2.4, "staan", face="boos", face_amt=0.4, at=LOOK, body={"spine": (14, 0, 0)})
+S.beat(mama, t_b + 3.0, "staan", face="twijfel", face_amt=0.8, at=LOOK + V(0.1, 0, -0.08), body={"spine": (8, 0, 0), "chest": (6, 0, 0)})
 S.beat(mama, END, "staan", face="twijfel", face_amt=0.9, at=LOOK + V(0.3, -0.2, -0.1), body={"spine": (3, 0, 0), "chest": (9, 0, 0)})
 A.blink_at(mama, F(t_b + 3.15), closed=5)
 S.hold(mama, END)
 
 # ---------------------------------------------------------------- camera's
 # 11a DETAIL de tuit en de spoelbak, net boven het aanrecht
-S.cam(0.0, ((0.15, 1.3, 1.25), (-0.2, 1.86, 1.06), 35), ((0.12, 1.34, 1.23), (-0.2, 1.86, 1.06), 39))
+S.cam(0.0, ((0.15, 1.3 + DY, 1.25), (-0.2, 1.86 + DY, 1.06), 35), ((0.12, 1.34 + DY, 1.23), (-0.2, 1.86 + DY, 1.06), 39))
 # 11b MEDIUM vanaf het aanrecht rechts, langs de muur: mama 3/4 van voren aan de kraan
 S.wall(t_b, END + 1, "front")                              # tegenshot naar -y: voormuur dicht
-S.cam(t_b, ((0.42, 2.0, 1.4), (-0.15, 1.25, 1.32), 18), ((0.4, 1.98, 1.39), (-0.15, 1.25, 1.32), 19))
+S.cam(t_b, ((0.42, 2.0, 1.4), (-0.3, 1.3, 1.32), 18), ((0.4, 1.98, 1.39), (-0.3, 1.3, 1.32), 19))
 
 # ---------------------------------------------------------------- HUD, geluid en stem
 S.counter("DAY 5", 0, t0=0.0)

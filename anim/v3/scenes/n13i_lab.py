@@ -26,7 +26,7 @@ BOX0 = box.matrix_world.translation.copy()
 box.scale = (1.5, 1.5, 1.5)
 
 # ---------------------------------------------------------------- de wetenschapper (man) en de jongen
-W0 = V(2.42, 1.86, 0)
+W0 = V(2.15, 2.05, 0)                                            # vlak voor de kast, doosje rechts voor hem (korte armen)
 wet = S.actor("wetenschapper", W0, 180)                          # kijkt naar +y, de kast in
 male_scientist(S, wet)
 H_AT = V(2.2, -1.05, 0)
@@ -37,7 +37,7 @@ for o in list(bpy.data.objects):
 
 T_GRAB = 0.75
 S.beat(wet, 0.0, "staan", face="neutraal", face_amt=0.5, at=BOX0)
-S.reach(wet, 0.0, "R", inf=0.0)
+S.reach(wet, 0.0, "R", BOX0 + V(0.0, -0.12, 0.06))                # zijn hand gaat al naar het doosje als het shot begint
 S.reach(wet, T_GRAB - 0.35, "R", BOX0 + V(0.0, -0.12, 0.06))
 S.reach(wet, T_GRAB, "R", BOX0 + V(0.0, -0.02, 0.03))
 grab(S, box, wet, T_GRAB, "hand.R", loc=(0.0, 0.07, 0.0), rot=(0, 0, 90))
@@ -59,6 +59,7 @@ S.say("N13-05", who=held, at=t_i2 + 0.25)
 P = V(2.24, -0.55, 0.92)
 T_GIVE, T_REL, T_OFF = t_j + 1.0, t_j + 1.6, t_j + 3.6
 S.beat(wet, t_j, "staan", face="vastberaden", face_amt=0.6, at=S.headpos(held, 0.0), arms=HOLD_FRONT_R, feet="keep")
+S.reach(wet, t_j, "R", inf=0.0)                                   # IK pas na de snede aan (geen trage overgang tijdens 13i)
 S.reach(wet, t_j + 0.3, "R", P + V(0.0, 0.18, 0.12))
 S.reach(wet, T_GIVE, "R", P + V(0.0, 0.05, 0.06))
 S.reach(wet, T_REL, "R", P + V(0.0, 0.0, 0.1))                    # hand bovenop het doosje

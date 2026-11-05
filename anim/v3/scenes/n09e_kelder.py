@@ -20,7 +20,7 @@ for o in list(bpy.data.objects):
             c.hide_render = c.hide_viewport = True
 
 # ---------------------------------------------------------------- de doos met blikken
-BOX0 = V(-0.2, -0.6, 0.76)
+BOX0 = V(-0.31, -0.6, 0.76)                               # aan de tafelrand, zodat ze erbij kan
 BW, BD, BH = 0.46, 0.34, 0.28
 CARD = S.mat("karton", (0.72, 0.55, 0.36))
 doos = T.box("Doos_blikken", (0, 0, 0), (BW, BD, BH), CARD, bevel=0.01, ol=0.004)
@@ -34,12 +34,12 @@ doos.location = BOX0
 blik = T.cyl("Blik_laatste", (0, 0, 0), 0.045, 0.12, CANS[0], seg=14, ol=0.003)
 
 # ---------------------------------------------------------------- mama
-M_AT = V(-0.95, -0.6, 0)
+M_AT = V(-0.74, -0.6, 0)                                  # vlak aan tafel (korte armen)
 mama = S.actor("mama", M_AT, 90)
 S.beat(mama, 0.0, "staan", face="vastberaden", face_amt=0.6, at=BOX0 + V(0, 0, 0.1))
 T_DROP, T_GRIP, T_LIFT, T_TURN, T_WALK = 0.7, 1.05, 1.45, 1.6, 2.0
-S.reach(mama, 0.0, "R", BOX0 + V(-0.05, 0.25, 0.42))
-S.reach(mama, T_DROP, "R", BOX0 + V(0.0, 0.05, 0.36))
+S.reach(mama, 0.0, "R", BOX0 + V(-0.08, -0.05, 0.42))
+S.reach(mama, T_DROP, "R", BOX0 + V(-0.08, -0.05, 0.36))
 S.reach(mama, 0.0, "L", inf=0.0)
 S.reach(mama, T_DROP, "L", inf=0.0)
 grab(S, blik, mama, 0.0, "hand.R", loc=(0, 0.06, 0.0))
@@ -55,7 +55,7 @@ for t in frange(T_WALK, END, 0.4):
 S.hold(mama, END)
 
 # de doos: ligt op tafel tot het optillen, daarna vast voor haar buik (per frame uit de stand van haar wortel)
-CARRY = V(0.0, -0.38, 0.6)                                 # lokaal: voor haar (-y), op buikhoogte
+CARRY = V(0.0, -0.32, 0.78)                                # lokaal: voor haar (-y), tegen haar buik (korte armen)
 doos.rotation_mode = "XYZ"
 for f in range(F(0.0), F(END) + 1):
     t = (f - 1) / FPS

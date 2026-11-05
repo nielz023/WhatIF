@@ -72,6 +72,8 @@ for f in range(F(0.0), F(t_3)):
 for t, off in ((T_SLING, V(-0.32, 0.0, 1.2)), (T_SLING + 0.25, V(-0.28, 0.12, 1.32)), (T_SLING + 0.5, V(-0.24, -0.02, 1.15))):
     S.reach(held, t, "R", S._root_matrix(held, t) @ off)
 S.reach(held, T_SLING + 0.75, "R", inf=0.0)
+for sd in ("L", "R"):                                         # IK blijft uit tot hij op de fiets zit (geen trage overgang naar het stuur)
+    S.reach(held, t_3 - 1.0 / FPS, sd, inf=0.0)
 S.face(held, t_2, "vastberaden", 0.7, look=(0.3, 0.1))
 
 # ---------------------------------------------------------------- zijn fiets staat geparkeerd op de stoep (tot de cut naar 11e-3)

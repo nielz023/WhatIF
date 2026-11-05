@@ -25,15 +25,16 @@ END = sh[-1][1]
 t_e, t_f, t_g, t_h, t_i, t_j, t_k = [s[0] for s in sh[1:]]
 rnd = random.Random(10)
 
-# ---------------------------------------------------------------- kaarsen: eerst uit, mama steekt de middelste aan
-CANDLE = S.obj("Kaars_tafel_1")
+# ---------------------------------------------------------------- kaarsen: eerst uit, mama steekt die aan haar kant aan
+CANDLE = S.obj("Kaars_tafel_2")
+CANDLE.location.y = -0.8                                  # iets naar mama toe geschoven: haar korte armen halen hem zo
 for k in range(3):
     fl, lt = S.obj(f"Kaars_tafel_{k}_vlam"), S.obj(f"Kaars_tafel_{k}_licht")
-    if k != 1:
+    if k != 2:
         fl.hide_render = fl.hide_viewport = True
         lt.data.energy = 0.0
 T_LIT = t_f + 2.2
-fl1, lt1 = S.obj("Kaars_tafel_1_vlam"), S.obj("Kaars_tafel_1_licht")
+fl1, lt1 = S.obj("Kaars_tafel_2_vlam"), S.obj("Kaars_tafel_2_licht")
 visible(fl1, 0.0, False)
 visible(fl1, T_LIT, True)
 light_key(lt1, 0.0, 0.0)
@@ -124,11 +125,13 @@ light_key(llt, 0.0, 0.0)
 light_key(llt, t_f + 0.95, 10.0)
 light_key(llt, T_LIT + 0.5, 0.0)
 grab(S, luc, mama, 0.0, "hand.R", loc=(0, 0.05, 0.0), rot=(90, 0, 0))
-CPOS = CANDLE.matrix_world.translation + V(0, 0, 0.24)
+bpy.context.view_layer.update()
+CPOS = CANDLE.matrix_world.translation + V(0, 0, 0.32)
 S.reach(mama, 0.0, "R", inf=0.0)
-S.reach(mama, t_f + 0.3, "R", V(0.45, -0.95, 0.85))                      # doosje, anticipatie
-S.reach(mama, t_f + 0.75, "R", V(0.45, -0.95, 0.85))
-S.reach(mama, t_f + 0.95, "R", V(0.30, -0.80, 0.90))                     # korte haal
+S.reach(mama, t_f + 0.05, "R", inf=0.0)
+S.reach(mama, t_f + 0.3, "R", V(0.55, -1.0, 0.85))                       # doosje, anticipatie (dicht bij haar: korte armen)
+S.reach(mama, t_f + 0.75, "R", V(0.55, -1.0, 0.85))
+S.reach(mama, t_f + 0.95, "R", V(0.47, -0.95, 0.90))                     # korte haal
 S.reach(mama, t_f + 1.6, "R", CPOS + V(0.05, -0.12, 0.0))
 S.reach(mama, T_LIT, "R", CPOS + V(0.02, -0.06, -0.01))
 S.reach(mama, T_LIT + 0.6, "R", V(0.5, -1.0, 0.82))

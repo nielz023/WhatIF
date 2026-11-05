@@ -50,7 +50,7 @@ def local(p, rot, lx, ly, lz=0.0):
 
 # ---------------------------------------------------------------- de kring
 RING = [  # naam, hoek, straal
-    ("hoofdpersonage_kind", 155, 2.7), ("opa", 138, 3.0), ("oma", 118, 3.3), ("broertje", 100, 2.6),
+    ("hoofdpersonage_kind", 155, 2.7), ("opa", 141, 2.95), ("oma", 118, 3.3), ("broertje", 100, 2.6),
     ("mama", 80, 3.0), ("papa", 63, 3.2), ("buurman", 32, 3.2), ("figurant_d", 8, 3.4),
     ("figurant_e", -37, 3.3), ("agent", -60, 3.0), ("kind_a", -78, 2.5), ("figurant_a", -97, 3.2),
     ("kind_b", -112, 2.5), ("figurant_b", -128, 3.3), ("figurant_c", -155, 3.3), ("beste_vriend", 176, 2.8),
@@ -138,7 +138,7 @@ S.beat(held, 0.0, "staan", face="nerveus", face_amt=0.4, at=FH)
 
 # 14b: opa staat rechtop, tikt de jongen op zijn schouder en knikt
 S.beat(opa, t_b, "staan", face="blij", face_amt=0.5, at=S.headpos(held, 0.0), feet="keep")
-SH = S.bone_world(held, "upper_arm.R", t_b + 0.6, tail=False) + V(0, 0, 0.05)
+SH = S.bone_world(held, "upper_arm.L", t_b + 0.6, tail=False) + V(0, 0, 0.05)   # de schouder aan opa's kant
 S.reach(opa, t_b + 0.3, "R", inf=0.0)
 for t, dz in ((t_b + 0.8, 0.06), (t_b + 1.0, 0.0), (t_b + 1.2, 0.05), (t_b + 1.4, 0.0), (t_b + 2.2, 0.0)):
     S.reach(opa, t, "R", SH + V(0, 0, dz))
@@ -214,14 +214,19 @@ T_HANDS = [t_g + 0.2, t_g + 0.9] + [t_g + 1.4 + 0.12 * k + rnd.uniform(0, 0.15) 
 T_HANDS[-1] = t_g + 3.0                          # de buurman als laatste
 for n, t in zip(ORDER, T_HANDS):
     ch = C[n]
-    hp = S.headpos(ch, t)
     side = "R" if n not in ("mama", "kind_b") else "L"
-    up = local(V(hp.x, hp.y, 0), ROT[n], (-0.22 if side == "R" else 0.22), 0.02, hp.z + 0.45)
-    S.reach(ch, t - 0.25, side, inf=0.0)
+    S.beat(ch, t, "staan", face="blij", face_amt=0.6, at=OH, feet="keep")
+    # hand omhoog vanaf de schouder: schuin naar buiten en iets naar voren, langs het grote hoofd (arm rekt niet)
+    sh_ = S.bone_world(ch, f"upper_arm.{side}", t + 0.3, tail=False)
+    arm = ((ch.J[f"elbow.{side}"] - ch.J[f"shoulder.{side}"]).length + (ch.J[f"wrist.{side}"] - ch.J[f"elbow.{side}"]).length) * ch.rig.scale.z
+    d = local(V(0, 0, 0), ROT[n], (-0.5 if side == "R" else 0.5), -0.25, 0.83).normalized()
+    up = sh_ + d * arm * 0.9
+    wr = S.bone_world(ch, f"hand.{side}", t - 0.25, tail=False)     # IK eerst aan op de hangende hand, dan omhoog
+    S.reach(ch, t - 0.25, side, wr, inf=0.0)
+    S.reach(ch, t - 0.1, side, wr)
     S.reach(ch, t + 0.3, side, up)
     S.reach(ch, t_h - 0.05, side, up)
     S.reach(ch, t_h, side, inf=0.0)
-    S.beat(ch, t, "staan", face="blij", face_amt=0.6, at=OH, feet="keep")
 S.beat(broer, t_g + 1.2, "juichen", face="lach", face_amt=0.9, at=OH, feet="keep")
 for t, dz in ((t_g + 1.5, 0.0), (t_g + 1.75, 0.28), (t_g + 2.0, 0.0), (t_g + 2.3, 0.0), (t_g + 2.55, 0.25), (t_g + 2.8, 0.0)):
     S.place(broer, t, POS["broertje"] + V(0, 0, dz))

@@ -49,7 +49,7 @@ for f in range(F(0.0), F(W_END) + 1):
     t = (f - 1) / FPS
     for ch, b, side in ((held, fh, 1.0), (vr, fv, -1.0)):
         M = S._root_matrix(ch, t)
-        b.location = M @ V(-side * 0.6, -0.3, 0)                     # fiets naast hem (rechts van de jongen, links van de vriend)
+        b.location = M @ V(-side * 0.5, -0.1, 0)                     # fiets naast hem (rechts van de jongen, links van de vriend), stuur binnen armbereik
         b.keyframe_insert("location", frame=f)
 for t in frange(0.0, W_END + 0.01, 0.2):
     S.sc.frame_set(F(t))
@@ -136,6 +136,7 @@ la_key(3, T3 + 0.4, 0.3)
 S.sc.frame_set(1)
 G0 = LA[0].matrix_world @ V(0, 0.06, 0.12)
 G3 = LA[3].matrix_world @ V(0, 0.06, 0.12)
+S.reach(held, t_e2 - 1.0 / FPS, "R", inf=0.0)               # IK pas aan op de snede (geen trage overgang tijdens 12e)
 S.reach(held, t_e2, "R", G0 + V(0.05, 0, 0.12))
 S.reach(held, T1, "R", G0 + V(0.03, 0, 0))
 S.reach(held, T1 + 0.25, "R", G0 + V(0.35, 0, 0))
@@ -147,9 +148,10 @@ S.reach(held, T3 + 0.08, "R", G0 + V(0.02, 0, 0.02))      # klap
 S.reach(held, t_f - 0.05, "R", G0 + V(0.2, 0, 0.15))
 S.reach(held, t_e2, "L", inf=0.0)
 S.reach(held, t_f - 0.05, "L", inf=0.0)
-S.beat(held, t_e2 + 0.2, "staan", face="vastberaden", face_amt=0.6, at=G0 + V(0.3, 0, 0), body={"spine": (14, 0, 0)}, crouch=(0.08, 10), feet="keep")
-S.beat(held, T2 - 0.1, "staan", face="nerveus", face_amt=0.7, at=G3 + V(0.3, 0, 0), body={"spine": (20, 0, 0)}, crouch=(0.18, 14), feet="keep")
-S.beat(held, T3 + 0.1, "staan", face="boos", face_amt=0.8, at=G0 + V(-0.3, 0, 0.3), body={"spine": (8, 0, 0)}, crouch=(0.05, 6), feet="keep")
+# hij staat stil: zonder feet="keep" werkt het door de knieën gaan echt (anders haalt hij de laatjes niet)
+S.beat(held, t_e2 + 0.2, "staan", face="vastberaden", face_amt=0.6, at=G0 + V(0.3, 0, 0), body={"spine": (14, 0, 0)}, crouch=(0.18, 12))
+S.beat(held, T2 - 0.1, "staan", face="nerveus", face_amt=0.7, at=G3 + V(0.3, 0, 0), body={"spine": (20, 0, 0)}, crouch=(0.33, 22))
+S.beat(held, T3 + 0.1, "staan", face="boos", face_amt=0.8, at=G0 + V(-0.3, 0, 0.3), body={"spine": (8, 0, 0)}, crouch=(0.12, 8))
 
 # ---------------------------------------------------------------- 12f: leunt met twee handen op het blad, hoofd zakt
 H_F = V(COUNTER_STAFF_X + 0.48, ap(-0.2, 0).y, 0)
@@ -159,7 +161,7 @@ held.rig.keyframe_insert("location", frame=F(t_f))
 for t in (t_f, END):
     S.reach(held, t, "L", V(COUNTER_STAFF_X - 0.12, H_F.y - 0.22, TOP_Z + 0.04))
     S.reach(held, t, "R", V(COUNTER_STAFF_X - 0.12, H_F.y + 0.22, TOP_Z + 0.04))
-S.beat(held, t_f, "staan", face="boos", face_amt=0.5, at=V(10.0, H_F.y, 1.0), body={"spine": (10, 0, 0)}, feet="keep")
+S.beat(held, t_f, "staan", face="boos", face_amt=0.5, at=V(10.0, H_F.y, 1.0), body={"spine": (10, 0, 0)})
 S.beat(held, t_f + 1.6, "staan", face="twijfel", face_amt=0.9, at=V(12.6, H_F.y, 0.4), body={"spine": (16, 0, 0), "chest": (6, 0, 0)}, feet="keep")
 S.beat(held, END, "staan", face="twijfel", face_amt=1.0, at=V(12.8, H_F.y, 0.2), body={"spine": (18, 0, 0), "chest": (8, 0, 0)}, feet="keep")
 S.say("N12-03", who=held, at=t_f + 0.2)

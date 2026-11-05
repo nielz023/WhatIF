@@ -37,13 +37,16 @@ hm = [T.cyl("Hamer_steel", (0, 0, -0.06), 0.014, 0.3, S.mat("hamer_steel", (0.55
 hamer = T.merge("Hamer", hm, ol=0.003)
 
 # ---------------------------------------------------------------- papa
-papa = S.actor("papa", (WX + 0.45, WY - 0.62, 0.12), 180)
+# hij staat op een krat dicht bij de gevel: met zijn korte armen haalt hij de bovenste plank anders niet
+KZ = 0.25
+T.box("Krat", (WX + 0.45, WY - 0.44, 0.12), (0.5, 0.36, KZ), S.mat("krat_rood", (0.62, 0.12, 0.1)), bevel=0.01, ol=0.004)
+papa = S.actor("papa", (WX + 0.45, WY - 0.44, 0.12 + KZ), 180)
 S.beat(papa, 0.0, "staan", face="vastberaden", face_amt=0.7, at=V(NX, WY, ZP))
 # linkerhand houdt de plank tegen het kozijn
-S.reach(papa, 0.0, "L", V(WX + 0.1, WY - 0.06, ZP - 0.02))
-S.reach(papa, END, "L", V(WX + 0.1, WY - 0.06, ZP - 0.02))
+S.reach(papa, 0.0, "L", V(WX + 0.1, WY - 0.06, ZP - 0.07))
+S.reach(papa, END, "L", V(WX + 0.1, WY - 0.06, ZP - 0.07))
 HIT = V(NX - 0.05, WY - 0.3, ZP - 0.08)                     # pols bij de slag (hamerkop op de spijker)
-UPP = V(NX - 0.05, WY - 0.55, ZP + 0.32)                    # pols bij de anticipatie
+UPP = V(NX - 0.03, WY - 0.57, ZP + 0.02)                    # pols bij de anticipatie (naast het hoofd, naar achter)
 S.reach(papa, 0.0, "R", HIT + V(0, -0.1, 0.05))
 HITS = (0.75, 1.45, 2.15, 2.85)
 for k, th in enumerate(HITS):
@@ -85,7 +88,7 @@ for f in range(F(0.0), F(END) + 1):
     hamer.keyframe_insert("rotation_quaternion", frame=f)
 
 # ---------------------------------------------------------------- camera: handheld medium, schuin van opzij
-S.cam(0.0, ((WX + 2.9, WY - 1.25, 1.75), (WX + 0.35, WY - 0.45, 1.6), 30), ((WX + 2.7, WY - 1.15, 1.75), (WX + 0.35, WY - 0.45, 1.6), 32), handheld=0.35)
+S.cam(0.0, ((WX + 2.9, WY - 1.25, 1.95), (WX + 0.35, WY - 0.45, 1.8), 30), ((WX + 2.7, WY - 1.15, 1.95), (WX + 0.35, WY - 0.45, 1.8), 32), handheld=0.35)
 
 S.counter("DAY 3", 0, t0=0.0)
 S.ambience("sfx_straat_sfeer", 0.0, END, vol=0.03)
