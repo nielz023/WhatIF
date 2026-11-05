@@ -235,6 +235,7 @@ nav.tabs .badge { position: absolute; top: 2px; left: 56%; min-width: 16px; heig
   <button role="tab" data-go="threads" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Threads</button>
 </nav>
 
+<script type="module" src="./kantoor/kantoor-boot.js"></script>
 <script>
 (function () {
   "use strict";
@@ -267,11 +268,14 @@ nav.tabs .badge { position: absolute; top: 2px; left: 56%; min-width: 16px; heig
   function openOffice() {
     if (K) { K.mount($("kantoor-root"), onAgent); return; }
     if (kLoading) return; kLoading = true;
-    if (!document.getElementById("kcss")) { var l = document.createElement("link"); l.id = "kcss"; l.rel = "stylesheet"; l.href = "kantoor/kantoor.css"; document.head.appendChild(l); }
-    import(new URL("kantoor/kantoor.js", document.baseURI).href).then(function (m) {
-      K = m; kLoading = false; $("kload").hidden = true;
+    if (!document.getElementById("kcss")) { var l = document.createElement("link"); l.id = "kcss"; l.rel = "stylesheet"; l.href = "./kantoor/kantoor.css"; document.head.appendChild(l); }
+    var ready = function () {
+      K = window.__DM_KANTOOR__; kLoading = false; $("kload").hidden = true;
       if (location.hash.slice(1) === "kantoor") K.mount($("kantoor-root"), onAgent);
-    }).catch(function (e) { kLoading = false; $("kload").textContent = "Het kantoor kon niet laden (" + (e && e.message || "fout") + "). Tik op Kantoor om het opnieuw te proberen."; });
+    };
+    if (window.__DM_KANTOOR__) { ready(); return; }
+    window.addEventListener("dm-kantoor", ready, { once: true });
+    setTimeout(function () { if (!K) $("kload").textContent = "Het kantoor laadt nog… (bij een trage verbinding kan dit even duren)"; }, 8000);
   }
   function closeOffice() { if (K) { K.unmount(); onAgent(null); } }
   function onAgent(a) {

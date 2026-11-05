@@ -8,9 +8,10 @@ out = src.replace("<script>\n(function", "<script>window.__DM_SEED__=" + seed + 
 d = here / "dist"; (d / "img").mkdir(parents=True, exist_ok=True)
 (d / "page.html").write_text(out)
 for f in (here / "assets").iterdir():
-    if f.is_file(): shutil.copy(f, d / "img" / f.name)
+    if f.is_file() and f.suffix != ".js": shutil.copy(f, d / "img" / f.name)
 shutil.rmtree(d / "kantoor", ignore_errors=True)
 shutil.copytree(here / "assets" / "kantoor", d / "kantoor")
+shutil.copy(here / "assets" / "kantoor-boot.js", d / "kantoor" / "kantoor-boot.js")
 import re
 for name in sorted(set(re.findall(r"\./img/([a-z0-9_]+\.jpg)", (here.parent / "src/components/office/DriftmarkDecor.tsx").read_text()))):
     shutil.copy(here.parent / "public/img" / name, d / "img" / name)
