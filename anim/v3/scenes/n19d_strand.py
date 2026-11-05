@@ -24,6 +24,18 @@ for o in list(bpy.data.objects):
         o.hide_render = o.hide_viewport = True
 
 SIGN = V(1.0, -14.5, 1.65)
+# handgeschilderd bord: de stifttekst was wit op crème (onleesbaar); maak hem donkerblauw
+_ink = bpy.data.materials.new("Stift_bord_blauw")
+_ink.use_nodes = True
+_bsdf = _ink.node_tree.nodes.get("Principled BSDF")
+if _bsdf:
+    _bsdf.inputs["Base Color"].default_value = (0.03, 0.07, 0.35, 1)
+    _bsdf.inputs["Roughness"].default_value = 0.6
+_ink.diffuse_color = (0.03, 0.07, 0.35, 1)
+for _o in bpy.data.objects:
+    if _o.name.startswith("Bord_NO_SWIMMING_tekst"):
+        _o.data.materials.clear()
+        _o.data.materials.append(_ink)
 
 # ---------------------------------------------------------------- opa en oma in hun strandstoelen (zoals scène 3c)
 OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.86, -2.02, 0)
@@ -106,8 +118,8 @@ HT = S.headpos(held, t_f)
 dn = V(d.x, d.y, 0).normalized()
 side = V(dn.y, -dn.x, 0)
 S.cam(t_f, (HT + dn * 1.4 + side * 0.25 + V(0, 0, -0.05), HT + V(0, 0, -0.06), 34), (HT + dn * 1.25 + side * 0.22 + V(0, 0, -0.05), HT + V(0, 0, -0.06), 36))
-# 19f2 over zijn schouder naar het bord, trage push
-S.cam(t_f2, (HT - dn * 0.7 - side * 0.6 + V(0, 0, 0.1), SIGN, 50), (HT - dn * 0.6 - side * 0.55 + V(0, 0, 0.1), SIGN, 68))
+# 19f2 POV: wat hij ziet, het bord, trage push (camera net voor zijn ogen, zijn hoofd niet in beeld)
+S.cam(t_f2, (HT + (SIGN - HT).normalized() * 0.35 + V(0, 0, 0.02), SIGN, 44), (HT + (SIGN - HT).normalized() * 0.6 + V(0, 0, 0.02), SIGN, 62))
 
 # ---------------------------------------------------------------- HUD, geluid, stem
 S.counter("YEAR 5", 6300, t0=0.0)
