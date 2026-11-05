@@ -2,10 +2,39 @@ import { useRef, useState } from 'react';
 import { Download, Upload, RotateCcw, CloudUpload, CloudDownload } from 'lucide-react';
 import { useGame } from '../store/useGame';
 import { PageHeader } from '../components/ui';
-import { integrationOverview, YouTubeDataAdapter } from '../services/adapters';
+import { YouTubeDataAdapter } from '../services/adapters';
 import { SupabaseAdapter } from '../services/persistence/storage';
 import type { GameData } from '../store/state';
 import type { IntegrationSettings } from '../types';
+import { useTools } from '../services/tools';
+import { useLive } from '../services/live';
+import { useReal } from '../services/real';
+
+type St = 'connected' | 'stub' | 'not_configured';
+const LABEL: Record<St, string> = { connected: 'verbonden', stub: 'deels', not_configured: 'niet verbonden' };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Any = any;
+function useRealConnections() {
+  const tools = useTools((x) => x.tools);
+  const live = useLive();
+  const avail = useReal((x) => x.avail);
+  const ok = (k: string): St => (tools[k]?.status === 'ok' ? 'connected' : tools[k]?.status === 'laden' ? 'stub' : 'not_configured');
+  const vqc = (tools.vidiqch?.data as Any)?.channels ?? [];
+  const drift = vqc.find((c: Any) => /drift/i.test(c.title ?? ''));
+  const hf = tools.higgsfield?.data as Any;
+  const el = (tools.elevenlabs?.data as Any)?.flows ?? [];
+  const bl = live.data.blender;
+  const yt = live.data.youtube;
+  return [
+    { id: 'claude', name: 'Claude (opdrachten)', purpose: 'Denkwerk, scripts, animatie', status: (avail === 'available' ? 'connected' : avail === 'laden' ? 'stub' : 'not_configured') as St, note: avail === 'available' ? 'Echt: wat je in de HQ typt of klikt, voert Claude uit in je project.' : 'Claude luistert nu niet mee; opdrachten wachten in de wachtrij.' },
+    { id: 'youtube', name: 'YouTube (via vidIQ)', purpose: 'Kanaalstatistieken lezen', status: (drift ? 'connected' : ok('vidiqch') === 'connected' ? 'stub' : ok('vidiqch')) as St, note: drift ? `Driftmark: ${Number(drift.subscriberCount).toLocaleString('nl-NL')} abonnees, ${Number(drift.viewCount).toLocaleString('nl-NL')} weergaven, ${drift.videoCount} video's. Uploaden doe je zelf in Studio.` : yt?.subscribers != null ? `Laatst bekend: ${yt.subscribers} abonnees (via Claude).` : 'vidIQ wordt nog geladen.' },
+    { id: 'threads', name: 'Claude-threads', purpose: 'Wie werkt waaraan', status: (live.source === 'live' ? 'connected' : 'stub') as St, note: live.source === 'live' ? `${live.data.activity.length} threads live uit de projectbestanden, ververst elke minuut.` : 'Laatst bekende stand; live bestand nog niet gelezen.' },
+    { id: 'voice', name: 'Stemmen (ElevenLabs v4)', purpose: 'Voice-overs', status: ok('elevenlabs'), note: ok('elevenlabs') === 'connected' ? `Verbonden, ${el.length} recente flows. Claude maakt de stemmen.` : 'ElevenLabs is nog niet bereikbaar vanaf deze pagina; Claude gebruikt hem wel.' },
+    { id: 'image', name: 'Beelden (Higgsfield)', purpose: 'Thumbnails en upgrades', status: ok('higgsfield'), note: ok('higgsfield') === 'connected' ? `Verbonden, ${hf?.credits ?? 0} credits (${hf?.subscription_plan_type ?? 'gratis'}). Ook als add-on in Blender.` : 'Higgsfield is nog niet bereikbaar vanaf deze pagina.' },
+    { id: 'video', name: 'Blender op je pc', purpose: 'Animatie en renders', status: (bl ? 'connected' : 'stub') as St, note: bl ? `${bl.stand} (bijgewerkt ${bl.bijgewerkt})` : 'Draait via Remote Control op je pc; de animatie-thread zet de stand hier neer.' },
+    { id: 'files', name: 'Projectbestanden', purpose: 'Opslag van alles', status: (live.source === 'live' ? 'connected' : 'stub') as St, note: 'Scripts, cast, sets en renders staan in de projectbestanden. Je spelvoortgang staat in deze browser.' },
+  ];
+}
 
 const STATUS = {
   connected: 'bg-emerald-500/15 text-emerald-300',
@@ -26,7 +55,7 @@ export default function SettingsPage() {
   const [ytId, setYtId] = useState('');
   const [ytOut, setYtOut] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
-  const ov = integrationOverview(s.settings);
+  const ov = useRealConnections();
   const set = (k: keyof IntegrationSettings, v: string) => setF({ ...f, [k]: v });
   const supa = new SupabaseAdapter(s.settings.supabaseUrl, s.settings.supabaseAnonKey);
 
@@ -35,16 +64,16 @@ export default function SettingsPage() {
       <PageHeader title="Settings" subtitle="Integrations, data and simulation." />
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="panel p-5">
-          <div className="mb-3 font-semibold text-white">Integration status</div>
+          <div className="mb-3 font-semibold text-white">Echte koppelingen</div>
           <div className="space-y-2">
             {ov.map((i) => (
               <div key={i.id} className="rounded-xl bg-white/[.03] p-3">
-                <div className="flex items-center justify-between gap-2"><span className="font-semibold text-white">{i.name}</span><span className={`chip ${STATUS[i.status]}`}>{i.status.replace('_', ' ')}</span></div>
+                <div className="flex items-center justify-between gap-2"><span className="font-semibold text-white">{i.name}</span><span className={`chip ${STATUS[i.status]}`}>{LABEL[i.status]}</span></div>
                 <div className="text-xs text-slate-400">{i.purpose} — {i.note}</div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-slate-500">External publishing (YouTube, Threads) is never performed automatically. Publishing in this game always stays in the local simulation and requires your explicit confirmation.</p>
+          <p className="mt-3 text-xs text-slate-500">Uploaden naar YouTube gebeurt nooit automatisch: dat doe je zelf in YouTube Studio.</p>
         </div>
 
         <div className="panel p-5">
