@@ -55,7 +55,9 @@ function snapshot(): GameData {
 export default function SettingsPage() {
   const s = useGame();
   const [f, setF] = useState<IntegrationSettings>({ ...s.settings });
-  const [ytId, setYtId] = useState('');
+  const [ytId, setYtId] = useState('UCJhUg9hdXlhRRc7GBU_nRgg');
+  const vqTools = useTools((x) => x.tools);
+  const liveYt = useLive((x) => x.data.youtube);
   const [ytOut, setYtOut] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const ov = useRealConnections();
@@ -114,10 +116,18 @@ export default function SettingsPage() {
 
         <div className="panel p-5">
           <div className="mb-3 font-semibold text-white">YouTube Data API test (read-only)</div>
+          <div className="mb-2 text-xs text-slate-400">Geen API-sleutel nodig: zonder sleutel haalt de HQ je cijfers via vidIQ. De ID van Driftmark staat al ingevuld.</div>
           <div className="flex gap-2">
             <input className="input" value={ytId} onChange={(e) => setYtId(e.target.value)} placeholder="Channel ID, e.g. UC_x5XG1OV2P6uZZ5FSM9Ttw" />
             <button className="btn-ghost" disabled={!ytId} onClick={async () => {
-              try { const r = await new YouTubeDataAdapter(s.settings.youtubeApiKey).fetchChannelStats(ytId); setYtOut(`Subscribers ${r.subscribers.toLocaleString()} · Views ${r.views.toLocaleString()} · Videos ${r.videos}`); }
+              const fmt = (a: number, b: number, c: number, bron: string) => `${Number(a).toLocaleString('nl-NL')} abonnees · ${Number(b).toLocaleString('nl-NL')} weergaven · ${c} video's (${bron})`;
+              if (!s.settings.youtubeApiKey) {
+                const ch = ((vqTools.vidiqch?.data as Any)?.channels ?? []).find((c: Any) => c.id === ytId || c.channelId === ytId || /drift/i.test(c.title ?? ''));
+                if (ch) { setYtOut(fmt(ch.subscriberCount, ch.viewCount, ch.videoCount, 'live via vidIQ')); return; }
+                if (liveYt?.subscribers != null) { setYtOut(fmt(liveYt.subscribers, liveYt.views ?? 0, liveYt.videoCount ?? 0, 'laatste ronde van Claude')); return; }
+                setYtOut('vidIQ is nog aan het laden. Probeer het over een paar seconden opnieuw.'); return;
+              }
+              try { const r = await new YouTubeDataAdapter(s.settings.youtubeApiKey).fetchChannelStats(ytId); setYtOut(fmt(r.subscribers, r.views, r.videos, 'YouTube Data API')); }
               catch (e) { setYtOut(`⚠️ ${(e as Error).message}`); }
             }}>Fetch</button>
           </div>
