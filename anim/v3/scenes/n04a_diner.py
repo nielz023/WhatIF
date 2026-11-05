@@ -201,7 +201,7 @@ for ch in (oma, held, mama, papa, bro, opa):
 
 # ---------------------------------------------------------------- camera's
 # 4a WIDE trage dolly langs de tafel (HOUSE RULES op de koelkast rechts in beeld)
-S.cam(0.0, ((-0.9, -3.4, 2.15), (0.1, -0.3, 0.9), 24), ((0.35, -3.3, 2.1), (0.45, -0.3, 0.9), 24))
+S.cam(0.0, ((-0.9, -3.4, 2.15), (0.1, -0.3, 0.9), 24), ((-0.15, -3.45, 2.12), (0.3, -0.3, 0.9), 23))
 # 4b MEDIUM: papa en het broertje
 S.cam(t_b, ((1.0, -2.9, 1.5), (1.45, -0.2, 1.05), 30), ((1.05, -2.6, 1.47), (1.45, -0.2, 1.05), 33))
 # 4c OTS vanaf de tafelrand (geen hoofd in beeld), push-in naar de tv
