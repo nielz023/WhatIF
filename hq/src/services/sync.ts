@@ -101,6 +101,8 @@ export function applyReal(live: Live) {
     : live.videos.filter((v) => v.status === 'Online').map((v) => ({ id: `real_vid${v.nr}`, projectId: `real_v${v.nr}`, channelId: 'ch_history', title: v.title, publishedTick: now, quality: 0, ctr: 0, avd: v.nr === 1 ? 26.3 : 0, views: v.nr === 1 ? 48 : 0, revenue: 0, likes: 0 })));
   const ledger: LedgerEntry[] = (live.costs ?? []).filter((c) => typeof c.bedrag === 'number').map((c, i) => ({ id: `cost_${i}`, day: Math.floor(now / 24), channelId: null, category: 'AI Subscriptions', amount: -(c.bedrag as number), note: `${c.wat}${c.notitie ? ` · ${c.notitie}` : ''} (${c.datum})` }));
   const subs = yt?.subscribers;
+  // Spelgeld (niels 2026-11-05: "doe maar 1000000"): alleen voor het spel, geen echt geld
+  ledger.unshift({ id: 'spelgeld', day: 0, channelId: null, category: 'Rewards', amount: 1000000, note: 'Startkapitaal spelgeld (niet echt)' });
 
   useGame.setState({
     videos, ledger, stats: [], company: { ...st.company, name: 'Driftmark', balance: -ledger.reduce((s, l) => s - l.amount, 0) },
