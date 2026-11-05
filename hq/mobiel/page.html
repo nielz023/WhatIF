@@ -1,0 +1,396 @@
+<title>Driftmark HQ Mobiel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Staande telefoon-app: vaste kop, één kolom kaarten, tabbalk onderin (duim). Eén donkere Driftmark-look: nachtblauw met oranje/blauw randlicht. */
+:root {
+  --bg: #070b1a; --panel: #0e1533; --panel2: #141d42; --line: #24326a;
+  --fg: #e8ecff; --muted: #8e9bc9; --orange: #ff9a4d; --blue: #5aa8ff;
+  --ok: #34d399; --wait: #fbbf24; --look: #38bdf8; --bad: #fb7185;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Figtree", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.45 var(--body); -webkit-tap-highlight-color: transparent; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: var(--blue); text-decoration: none; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px);
+  padding-block: 12px 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+.mark { width: 36px; height: 36px; border-radius: 10px; flex: none; background: url(img/banner.jpg) center/cover, var(--panel2); box-shadow: -2px 0 0 var(--orange) inset, 2px 0 0 var(--blue) inset; }
+.top h1 { margin: 0; font: 800 19px/1 var(--display); letter-spacing: .01em; }
+.top .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.live { margin-left: auto; display: flex; align-items: center; gap: 6px; font: 500 11px var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); padding: 6px 9px; border-radius: 99px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.live.on .dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+
+main { padding-block: 14px calc(88px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 560px; margin: 0 auto; display: grid; gap: 14px; }
+section[data-tab] { display: grid; gap: 14px; }
+h2 { margin: 6px 0 0; font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+h2 .n { font-family: var(--mono); color: var(--fg); background: var(--panel2); border-radius: 6px; padding: 1px 6px; letter-spacing: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; min-width: 0; }
+.card.hero { background: linear-gradient(160deg, var(--panel2), var(--panel)); border-color: color-mix(in srgb, var(--orange) 40%, var(--line)); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.stack { display: grid; gap: 10px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; min-width: 0; }
+.stat b { display: block; font: 800 22px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; color: var(--muted); }
+
+.vtitle { font: 700 17px/1.25 var(--display); text-wrap: balance; margin: 2px 0 6px; }
+.eyebrow { font: 500 11px var(--mono); color: var(--orange); letter-spacing: .04em; }
+.steps { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin: 10px 0 6px; }
+.steps i { height: 6px; border-radius: 3px; background: var(--line); }
+.steps i.d { background: var(--blue); }
+.steps i.a { background: var(--orange); box-shadow: 0 0 8px var(--orange); animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .steps i.a { animation: none; } }
+.stepline { font-size: 13px; color: var(--muted); }
+.stepline b { color: var(--fg); font-weight: 600; }
+
+.row { display: flex; gap: 10px; align-items: flex-start; padding: 11px 0; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; padding-top: 0; }
+.row:last-child { padding-bottom: 0; }
+.row .grow { flex: 1; min-width: 0; }
+.row .t { font-weight: 600; overflow-wrap: anywhere; }
+.row .d { font-size: 13px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.pill { flex: none; font: 500 10.5px var(--mono); padding: 3px 7px; border-radius: 99px; border: 1px solid currentColor; white-space: nowrap; }
+.s-working { color: var(--ok); } .s-blocked { color: var(--wait); } .s-review_ready { color: var(--look); } .s-done { color: var(--muted); } .s-failed, .s-stopped { color: var(--bad); }
+.go { flex: none; align-self: center; color: var(--muted); font-size: 18px; }
+a.rowlink { color: inherit; }
+.empty { text-align: center; padding: 18px 10px; color: var(--muted); font-size: 14px; }
+.empty b { display: block; color: var(--fg); font: 700 16px var(--display); margin-bottom: 2px; }
+
+.chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--panel); border-radius: 99px; padding: 7px 12px; font-size: 13px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+
+textarea { width: 100%; box-sizing: border-box; min-height: 110px; resize: vertical; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font: 16px/1.4 var(--body); }
+textarea:focus { border-color: var(--orange); outline: none; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 0; border-radius: 12px; padding: 14px; font: 700 16px var(--display); background: var(--orange); color: #1a0d02; cursor: pointer; }
+.btn:disabled { opacity: .5; }
+.btn.ghost { background: var(--panel2); color: var(--fg); font: 600 13px var(--body); padding: 8px 10px; width: auto; }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.note { font-size: 12.5px; color: var(--muted); }
+.note.warn { color: var(--wait); }
+.reply { border-left: 2px solid var(--blue); padding-left: 10px; }
+.reply .q { font-size: 12.5px; color: var(--muted); }
+.reply .a { margin-top: 3px; }
+.reply .w { font: 500 11px var(--mono); color: var(--muted); margin-top: 4px; }
+.order .st { font: 500 11px var(--mono); }
+.order .st.ok { color: var(--ok); } .order .st.q { color: var(--wait); }
+.thumb { width: 100%; aspect-ratio: 16/9; max-width: 100%; object-fit: cover; border-radius: 10px; background: var(--panel2); display: block; }
+.yt .v { font: 600 14px var(--mono); font-variant-numeric: tabular-nums; flex: none; }
+ol.next { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+ol.next li::marker { color: var(--orange); font-family: var(--mono); }
+
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  padding-block: 6px calc(6px + env(safe-area-inset-bottom, 0px)); padding-left: max(6px, env(safe-area-inset-left, 0px)); padding-right: max(6px, env(safe-area-inset-right, 0px)); }
+nav.tabs button { background: none; border: 0; padding: 6px 2px; display: grid; justify-items: center; gap: 3px; font-size: 11px; color: var(--muted); cursor: pointer; position: relative; }
+nav.tabs svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+nav.tabs button[aria-selected="true"] { color: var(--fg); }
+nav.tabs button[aria-selected="true"] svg { stroke: var(--orange); }
+nav.tabs .badge { position: absolute; top: 2px; left: 55%; min-width: 16px; height: 16px; border-radius: 8px; background: var(--wait); color: #1a1200; font: 700 10px/16px var(--mono); text-align: center; padding: 0 4px; box-sizing: border-box; }
+</style>
+
+<header class="top">
+  <div class="mark" aria-hidden="true"></div>
+  <div>
+    <h1>Driftmark HQ</h1>
+    <div class="sub" id="sub">telefoonversie</div>
+  </div>
+  <div class="live" id="live"><span class="dot"></span><span id="livetxt">laden…</span></div>
+</header>
+
+<main>
+  <!-- NU -->
+  <section data-tab="nu" id="tab-nu">
+    <div class="stats" id="stats"></div>
+    <div class="card hero" id="current"></div>
+    <h2>Wacht op jou <span class="n" id="waitn">0</span></h2>
+    <div class="card" id="waiting"></div>
+    <h2>Blender op je pc</h2>
+    <div class="card small" id="blender"></div>
+    <h2>Volgende stappen</h2>
+    <div class="card"><ol class="next" id="next"></ol></div>
+  </section>
+
+  <!-- VIDEO'S -->
+  <section data-tab="videos" id="tab-videos" hidden>
+    <div id="videos" class="stack"></div>
+  </section>
+
+  <!-- THREADS -->
+  <section data-tab="threads" id="tab-threads" hidden>
+    <div class="chips" id="tfilter" role="group" aria-label="Filter threads"></div>
+    <div class="card" id="threads"></div>
+  </section>
+
+  <!-- CIJFERS -->
+  <section data-tab="cijfers" id="tab-cijfers" hidden>
+    <div class="stats" id="stats2"></div>
+    <p class="note" id="ytsrc"></p>
+    <h2>Video's op YouTube</h2>
+    <div class="card yt" id="yt"></div>
+    <h2>Credits en kosten</h2>
+    <div class="card" id="costs"></div>
+  </section>
+
+  <!-- OPDRACHT -->
+  <section data-tab="opdracht" id="tab-opdracht" hidden>
+    <div class="card stack" id="orders-anchor">
+      <label for="otext" class="vtitle" style="margin:0">Geef een opdracht</label>
+      <p class="note" style="margin:0">Gaat rechtstreeks naar Claude, die het in het project echt uitvoert. Het antwoord verschijnt hieronder.</p>
+      <div class="quick" id="quick"></div>
+      <textarea id="otext" maxlength="3500" placeholder="Bijv. Hoe ver is de render van video 3?"></textarea>
+      <button class="btn" id="osend" type="button">Versturen</button>
+      <p class="note" id="ostate"></p>
+    </div>
+    <h2>Jouw opdrachten</h2>
+    <div class="card" id="orders"></div>
+    <h2>Antwoorden</h2>
+    <div class="card stack" id="replies"></div>
+  </section>
+</main>
+
+<nav class="tabs" role="tablist" aria-label="Onderdelen">
+  <button role="tab" data-go="nu" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Nu<span class="badge" id="badge" hidden>0</span></button>
+  <button role="tab" data-go="videos" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg>Video's</button>
+  <button role="tab" data-go="opdracht" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20l16-8L4 4l2.5 8z"/><path d="M6.5 12H13"/></svg>Opdracht</button>
+  <button role="tab" data-go="threads" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Threads</button>
+  <button role="tab" data-go="cijfers" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Cijfers</button>
+</nav>
+
+<script>
+(function () {
+  "use strict";
+  var PROJ = "https://claude.ai/code/project/chan_01LkmukDuDNkj8pXsDu4v8WG";
+  var threadUrl = function (id) { return PROJ + "?thread=" + id; };
+  var STATE = { working: "aan het werk", blocked: "wacht op jou", review_ready: "kijk even", done: "klaar", failed: "mislukt", stopped: "gestopt" };
+  var QUICK = ["Hoe ver is video 3?", "Wat moet ik nu doen?", "Update de kanaalcijfers via vidIQ", "Kies een onderwerp voor video 4"];
+
+  var data = null, source = "laden", checkedAt = null, filter = "open";
+  var fs, cm;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function nf(n) { return typeof n === "number" ? n.toLocaleString("nl-NL") : (n == null ? "–" : esc(n)); }
+  function ago(iso) {
+    if (!iso) return "";
+    var t = Date.parse(iso); if (isNaN(t)) return esc(iso);
+    var m = Math.round((Date.now() - t) / 60000);
+    if (m < 1) return "net nu"; if (m < 60) return m + " min geleden";
+    var h = Math.round(m / 60); if (h < 24) return h + " uur geleden";
+    return new Date(t).toLocaleString("nl-NL", { timeZone: "Europe/Amsterdam", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+  function lsGet(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+  /* ---------- tabs (#nu, #videos, ...) ---------- */
+  var TABS = ["nu", "videos", "opdracht", "threads", "cijfers"];
+  function show(tab) {
+    if (TABS.indexOf(tab) < 0) tab = "nu";
+    document.querySelectorAll("section[data-tab]").forEach(function (s) { s.hidden = s.dataset.tab !== tab; });
+    document.querySelectorAll("nav.tabs button").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.go === tab ? "true" : "false"); });
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("nav.tabs button").forEach(function (b) {
+    b.addEventListener("click", function () { if (location.hash !== "#" + b.dataset.go) location.hash = b.dataset.go; else show(b.dataset.go); });
+  });
+  window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
+
+  /* ---------- render ---------- */
+  function activeStep(v) {
+    var s = v.steps || [], a = s.filter(function (x) { return x.active; })[0];
+    var done = s.filter(function (x) { return x.done; }).length;
+    return { label: a ? a.label : (done === s.length && s.length ? "Klaar" : (s[done] || {}).label), done: done, total: s.length };
+  }
+  function stepsBar(v) { return '<div class="steps" aria-hidden="true">' + (v.steps || []).map(function (s) { return '<i class="' + (s.done ? "d" : s.active ? "a" : "") + '"></i>'; }).join("") + "</div>"; }
+  function statTiles(yt) {
+    var vids = (yt.videos || []);
+    var longs = vids.filter(function (v) { return v.type === "long"; });
+    var best = vids.filter(function (v) { return v.type === "short"; }).sort(function (a, b) { return (b.views || 0) - (a.views || 0); })[0];
+    return '<div class="stat"><b>' + nf(yt.subscribers) + '</b><span>abonnees</span></div>' +
+      '<div class="stat"><b>' + nf(yt.views) + '</b><span>weergaven</span></div>' +
+      '<div class="stat"><b>' + nf(best ? best.views : null) + '</b><span>beste short</span></div>' +
+      "";
+  }
+  function actRow(a) {
+    return '<a class="row rowlink" href="' + threadUrl(a.id) + '" target="_blank" rel="noreferrer"><div class="grow"><div class="t">' + esc(a.title) + '</div>' +
+      (a.doing ? '<div class="d">' + esc(a.doing) + '</div>' : "") +
+      '<div class="d">' + (a.lastIso ? ago(a.lastIso) : esc(a.last || "")) + (a.video ? " · video " + a.video : "") + '</div></div>' +
+      '<span class="pill s-' + esc(a.state) + '">' + esc(STATE[a.state] || a.state) + '</span></a>';
+  }
+
+  function render() {
+    if (!data) return;
+    var d = data, yt = d.youtube || {}, acts = d.activity || [];
+    $("sub").textContent = "bijgewerkt " + (ago(d.updated) || "–");
+
+    /* Nu */
+    $("stats").innerHTML = statTiles(yt);
+    var cur = (d.videos || []).filter(function (v) { return v.status !== "Online"; })[0] || (d.videos || [])[0];
+    if (cur) {
+      var st = activeStep(cur), thumb = (d.outputs && d.outputs[String(cur.nr)] || []).filter(function (o) { return /thumbnail/i.test(o.name) && o.kind === "image"; })[0];
+      $("current").innerHTML = '<div class="eyebrow">VIDEO ' + cur.nr + ' · ' + esc((cur.status || "").toUpperCase()) + '</div>' +
+        '<div class="vtitle">' + esc(cur.title) + '</div>' + stepsBar(cur) +
+        '<div class="stepline">Nu: <b>' + esc(st.label) + '</b> · stap ' + Math.min(st.done + 1, st.total) + ' van ' + st.total + (cur.lengte ? " · " + esc(cur.lengte) : "") + '</div>' +
+        (thumb ? '<div id="thumbbox" style="margin-top:12px"></div>' : "");
+      if (thumb) loadImg(thumb.path, "thumbbox");
+    }
+    var waiting = acts.filter(function (a) { return a.state === "blocked" || a.state === "review_ready"; });
+    $("waitn").textContent = waiting.length;
+    $("badge").hidden = !waiting.length; $("badge").textContent = waiting.length;
+    $("waiting").innerHTML = waiting.length ? waiting.map(actRow).join("") : '<div class="empty"><b>Er wacht niets op je</b>Alle threads kunnen zelf verder.</div>';
+    var b = d.blender;
+    $("blender").innerHTML = b ? '<div>' + esc(b.stand) + '</div>' + (b.wachtrij ? '<div class="d muted" style="margin-top:6px">Wachtrij: ' + esc(Array.isArray(b.wachtrij) ? b.wachtrij.map(function (w) { return w.naam + " (" + w.status + ")"; }).join(", ") : b.wachtrij) + '</div>' : "") +
+      (b.bijgewerkt ? '<div class="note" style="margin-top:6px">' + ago(b.bijgewerkt.length <= 16 ? b.bijgewerkt + ":00+01:00" : b.bijgewerkt) + '</div>' : "") : '<span class="muted">Geen stand bekend.</span>';
+    $("next").innerHTML = (d.next || []).map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("");
+
+    /* Video's */
+    $("videos").innerHTML = (d.videos || []).slice().reverse().map(function (v) {
+      var st = activeStep(v);
+      var links = [];
+      if (v.youtube) links.push('<a href="' + esc(v.youtube) + '" target="_blank" rel="noreferrer">Op YouTube ↗</a>');
+      (v.threads || []).forEach(function (t) { links.push('<a href="' + threadUrl(t.id) + '" target="_blank" rel="noreferrer">' + esc(t.title) + ' ↗</a>'); });
+      return '<article class="card"><div class="eyebrow">VIDEO ' + v.nr + ' · ' + esc((v.status || "").toUpperCase()) + (v.lengte ? " · " + esc(v.lengte) : "") + '</div>' +
+        '<div class="vtitle">' + esc(v.title) + '</div>' + stepsBar(v) +
+        '<div class="stepline">' + (st.label === "Klaar" ? "<b>Alle stappen klaar</b>" : 'Nu: <b>' + esc(st.label) + '</b>') + '</div>' +
+        (v.kern ? '<p class="small" style="margin:10px 0 4px">' + esc(v.kern) + '</p>' : "") +
+        (v.twist ? '<p class="small muted" style="margin:0">Twist: ' + esc(v.twist) + '</p>' : "") +
+        ((v.notes || []).length ? '<ul class="small muted" style="margin:8px 0 0;padding-left:18px">' + v.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + '</ul>' : "") +
+        (links.length ? '<div class="small" style="display:grid;gap:6px;margin-top:10px">' + links.join("") + '</div>' : "") + '</article>';
+    }).join("");
+
+    /* Threads */
+    var groups = [["open", "Bezig"], ["wacht", "Wacht op jou"], ["klaar", "Klaar"], ["alle", "Alle"]];
+    $("tfilter").innerHTML = groups.map(function (g) { return '<button class="chip" type="button" data-f="' + g[0] + '" aria-pressed="' + (filter === g[0]) + '">' + g[1] + '</button>'; }).join("");
+    var list = acts.filter(function (a) {
+      if (filter === "open") return a.state === "working"; if (filter === "wacht") return a.state === "blocked" || a.state === "review_ready";
+      if (filter === "klaar") return a.state === "done"; return true;
+    }).sort(function (a, b) { return (Date.parse(b.lastIso || 0) || 0) - (Date.parse(a.lastIso || 0) || 0); });
+    $("threads").innerHTML = list.length ? list.map(actRow).join("") : '<div class="empty"><b>Niets in deze groep</b>Kies een andere filter.</div>';
+
+    /* Cijfers */
+    var vids = yt.videos || [];
+    var longs = vids.filter(function (v) { return v.type === "long"; }), shorts = vids.filter(function (v) { return v.type === "short"; });
+    var sv = shorts.reduce(function (s, v) { return s + (v.views || 0); }, 0), lv = longs.reduce(function (s, v) { return s + (v.views || 0); }, 0);
+    $("stats2").innerHTML = '<div class="stat"><b>' + nf(yt.subscribers) + '</b><span>abonnees</span></div><div class="stat"><b>' + nf(sv) + '</b><span>views shorts</span></div><div class="stat"><b>' + nf(lv) + '</b><span>views lang</span></div>';
+    $("ytsrc").textContent = "Bron: " + (yt.bron || "status.json") + (yt.bijgewerkt ? ", " + ago(yt.bijgewerkt) : "") + ". Vraag via Opdracht om nieuwe cijfers.";
+    $("yt").innerHTML = vids.length ? vids.slice().sort(function (a, b) { return String(b.datum).localeCompare(String(a.datum)); }).map(function (v) {
+      return '<a class="row rowlink" href="' + esc(v.url || "#") + '" target="_blank" rel="noreferrer"><div class="grow"><div class="t small">' + esc(v.title) + '</div><div class="d">' + (v.type === "short" ? "short" : "lange video") + (v.datum ? " · " + esc(v.datum) : "") + (v.status && v.status !== "public" ? " · " + esc(v.status) : "") + '</div></div><span class="v">' + nf(v.views) + '</span></a>';
+    }).join("") : '<div class="empty">Nog geen video-cijfers.</div>';
+    $("costs").innerHTML = (d.costs || []).map(function (c) {
+      return '<div class="row"><div class="grow"><div class="t small">' + esc(c.wat) + '</div><div class="d">' + esc(c.datum) + (c.notitie ? " · " + esc(c.notitie) : "") + '</div></div><span class="v small" style="font-family:var(--mono);text-align:right;max-width:40%">' + esc(c.bedrag != null ? "€ " + c.bedrag : (c.credits || "")) + '</span></div>';
+    }).join("") || '<span class="muted">Geen kosten bekend.</span>';
+
+    /* Antwoorden */
+    var reps = (d.replies || []).slice().reverse().slice(0, 15);
+    $("replies").innerHTML = reps.length ? reps.map(function (r) {
+      return '<div class="reply"><div class="q">“' + esc(r.opdracht) + '”</div><div class="a small">' + esc(r.antwoord) + '</div><div class="w">' + esc(r.at) + (r.thread ? ' · <a href="' + threadUrl(r.thread) + '" target="_blank" rel="noreferrer">thread ↗</a>' : "") + '</div></div>';
+    }).join("") : '<span class="muted small">Nog geen antwoorden.</span>';
+  }
+
+  document.addEventListener("click", function (e) {
+    var c = e.target.closest && e.target.closest("[data-f]");
+    if (c) { filter = c.dataset.f; render(); }
+  });
+
+  function setLive() {
+    var el = $("live"), t = $("livetxt");
+    el.classList.toggle("on", source === "live");
+    t.textContent = source === "live" ? "live" : source === "laden" ? "laden…" : source === "geen-toegang" ? "geen toegang" : "offline";
+  }
+
+  /* ---------- live data uit de projectbestanden ---------- */
+  var imgCache = {};
+  function loadImg(path, boxId) {
+    var box = $(boxId); if (!box || !fs) return;
+    if (imgCache[path]) { box.innerHTML = '<img class="thumb" alt="Thumbnail" src="' + imgCache[path] + '">'; return; }
+    fs.read(path).then(function (r) {
+      var url = URL.createObjectURL(new Blob([r.bytes], { type: /\.png$/i.test(path) ? "image/png" : "image/jpeg" }));
+      imgCache[path] = url; var b = $(boxId); if (b) b.innerHTML = '<img class="thumb" alt="Thumbnail" src="' + url + '">';
+    }).catch(function () {});
+  }
+  function refresh() {
+    var p = (fs === undefined && window.claude && window.claude.use) ? window.claude.use("files").catch(function () { return null; }) : Promise.resolve(fs || null);
+    return p.then(function (f) {
+      fs = f;
+      if (!fs) { source = "geen-toegang"; setLive(); return; }
+      return fs.read("driftmark-hq/status.json").then(function (r) {
+        data = JSON.parse(new TextDecoder().decode(r.bytes)); source = "live"; checkedAt = Date.now();
+        lsSet("dm-mobiel-cache", data); setLive(); render();
+      }).catch(function (e) { source = e && e.code === "not_granted" ? "geen-toegang" : "fout"; setLive(); });
+    });
+  }
+
+  /* ---------- opdrachten naar Claude ---------- */
+  var orders = lsGet("dm-mobiel-orders", []);
+  function saveOrders() { lsSet("dm-mobiel-orders", orders.slice(0, 40)); }
+  function renderOrders() {
+    $("orders").innerHTML = orders.length ? orders.slice(0, 10).map(function (o) {
+      return '<div class="row order"><div class="grow"><div class="small">' + esc(o.text) + '</div><div class="d">' + ago(new Date(o.at).toISOString()) + (o.reason ? " · " + esc(o.reason) : "") + '</div></div>' +
+        (o.status === "verstuurd" ? '<span class="st ok">verstuurd</span>' : '<button class="btn ghost" type="button" data-resend="' + o.id + '">Opnieuw</button>') + '</div>';
+    }).join("") : '<span class="muted small">Nog geen opdrachten vanaf je telefoon.</span>';
+  }
+  function getCm() {
+    if (cm !== undefined) return Promise.resolve(cm);
+    if (!(window.claude && window.claude.use)) return Promise.resolve(null);
+    return window.claude.use("comments").then(function (c) { cm = c; return c; }).catch(function () { cm = null; return null; });
+  }
+  function deliver(text) {
+    return getCm().then(function (c) {
+      if (!c) return { ok: false, reason: "Versturen kan alleen op de gepubliceerde pagina in claude.ai." };
+      return c.canSendToClaude().then(function (st) {
+        if (st !== "available") return { ok: false, reason: st === "no_session" ? "Claude luistert nu niet mee; probeer straks opnieuw." : st === "writers_only" ? "Alleen de eigenaar kan opdrachten sturen." : "Versturen staat hier uit." };
+        return c.anchorFor($("orders-anchor")).then(function (anchor) {
+          return c.sendToClaude({ anchor: anchor, text: ("[DRIFTMARK HQ MOBIEL · ECHTE OPDRACHT]\n" + text).slice(0, 3800) });
+        }).then(function () { return { ok: true }; });
+      });
+    }).catch(function (e) {
+      var code = (e && e.code) || "fout";
+      return { ok: false, reason: code === "rate_limited" ? "Te snel achter elkaar; wacht even." : "Niet verstuurd (" + code + ")." };
+    });
+  }
+  function send(text, id) {
+    var o = id ? orders.filter(function (x) { return x.id === id; })[0] : { id: Math.random().toString(36).slice(2), at: Date.now(), text: text, status: "wachtrij" };
+    if (!o) return;
+    if (!id) { orders.unshift(o); }
+    $("osend").disabled = true; $("ostate").className = "note"; $("ostate").textContent = "Versturen…";
+    deliver(o.text).then(function (r) {
+      o.status = r.ok ? "verstuurd" : "wachtrij"; o.reason = r.ok ? "" : r.reason;
+      saveOrders(); renderOrders();
+      $("osend").disabled = false;
+      $("ostate").className = r.ok ? "note" : "note warn";
+      $("ostate").textContent = r.ok ? "Verstuurd. Claude pakt het op; het antwoord komt bij Antwoorden." : r.reason + " De opdracht staat bij Jouw opdrachten.";
+      if (r.ok && !id) $("otext").value = "";
+    });
+  }
+  $("quick").innerHTML = QUICK.map(function (q) { return '<button class="chip" type="button" data-q="' + esc(q) + '">' + esc(q) + '</button>'; }).join("");
+  $("quick").addEventListener("click", function (e) { var b = e.target.closest("[data-q]"); if (b) { $("otext").value = b.dataset.q; $("otext").focus(); } });
+  $("osend").addEventListener("click", function () { var t = $("otext").value.trim(); if (t) send(t); else $("otext").focus(); });
+  $("orders").addEventListener("click", function (e) { var b = e.target.closest("[data-resend]"); if (b) send(null, b.dataset.resend); });
+  try { var dr = sessionStorage.getItem("dm-mobiel-draft"); if (dr) $("otext").value = dr; } catch (e) {}
+  $("otext").addEventListener("input", function () { try { sessionStorage.setItem("dm-mobiel-draft", $("otext").value); } catch (e) {} });
+
+  /* ---------- start ---------- */
+  data = lsGet("dm-mobiel-cache", null) || window.__DM_SEED__ || null;
+  show(location.hash.slice(1));
+  render(); renderOrders(); setLive();
+  setTimeout(refresh, 300);
+  setInterval(refresh, 60000);
+  setInterval(function () { render(); renderOrders(); }, 30000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) refresh(); });
+})();
+</script>
