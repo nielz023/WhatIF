@@ -528,6 +528,7 @@ class Scene:
         self.voice.append((os.path.relpath(path, AUDIO), t0))
         t1 = t0 + dur
         self.t = max(self.t, t1)
+        self.vo_end = max(getattr(self, "vo_end", 0.0), t1)
         if who is not None:
             A.lipsync(who, path, F(t0), gain=gain)
         return t0, t1
@@ -788,6 +789,13 @@ class Scene:
 
     def finish(self, length=None, tail=0.8, picture_end=None, title=None):
         self.length = length or (self.t + tail)
+        vo_end = getattr(self, "vo_end", 0.0)
+        if vo_end + 0.6 > self.length:   # stem mag nooit afgekapt worden: laatste shot loopt door
+            print("STEM_TE_LANG", self.code, "clip", round(self.length, 2), "stem tot", round(vo_end, 2))
+            self.length = vo_end + 0.6
+        if os.environ.get("WHATIF_VOCHECK"):
+            print("VOCHECK", self.code, round(self.length, 2), round(vo_end, 2))
+            raise SystemExit(0)
         sc = self.sc
         sc.frame_start, sc.frame_end = 1, F(self.length)
         self.pre_finish()
