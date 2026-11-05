@@ -36,18 +36,18 @@ for o, keys in ((old, ((0.0, 0.0, True), (T_OUT, 0.0, True), (T_OUT + 0.3, 1.3, 
                 kp.interpolation = "CONSTANT"
 
 # trapje + pomphouder rechts naast het bord, reikt met zijn linkerhand naar de cijfers
-STEP = 1.25
-FOOT = B + N * 0.55 + TG * 0.85
+STEP = 2.2                                        # hoog trapje: zijn schouder op cijferhoogte (korte armen)
+FOOT = B + N * 0.45 + TG * 0.72
 T.box("Trapje", tuple(FOOT), (0.6, 0.5, STEP), S.mat("trapje_alu", (0.75, 0.76, 0.78)), rot=(0, 0, -20), bevel=0.02, ol=0.006)
 man = S.actor("figurant_c", FOOT + V(0, 0, STEP), -20 + 180 - 25)
 S.beat(man, 0.0, "staan", face="grijns", face_amt=0.6, at=DIG)
 S.reach(man, 0.0, "L", inf=0.0)
 S.reach(man, 0.6, "L", inf=0.0)
-S.reach(man, 1.0, "L", DIG + TG * 0.35 + N * 0.06)
-S.reach(man, T_OUT + 0.3, "L", DIG + TG * 0.75 + N * 0.06)
-S.reach(man, T_IN - 0.05, "L", DIG - TG * 0.55 + N * 0.06)
-S.reach(man, T_IN + 0.35, "L", DIG + TG * 0.05 + N * 0.06)
-S.reach(man, T_IN + 0.75, "L", inf=0.0)
+S.reach(man, 1.0, "L", DIG + TG * 0.3 + N * 0.08)
+S.reach(man, T_OUT + 0.3, "L", DIG + TG * 0.6 + N * 0.08)
+S.reach(man, T_IN - 0.05, "L", DIG + TG * 0.15 + N * 0.08)           # wacht op het nieuwe cijfer en tikt het op zijn plek
+S.reach(man, T_IN + 0.35, "L", DIG + TG * 0.2 + N * 0.08)
+S.reach(man, T_IN + 0.55, "L", inf=0.0)
 S.beat(man, T_IN + 0.8, "staan", face="grijns", face_amt=0.9, at=DIG)
 S.hold(man, END)
 

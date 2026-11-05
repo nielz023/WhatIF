@@ -60,10 +60,10 @@ BX = -4.45
 from lib import huis as HU  # noqa: E402
 for nm in ("Bord_NO_SCHOOL", "Bord_FOREVER"):
     S.obj(nm).hide_render = S.obj(nm).hide_viewport = True
-TX = 0.19
+TX = 0.13                                                   # kleiner handschrift: binnen bereik van zijn korte arm
 T_W = [(t_c + 0.35, t_c + 1.55), (t_c + 1.75, t_c + 2.95)]
 masks = []                                                  # (y0, y1, z, ta, tb) per regel, voor de hand
-for k, (txt, z) in enumerate((("NO SCHOOL", 1.47), ("FOREVER!!", 1.17))):
+for k, (txt, z) in enumerate((("NO SCHOOL", 1.26), ("FOREVER!!", 1.07))):
     full = HU.marker_text(f"Bord_regel{k}_vol", txt, (BX + 0.026, 0, z), TX, "rood", rot=(90, 0, 90), align="LEFT")
     bpy.context.view_layer.update()
     ys = [(full.matrix_world @ V(c)).y for c in full.bound_box]
@@ -87,7 +87,10 @@ for k, (txt, z) in enumerate((("NO SCHOOL", 1.47), ("FOREVER!!", 1.17))):
                 kp.interpolation = "CONSTANT"
     masks.append((y0, y0 + w, z + TX * 0.35, ta, tb))
 
-ST = V(-3.95, 0.0, 0)
+# hij staat op een opstapje voor het bord (anders komt hij niet bij het bord)
+STEP_H = 0.55
+T.box("Opstapje", (-4.06, -0.17, 0), (0.42, 0.4, STEP_H), S.mat("opstapje_hout", (0.55, 0.38, 0.22)), bevel=0.02, ol=0.004)
+ST = V(-4.06, -0.17, STEP_H)                                # rechterschouder voor het midden van de tekst
 S.teleport(bro, t_c, ST, -90)
 S.beat(bro, t_c, "staan", face="grijns", face_amt=0.8, at=V(BX, 0, 1.5), feet="keep")
 stift = T.cyl("Stift", (0, 0, 0), 0.012, 0.13, S.mat("stift_rood", (0.85, 0.1, 0.1)), seg=10, ol=0.003)
@@ -107,9 +110,9 @@ for (y0, y1, zc, ta, tb) in masks:
         u = j / n
         y = y0 + (y1 - y0) * u
         z = zc + (0.07 if j % 2 else -0.06)
-        S.reach(bro, ta + (tb - ta) * u, "R", V(BX + 0.12, y, min(z, 1.5)))
+        S.reach(bro, ta + (tb - ta) * u, "R", V(BX + 0.18, y, min(z, 1.5)))
 S.beat(bro, t_c + 1.6, "staan", face="grijns", face_amt=1.0, at=V(BX, 0.3, 1.25), body={"spine": (4, 0, 0)}, feet="keep")
-S.reach(bro, t_c + 3.2, "R", V(BX + 0.3, 0.6, 1.2))
+S.reach(bro, t_c + 3.2, "R", V(BX + 0.3, 0.3, 1.2))
 S.reach(bro, t_c + 3.5, "R", inf=0.0)
 # draait zich om naar de camera en roept het uit, armen in de lucht
 S.turn(bro, t_c + 3.05, t_c + 3.45, 138)

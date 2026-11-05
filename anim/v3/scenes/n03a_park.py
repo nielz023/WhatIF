@@ -24,8 +24,9 @@ ring = lambda ang, z, r: C + V(math.cos(ang) * r, math.sin(ang) * r, z)
 a0 = math.atan2(u.y, u.x)
 for k, t in enumerate(frange(0.0, END, 0.7)):
     hi = k % 2
-    S.reach(kidA, t, "L", ring(a0 + 0.18, 1.75 if hi else 1.27, 1.06 if hi else 1.46))
-    S.reach(kidA, t, "R", ring(a0 - 0.18, 1.27 if hi else 1.75, 1.46 if hi else 1.06))
+    # stangen binnen armbereik (korte kinderarmen): hand-over-hand vlak boven en voor de schouders
+    S.reach(kidA, t, "L", ring(a0 - 0.08, 1.42 if hi else 1.27, 1.36 if hi else 1.46))
+    S.reach(kidA, t, "R", ring(a0 + 0.08, 1.27 if hi else 1.42, 1.46 if hi else 1.36))
     A.crouch(kidA, F(t), 0.05 - 0.04 * hi, 10)
 S.hold(kidA, END)
 kidB = S.actor("kind_b", C + V(-0.75, -2.35, 0), 20)
@@ -71,7 +72,7 @@ S.face(held, t_b + 1.4, "lach", 0.9, look=(0.6, -0.1))
 S.face(vriend, t_b, "lach", 0.9, look=(0.5, -0.1))
 # vriend: laat zijn stuur met één hand los (de arm aan onze kant) en zwaait naar het hondje
 S.reach(vriend, t_b + 0.9, "L", inf=1.0)
-S.reach(vriend, t_b + 1.15, "L", inf=0.0)
+S.reach(vriend, t_b + 1.05, "L", inf=0.0)
 S.reach(vriend, END, "L", inf=0.0)
 for k, t in enumerate(frange(t_b + 1.15, END - 0.2, 0.28)):
     S.beat(vriend, t, "zwaaien_a" if k % 2 else "zwaaien_b", face="lach", face_amt=0.9, at=V(3.2, -3.8, 0.4),

@@ -21,7 +21,7 @@ CAR = V(-13.5, -4.7, 0)
 car = S.obj("Auto_geparkeerd_0")
 car.location = CAR
 bon = S.obj("Parkeerbon")
-bon.location = CAR + V(-1.2, 0, 1.02)
+bon.location = CAR + V(-1.2, -0.72, 0.96)                # onder de ruitenwisser aan de stoepkant
 bon.hide_render = True
 bon.keyframe_insert("hide_render", frame=1)
 bon.hide_render = False
@@ -57,19 +57,25 @@ S.beat(bro, 0.0, "handen_zij", face="twijfel", face_amt=0.6, at=V(6.0, -12, 1.0)
 S.beat(bro, 1.5, "staan", face="boos", face_amt=0.4, at=V(0, -40, 1.0), body={"head": (0, 0, 0)})
 # 3f: anticipatie (zakt door de knieën), stapt van de stoep...
 S.beat(bro, t_f + 0.2, "staan", face="zelfverzekerd", face_amt=0.6, at=V(6, -7.8, 1.0), crouch=(0.08, 6))
-STEP = V(-5.55, -8.75, 0)
+STEP = V(-5.8, -8.75, 0)                     # net van de stoep af
 S.walk(bro, t_f + 0.35, t_f + 0.8, [BRO_AT, STEP], stride=0.4)
 # ...mama grijpt zijn capuchon en trekt hem terug, hij veert met overshoot tegen haar been
-S.reach(mama, t_f + 0.45, "R", inf=0.0)
-HOOD = lambda t: S.headpos(bro, t) + V(-0.32, 0, -0.32)
-S.reach(mama, t_f + 0.85, "R", HOOD(t_f + 0.85))
-S.beat(mama, t_f + 0.85, "staan", face="boos", face_amt=0.5, at=S.headpos(bro, t_f + 0.85) + V(1.6, -0.6, 0), body={"spine": (8, 0, 0)})
+# (korte armen: ze stapt mee naar de stoeprand, buigt voorover en grijpt met links, hij staat aan haar linkerkant)
+MAMA_GRAB = MAMA_AT + V(0.45, 0.1, 0)
+S.walk(mama, t_f + 0.25, t_f + 0.6, [MAMA_AT, MAMA_GRAB], stride=0.3, end_rot=85)
+S.reach(mama, t_f + 0.55, "L", inf=0.0)
+HOOD = lambda t: S.headpos(bro, t) + V(-0.28, 0, -0.12)
+S.reach(mama, t_f + 0.85, "L", HOOD(t_f + 0.85))
+S.reach(mama, t_f + 0.95, "L", HOOD(t_f + 0.95))
+S.beat(mama, t_f + 0.75, "staan", face="boos", face_amt=0.5, at=S.headpos(bro, t_f + 0.85) + V(1.6, -0.6, 0), body={"spine": (14, 0, 0)},
+       crouch=(0.14, 24))
 S.teleport(bro, t_f + 1.0, STEP, 90)
 S.place(bro, t_f + 1.35, BRO_AT + V(-0.12, 0, 0), 90)
 S.place(bro, t_f + 1.55, BRO_AT + V(0.04, 0, 0), 90)
 S.place(bro, t_f + 1.75, BRO_AT, 90)
-S.reach(mama, t_f + 1.35, "R", BRO_AT + V(-0.3, 0, 1.0))
-S.reach(mama, t_f + 1.8, "R", inf=0.0)
+S.reach(mama, t_f + 1.35, "L", BRO_AT + V(-0.25, 0, 1.0))
+S.reach(mama, t_f + 1.55, "L", BRO_AT + V(-0.25, 0, 1.0))
+S.reach(mama, t_f + 1.75, "L", inf=0.0)
 S.beat(bro, t_f + 1.1, "schrik", amount=0.6, face="verbaasd", face_amt=0.8, crouch=(0.0, -10))
 S.beat(mama, t_f + 1.9, "handen_zij", face="zelfverzekerd", face_amt=0.6, at=S.headpos(bro, t_f + 1.9) + V(1.8, -0.9, 0))
 line = S.say("N03-03", who=mama, at=t_f + 1.0)
@@ -81,10 +87,13 @@ S.hold(bro, END)
 S.hold(mama, END)
 
 # ---------------------------------------------------------------- de agent schrijft een bon
-ag = S.actor("agent", CAR + V(-1.0, -2.05, SW), 0)
+ag = S.actor("agent", CAR + V(-1.35, -1.35, SW), 0)      # vlak naast de auto, op de stoeprand
 WRITE = arms(arm("L", (0.25, 0.6, -0.75), (-0.2, 0.9, 0.35)), arm("R", (0.25, 0.55, -0.75), (-0.45, 0.8, 0.35)))
 S.beat(ag, 0.0, "staan", arms=WRITE, face="neutraal", face_amt=0.5, look=(0.0, -0.6), body={"head": (18, 0, 0)})
 S.beat(ag, 1.3, "staan", arms=WRITE, face="zelfverzekerd", face_amt=0.5, look=(0.0, -0.6), body={"head": (20, 0, 0)})
+# draait zich om naar de auto en buigt over de motorkap om de bon onder de wisser te steken
+S.turn(ag, 1.6, 2.0, 180)
+S.beat(ag, 2.15, "staan", arms=WRITE, face="zelfverzekerd", face_amt=0.5, at=bon.location, body={"spine": (22, 0, 0)})
 S.reach(ag, 1.85, "R", inf=0.0)
 S.reach(ag, 2.3, "R", bon.location + V(0, -0.12, 0.05))
 S.reach(ag, 2.7, "R", inf=0.0)

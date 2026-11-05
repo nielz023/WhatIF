@@ -60,7 +60,7 @@ lijn.rotation_euler = (math.radians(-11), 0, 0)
 
 # ---------------------------------------------------------------- 8h: het broertje raapt het bordje op
 FACE = -PERP                                                # hij staat naast het bord en kijkt ernaar
-BRO_AT = MIDP + PERP * 0.55
+BRO_AT = MIDP + PERP * 0.3                                 # dicht bij de paal: korte kinderarmen
 BRO_AT.z = 0.0
 rot_bro = math.degrees(math.atan2(FACE.x, -FACE.y))
 bro = S.actor("broertje", BRO_AT, rot_bro)
@@ -72,8 +72,8 @@ S.reach(bro, 0.0, "R", inf=0.0)
 S.reach(bro, t_h + 0.2, "L", inf=0.0)
 S.reach(bro, t_h + 0.2, "R", inf=0.0)
 S.beat(bro, t_h + 0.85, "staan", face="vastberaden", face_amt=0.7, at=MIDP, crouch=(0.32, 22))
-S.reach(bro, t_h + 0.85, "L", MIDP + DIR * 0.22 + V(0, 0, 0.04))
-S.reach(bro, t_h + 0.85, "R", MIDP - DIR * 0.12 + V(0, 0, 0.04))
+S.reach(bro, t_h + 0.85, "L", MIDP - DIR * 0.15 + V(0, 0, 0.04))       # rechterhand aan de +DIR-kant (= zijn rechts)
+S.reach(bro, t_h + 0.85, "R", MIDP + DIR * 0.15 + V(0, 0, 0.04))
 T_GRAB = t_h + 0.95
 S.reach(bro, t_h + 1.5, "L", inf=0.0)
 # hij komt overeind en houdt het bordje rechtop naast zich, als een vlag: rechterhand om de paal, tekst naar de camera

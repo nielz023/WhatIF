@@ -93,7 +93,7 @@ LOW = arms(arm("L", (0.25, 0.2, -0.95), (0.05, 0.6, -0.8)))
 S.beat(held, 0.0, "staan", arms=LOW, face="nerveus", face_amt=0.5, look=(0.0, 0.0), feet="keep")
 GLASS = V(HX + 0.3, 1.93, 1.2)
 S.reach(held, 0.0, "R", inf=0.0)
-S.reach(held, 0.9, "R", inf=0.0)
+S.reach(held, 1.15, "R", S.bone_world(held, "hand.R", 1.15, tail=False), inf=0.0)   # IK-doel start bij de hangende hand
 S.reach(held, 1.5, "R", GLASS + V(0, -0.04, 0))
 S.reach(held, 1.7, "R", GLASS)
 S.reach(held, END, "R", GLASS)

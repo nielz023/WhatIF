@@ -48,6 +48,8 @@ def push_cart(ch, cart, t0, t1, ahead=0.78):
     """Kar volgt de figuur (voor hem uit, zelfde richting); beide handen aan het handvat."""
     S.reach(ch, 0.0, "R", inf=0.0)
     S.reach(ch, 0.0, "L", inf=0.0)
+    S.reach(ch, t0 - 0.15, "R", inf=0.0)               # IK pas vlak voor het duwen aan (geen trage aanloop vanaf 0)
+    S.reach(ch, t0 - 0.15, "L", inf=0.0)
     for t in frange(t0, t1 + 0.01, 0.1):
         M = S._root_matrix(ch, t)
         R3 = M.to_3x3().normalized()
@@ -71,13 +73,13 @@ def push_cart(ch, cart, t0, t1, ahead=0.78):
 # ---------------------------------------------------------------- de cast bij kassa 1
 CASH = V(-10.65, -12.3, 0)
 kas = S.actor("kassiere", CASH, 90)
-dief = S.actor("figurant_d", (-9.05, -11.6, 0), 0)
+dief = S.actor("figurant_d", (-9.05, -11.95, 0), 0)     # vlak voor het chocoladerek (korte armen)
 agent = S.actor("agent", (-9.05, -9.7, 0), 0)
 mama = S.actor("mama", (-8.0, -8.3, 0), 0)
 held = S.actor("hoofdpersonage_kind", (-8.67, -8.5, 0), 10)
 mandje = T.box("Mandje", (0, 0, 0), (0.42, 0.3, 0.22), S.mat("mandje_rood", (0.85, 0.12, 0.1)), base=False, bevel=0.03, ol=0.004)
 grab(S, mandje, mama, 0.0, "hand.R", loc=(0, 0.12, -0.12), rot=(0, 0, 0), release=t_i - 0.05)
-reep = T.box("Reep_dief", (-9.3, -12.75, 1.0), (0.05, 0.16, 0.02), S.mat("reep_paars", (0.45, 0.15, 0.55)), base=False, bevel=0.005, ol=0.003)
+reep = T.box("Reep_dief", (-9.25, -12.45, 1.0), (0.05, 0.16, 0.02), S.mat("reep_paars", (0.45, 0.15, 0.55)), base=False, bevel=0.005, ol=0.003)
 reep.rotation_euler = (math.radians(90), 0, 0)
 S.beat(kas, 0.0, "staan", face="neutraal", face_amt=0.5, at=V(-9.0, -11.6, 1.5))
 S.beat(agent, 0.0, "staan", face="neutraal", face_amt=0.5, look=(0.2, -0.2))
@@ -95,7 +97,7 @@ S.beat(dief, t_e + 0.8, "staan", arms=arms(arm("R", (0.35, 0.5, 0.2), (0.1, 0.4,
 S.turn(dief, t_e + 1.0, t_e + 1.4, -70)
 S.beat(dief, t_e + 1.3, "staan", arms=arms(arm("R", (0.35, 0.5, 0.2), (0.1, 0.4, 0.9))), face="grijns", face_amt=0.7,
        at=S.head(kas, 0.0), feet="keep")
-BACK = [V(-9.05, -11.6, 0), V(-8.7, -13.6, 0), V(-6.0, -15.6, 0), V(-2.2, -17.6, 0), V(-1.0, -20.5, 0)]
+BACK = [V(-9.05, -11.95, 0), V(-8.7, -13.6, 0), V(-6.0, -15.6, 0), V(-2.2, -17.6, 0), V(-1.0, -20.5, 0)]
 S.walk(dief, t_e + 1.6, t_e + 6.2, BACK, stride=0.32, turn=False)
 S.beat(dief, t_e + 2.2, "staan", arms=arms(arm("R", (0.3, 0.3, -0.3), (0.0, 0.5, 0.8))), face="grijns", face_amt=0.8,
        at=S.head(kas, 0.0), feet="keep")
@@ -123,7 +125,7 @@ S.beat(mama, t_g + 1.0, "staan", face="nerveus", face_amt=0.6, at=S.head(agent, 
 S.beat(held, t_g + 1.2, "staan", face="nerveus", face_amt=0.6, at=S.head(agent, t_g))
 
 # ---------------------------------------------------------------- 7h: de winkel kijkt elkaar aan... en breekt los
-SHOP = [("figurant_a", (-6.8, -6.8), 30), ("figurant_e", (-2.3, -7.4), -20), ("figurant_f", (2.3, -6.6), 40),
+SHOP = [("figurant_a", (-6.8, -6.8), 30), ("figurant_e", (-3.45, -4.75), -20), ("figurant_f", (2.3, -6.6), 40),
         ("figurant_b", (6.8, -7.0), -30), ("buurman", (-2.3, -3.2), 180), ("figurant_c", (2.2, -2.0), 150)]
 shoppers = []
 for k, (nm, (x, y), r) in enumerate(SHOP):
@@ -136,7 +138,7 @@ for k, (nm, (x, y), r) in enumerate(SHOP):
 woman = shoppers[1]
 FLES = V(-3.92, -4.6, 1.2)
 fles = T.cyl("Fles", FLES + V(0, 0, -0.14), 0.04, 0.28, S.mat("fles_groen", (0.2, 0.55, 0.3)), seg=12, ol=0.003)
-S.turn(woman, t_h + 1.0, t_h + 1.4, 120)
+S.turn(woman, t_h + 1.0, t_h + 1.4, -90)                  # naar het schap (fles naast haar)
 S.reach(woman, 0.0, "R", inf=0.0)
 S.reach(woman, t_h + 1.4, "R", inf=0.0)
 S.reach(woman, t_h + 2.4, "R", FLES + V(0.06, -0.08, 0.0))
@@ -161,12 +163,12 @@ for k, e in enumerate(shoppers):
 S.beat(mama, t_h + 0.6, "staan", face="bang", face_amt=0.7, at=S.head(shoppers[0], 0.0))
 S.beat(held, t_h + 1.0, "staan", face="bang", face_amt=0.6, at=S.head(shoppers[1], 0.0))
 MPATH = [V(-8.0, -8.3, 0), V(-7.6, -9.6, 0), V(-7.6, -14.0, 0), V(-1.4, -17.4, 0), V(-1.0, -23.0, 0)]
-HPATH = []                                         # hij rent 0,7 m rechts naast haar (zij houdt zijn pols vast)
+HPATH = []                                         # hij rent 0,55 m rechts naast haar (zij houdt zijn pols vast)
 for k, p in enumerate(MPATH):
     a = MPATH[max(0, k - 1)]
     b = MPATH[min(len(MPATH) - 1, k + 1)]
     d = (b - a).normalized()
-    HPATH.append(p + V(d.y, -d.x, 0) * 0.7)
+    HPATH.append(p + V(d.y, -d.x, 0) * 0.55)
 S.run(mama, t_i + 0.4, t_i + 6.6, MPATH, stride=0.95, lean=14)
 S.run(held, t_i + 0.4, t_i + 6.6, HPATH, stride=0.8, lean=18)
 # hand in hand: haar rechterhand (hij loopt rechts van haar) pakt zijn linkerpols, zijn arm wordt meegetrokken

@@ -20,7 +20,7 @@ t_b, t_tv, t_st, t_d = sh[1][0], sh[2][0], sh[3][0], sh[4][0]
 
 TX, TY, TZ = 0.2, -0.6, 0.80
 OPA_AT, OMA_AT, HERO_AT = V(TX - 0.8, TY + 0.62, 0), V(TX - 0.25, TY + 0.62, 0), V(TX + 0.3, TY + 0.62, 0)
-MAMA_AT, PAPA_AT = V(TX - 1.72, TY, 0), V(TX + 1.72, TY, 0)
+MAMA_AT, PAPA_AT = V(TX - 1.72, TY, 0), V(TX + 1.48, TY, 0)     # papa dicht aan de kop: korte armen moeten bord en schaal halen
 BRO_AT = V(TX + 0.85, TY + 0.62, 0)                # achter de tafel, naast papa
 # stoelen vooraan weg (open voor de camera), behalve die van het broertje; kopse stoelen naar de tafel
 for k, o in enumerate(sorted([o for o in bpy.data.objects if o.name.startswith("Stoel") and not o.name.startswith("Stoel_kop")],
@@ -33,6 +33,8 @@ for o, x in zip(achter, (OPA_AT.x, OMA_AT.x, HERO_AT.x)):
     o.location.x = x
 for o in [o for o in bpy.data.objects if o.name.startswith("Stoel_kop")]:
     o.rotation_euler.z = math.radians(90 if o.location.x < TX else -90)
+    if o.location.x > TX:
+        o.location.x += PAPA_AT.x - (TX + 1.72)          # papa's stoel schuift mee naar de tafel
 stoel_b = T.box("Stoel_broertje", BRO_AT + V(0, 0.08, 0.0), (0.42, 0.42, 0.46), S.mat("stoel_hout", (0.55, 0.38, 0.22)), bevel=0.02,
                 ol=0.004)
 bpy.context.view_layer.update()
@@ -54,7 +56,7 @@ PLATE = {opa: V(OPA_AT.x, TY + 0.25, TZ), oma: V(OMA_AT.x, TY + 0.25, TZ), held:
          mama: V(TX - 0.9, TY, TZ), papa: V(TX + 0.9, TY, TZ)}          # = Bord_kop_1/2 van de set (tafel TL 2.2)
 
 # schaal aardappels naast papa
-SX, SY = TX + 0.98, TY - 0.28                       # schaal op tafel, naast papa's bord
+SX, SY = TX + 0.98, TY + 0.29                       # schaal op tafel, rechts naast papa's bord (aan de kant van zijn schephand)
 schaal = T.cyl("Schaal_aardappels", (SX, SY, TZ), 0.15, 0.08, S.mat("schaal_wit", (0.95, 0.94, 0.9)), seg=24, ol=0.003)
 rnd = __import__("random").Random(3)
 for k in range(9):
@@ -71,12 +73,13 @@ pile.keyframe_insert("hide_render", frame=F(2.6))
 lepel = cutlery(S, "opscheplepel", "Opscheplepel_papa")
 grab(S, lepel, papa, 0.0, "hand.R", loc=(0, 0.06, 0.0), rot=(-70, 0, 0), release=None)   # losgelaten bij 4b (zie lepel_rest)
 S.beat(papa, 0.0, **SEAT[papa], face="blij", face_amt=0.6, at=schaal.location + V(0, 0, 0.1))
-S.reach(papa, 0.3, "R", schaal.location + V(0.05, -0.05, 0.28))
-S.reach(papa, 0.9, "R", schaal.location + V(0.0, 0.0, 0.16))
-S.reach(papa, 1.4, "R", schaal.location + V(0.02, 0.0, 0.3))
-S.reach(papa, 2.2, "R", PLATE[papa] + V(0.0, -0.08, 0.24))
-S.reach(papa, 2.6, "R", PLATE[papa] + V(0.0, -0.05, 0.16))
-S.reach(papa, 3.1, "R", PLATE[papa] + V(0.12, -0.18, 0.2))
+# pols een lepellengte vóór schaal/bord (de lepel steekt voorbij de hand)
+S.reach(papa, 0.3, "R", schaal.location + V(0.15, -0.05, 0.28))
+S.reach(papa, 0.9, "R", schaal.location + V(0.12, 0.0, 0.16))
+S.reach(papa, 1.4, "R", schaal.location + V(0.14, 0.0, 0.3))
+S.reach(papa, 2.2, "R", PLATE[papa] + V(0.12, 0.0, 0.24))
+S.reach(papa, 2.6, "R", PLATE[papa] + V(0.12, 0.02, 0.16))
+S.reach(papa, 3.1, "R", PLATE[papa] + V(0.2, -0.06, 0.2))
 S.beat(papa, 2.2, **SEAT[papa], face="blij", face_amt=0.6, at=PLATE[papa])
 
 # opa snijdt vlees: vork links, mes rechts, ellebogen laag
@@ -97,20 +100,20 @@ S.beat(oma, 1.4, **SEAT[oma], face="lach", face_amt=0.6, at=S.head(opa))
 S.beat(held, 1.0, **SEAT[held], face="grijns", face_amt=0.6, at=S.head(bro))
 S.beat(mama, 1.6, **SEAT[mama], face="blij", face_amt=0.6, at=S.head(papa))
 
-# broertje: telefoon onder de tafel, duim tikt
+# broertje: telefoon onder de tafel, duim tikt (linkerhand: papa zit aan zijn linkerkant)
 phone = prop_phone(S, "Telefoon_broertje")
-g1 = grab(S, phone, bro, 0.0, "hand.R", loc=(0, 0.06, 0.0), rot=(0, 0, 0), release=t_b + 1.95)
+g1 = grab(S, phone, bro, 0.0, "hand.L", loc=(0, 0.06, 0.0), rot=(0, 0, 0), release=t_b + 1.95)
 UNDER = arms(arm("R", (0.12, 0.25, -0.96), (-0.15, 0.95, -0.2)), arm("L", (0.12, 0.25, -0.96), (-0.3, 0.9, -0.2)))   # in zijn schoot, onder de tafelrand
 S.beat(bro, 0.0, **SEAT[bro], arms=UNDER, face="grijns", face_amt=0.5, look=(0.0, -0.7), body={"head": (24, 0, 0)})
 for k, t in enumerate(frange(0.2, t_b + 0.6, 0.35)):
-    A.bone_rot(bro, F(t), "thumb.01.R" if "thumb.01.R" in bro.pb else "hand.R", (8 if k % 2 else -8, 0, 0))
+    A.bone_rot(bro, F(t), "thumb.01.L" if "thumb.01.L" in bro.pb else "hand.L", (8 if k % 2 else -8, 0, 0))
 
 # ---------------------------------------------------------------- 4b: papa steekt zijn hand uit, palm omhoog
-S.beat(papa, t_b, **SEAT[papa], face="zelfverzekerd", face_amt=0.6, at=S.head(bro))
-S.reach(papa, t_b - 0.05, "R", inf=0.0)
+BRO_KIJK = S.head(bro) + V(-0.15, -0.35, 0)           # papa kijkt naar het broertje, iets naar de camera gedraaid
+S.beat(papa, t_b, **SEAT[papa], face="zelfverzekerd", face_amt=0.6, at=BRO_KIJK)
 lepel_rest = V(TX + 0.98, TY + 0.0, TZ + 0.01)
 # hij legt de lepel op tafel vóór hij zijn hand uitsteekt (niet mee onder de tafel)
-S.reach(papa, t_b - 0.45, "R", lepel_rest + V(0.0, -0.04, 0.07))
+S.reach(papa, t_b - 0.45, "R", lepel_rest + V(0.06, -0.04, 0.07))
 for c in lepel.constraints:
     if c.type == "COPY_TRANSFORMS":
         c.keyframe_insert("influence", frame=F(t_b - 0.3) - 1)
@@ -119,22 +122,25 @@ for c in lepel.constraints:
 lepel.location = lepel_rest
 lepel.rotation_euler = (0.0, 0.0, math.radians(90))
 lepel.scale = (1, 1, 1)
-S.beat(papa, t_b + 0.2, **SEAT[papa], face="zelfverzekerd", face_amt=0.7, at=S.head(bro),
-       arms=arm("L", (0.25, 0.75, -0.45), (0.0, 1.0, 0.05), (0.0, 1.0, -0.2)), body={"spine": (6, 0, 0)})
+# overgavepunt tussen papa en het broertje in (beiden korte armen): papa steekt zijn rechterhand uit
+HAND_P = V(TX + 1.18, TY + 0.47, 0.92)                # net naast de schaal, boven de tafelkop
+S.beat(papa, t_b + 0.2, **SEAT[papa], face="zelfverzekerd", face_amt=0.7, at=BRO_KIJK, body={"spine": (6, 0, 0)})
+S.reach(papa, t_b + 0.45, "R", HAND_P + V(0.04, -0.04, -0.03))
+S.reach(papa, t_b + 2.3, "R", HAND_P + V(0.05, -0.05, -0.02))
+S.reach(papa, t_b + 2.7, "R", inf=0.0)
 pl = S.say("N04-01", who=papa, at=t_b + 0.25)
 # broertje rolt met zijn ogen (kijkt omhoog, zucht) en legt de telefoon in papa's hand
 S.beat(bro, t_b + 0.3, **SEAT[bro], arms=UNDER, face="twijfel", face_amt=0.8, look=(0.0, 0.8), body={"head": (-6, 0, 0)})
 S.beat(bro, t_b + 1.2, **SEAT[bro], face="boos", face_amt=0.5, at=S.head(papa))
-HAND_P = PAPA_AT + V(-0.5, 0.12, 0.95)
-S.reach(bro, 0.0, "R", inf=0.0)
-S.reach(bro, t_b + 0.9, "R", inf=0.0)
-S.reach(bro, t_b + 1.2, "R", HAND_P + V(0.0, -0.12, 0.12))
-S.reach(bro, t_b + 1.85, "R", HAND_P + V(0.0, -0.02, 0.05))
-S.reach(bro, t_b + 2.3, "R", inf=0.0)
-grab(S, phone, papa, t_b + 1.95, "hand.L", loc=(0, 0.06, 0.02), rot=(90, 0, 0))
-S.beat(bro, t_b + 2.4, **SEAT[bro], arms=arms(arm("R", (0.2, 0.4, -0.88), (0.0, 0.7, 0.7))), face="twijfel", face_amt=0.6,
+S.reach(bro, 0.0, "L", inf=0.0)
+S.reach(bro, t_b + 0.9, "L", inf=0.0)
+S.reach(bro, t_b + 1.2, "L", HAND_P + V(-0.04, 0.05, 0.08))
+S.reach(bro, t_b + 1.85, "L", HAND_P + V(-0.03, 0.03, 0.04))
+S.reach(bro, t_b + 2.3, "L", inf=0.0)
+grab(S, phone, papa, t_b + 1.95, "hand.R", loc=(0, 0.06, 0.02), rot=(90, 0, 0))
+S.beat(bro, t_b + 2.4, **SEAT[bro], arms=arms(arm("L", (0.2, 0.4, -0.88), (0.0, 0.7, 0.7))), face="twijfel", face_amt=0.6,
            at=PLATE[held] + V(0.6, -0.4, 0))
-S.beat(papa, t_b + 2.3, **SEAT[papa], face="blij", face_amt=0.6, at=S.head(bro),
+S.beat(papa, t_b + 2.3, **SEAT[papa], face="blij", face_amt=0.6, at=BRO_KIJK,
        arms=arm("L", (0.2, 0.55, -0.75), (0.0, 0.9, 0.3)))
 S.beat(held, t_b + 0.4, **SEAT[held], face="lach", face_amt=0.7, at=S.head(bro))
 

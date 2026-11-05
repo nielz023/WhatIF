@@ -16,7 +16,7 @@ END = sh[-1][1]
 t_d = sh[1][0]
 
 # strandtas met het pillendoosje tussen de twee stoelen, binnen opa's bereik (links van hem)
-BAG = V(-4.0, -1.95, 0)
+BAG = V(-4.06, -1.95, 0)
 S.obj("Strandtas").location = BAG
 S.obj("Pillendoosje_opa").location = BAG + V(0, 0.0, 0.355)
 S.obj("Pillendoosje_opa").rotation_euler.z = math.radians(-20)
@@ -24,10 +24,10 @@ S.obj("Pillendoosje_opa").scale = (2.4, 2.4, 2.4)        # op maat van de grote 
 bpy.context.view_layer.update()
 
 # ---------------------------------------------------------------- opa en oma in hun strandstoelen
-OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.72, -2.02, 0)
+OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.82, -2.02, 0)
 _st = S.obj("Strandstoel_oma")
 if _st is not None:
-    _st.location.x, _st.location.y = -3.72, -2.07         # stoel schuift mee: oma zit dichter bij opa
+    _st.location.x, _st.location.y = -3.82, -2.07         # stoel schuift mee: oma zit dichter bij opa
 opa = S.actor("opa", OPA_AT, -5, drop=("wandelstok",))        # stok laat hij bij het strand liggen
 oma = S.actor("oma", OMA_AT, 5)
 SEAT = {}
@@ -45,13 +45,15 @@ S.beat(opa, 0.7, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.4, look=(0.0
 # oma smeert zonnebrand op zijn neus: hij trekt een gezicht en leunt weg
 NOSE = S.headpos(opa, 0.9) + V(0.05, -0.32, -0.05)
 S.beat(oma, 0.0, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
-S.reach(oma, 0.5, "R", inf=0.0)
-S.reach(oma, 0.9, "R", NOSE + V(0.15, -0.05, 0))
-S.reach(oma, 1.3, "R", NOSE + V(0.05, 0, 0.02))
-S.reach(oma, 1.6, "R", NOSE + V(0.05, 0, -0.02))
-S.reach(oma, 1.9, "R", NOSE + V(0.05, 0, 0.02))
-S.reach(oma, 2.4, "R", inf=0.0)
-S.beat(oma, 1.0, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (4, 0, -20)})
+# pols net naast de neus (vingers raken hem); oma leunt opzij naar opa, armen zijn kort
+S.reach(oma, 0.6, "R", inf=0.0)
+S.reach(oma, 0.9, "R", NOSE + V(0.2, -0.05, -0.03))
+S.reach(oma, 1.3, "R", NOSE + V(0.12, 0, -0.02))
+S.reach(oma, 1.6, "R", NOSE + V(0.12, 0, -0.05))
+S.reach(oma, 1.9, "R", NOSE + V(0.12, 0, -0.02))
+S.reach(oma, 2.05, "R", inf=0.0)
+S.beat(oma, 1.0, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (4, 0, 24)})
+S.beat(oma, 1.9, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (4, 0, 24)})
 S.beat(oma, 2.4, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
 S.beat(opa, 1.25, **SEAT[opa], arms=READ, face="boos", face_amt=0.6, look=(0.6, 0.1), body={"head": (6, 0, 14)})
 S.beat(opa, 2.1, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.6, look=(0.0, -0.3), body={"head": (12, 0, 0)})
@@ -62,8 +64,10 @@ S.hold(oma, END)
 box = S.obj("Pillendoosje_opa")
 SAT = box.matrix_world.translation + Matrix.Rotation(math.radians(-20), 3, "Z") @ V((-0.081 + 5 * 0.027) * 2.4, 0, 0.07)
 S.beat(opa, t_d, **SEAT[opa], arms=arm("R", (0.30, 0.75, -0.55), (-0.35, 0.85, 0.35)), face="neutraal", face_amt=0.5,
-       at=SAT, body={"head": (18, 0, -10)})
-S.reach(opa, t_d - 0.1, "L", SAT + V(0.05, -0.25, 0.25))
+       at=SAT, body={"head": (18, 0, -10), "spine": (8, 0, -18)})             # leunt opzij naar de tas
+S.reach(opa, 0.0, "L", inf=0.0)                                  # shot 1: linkerhand houdt de krant (FK)
+S.reach(opa, t_d - 0.05, "L", inf=0.0)
+S.reach(opa, t_d, "L", SAT + V(0.05, -0.25, 0.25))
 S.reach(opa, t_d + 0.45, "L", SAT + V(0.0, -0.10, 0.14))        # duim op het klepje
 S.reach(opa, t_d + 0.75, "L", SAT + V(0.0, -0.07, 0.11))        # klik
 S.reach(opa, t_d + 1.25, "L", SAT + V(0.0, -0.02, 0.13))          # vingers in het vakje
