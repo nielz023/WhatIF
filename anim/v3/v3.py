@@ -188,6 +188,16 @@ class Scene3(_v2.Scene2):
                     else:
                         d["t0"] = b
 
+    def _build_cams(self):
+        if os.environ.get("WHATIF_LIGHT", "1") != "0":
+            # filmische scherptediepte: (half)close-ups (lens >= 30) krijgen f/2.8-4 met focus op het richtpunt
+            for c in self.cams:
+                if c["dof"] is None and not c["fn"]:
+                    lenses = [c["a"][2]] + ([c["b"][2]] if c["b"] else [])
+                    if all(isinstance(x, (int, float)) for x in lenses) and min(lenses) >= 30:
+                        c["dof"] = 2.8 if min(lenses) >= 40 else 4.0
+        super()._build_cams()
+
     def post_cams(self):
         if os.environ.get("WHATIF_LIGHT", "1") != "0":
             self._cine_light()
@@ -525,7 +535,7 @@ def _cine_light(self):
             dist = 1.7 * sc_
             lo.location = h + (d * math.cos(0.6) + side * math.sin(0.6)) * dist + Vector((0, 0, 0.75 * sc_))
             lo.rotation_euler = (h - lo.location).to_track_quat("-Z", "Y").to_euler()
-            e = (95.0 if rank == 0 else 55.0) * sc_ * sc_ * (0.8 if night else 1.0)
+            e = (15.0 if rank == 0 else 9.0) * sc_ * sc_ * (1.0 if night else 0.6)
             for f, en in ((F(t0), e), (max(F(t0), F(t1) - 1), e)):
                 lo.data.energy = en
                 lo.data.keyframe_insert("energy", frame=f)
@@ -557,11 +567,14 @@ def _cine_post(self):
         out = N.new("NodeGroupOutput")
         ng.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
         gl = N.new("CompositorNodeGlare")
-        for k, v in (("glare_type", "BLOOM"), ("quality", "HIGH")):
+        for k, v in (("Type", "Bloom"), ("Quality", "High")):
             try:
-                setattr(gl, k, v)
+                gl.inputs[k].default_value = v
             except Exception:
-                pass
+                try:
+                    setattr(gl, k.lower() if k == "Quality" else "glare_type", v.upper())
+                except Exception:
+                    pass
         for name, v in (("Threshold", 1.0), ("Strength", 0.35), ("Size", 0.6)):
             if name in gl.inputs:
                 gl.inputs[name].default_value = v
@@ -581,18 +594,19 @@ def _cine_post(self):
             if "Size" in bl.inputs:
                 bl.inputs["Size"].default_value = (400, 400)
         L.new(em.outputs[0], bl.inputs[0])
-        mx = N.new("ShaderNodeMix") if False else N.new("CompositorNodeMixRGB")
-        try:
-            mx.blend_type = "MULTIPLY"
-        except Exception:
-            pass
-        mr = N.new("CompositorNodeMapRange")
+        mr = N.new("ShaderNodeMapRange")
         L.new(bl.outputs[0], mr.inputs[0])
         mr.inputs[1].default_value, mr.inputs[2].default_value = 0.0, 1.0
         mr.inputs[3].default_value, mr.inputs[4].default_value = 0.78, 1.0
-        L.new(gl.outputs["Image"], mx.inputs[1])
-        L.new(mr.outputs[0], mx.inputs[2])
-        L.new(mx.outputs[0], out.inputs[0])
+        mx = N.new("ShaderNodeMix")
+        mx.data_type, mx.blend_type = "RGBA", "MULTIPLY"
+        mx.inputs[0].default_value = 1.0
+        ins = {i.identifier: i for i in mx.inputs}
+        outs = {o.identifier: o for o in mx.outputs}
+        L.new(gl.outputs["Image"], ins["A_Color"])
+        L.new(mr.outputs[0], ins["B_Color"])
+        mx_out = outs["Result_Color"]
+        L.new(mx_out, out.inputs[0])
         sc.render.use_compositing = True
     except Exception as ex:                              # nooit een render laten vallen op de filmlook
         print("FILMLOOK overgeslagen:", ex)

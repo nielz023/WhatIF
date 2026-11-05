@@ -501,6 +501,33 @@ def _weights(rig, parts, J):
                     if w > 0.001:
                         g(bn).add([v.index], w, "REPLACE")
             continue
+        if b and b.split(".")[0] in ("upper_arm", "forearm", "hand") and "shoulder." + b[-1] in J \
+                and not pn.startswith(("telefoon", "wandelstok")) and os.environ.get("WHATIF_SOFTSKIN", "1") != "0":
+            # vloeiend skelet (niels 2026-11-05): schouder, elleboog en pols buigen zacht i.p.v. losse stukken
+            sd = b[-1]
+            sh_, el, wr = J["shoulder." + sd], J["elbow." + sd], J["wrist." + sd]
+            L1, L2 = (el - sh_).length, (wr - el).length
+            u1, u2 = (el - sh_).normalized(), (wr - el).normalized()
+            for v in o.data.vertices:
+                p_ = v.co
+                a1 = (p_ - sh_).dot(u1)                   # afstand langs de bovenarm vanaf de schouder
+                a2 = (p_ - el).dot(u2)                    # afstand langs de onderarm vanaf de elleboog
+                # langs de keten: < L1 bovenarm, daarna onderarm; elleboog-zone +-0.05, pols-zone +-0.03
+                d_el = a1 - L1 if a2 < 0 else a2         # <0 = bovenarmkant, >0 = onderarmkant
+                t_el = _smooth((d_el + 0.05) / 0.10)
+                t_wr = _smooth((a2 - L2 + 0.03) / 0.06)
+                t_sh = _smooth((a1 - 0.01) / 0.07)        # vlak bij de schouder mee met de borst
+                w_chest = (1 - t_sh) * 0.6
+                w_up = (1 - t_el) * (1 - w_chest)
+                w_fo = t_el * (1 - t_wr) * (1 - w_chest)
+                w_ha = t_el * t_wr * (1 - w_chest)
+                if b.startswith("hand"):                  # handen/vingers: alleen pols-overgang
+                    w_chest, w_up = 0.0, 0.0
+                    w_fo, w_ha = 1 - t_wr, t_wr
+                for bn, w in (("chest", w_chest), ("upper_arm." + sd, w_up), ("forearm." + sd, w_fo), ("hand." + sd, w_ha)):
+                    if w > 0.001:
+                        g(bn).add([v.index], w, "REPLACE")
+            continue
         if b:
             g(b).add([v.index for v in o.data.vertices], 1.0, "REPLACE")
             continue

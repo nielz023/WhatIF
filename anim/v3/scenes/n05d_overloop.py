@@ -58,7 +58,7 @@ HOLD1 = arms(arm("R", (0.25, 0.45, -0.85), (-0.25, 0.9, 0.3)))
 papa = S.actor("papa", (1.85, -0.15, 0), -15, outfit=PYJ["papa"])
 mama = S.actor("mama", (2.45, -0.45, 0), -55, outfit=PYJ["mama"])
 bro = S.actor("broertje", (-0.2, 2.05, 0), 0, outfit=PYJ["broertje"])
-opa = S.actor("opa", (1.6, 1.12, 0), -25, outfit=PYJ["opa"], cane=True)
+opa = S.actor("opa", (1.6, 1.12, 0), -25, outfit=PYJ["opa"])
 held = S.actor("hoofdpersonage_pyjama", (-1.9, 2.3, 0), 0)
 visible(held.body, 0.0, False)
 visible(held.body, t_g - 0.1, True)
@@ -88,23 +88,23 @@ S.beat(mama, 2.05, "armen_over", amount=0.9, face="nerveus", face_amt=0.7, at=S.
 S.beat(mama, 2.9, "armen_over", amount=1.0, face="bang", face_amt=0.5, at=S.head(papa, 2.9))
 
 # ---------------------------------------------------------------- 5e het broertje stormt naar buiten
-b_ph = phone_for(bro, "Telefoon_broertje", side="L")
+b_ph = phone_for(bro, "Telefoon_broertje", side="R")    # rechts: links grijpt hij de deurpost
 face_light(bro, "Schermlicht_broertje", energy=22)
 S.beat(bro, 0.0, "staan", face="verbaasd", face_amt=0.6)
 S.run(bro, t_e + 0.05, t_e + 0.85, [V(-0.2, 2.05, 0), V(-0.15, 1.45, 0), V(-0.05, 0.95, 0)], stride=0.42, lean=10, ease_out=0.3)
-POST = V(0.29, 1.2, 0.95)
-S.reach(bro, 0.0, "R", inf=0.0)
-S.reach(bro, t_e + 0.6, "R", inf=0.0)
-S.reach(bro, t_e + 0.85, "R", POST)
-S.reach(bro, t_e + 1.35, "R", POST)
-S.reach(bro, t_e + 1.65, "R", inf=0.0)
+POST = V(0.25, 1.12, 0.72)                       # deurpost aan zijn linkerkant, op schouderhoogte van een kind
+S.reach(bro, 0.0, "L", inf=0.0)
+S.reach(bro, t_e + 0.7, "L", inf=0.0)
+S.reach(bro, t_e + 0.85, "L", POST)
+S.reach(bro, t_e + 1.35, "L", POST)
+S.reach(bro, t_e + 1.65, "L", inf=0.0)
 S.turn(bro, t_e + 0.9, t_e + 1.4, 40, loc=V(0.05, 0.85, 0))
-S.beat(bro, t_e + 0.95, "staan", arms=arms(arm("L", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="verbaasd", face_amt=1.0, at=S.head(papa, t_e + 0.95),
+S.beat(bro, t_e + 0.95, "staan", arms=arms(arm("R", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="verbaasd", face_amt=1.0, at=S.head(papa, t_e + 0.95),
        body={"spine": (8, 0, 0)}, feet="keep")
-S.beat(bro, t_e + 1.5, "staan", arms=arms(arm("L", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="blij", face_amt=0.8, at=S.head(papa, t_e + 1.5),
+S.beat(bro, t_e + 1.5, "staan", arms=arms(arm("R", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="blij", face_amt=0.8, at=S.head(papa, t_e + 1.5),
        feet="keep")
 S.say("N05-02", who=bro, at=t_e + 1.0)
-S.beat(bro, t_e + 2.6, "staan", arms=arms(arm("L", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="lach", face_amt=0.6, at=S.head(papa, t_e + 2.6),
+S.beat(bro, t_e + 2.6, "staan", arms=arms(arm("R", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="lach", face_amt=0.6, at=S.head(papa, t_e + 2.6),
        feet="keep")
 # papa en mama kijken naar hem
 S.beat(papa, t_e + 0.9, "staan", arms=HOLD1, face="verbaasd", face_amt=0.5, at=S.head(bro, t_e + 0.9))
@@ -115,7 +115,7 @@ S.beat(opa, 0.0, "staan", face="neutraal", face_amt=0.5, at=S.head(bro, 0.0))
 # één hand (rechts) schuift de bril recht, VÓÓR het grote hoofd langs (niet erdoor); links blijft omlaag
 FWD = V(math.sin(math.radians(-25)), -math.cos(math.radians(-25)), 0)
 SIDE_R = V(-FWD.y, FWD.x, 0) * -1                       # rechterkant van opa
-GL = S.headpos(opa, t_f) + FWD * 0.40 + V(0, 0, 0.03)
+GL = S.headpos(opa, t_f) + FWD * 0.36 + V(0, 0, -0.08)          # pols vlak onder de bril: de vingers duwen hem omhoog
 S.reach(opa, 0.0, "R", inf=0.0)
 S.reach(opa, 0.0, "L", inf=0.0)
 S.reach(opa, t_f + 0.1, "R", inf=0.0)
@@ -127,9 +127,9 @@ S.beat(opa, t_f + 0.5, "staan", face="neutraal", face_amt=0.4, look=(0.0, 0.0), 
 S.beat(opa, t_f + 1.3, "staan", face="vastberaden", face_amt=0.4, at=S.head(bro, t_f + 1.3))
 S.say("N05-03", who=opa, at=t_f + 0.4)
 S.beat(opa, t_f + 3.6, "staan", face="verdrietig", face_amt=0.4, at=S.head(bro, t_f + 3.6))
-S.beat(bro, t_f + 0.8, "staan", arms=arms(arm("L", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="twijfel", face_amt=0.6, at=S.head(opa, t_f + 0.8),
+S.beat(bro, t_f + 0.8, "staan", arms=arms(arm("R", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="twijfel", face_amt=0.6, at=S.head(opa, t_f + 0.8),
        feet="keep")
-S.beat(bro, t_f + 3.0, "staan", arms=arms(arm("L", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="nerveus", face_amt=0.7, at=S.head(opa, t_f + 3.0),
+S.beat(bro, t_f + 3.0, "staan", arms=arms(arm("R", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="nerveus", face_amt=0.7, at=S.head(opa, t_f + 3.0),
        feet="keep")
 S.beat(papa, t_f + 0.3, "staan", arms=HOLD1, face="nerveus", face_amt=0.6, at=S.head(opa, t_f + 0.3))
 S.beat(mama, t_f + 0.3, "armen_over", amount=1.0, face="bang", face_amt=0.5, at=S.head(opa, t_f + 0.3))
@@ -147,18 +147,19 @@ S.beat(held, t_g, "staan", arms=HOLD1, face="nerveus", face_amt=0.7, look=(0.0, 
 S.beat(held, t_g + 1.5, "staan", arms=HOLD1, face="nerveus", face_amt=0.8, look=(0.3, -0.2), feet="keep")
 S.beat(mama, t_g, "staan", arms=arms(arm("L", (0.25, 0.45, -0.85), (-0.35, 0.85, 0.25))), face="bang", face_amt=0.5,
        look=(0.0, -0.4), feet="keep")
-SHOULDER = S.headpos(bro, t_g + 1.0) + V(0.18, 0.05, -0.38)
+# mama legt haar hand op zijn hoofd (zijn schouder zit te laag voor haar korte arm)
+SHOULDER = S.headpos(bro, t_g + 1.0) + V(0.12, -0.05, 0.27)
 S.reach(mama, t_g, "R", inf=0.0)
-S.reach(mama, t_g + 0.9, "R", inf=0.0)
+S.reach(mama, t_g + 1.1, "R", inf=0.0)
 S.reach(mama, t_g + 1.4, "R", SHOULDER)
 S.reach(mama, END, "R", SHOULDER)
 S.beat(mama, t_g + 1.4, "staan", arms=arms(arm("L", (0.25, 0.45, -0.85), (-0.35, 0.85, 0.25))), face="verdrietig", face_amt=0.4,
        at=S.head(bro, t_g + 1.4), feet="keep")
 S.beat(papa, t_g, "staan", arms=HOLD1, face="nerveus", face_amt=0.7, look=(0.0, -0.4), feet="keep")
 S.beat(papa, t_g + 1.8, "staan", arms=HOLD1, face="nerveus", face_amt=0.7, at=S.head(held, t_g + 1.8), feet="keep")
-S.beat(bro, t_g, "staan", arms=arms(arm("L", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="nerveus", face_amt=0.6,
+S.beat(bro, t_g, "staan", arms=arms(arm("R", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="nerveus", face_amt=0.6,
        look=(0.0, -0.4), feet="keep")
-S.beat(bro, t_g + 1.5, "staan", arms=arms(arm("L", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="verdrietig", face_amt=0.4,
+S.beat(bro, t_g + 1.5, "staan", arms=arms(arm("R", (0.3, 0.5, -0.8), (-0.2, 0.9, 0.3))), face="verdrietig", face_amt=0.4,
        at=S.head(mama, t_g + 1.5), feet="keep")
 S.beat(opa, t_g, "staan", face="verdrietig", face_amt=0.4, at=S.head(held, t_g))
 

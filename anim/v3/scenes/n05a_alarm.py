@@ -48,7 +48,7 @@ DUV_TOP = 0.80
 held = S.actor("hoofdpersonage_pyjama", LIE_AT, 0)
 spec, rz = sit(held, seat_top=0.52, lean=4)
 LEG = held.J["pelvis"].z - held.J["ankle.L"].z
-FZ = 0.6 - rz                                     # hielen op de matras, benen gestrekt onder het dekbed
+FZ = 0.49 - rz                                     # hielen op de matras, benen gestrekt onder het dekbed
 spec["feet"] = ((0.06, 0.8 * LEG, FZ), (-0.06, 0.8 * LEG, FZ))
 P_ = held.J["pelvis"].z
 HIP = LIE_AT + V(0, P_ * math.sin(math.radians(75)), P_ * math.cos(math.radians(75)))
@@ -86,16 +86,55 @@ for t, tilt in ((0.0, -80), (T_UP0, -80), (T_UP0 + 0.3, -30), (T_UP1, 0), (END, 
     piv.rotation_euler = (math.radians(tilt), 0, 0)
     piv.keyframe_insert("rotation_euler", frame=F(t))
 held.last = None
+
+
+# benen blijven plat op de matras (onder het dekbed) terwijl het lijf om de heup omhoog kantelt:
+# voor kanteling a (graden achterover) wijzen de benen in rig-ruimte (0, -cos a, -sin a)
+def legs(a_deg):
+    a = math.radians(a_deg)
+    drop = spec["crouch"][0]
+    out = []
+    for (sx, fwd0, fz0) in spec["feet"]:
+        rest = held.J["ankle.L"].z - (P_ - drop)          # rust-enkel t.o.v. de (gezakte) heup
+        v0y, v0z = -fwd0, fz0 + rest                      # zittend: enkel t.o.v. heup (wereld = rig bij 0 graden)
+        y = v0y * math.cos(a) - v0z * math.sin(a)
+        z = v0y * math.sin(a) + v0z * math.cos(a)
+        out.append((sx, -y, z - rest))
+    return tuple(out)
+
+
+TILTS = ((0.0, 80), (T_UP0, 80), (T_UP0 + 0.3, 30), (T_UP1, 0), (END, 0))
+
+
+def tilt_at(t):
+    for (a, ta), (b, tb) in zip(TILTS, TILTS[1:]):
+        if a <= t <= b:
+            w = (t - a) / max(1e-3, b - a)
+            w = w * w * (3 - 2 * w)
+            return ta + (tb - ta) * w
+    return 0.0
+
+
+LIE = dict(crouch=spec["crouch"], feet=legs(80))
 # slapen: armen langs het lijf, ogen dicht, rustige adem
-S.beat(held, 0.0, "staan", face="neutraal", face_amt=0.2, look=(0.0, 0.0), body={"head": (-4, 10, 0)})
+S.beat(held, 0.0, "staan", face="neutraal", face_amt=0.2, look=(0.0, 0.0), body={"head": (-4, 10, 0)}, **LIE)
 S.eyes_closed(held, 0.0, T_WAKE)
 for k, t in enumerate(frange(0.0, T_PING, 0.5)):
     A.bone_rot(held, F(t), "chest", (3 if k % 2 else -2, 0, 0))
-S.beat(held, T_PING + 0.05, "staan", face="neutraal", face_amt=0.3, look=(0.0, 0.0), body={"head": (-4, 10, 0)})
-S.beat(held, T_WAKE + 0.05, "staan", face="geschrokken", face_amt=0.8, look=(0.5, -0.2), body={"head": (-8, 22, 0)})
+S.beat(held, T_PING + 0.05, "staan", face="neutraal", face_amt=0.3, look=(0.0, 0.0), body={"head": (-4, 10, 0)}, **LIE)
+S.beat(held, T_WAKE + 0.05, "staan", face="geschrokken", face_amt=0.8, look=(0.5, -0.2), body={"head": (-8, 22, 0)}, **LIE)
 # rechtop: zithouding (benen onder het dekbed), kijkt naar de telefoon naast zich
 S.beat(held, T_UP1, "staan", face="geschrokken", face_amt=1.0, look=(0.6, -0.6), body={"head": (-18, 25, 0)}, **spec)
 
+# tijdens het overeind komen: benen per beeld plat houden (overschrijft de tussenwaarden van de beats)
+# de voet zelf draait mee terug (anders staan de tenen liggend rechtop en prikken ze door het dekbed)
+FSGN = float(os.environ.get("N05A_FSGN", "-1"))
+for f in range(1, F(T_UP1) + 1):
+    a = tilt_at((f - 1) / FPS)
+    fl, fr = legs(a)
+    A.crouch(held, f, *spec["crouch"])
+    A.foot(held, f, "L", fl, (FSGN * a, 0, 0))
+    A.foot(held, f, "R", fr, (FSGN * a, 0, 0))
 # de telefoon ligt naast zijn linkerhand op het dekbed (set-telefoon op het nachtkastje weg)
 for nm in ("Telefoon", "Telefoon_scherm", "Telefoon_gloed"):
     o = bpy.data.objects.get(nm)
@@ -117,6 +156,7 @@ phone.keyframe_insert("location", frame=F(0.0))
 # pakken: linkerhand naar de telefoon, dan met twee handen voor zijn borst, scherm naar zijn gezicht
 S.reach(held, 0.0, "L", None, 0.0)
 S.reach(held, T_UP1, "L", None, 0.0)
+S.sc.frame_set(F(T_GRAB))                       # rig hangt aan het kantelpunt: reach() rekent via matrix_world van dit beeld
 S.reach(held, T_GRAB, "L", PH + V(0.0, 0.0, 0.05))
 S.reach(held, T_GRAB + 0.2, "L", None, 0.0)
 grab(S, phone, held, T_GRAB, "hand.L", loc=(0, 0.06, 0.0), mode="loc", offset=(-0.03, -0.05, 0.06))
