@@ -12,7 +12,7 @@ from v3 import *  # noqa: E402,F401,F403
 from lib import huis as HU  # noqa: E402
 
 S = Scene3("n18f", "stadsplein", "jaar1", exposure=0.3)
-sh = S.cuts([6.8])
+sh = S.cuts([3.4, 3.4])
 END = sh[-1][1]
 bpy.context.view_layer.update()
 
@@ -96,7 +96,10 @@ for n, p, act in (("figurant_a", V(-1.6, 9.6, 0), "lees"), ("figurant_e", V(-0.4
     S.hold(ch, END)
 
 # ---------------------------------------------------------------- camera: trage pull-back
-S.cam(0.0, ((2.6, 5.5, 2.2), (1.2, 12.0, 2.8), 28), ((4.4, -2.2, 2.6), (0.4, 12.0, 2.8), 26))
+# 18f1 MEDIUM op de ladder en het bord, lichte pull-back (lezers onderin volledig in beeld)
+S.cam(0.0, ((3.0, 2.6, 2.3), (1.2, 12.0, 2.3), 30), ((3.5, 1.0, 2.4), (1.0, 12.0, 2.3), 29))
+# 18f2 WIDE het hele plein, de nieuwe regel op het bord
+S.cam(sh[1][0], ((-2.6, 0.2, 2.5), (0.8, 12.0, 2.4), 26), ((-3.4, -1.8, 2.8), (0.6, 12.0, 2.5), 25))
 
 # ---------------------------------------------------------------- HUD, geluid, stem
 S.counter("YEAR 1", [(0.0, 212), (T_W1 + 0.1, 213)], t0=0.0)
