@@ -3,6 +3,7 @@ import { Html } from '@react-three/drei';
 import type { Agent, DepartmentId } from '../../types';
 import { Box, Bookshelf, Cooler, Desk, Easel, Frame, MeetingTable, MicStand, Plant, ServerRack, Sofa, WallScreen, Whiteboard, Chair } from './Furniture';
 import { Employee } from './Employee';
+import { Poster, ROOM_POSTERS, DM } from './DriftmarkDecor';
 
 export const ROOM = 10;
 const H = 2.7; // wall height
@@ -83,6 +84,9 @@ export function Room({ id, name, icon, color, wall, floor, position, agents, pen
         <Desk key={i} p={[x, 0, z]} screen={i % 2 ? color : '#3b82f6'} active={agents[i]?.state === 'working'} dual={id === 'production' || id === 'ceo'} />
       ))}
       <DeptDecor id={id} color={color} />
+      {/* Driftmark-posters */}
+      {ROOM_POSTERS[id] && <Poster src={ROOM_POSTERS[id][0]} p={id === 'warroom' ? [-3.85, 1.65, -HALF + 0.2] : [-2.5, 1.6, -HALF + 0.2]} w={id === 'warroom' ? 1.1 : 2.2} h={id === 'warroom' ? 0.75 : 1.35} frame={color} />}
+      {ROOM_POSTERS[id] && <Poster src={ROOM_POSTERS[id][1]} p={[-HALF + 0.2, 1.6, 2.9]} rot={Math.PI / 2} w={2.2} h={1.35} frame={DM.orange} />}
       <Plant p={[HALF - 0.6, 0, -HALF + 0.6]} />
       <Plant p={[-HALF + 0.6, 0, HALF - 0.6]} scale={0.8} />
 
