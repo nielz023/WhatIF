@@ -220,3 +220,26 @@ class Body:
             if fc.data_path == "location":
                 loc[fc.array_index] = fc.evaluate(F(t))
         return Vector(loc)
+
+
+def skin_tint(ch, keys, color=(0.42, 0.10, 0.62)):
+    """Huid kleurt (bv. paars van de peper): keys = [(t, 0..1), ...]. Werkt op de huid-materialen van ch."""
+    mats = {sl.material for o in ch.rig.children for sl in o.material_slots if sl.material and "huid" in sl.material.name}
+    for m in mats:
+        nt = m.node_tree
+        bs = [n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"]
+        if not bs:
+            continue
+        inp = bs[0].inputs["Base Color"]
+        mix = nt.nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.blend_type = "MIX"
+        if inp.links:
+            nt.links.new(inp.links[0].from_socket, mix.inputs[6])
+        else:
+            mix.inputs[6].default_value = inp.default_value
+        mix.inputs[7].default_value = tuple(color) + (1.0,)
+        nt.links.new(mix.outputs[2], inp)
+        for t, v in keys:
+            mix.inputs[0].default_value = v
+            mix.inputs[0].keyframe_insert("default_value", frame=F(t))
