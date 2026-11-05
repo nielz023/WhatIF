@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, Component, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from './store/useGame';
 import Sidebar, { MobileNav, StudioTabs, STUDIO } from './components/layout/Sidebar';
@@ -51,6 +51,30 @@ function useSimulationLoop() {
   }, []);
 }
 
+/** Vangt een fout in één scherm op, zodat niet de hele HQ crasht. */
+class PageBoundary extends Component<{ children: ReactNode }, { err: string | null }> {
+  state = { err: null as string | null };
+  static getDerivedStateFromError(e: unknown) { return { err: String((e as Error)?.message ?? e) }; }
+  componentDidCatch(e: unknown) { console.error('[HQ] scherm-fout', e); }
+  render() {
+    if (!this.state.err) return this.props.children;
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="panel max-w-md p-6 text-center">
+          <div className="text-3xl">🛠️</div>
+          <div className="mt-2 font-display text-xl font-bold text-white">Dit scherm liep vast</div>
+          <p className="mt-1 text-[14px] text-slate-300">De rest van de HQ werkt gewoon. Ga terug naar Home, of laat Claude weten welke knop je indrukte.</p>
+          <p className="mt-2 break-words text-[12px] text-slate-500">{this.state.err}</p>
+          <div className="mt-4 flex justify-center gap-2">
+            <button className="btn-primary" onClick={() => useGame.getState().setPage('driftmark')}>Naar Home</button>
+            <button className="btn-ghost" onClick={() => this.setState({ err: null })}>Opnieuw</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
 export default function App() {
   useSimulationLoop();
   const page = useGame((s) => s.page);
@@ -74,7 +98,7 @@ export default function App() {
         <main className="relative min-h-0 flex-1 pb-[64px] md:pb-0">
           <AnimatePresence mode="wait">
             <motion.div key={page} className="absolute inset-0" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-              <Page />
+              <PageBoundary key={page}><Page /></PageBoundary>
             </motion.div>
           </AnimatePresence>
           {STUDIO.some((x) => x.id === page) && <BottomActions />}

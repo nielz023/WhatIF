@@ -33,7 +33,7 @@ export function ToolsPanel() {
         <Card title="Blender (je pc)" status={blender ? 'ok' : 'laden'}>
           {blender ? (<>
             <div className="text-slate-300">{blender.stand}</div>
-            {blender.wachtrij.slice(0, 6).map((w) => <div key={w.naam}>• {w.naam} <span className="text-slate-500">· {w.status}</span></div>)}
+            {Array.isArray(blender.wachtrij) ? blender.wachtrij.slice(0, 6).map((w, i) => <div key={w?.naam ?? i}>• {typeof w === 'string' ? w : w?.naam} {typeof w !== 'string' && w?.status && <span className="text-slate-500">· {w.status}</span>}</div>) : blender.wachtrij ? <div>Wachtrij: {String(blender.wachtrij)}</div> : null}
             <div className="text-slate-500">bijgewerkt {blender.bijgewerkt}</div>
           </>) : <div>Renderwachtrij via Remote Control op je pc. De animatie-thread zet de stand hier neer.</div>}
         </Card>
