@@ -24,8 +24,11 @@ S.obj("Pillendoosje_opa").scale = (2.4, 2.4, 2.4)        # op maat van de grote 
 bpy.context.view_layer.update()
 
 # ---------------------------------------------------------------- opa en oma in hun strandstoelen
-OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.4, -2.05, 0)
-opa = S.actor("opa", OPA_AT, -5)
+OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.72, -2.02, 0)
+_st = S.obj("Strandstoel_oma")
+if _st is not None:
+    _st.location.x, _st.location.y = -3.72, -2.07         # stoel schuift mee: oma zit dichter bij opa
+opa = S.actor("opa", OPA_AT, -5, drop=("wandelstok",))        # stok laat hij bij het strand liggen
 oma = S.actor("oma", OMA_AT, 5)
 SEAT = {}
 for ch, at, r in ((opa, OPA_AT, -5), (oma, OMA_AT, 5)):
@@ -40,7 +43,7 @@ READ = arms(arm("L", (0.30, 0.75, -0.55), (-0.35, 0.85, 0.35)), arm("R", (0.30, 
 S.beat(opa, 0.0, **SEAT[opa], arms=READ, face="neutraal", face_amt=0.5, at=krant.matrix_world.translation + V(0, -0.4, 0.1))
 S.beat(opa, 0.7, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.4, look=(0.0, -0.3), body={"head": (14, 0, 0)})
 # oma smeert zonnebrand op zijn neus: hij trekt een gezicht en leunt weg
-NOSE = S.head(opa) + V(0.05, -0.32, -0.05)
+NOSE = S.headpos(opa, 0.9) + V(0.05, -0.32, -0.05)
 S.beat(oma, 0.0, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
 S.reach(oma, 0.5, "R", inf=0.0)
 S.reach(oma, 0.9, "R", NOSE + V(0.15, -0.05, 0))
@@ -48,7 +51,7 @@ S.reach(oma, 1.3, "R", NOSE + V(0.05, 0, 0.02))
 S.reach(oma, 1.6, "R", NOSE + V(0.05, 0, -0.02))
 S.reach(oma, 1.9, "R", NOSE + V(0.05, 0, 0.02))
 S.reach(oma, 2.4, "R", inf=0.0)
-S.beat(oma, 1.0, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (0, 0, -10)})
+S.beat(oma, 1.0, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (4, 0, -20)})
 S.beat(oma, 2.4, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
 S.beat(opa, 1.25, **SEAT[opa], arms=READ, face="boos", face_amt=0.6, look=(0.6, 0.1), body={"head": (6, 0, 14)})
 S.beat(opa, 2.1, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.6, look=(0.0, -0.3), body={"head": (12, 0, 0)})
@@ -77,7 +80,7 @@ S.hold(opa, END)
 
 # ---------------------------------------------------------------- strandwacht: fluit en wijst naar de vlaggen
 wacht = S.actor("strandwacht", (6.0, -7.95, 0), 0)
-spec, z = sit(wacht, seat_top=2.04, lean=-6)
+spec, z = sit(wacht, seat_top=2.04, lean=-6, bent=True)
 S.place(wacht, 0, V(6.0, -7.95, z), 0)
 FLAG = V(-6.0, -19.5, 1.5)
 S.beat(wacht, 0.0, **spec, face="neutraal", face_amt=0.5, at=V(2.0, -22.0, 0.5))

@@ -26,8 +26,11 @@ for o in list(bpy.data.objects):
 SIGN = V(1.0, -14.5, 1.65)
 
 # ---------------------------------------------------------------- opa en oma in hun strandstoelen (zoals scène 3c)
-OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.4, -2.05, 0)
-opa = S.actor("opa", OPA_AT, -5)
+OPA_AT, OMA_AT = V(-4.6, -1.95, 0), V(-3.72, -2.02, 0)
+_st = S.obj("Strandstoel_oma")
+if _st is not None:
+    _st.location.x, _st.location.y = -3.72, -2.07         # stoel schuift mee: oma zit dichter bij opa
+opa = S.actor("opa", OPA_AT, -5, drop=("wandelstok",))        # stok laat hij bij het strand liggen
 oma = S.actor("oma", OMA_AT, 5)
 SEAT = {}
 for ch, at, r in ((opa, OPA_AT, -5), (oma, OMA_AT, 5)):
@@ -39,7 +42,7 @@ attach(krant, opa, "hand.R", (0.22, 0.05, 0.02), (90, 0, 0))
 READ = arms(arm("L", (0.30, 0.75, -0.55), (-0.35, 0.85, 0.35)), arm("R", (0.30, 0.75, -0.55), (-0.35, 0.85, 0.35)))
 S.beat(opa, 0.0, **SEAT[opa], arms=READ, face="neutraal", face_amt=0.5, at=krant.matrix_world.translation + V(0, -0.4, 0.1))
 S.beat(opa, t_e + 0.3, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.4, look=(0.0, -0.3), body={"head": (14, 0, 0)})
-NOSE = S.head(opa) + V(0.05, -0.32, -0.05)
+NOSE = S.headpos(opa, t_e + 0.6) + V(0.05, -0.32, -0.05)
 S.beat(oma, 0.0, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
 k = 1.4                                                  # trager dan in scène 3
 S.reach(oma, 0.0, "R", inf=0.0)
@@ -49,7 +52,7 @@ S.reach(oma, t_e + 0.2 + 0.8 * k, "R", NOSE + V(0.05, 0, 0.02))
 S.reach(oma, t_e + 0.2 + 1.1 * k, "R", NOSE + V(0.05, 0, -0.02))
 S.reach(oma, t_e + 0.2 + 1.4 * k, "R", NOSE + V(0.05, 0, 0.02))
 S.reach(oma, t_e + 0.2 + 1.9 * k, "R", inf=0.0)
-S.beat(oma, t_e + 0.2 + 0.5 * k, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (0, 0, -10)})
+S.beat(oma, t_e + 0.2 + 0.5 * k, **SEAT[oma], face="lach", face_amt=0.7, at=S.head(opa), body={"spine": (4, 0, -20)})
 S.beat(oma, t_e + 0.2 + 1.9 * k, **SEAT[oma], face="blij", face_amt=0.6, at=S.head(opa))
 S.beat(opa, t_e + 0.2 + 0.75 * k, **SEAT[opa], arms=READ, face="boos", face_amt=0.6, look=(0.6, 0.1), body={"head": (6, 0, 14)})
 S.beat(opa, t_e + 0.2 + 1.6 * k, **SEAT[opa], arms=READ, face="twijfel", face_amt=0.6, look=(0.0, -0.3), body={"head": (12, 0, 0)})
@@ -61,7 +64,7 @@ S.hold(oma, END)
 
 # ---------------------------------------------------------------- de strandwacht: fluit en wijst (zoals scène 3c)
 wacht = S.actor("strandwacht", (6.0, -7.95, 0), 0)
-spec, z = sit(wacht, seat_top=2.04, lean=-6)
+spec, z = sit(wacht, seat_top=2.04, lean=-6, bent=True)
 S.place(wacht, 0, V(6.0, -7.95, z), 0)
 FLAG = V(-6.0, -19.5, 1.5)
 S.beat(wacht, 0.0, **spec, face="neutraal", face_amt=0.5, at=V(2.0, -22.0, 0.5))

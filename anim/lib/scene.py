@@ -1040,7 +1040,7 @@ CLAP_B = arms(arm("L", (0.3, 0.8, -0.3), (0.3, 0.9, 0.1)), arm("R", (0.3, 0.8, -
 # ---------------------------------------------------------------------------
 # Zitten, scharnieren en nog wat rekwisieten
 # ---------------------------------------------------------------------------
-def sit(ch, seat_top=0.49, lean=-4.0, spread=0.07):
+def sit(ch, seat_top=0.49, lean=-4.0, spread=0.07, bent=False):
     """Zithouding voor beat(): geeft (spec, root_z). Zet de wortel van het figuur boven het midden van de
     zitting op hoogte root_z (> 0 voor kinderen, hun voeten bungelen dan)."""
     P_ = ch.J["pelvis"].z
@@ -1056,6 +1056,9 @@ def sit(ch, seat_top=0.49, lean=-4.0, spread=0.07):
         drop = 0.03
         root_z = want - (P_ - drop)
         feet = ((spread * 0.3, 0.16, 0.06), (-spread * 0.3, 0.12, 0.03))
+        if bent:                                         # hoge stoel (strandwacht): knieën ~90°, voeten naar voren
+            fwd, up = 0.42 * L, 0.40 * L                 # enkel 0.42 L vooruit en 0.40 L omhoog t.o.v. hangend
+            feet = ((spread * 0.3, fwd, up), (-spread * 0.3, fwd * 0.92, up))
     return dict(crouch=(drop, lean), feet=feet), root_z
 
 
