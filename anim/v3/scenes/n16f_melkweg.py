@@ -22,7 +22,7 @@ t_g, t_g2, t_g3, t_h, t_h2 = [s[0] for s in sh[1:]]
 for o in list(bpy.data.objects):
     if o.name.startswith(("Bram", "Hoofdpersonage")) and o.type != "CAMERA":
         o.hide_render = o.hide_viewport = True
-night_sky(stars=1.0, milky=1.2)
+night_sky(stars=1.0, milky=1.4, band=(-0.904, 0.326, 0.276))      # band schuin door het beeld van 16g2
 
 # ---------------------------------------------------------------- het dakvlak aan de tuinkant opmeten
 bpy.context.view_layer.update()
@@ -59,8 +59,8 @@ def lie(ch, x, feet_y, back=0.16):
     return p
 
 
-held = S.actor("hoofdpersonage_kind", (0.55, -0.8, 7.0), 0)
-opa = S.actor("opa", (-0.55, -0.8, 7.0), 0, drop=("wandelstok",))
+held = S.actor("hoofdpersonage_kind", (0.55, -0.8, -50.0), 0)      # eerst ver weg: de dak-raycast mag hem zelf niet raken
+opa = S.actor("opa", (-0.55, -0.8, -50.0), 0, drop=("wandelstok",))
 lie(held, 0.55, -0.55)
 lie(opa, -0.55, -0.15)
 bpy.context.view_layer.update()
@@ -104,7 +104,7 @@ S.cam(0.0, ((3.8, 7.0, 1.5), MID + V(0, 0.4, 0.4), 26), ((2.0, 3.2, 8.7), MID + 
 # 16g CLOSE opa, van boven
 S.cam(t_g, (HO + NRM * 1.15 + UP * 0.25 + V(-0.15, 0, 0), HO + V(0, 0, 0.02), 32), (HO + NRM * 1.05 + UP * 0.22 + V(-0.14, 0, 0), HO + V(0, 0, 0.02), 34))
 # 16g2 de Melkweg: vanaf hun hoofden omhoog
-S.cam(t_g2, (MID + NRM * 0.6 + UP * 0.6, MID + NRM * 6.0 + UP * 9.0 + V(1.0, 0, 0), 18), (MID + NRM * 0.6 + UP * 0.6, MID + NRM * 6.0 + UP * 9.0 + V(2.6, 0, 0), 18))
+S.cam(t_g2, (MID + NRM * 1.8 + UP * 1.4, MID + NRM * 8.0 + UP * 9.0 + V(1.0, 0, 0), 18), (MID + NRM * 1.8 + UP * 1.4, MID + NRM * 8.0 + UP * 9.0 + V(2.6, 0, 0), 18))   # boven hun hoofden: geen hoofd in beeld
 # 16g3 WIDE vanaf de nok, over hun hoofden de tuin in
 S.cam(t_g3, (MID + UP * 3.0 + NRM * 2.6, MID - UP * 1.6, 24), (MID + UP * 2.8 + NRM * 2.5, MID - UP * 1.6, 25))
 # 16h CLOSE de jongen

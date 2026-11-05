@@ -919,7 +919,7 @@ def no_phone(ch, screen="6FB7FF", case="1A1A1A"):
     print("TELEFOON WEG", ch.name, len(kill), "vlakken")
 
 
-def night_sky(stars=1.0, milky=1.0, band=(0.95, 0.3, 0.12), width=0.16):
+def night_sky(stars=1.0, milky=1.0, band=(0.95, 0.3, 0.12), width=0.3):
     """Sterren en een Melkweg in de wereld (op de lucht die de camera ziet). band = normaal van het Melkwegvlak."""
     w = bpy.context.scene.world
     N, L = w.node_tree.nodes, w.node_tree.links
@@ -957,12 +957,12 @@ def night_sky(stars=1.0, milky=1.0, band=(0.95, 0.3, 0.12), width=0.16):
     bandm.interpolation_type = "SMOOTHSTEP"
     L.new(ab.outputs["Value"], bandm.inputs["Value"])
     noise = N.new("ShaderNodeTexNoise")
-    noise.inputs["Scale"].default_value = 7.0
-    noise.inputs["Detail"].default_value = 10.0
+    noise.inputs["Scale"].default_value = 3.5
+    noise.inputs["Detail"].default_value = 12.0
     L.new(nrm.outputs["Vector"], noise.inputs["Vector"])
     nmr = N.new("ShaderNodeMapRange")
-    nmr.inputs["From Min"].default_value = 0.42
-    nmr.inputs["From Max"].default_value = 0.75
+    nmr.inputs["From Min"].default_value = 0.3
+    nmr.inputs["From Max"].default_value = 0.8
     L.new(noise.outputs["Fac"], nmr.inputs["Value"])
     glow = N.new("ShaderNodeMath")
     glow.operation = "MULTIPLY"

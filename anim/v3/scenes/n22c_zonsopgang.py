@@ -13,9 +13,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from v3 import *  # noqa: E402,F401,F403
 
 S = Scene3("n22c", "stadsplein", "middernacht", exposure=0.2, night=True)
-sh = S.cuts([6.0, 2.0])
+sh = S.cuts([3.3, 2.7, 2.0])
 END = sh[-1][1]
-t_d = sh[1][0]
+t_c2, t_d = sh[1][0], sh[2][0]
 bpy.context.view_layer.update()
 
 for o in list(bpy.data.objects):
@@ -48,7 +48,16 @@ so = bpy.data.objects.new(sl.name, sl)
 S.sc.collection.objects.link(so)
 so.rotation_euler = (math.radians(82), 0, 0)               # laag uit het zuiden
 light_key(so, 0.0, 0.0, interp="LINEAR")
-light_key(so, END, 2.5, interp="LINEAR")
+light_key(so, END, 3.2, interp="LINEAR")
+# dageraad: een warme gloed laag aan de zuidelijke horizon, achter de zon (wordt sterker terwijl de zon opkomt)
+GLOW = T.box("Dageraad_gloed", (0, -236, -6), (520, 0.5, 46), S.mat("dageraad_gloed", (1.0, 0.45, 0.16), 0.0), bevel=0, ol=0)
+GLOW.visible_shadow = False
+emission_key("dageraad_gloed", 0.0, 0.4, interp="LINEAR")
+emission_key("dageraad_gloed", 6.0, 3.0, interp="LINEAR")
+GLOW2 = T.box("Dageraad_gloed_hoog", (0, -238, 40), (520, 0.5, 70), S.mat("dageraad_gloed_hoog", (0.95, 0.55, 0.45), 0.0), bevel=0, ol=0)
+GLOW2.visible_shadow = False
+emission_key("dageraad_gloed_hoog", 0.0, 0.1, interp="LINEAR")
+emission_key("dageraad_gloed_hoog", 6.0, 0.9, interp="LINEAR")
 
 # ---------------------------------------------------------------- de jongen met zijn telefoon
 TC = V(0.0, 4.0, 0)
@@ -80,7 +89,10 @@ S.reach(held, t_d, "L", UP_ + V(0.05, -0.05, 0.03))
 S.hold(held, END)
 
 # ---------------------------------------------------------------- camera: trage pull-back, dan zwart
-S.cam(0.0, ((2.4, -0.6, 1.75), HH + V(0, 0, -0.25), 30), ((3.9, -4.6, 2.6), HH + V(0, 0, -0.15), 30))
+# 22c1 schuin achter hem, de opkomende zon in: hij als silhouet tegen de dageraad, de schermen gaan uit
+S.cam(0.0, (H + V(1.25, 1.9, 1.55), H + V(-0.35, -4.0, 1.25), 30), (H + V(1.9, 3.3, 2.0), H + V(-0.35, -5.0, 1.15), 29))
+# 22c2 van voren, warm zonlicht op zijn gezicht: de telefoon licht op, zijn duim beweegt ernaartoe; trage pull-back
+S.cam(t_c2, ((2.4, -0.6, 1.75), HH + V(0, 0, -0.25), 32), ((3.2, -2.6, 2.1), HH + V(0, 0, -0.2), 30))
 S.black(t_d, END, "")
 
 # ---------------------------------------------------------------- geluid, stem
