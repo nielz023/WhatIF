@@ -1,7 +1,13 @@
 import { useEffect, Component, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from './store/useGame';
-import Sidebar, { MobileNav, StudioTabs, STUDIO } from './components/layout/Sidebar';
+import { MobileNav, StudioTabs, STUDIO, MAIN } from './components/layout/Sidebar';
+import GlassNav from './components/layout/GlassNav';
+import WorldLayer from './world/WorldLayer';
+import HomeHud from './world/HomeHud';
+import { HoloPanel } from './world/HoloPanel';
+import { useWorld } from './world/useWorld';
+import type { WorldMode } from './world/NeonOffice';
 import Coach from './components/shared/Coach';
 import Tour from './components/shared/Tour';
 import TopBar from './components/layout/TopBar';
@@ -31,7 +37,7 @@ import { startLive } from './services/live';
 import { startTools } from './services/tools';
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
-  driftmark: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
+  driftmark: () => null, overzicht: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
   threads: ThreadsPage, finances: FinancesPage, upgrades: UpgradesPage, achievements: AchievementsPage,
   settings: SettingsPage, warroom: WarRoomPage,
 };
@@ -75,44 +81,80 @@ class PageBoundary extends Component<{ children: ReactNode }, { err: string | nu
   }
 }
 
+const TITLES: Partial<Record<PageId, { t: string; sub: string; c: string }>> = {
+  overzicht: { t: 'Dagoverzicht', sub: 'Wat er nu gebeurt en wat op jou wacht', c: '#FF7A24' },
+  videos: { t: "Video's", sub: 'Productie van idee tot upload, plus shorts', c: '#FF4DB8' },
+  kanaal: { t: 'Kanaal', sub: 'Abonnees, weergaven, kijkduur en groei', c: '#FACC15' },
+  coach: { t: 'Claude · CEO Coach', sub: 'Gesprek, briefing, doelen, beslissingen, agents en rapporten', c: '#FF7A24' },
+  meer: { t: 'Meer', sub: 'Taken, cast & sets, werkwijze, gereedschap, ideeën, koppelingen', c: '#20D9FF' },
+  settings: { t: 'Instellingen', sub: 'Koppelingen en opslag', c: '#94A3B8' },
+};
+
 export default function App() {
   useSimulationLoop();
   const page = useGame((s) => s.page);
+  const setPage = useGame((s) => s.setPage);
+  const bump = useWorld((s) => s.bump);
   const Page = PAGES[page] ?? DriftmarkPage;
+  const studio = STUDIO.some((x) => x.id === page);
+  const mode: WorldMode = page === 'driftmark' ? 'home' : page === 'hq' ? 'studio' : 'panel';
+  const meta = TITLES[page] ?? (studio ? { t: `Studio · ${STUDIO.find((x) => x.id === page)?.label ?? ''}`, sub: 'Het kantoor beheren', c: '#398CFF' } : { t: MAIN.find((x) => x.id === page)?.label ?? '', sub: '', c: '#FF7A24' });
+
+  useEffect(() => { bump(); }, [page, bump]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.closest('input,textarea,select')) return;
-            if (e.key === 'Escape') { const st = useGame.getState(); st.selectAgent(null); st.selectProject(null); st.selectDept(null); st.setNotifOpen(false); }
+      if (e.key === 'Escape') {
+        const st = useGame.getState(); const w = useWorld.getState();
+        if (st.selectedAgentId || st.selectedProjectId || st.selectedDept || st.notifOpen) { st.selectAgent(null); st.selectProject(null); st.selectDept(null); st.setNotifOpen(false); return; }
+        if (w.worker) return w.openWorker(null);
+        if (w.focus) return w.setFocus(null);
+        if (st.page !== 'driftmark') st.setPage('driftmark');
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   return (
-    <div className="flex h-full w-full">
-      <Sidebar />
-      <div className="relative flex min-w-0 flex-1 flex-col">
-        <TopBar />
-        {STUDIO.some((x) => x.id === page) && <StudioTabs />}
+    <div className="relative h-full w-full overflow-hidden bg-[#050816]">
+      <WorldLayer mode={mode} />
+      <div className="pointer-events-none relative z-10 flex h-full w-full flex-col">
+        <div className="pointer-events-auto"><TopBar /></div>
+        <GlassNav />
         <main className="relative min-h-0 flex-1 pb-[64px] md:pb-0">
+          {mode === 'home' && <HomeHud />}
+          {mode === 'studio' && (
+            <div className="pointer-events-none absolute inset-0 flex flex-col">
+              <div className="pointer-events-auto"><StudioTabs /></div>
+              <div className="relative min-h-0 flex-1"><PageBoundary key={page}><Page /></PageBoundary></div>
+            </div>
+          )}
           <AnimatePresence mode="wait">
-            <motion.div key={page} className="absolute inset-0" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-              <PageBoundary key={page}><Page /></PageBoundary>
-            </motion.div>
+            {mode === 'panel' && (
+              <motion.div key={page} className="absolute inset-0 flex justify-center px-2 pb-2 pt-1 md:px-10 md:pb-6 md:pt-2" exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <HoloPanel title={meta.t} sub={meta.sub} accent={meta.c} onClose={() => setPage(studio ? 'hq' : 'driftmark')} className="h-full w-full max-w-[1200px]" bare={!studio && page !== 'settings'}>
+                  {studio && <StudioTabs />}
+                  <div className="relative h-full min-h-[60vh]"><PageBoundary key={page}><Page /></PageBoundary></div>
+                </HoloPanel>
+              </motion.div>
+            )}
           </AnimatePresence>
-          {STUDIO.some((x) => x.id === page) && <BottomActions />}
+          {(mode === 'home' || studio) && <div className="pointer-events-auto"><BottomActions /></div>}
         </main>
       </div>
-      <MobileNav />
-      <Coach />
-      <Tour />
-      <DepartmentDrawer />
-      <ProjectDrawer />
-      <AgentDrawer />
-      <AllModals />
-      <ConfirmDialog />
-      <Toasts />
+      <div className="relative z-20"><MobileNav /></div>
+      <div className="relative z-30">
+        <Coach />
+        <Tour />
+        <DepartmentDrawer />
+        <ProjectDrawer />
+        <AgentDrawer />
+        <AllModals />
+        <ConfirmDialog />
+        <Toasts />
+      </div>
     </div>
   );
 }

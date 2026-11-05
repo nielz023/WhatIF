@@ -1,4 +1,3 @@
-import { Component, lazy, Suspense, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../store/useGame';
 import { Avatar, DemoBadge } from '../components/ui';
@@ -6,19 +5,6 @@ import PipelineStepper from '../components/shared/Pipeline';
 import { stageById } from '../modules/workflows/pipeline';
 import { deptById } from '../modules/departments/departments';
 import { relTime } from '../lib/util';
-
-const OfficeScene = lazy(() => import('../components/office/OfficeScene'));
-
-class OfficeBoundary extends Component<{ children: ReactNode }, { err: boolean }> {
-  state = { err: false };
-  static getDerivedStateFromError() { return { err: true }; }
-  componentDidCatch(e: unknown) { console.warn('[HQ] 3D-kantoor fout', e); }
-  render() {
-    return this.state.err
-      ? <div className="flex h-full items-center justify-center p-6 text-center text-slate-400">Het 3D-kantoor kon niet laden op dit apparaat. De rest van het HQ werkt gewoon.</div>
-      : this.props.children;
-  }
-}
 
 export default function HQPage() {
   const s = useGame();
@@ -28,27 +14,21 @@ export default function HQPage() {
   const counts = { working: s.agents.filter((a) => a.state === 'working').length, meeting: s.agents.filter((a) => a.state === 'meeting').length, idle: s.agents.filter((a) => a.state === 'idle').length };
 
   return (
-    <div className="relative h-full w-full">
-      <OfficeBoundary>
-        <Suspense fallback={<div className="flex h-full items-center justify-center text-slate-400">Kantoor wordt gebouwd…</div>}>
-          <OfficeScene />
-        </Suspense>
-      </OfficeBoundary>
-
+    <div className="pointer-events-none relative h-full w-full">
       {/* title */}
       <div className="pointer-events-none absolute left-4 top-3 select-none">
-        <div className="font-display text-2xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(99,102,241,.6)] md:text-3xl">DRIFTMARK <span className="text-gradient">STUDIO</span></div>
+        <div className="font-display text-2xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(99,102,241,.6)] md:text-3xl">STUDIO <span className="text-gradient">BEHEER</span></div>
         <div className="mt-1 flex items-center gap-2 text-[13px] text-slate-400">
-          <span><span className="text-emerald-400">●</span> {counts.working} working</span>
-          <span><span className="text-sky-400">●</span> {counts.meeting} in meetings</span>
-          <span><span className="text-slate-400">●</span> {counts.idle} idle</span>
+          <span><span className="text-emerald-400">●</span> {counts.working} aan het werk</span>
+          <span><span className="text-sky-400">●</span> {counts.meeting} in overleg</span>
+          <span><span className="text-slate-400">●</span> {counts.idle} vrij</span>
           {s.demoMode && <DemoBadge />}
         </div>
-        <div className="mt-1 text-[13px] text-slate-500">Click a room to open its dashboard · click an employee for their profile · drag to rotate, scroll to zoom</div>
+        <div className="mt-1 text-[13px] text-slate-500">Klik op een afdeling voor het dashboard · klik op een teamlid voor het profiel · slepen draait, scrollen zoomt</div>
       </div>
 
       {/* pipeline panel */}
-      <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} className="panel absolute bottom-20 left-3 hidden w-[330px] p-3 lg:block">
+      <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} className="panel pointer-events-auto absolute bottom-20 left-3 hidden w-[330px] p-3 lg:block">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[13px] font-bold uppercase tracking-wider text-slate-300">Production pipeline</span>
           <button className="text-[13px] text-sky-300 hover:text-white" onClick={() => s.setPage('projects')}>All projects →</button>
@@ -72,7 +52,7 @@ export default function HQPage() {
 
       {/* approvals + feed */}
       {!s.selectedDept && !s.selectedAgentId && !s.selectedProjectId && (
-        <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} className="absolute right-3 top-3 hidden w-[310px] space-y-3 xl:block">
+        <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} className="pointer-events-auto absolute right-3 top-3 hidden w-[310px] space-y-3 xl:block">
           {approvals.length > 0 && (
             <div className="panel border-amber-400/40 p-3">
               <div className="mb-2 text-[13px] font-bold uppercase tracking-wider text-amber-300">⏳ Waiting for you ({approvals.length})</div>

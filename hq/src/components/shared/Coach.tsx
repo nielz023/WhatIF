@@ -10,6 +10,7 @@ import { useDb } from '../../services/db';
 import { order } from '../../services/real';
 import { useGame } from '../../store/useGame';
 import { startCoach, vraag, parse } from '../../services/coach';
+import { useWorld } from '../../world/useWorld';
 
 type Tip = { text: string; doe?: string };
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -85,10 +86,11 @@ export default function Coach() {
   const opdrachtUit = (t: string) => parse(t).acties[0];
   const saveSet = (on: boolean, f: number) => { setTipsOn(on); setFreq(f); try { localStorage.setItem('coach-tips', on ? 'aan' : 'uit'); localStorage.setItem('coach-freq', String(f)); } catch { /* */ } };
 
+  const panelOpen = useWorld((w) => !!(w.focus || w.worker));
   if (page === 'coach') return null;
   return (
     <div className="pointer-events-none fixed bottom-[76px] right-3 z-[60] flex flex-col items-end gap-2 md:bottom-4 md:right-4">
-      {bubble && !open && (
+      {bubble && !open && !(panelOpen && page === 'driftmark') && (
         <div className="dm-pop pointer-events-auto w-[290px] max-w-[calc(100vw-24px)] rounded-2xl border border-orange-400/50 bg-[#0f1630] p-3 text-[14px] text-slate-100 shadow-2xl backdrop-blur">
           <div className="mb-1 flex items-center justify-between"><span className="text-[12px] font-bold uppercase tracking-wider text-orange-300">💡 Tip van je coach</span><button aria-label="Tip sluiten" onClick={() => setBubble(null)} className="text-slate-400 hover:text-white"><X size={15} /></button></div>
           {bubble.text}

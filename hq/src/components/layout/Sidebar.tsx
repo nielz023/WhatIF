@@ -5,7 +5,7 @@ import { useLive } from '../../services/live';
 
 /** De 5 vaste knoppen. De eerste drie zijn echt, Studio is het spel, Meer is naslag. */
 export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: string }[] = [
-  { id: 'driftmark', label: 'Home', icon: Home, uitleg: 'Wat er nu gebeurt en wat op jou wacht' },
+  { id: 'driftmark', label: 'Kantoor', icon: Home, uitleg: 'Wat er nu gebeurt en wat op jou wacht' },
   { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts' },
   { id: 'kanaal', label: 'Kanaal', icon: LineChart, uitleg: 'Abonnees, weergaven en wat werkt' },
   { id: 'coach', label: 'Coach', icon: Sparkles, uitleg: 'Je CEO Coach: gesprek, briefing, doelen, beslissingen' },
@@ -28,7 +28,7 @@ export const STUDIO: { id: PageId; label: string; icon: typeof Home }[] = [
 /** oude naam, nog gebruikt door andere schermen */
 export const NAV = [...MAIN, ...STUDIO.slice(1)];
 
-export const mainOf = (p: PageId): PageId => (STUDIO.some((s) => s.id === p) ? 'hq' : p === 'settings' ? 'meer' : p);
+export const mainOf = (p: PageId): PageId => (STUDIO.some((s) => s.id === p) ? 'hq' : p === 'settings' ? 'meer' : p === 'overzicht' ? 'driftmark' : p);
 
 function useWaiting() {
   return useLive((s) => s.data.activity.filter((a) => a.state === 'blocked' || a.state === 'review_ready').length);

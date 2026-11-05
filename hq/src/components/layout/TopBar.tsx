@@ -12,7 +12,7 @@ export default function TopBar() {
   const unread = s.notifications.filter((n) => !n.read).length;
 
   const Stat = ({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: React.ReactNode; color: string }) => (
-    <div className="hidden items-center gap-2 rounded-xl border border-hq-line/60 bg-hq-panel/60 px-3 py-1.5 md:flex">
+    <div className="glass-stat hidden items-center gap-2.5 px-3 py-1.5 md:flex">
       <span style={{ color }}>{icon}</span>
       <div className="leading-tight">
         <div className="text-[11px] font-semibold text-slate-400">{label}</div>
@@ -22,10 +22,10 @@ export default function TopBar() {
   );
 
   return (
-    <header className="relative z-50 flex h-[64px] shrink-0 items-center gap-2 border-b border-hq-line/60 bg-[#080d22]/80 px-3 backdrop-blur-xl">
-      <div className="flex items-center gap-2 md:hidden">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-sky-500"><svg viewBox="0 0 24 24" className="h-4 w-4 fill-white"><path d="M8 5.5v13l11-6.5z" /></svg></div>
-        <span className="font-display text-[16px] font-bold text-white">DRIFTMARK <span className="text-gradient">HQ</span></span>
+    <header className="relative z-50 flex h-[64px] shrink-0 items-center gap-2 bg-gradient-to-b from-[#050816]/95 to-[#050816]/40 px-3 md:px-5">
+      <div className="mr-2 flex items-center gap-2.5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 via-orange-500 to-[#ff5f3d] shadow-[0_0_22px_rgba(255,122,36,.5)]"><svg viewBox="0 0 24 24" className="h-4 w-4 fill-white"><path d="M8 5.5v13l11-6.5z" /></svg></div>
+        <span className="font-display text-[16px] font-bold leading-tight tracking-wide text-white md:text-[18px]">DRIFTMARK<br className="hidden md:block" /><span className="text-[#398CFF] md:text-[16px]"> HQ</span></span>
       </div>
       <Stat icon={<Users size={16} />} label="Claude bezig" value={live.activity.filter((a) => a.state === 'working').length} color="#3db8ff" />
       <Stat icon={<Tv size={16} />} label="Abonnees" value={live.youtube?.subscribers ?? '—'} color="#ff8a3d" />
