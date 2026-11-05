@@ -9,6 +9,7 @@ import { useLive, type Live } from '../../services/live';
 import { useDb } from '../../services/db';
 import { order } from '../../services/real';
 import { useGame } from '../../store/useGame';
+import { startCoach, vraag, parse } from '../../services/coach';
 
 type Tip = { text: string; doe?: string };
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -33,20 +34,12 @@ function tipsFor(d: Live): Tip[] {
   return t;
 }
 
-function context(d: Live, stats: { at: string; subscribers?: number; views?: number }[]) {
-  const v = d.videos.map((x) => `- Video ${x.nr} "${x.title}": ${x.status}; stap nu: ${x.steps.find((s) => s.active)?.label ?? (x.steps.every((s) => s.done) ? 'klaar' : '?')}`).join('\n');
-  const a = d.activity.filter((x) => x.state !== 'done').map((x) => `- ${x.title} (${x.state}): ${x.doing ?? ''}`).join('\n');
-  const y = (d.youtube?.videos ?? []).slice(0, 12).map((x) => `- ${x.type === 'long' ? 'LANG' : 'short'} "${x.title}" ${x.datum ?? ''}: ${x.views ?? 0} views`).join('\n');
-  const s = stats.length > 1 ? `Abonnees van ${stats[0].subscribers} naar ${stats[stats.length - 1].subscribers} sinds ${stats[0].at}.` : '';
-  return `KANAAL: Driftmark (@driftmark3d), 3D "What IF"-video's (lang 15-18 min per week) + teaser-shorts. ${d.youtube?.subscribers ?? '?'} abonnees, ${d.youtube?.views ?? '?'} weergaven. ${s}
-VIDEO'S:\n${v}\nOPEN TAKEN:\n${a}\nYOUTUBE:\n${y}
-VASTE REGELS: hook binnen 5 s en geen uitleg in de eerste minuut; titel+thumbnail = wat de eerste seconden tonen; teller/tijdlijn in beeld; echte wetenschap; spreek de kijker aan met "jij"; twist aan het eind; NIET verwijzen naar de volgende video; stem centraal, muziek zacht; -14 LUFS. Retentie video 1: gem. 6:40 (26%), 2/3 weg in eerste minuut. Uploaden doet niels zelf.`;
-}
-
 export default function Coach() {
   const d = useLive((s) => s.data);
   const stats = useDb((s) => s.stats);
   const toast = useGame((s) => s.toast);
+  const setPage = useGame((s) => s.setPage);
+  const page = useGame((s) => s.page);
   const tips = useMemo(() => tipsFor(d), [d]);
   const [open, setOpen] = useState(false);
   const [bubble, setBubble] = useState<Tip | null>(null);
@@ -57,18 +50,15 @@ export default function Coach() {
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState(false);
   const [canAsk, setCanAsk] = useState<boolean | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sampleRef = useRef<any>(null);
   const idx = useRef(Math.floor(Math.random() * 100));
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let on = true;
+    void startCoach();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const c = (window as any).claude;
     if (!c?.use) { setCanAsk(false); return; }
-    c.use('sample').then((s: unknown) => { if (on) { sampleRef.current = s; setCanAsk(!!s); } }).catch(() => on && setCanAsk(false));
-    return () => { on = false; };
+    c.use('sample').then((x: unknown) => setCanAsk(!!x)).catch(() => setCanAsk(false));
   }, []);
 
   // random tips: eerste na 20 s, daarna elke `freq` minuten
@@ -86,26 +76,16 @@ export default function Coach() {
     if (!text.trim() || busy) return;
     const next: Msg[] = [...msgs, { role: 'user', content: text.trim() }];
     setMsgs(next); setQ(''); setBusy(true);
-    const s = sampleRef.current;
-    if (!s) { setMsgs([...next, { role: 'assistant', content: 'Vragen stellen werkt alleen op de gepubliceerde pagina in claude.ai. Hier geef ik je wel tips!' }]); setBusy(false); return; }
-    const intro = `Je bent "de coach" in Driftmark HQ, het dashboard van YouTuber niels (tiener, Nederlands). Antwoord ALTIJD in het Nederlands, kort (max 120 woorden), vrolijk en concreet, zoals een coole coach voor tieners. Geef praktische YouTube-tips op basis van zijn echte cijfers hieronder. Verzin geen cijfers. Als iets een taak voor Claude is, sluit af met een regel "OPDRACHT: <korte opdracht>".\n\n${context(d, stats)}`;
-    const input: Msg[] = [{ role: 'user', content: intro + '\n\nVraag van niels: ' + next[0].content }, ...next.slice(1)];
-    if (input.length > 1 && input[0].role === 'user' && next.length > 1) { /* gesprek loopt door */ }
-    const live: Msg = { role: 'assistant', content: '' };
-    try {
-      const r = await s(next.length === 1 ? input[0].content : input, { cache: false, modelTier: 'quick', onText: ({ text: t }: { text: string }) => { live.content = t; setMsgs([...next, { ...live }]); } });
-      setMsgs([...next, { role: 'assistant', content: r.text }]);
-    } catch (e) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const code = (e as any)?.code;
-      setMsgs([...next, { role: 'assistant', content: code === 'not_granted' ? 'Ik mag nog geen vragen beantwoorden. Sta het toe als claude.ai erom vraagt, dan kan het wel.' : code === 'rate_limited' ? 'Even rustig aan, probeer het zo nog eens.' : 'Dat lukte nu niet. Probeer het zo nog een keer.' }]);
-    } finally { setBusy(false); }
+    const r = await vraag(next, d, stats, (t) => setMsgs([...next, { role: 'assistant', content: t }]));
+    setMsgs([...next, { role: 'assistant', content: r.tekst }]);
+    setBusy(false);
   };
 
   const doe = (t: string) => { order(t, toast); setBubble(null); };
-  const opdrachtUit = (t: string) => t.match(/OPDRACHT:\s*(.+)$/m)?.[1]?.trim();
+  const opdrachtUit = (t: string) => parse(t).acties[0];
   const saveSet = (on: boolean, f: number) => { setTipsOn(on); setFreq(f); try { localStorage.setItem('coach-tips', on ? 'aan' : 'uit'); localStorage.setItem('coach-freq', String(f)); } catch { /* */ } };
 
+  if (page === 'coach') return null;
   return (
     <div className="pointer-events-none fixed bottom-[76px] right-3 z-[60] flex flex-col items-end gap-2 md:bottom-4 md:right-4">
       {bubble && !open && (
@@ -124,6 +104,7 @@ export default function Coach() {
           <div className="flex items-center gap-2 border-b border-hq-line px-3 py-2.5">
             <img src="./img/c1_hoofdpersonage.jpg" alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-orange-400" />
             <div className="min-w-0 flex-1"><div className="font-display text-[16px] font-bold text-white">Je coach</div><div className="text-[12px] text-slate-400">{canAsk ? 'Vraag me alles over je kanaal' : canAsk === false ? 'Tips (vragen werkt in claude.ai)' : 'Even opstarten…'}</div></div>
+            <button onClick={() => { setPage('coach'); setOpen(false); }} className="rounded-lg bg-orange-500/20 px-2 py-1 text-[12px] font-semibold text-orange-200 hover:bg-orange-500/30">Coachkamer</button>
             <button aria-label="Instellingen coach" onClick={() => setShowSet(!showSet)} className="p-1 text-slate-400 hover:text-white"><Settings2 size={17} /></button>
             <button aria-label="Coach sluiten" onClick={() => setOpen(false)} className="p-1 text-slate-400 hover:text-white"><X size={18} /></button>
           </div>
@@ -140,7 +121,7 @@ export default function Coach() {
           <div className="flex-1 space-y-2 overflow-y-auto p-3">
             {msgs.length === 0 && (
               <div className="space-y-2">
-                <div className="rounded-2xl rounded-tl-sm bg-white/[.06] p-3 text-[14px] text-slate-100">Hoi niels! 👋 Ik ken je cijfers, je video's en je regels. Vraag maar raak, of kies hieronder.</div>
+                <div className="rounded-2xl rounded-tl-sm bg-white/[.06] p-3 text-[14px] text-slate-100">Hoi niels! 👋 Ik ben je CEO Coach. Snelle vraag hier, of open de Coachkamer voor je briefing, doelen en beslissingen.</div>
                 {['Hoe krijg ik meer kijkers op mijn lange video\'s?', 'Wat moet ik nu als eerste doen?', 'Welke short werkt het best en waarom?', 'Geef 3 titels voor video 4'].map((s) => (
                   <button key={s} onClick={() => void ask(s)} className="block w-full rounded-xl border border-hq-line px-3 py-2 text-left text-[13px] text-slate-200 hover:border-orange-400/60">{s}</button>
                 ))}
@@ -154,7 +135,7 @@ export default function Coach() {
               const op = m.role === 'assistant' ? opdrachtUit(m.content) : undefined;
               return (
                 <div key={i} className={`max-w-[88%] whitespace-pre-line rounded-2xl p-3 text-[14px] ${m.role === 'user' ? 'ml-auto rounded-tr-sm bg-orange-500/80 text-white' : 'rounded-tl-sm bg-white/[.06] text-slate-100'}`}>
-                  {m.content.replace(/\n?OPDRACHT:.*$/m, '') || (busy ? '…' : '')}
+                  {parse(m.content).schoon || (busy ? '…' : '')}
                   {op && <button className="btn-primary mt-2 !px-3 !py-1.5 text-[13px]" onClick={() => doe(op)}>Doe dit: {op.length > 40 ? op.slice(0, 40) + '…' : op}</button>}
                 </div>
               );

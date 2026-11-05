@@ -1,4 +1,4 @@
-import { Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderKanban, Users, Tv, BarChart3, MessagesSquare, Wallet, Wrench, Trophy, ShieldAlert } from 'lucide-react';
+import { Sparkles, Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderKanban, Users, Tv, BarChart3, MessagesSquare, Wallet, Wrench, Trophy, ShieldAlert } from 'lucide-react';
 import type { PageId } from '../../types';
 import { useGame } from '../../store/useGame';
 import { useLive } from '../../services/live';
@@ -8,6 +8,7 @@ export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: strin
   { id: 'driftmark', label: 'Home', icon: Home, uitleg: 'Wat er nu gebeurt en wat op jou wacht' },
   { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts' },
   { id: 'kanaal', label: 'Kanaal', icon: LineChart, uitleg: 'Abonnees, weergaven en wat werkt' },
+  { id: 'coach', label: 'Coach', icon: Sparkles, uitleg: 'Je CEO Coach: gesprek, briefing, doelen, beslissingen' },
   { id: 'hq', label: 'Studio', icon: Building2, uitleg: 'Het 3D-kantoor en het spel' },
   { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
 ];
@@ -55,7 +56,7 @@ export default function Sidebar() {
           const b = id === 'driftmark' ? waiting : 0;
           return (
             <div key={id}>
-              {i === 3 && <div className="mx-3 my-2 border-t border-hq-line" />}
+              {i === 4 && <div className="mx-3 my-2 border-t border-hq-line" />}
               <button onClick={() => setPage(id)} title={uitleg}
                 className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-semibold transition ${active ? 'bg-orange-500/15 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}>
                 {active && <span className="absolute left-0 top-2.5 h-[calc(100%-20px)] w-[3px] rounded-r bg-orange-400 shadow-[0_0_10px_#ff8a3d]" />}
@@ -79,7 +80,7 @@ export function MobileNav() {
   const cur = mainOf(page);
   const waiting = useWaiting();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-hq-line bg-[#080d22]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-hq-line bg-[#080d22]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
       {MAIN.map(({ id, label, icon: Icon }) => {
         const active = cur === id;
         return (

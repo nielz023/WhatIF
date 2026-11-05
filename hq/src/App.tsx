@@ -24,13 +24,14 @@ import SettingsPage from './pages/SettingsPage';
 import WarRoomPage from './pages/WarRoomPage';
 import DriftmarkPage, { VideosPage, MeerPage } from './pages/DriftmarkPage';
 import KanaalPage from './pages/KanaalPage';
+import CoachPage from './pages/CoachPage';
 import type { PageId } from './types';
 import { realTick } from './lib/util';
 import { startLive } from './services/live';
 import { startTools } from './services/tools';
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
-  driftmark: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
+  driftmark: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: AnalyticsPage,
   threads: ThreadsPage, finances: FinancesPage, upgrades: UpgradesPage, achievements: AchievementsPage,
   settings: SettingsPage, warroom: WarRoomPage,
 };
