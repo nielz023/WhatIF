@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { UserPlus } from 'lucide-react';
-import { useGame } from '../store/useGame';
+import { UserPlus, Sparkles } from 'lucide-react';
+import { useGame, MAX_LEVEL, maxUpgradeCost } from '../store/useGame';
 import { Avatar, PageHeader, Progress, StateDot } from '../components/ui';
 import { DEPARTMENTS, deptById } from '../modules/departments/departments';
 import { ROLES, roleById } from '../modules/agents/roles';
@@ -22,7 +22,7 @@ export default function AgentsPage() {
       <PageHeader
         title="AI Agents"
         subtitle={`${s.agents.length}/${agentSlots(s as unknown as GameData)} desks filled · payroll ≈ ${eur(payroll)}/day`}
-        actions={<button className="btn-primary text-xs" onClick={() => s.openModal('hireAgent', dept !== 'all' ? { dept } : undefined)}><UserPlus size={14} />Hire agent</button>}
+        actions={<div className="flex gap-2"><button className="btn-ghost text-xs" onClick={() => s.askConfirm({ title: 'Iedereen maximaal upgraden?', body: `Alle agents in één keer naar niveau ${MAX_LEVEL} met alle vaardigheden op 100 (spelgeld).`, confirmLabel: 'Alles max', onConfirm: () => { s.maxUpgradeAll(); } })}><Sparkles size={14} />Iedereen max upgraden</button><button className="btn-primary text-xs" onClick={() => s.openModal('hireAgent', dept !== 'all' ? { dept } : undefined)}><UserPlus size={14} />Hire agent</button></div>}
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <input className="input !w-56 !py-1.5 text-xs" placeholder="Search agents…" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -39,7 +39,7 @@ export default function AgentsPage() {
           const d = deptById(a.department);
           const task = s.tasks.find((t) => t.id === a.currentTaskId);
           return (
-            <button key={a.id} onClick={() => s.selectAgent(a.id)} className="panel group relative overflow-hidden p-4 text-left transition hover:-translate-y-0.5 hover:border-indigo-400/50">
+            <div key={a.id} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') s.selectAgent(a.id); }} onClick={() => s.selectAgent(a.id)} className="panel group cursor-pointer relative overflow-hidden p-4 text-left transition hover:-translate-y-0.5 hover:border-indigo-400/50">
               <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-20 blur-2xl" style={{ background: d.color }} />
               <div className="flex items-center gap-3">
                 <Avatar agent={a} size={46} ring={a.state === 'working'} />
@@ -59,7 +59,10 @@ export default function AgentsPage() {
                 <span className="text-[10px] text-slate-500">{a.completed} tasks done</span>
               </div>
               <div className="mt-1 truncate text-[11px] text-slate-400">{task ? `▶ ${task.title}` : a.channelIds.length ? `Channels: ${a.channelIds.map((id) => s.channels.find((c) => c.id === id)?.name).join(', ')}` : 'All channels'}</div>
-            </button>
+              {a.level >= MAX_LEVEL && Object.values(a.skills).every((v) => v >= 100)
+                ? <div className="mt-2 rounded-lg bg-amber-400/10 py-1 text-center text-[11px] font-semibold text-amber-300">★ Maximaal</div>
+                : <button className="btn-primary mt-2 w-full justify-center text-[11px]" onClick={(e) => { e.stopPropagation(); s.maxUpgradeAgent(a.id); }}><Sparkles size={12} />Max upgraden ({eur(maxUpgradeCost(a))})</button>}
+            </div>
           );
         })}
       </div>

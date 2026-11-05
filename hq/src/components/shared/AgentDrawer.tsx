@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, GraduationCap, ArrowUpCircle, ClipboardList, UserMinus, Share2 } from 'lucide-react';
-import { useGame } from '../../store/useGame';
+import { useGame, MAX_LEVEL, maxUpgradeCost } from '../../store/useGame';
 import { Avatar, Drawer, Progress, StateDot, StatusBadge } from '../ui';
 import { roleById, xpForLevel } from '../../modules/agents/roles';
 import { deptById } from '../../modules/departments/departments';
@@ -61,6 +61,7 @@ export default function AgentDrawer() {
       <div className="mt-4 flex flex-wrap gap-2">
         <button className="btn-ghost text-xs" onClick={() => s.openModal('assignTask', { agentId: a.id })}><ClipboardList size={14} />Assign task</button>
         <button className="btn-ghost text-xs" onClick={() => s.askConfirm({ title: `Upgrade ${a.name}?`, body: `${a.name} naar niveau ${a.level + 1} voor ${eur(250 * a.level)}. Alle vaardigheden +3; dagkosten iets hoger.`, confirmLabel: 'Upgrade', onConfirm: () => s.promoteAgent(a.id) && s.toast(`${a.name} upgraded!`, 'success') })}><ArrowUpCircle size={14} />Upgrade ({eur(250 * a.level)})</button>
+        <button className="btn-primary text-xs" disabled={a.level >= MAX_LEVEL && Object.values(a.skills).every((v) => v >= 100)} onClick={() => s.askConfirm({ title: `${a.name} maximaal upgraden?`, body: `In één keer naar niveau ${MAX_LEVEL} met alle vaardigheden op 100, voor ${eur(maxUpgradeCost(a))} spelgeld.`, confirmLabel: 'Max upgraden', onConfirm: () => { s.maxUpgradeAgent(a.id); } })}><Sparkles size={14} />Max upgraden ({eur(maxUpgradeCost(a))})</button>
         <button className="btn-danger ml-auto text-xs" onClick={() => s.askConfirm({ title: `Let ${a.name} go?`, body: 'This agent will leave the company permanently. Their open tasks return to the queue. This cannot be undone.', confirmLabel: 'Remove agent', danger: true, onConfirm: () => s.fireAgent(a.id) })}><UserMinus size={14} />Remove</button>
       </div>
 

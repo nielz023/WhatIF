@@ -66,6 +66,8 @@ interface Actions {
   fireAgent: (id: string) => void;
   trainAgent: (id: string, skill: string) => boolean;
   promoteAgent: (id: string) => boolean;
+  maxUpgradeAgent: (id: string) => boolean;
+  maxUpgradeAll: () => number;
   updateAgent: (id: string, patch: { instructions?: string; channelIds?: string[]; personality?: string }) => void;
 
   approveProject: (id: string) => void;
@@ -265,6 +267,36 @@ export const useGame = create<GameStore>()(
           checkAchievements(g);
         });
         return true;
+      },
+      // Max upgraden in één keer (niels 2026-11-05): niveau 10, alle vaardigheden 100
+      maxUpgradeAgent: (id) => {
+        const d = get() as unknown as GameData;
+        const a = d.agents.find((x) => x.id === id);
+        if (!a) return false;
+        if (a.level >= MAX_LEVEL && Object.values(a.skills).every((v) => v >= 100)) { get().toast(`${a.name} is al maximaal.`, 'info'); return false; }
+        const cost = maxUpgradeCost(a);
+        if (d.company.balance < cost) { get().toast('Niet genoeg saldo om maximaal te upgraden.', 'warning'); return false; }
+        set((s) => {
+          const g = s as unknown as GameData;
+          const ag = g.agents.find((x) => x.id === id)!;
+          ledger(g, 'Training', -cost, `${ag.name} maximaal geüpgraded (niveau ${MAX_LEVEL})`);
+          ag.salary += 4 * Math.max(0, MAX_LEVEL - ag.level);
+          ag.level = Math.max(ag.level, MAX_LEVEL); ag.xp = 0;
+          Object.keys(ag.skills).forEach((k) => (ag.skills[k] = 100));
+          ag.morale = 100; ag.performance = 100;
+          notify(g, `🚀 ${ag.name} is maximaal geüpgraded.`, 'success', 'agents');
+          checkAchievements(g);
+        });
+        return true;
+      },
+      maxUpgradeAll: () => {
+        let n = 0;
+        for (const a of (get() as unknown as GameData).agents) {
+          if (a.level >= MAX_LEVEL && Object.values(a.skills).every((v) => v >= 100)) continue;
+          if (get().maxUpgradeAgent(a.id)) n++;
+        }
+        get().toast(n ? `${n} agents maximaal geüpgraded.` : 'Iedereen is al maximaal.', n ? 'success' : 'info');
+        return n;
       },
       updateAgent: (id, patch) => set((s) => { const a = s.agents.find((x) => x.id === id); if (a) Object.assign(a, patch); }),
 
@@ -491,6 +523,8 @@ export const useData = useGame;
 
 // ── ECHT-MODUS ─────────────────────────────────────────────
 // Acties van de speler worden echte opdrachten voor Claude (zie services/real.ts).
+export const MAX_LEVEL = 10;
+export const maxUpgradeCost = (a: { level: number }) => { let c = 0; for (let l = a.level; l < MAX_LEVEL; l++) c += 250 * l; return Math.max(c, 500); };
 import { order } from '../services/real';
 import { stageById } from '../modules/workflows/pipeline';
 {
