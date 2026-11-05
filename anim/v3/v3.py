@@ -559,6 +559,10 @@ def _cine_post(self):
     if _v2.ENGINE == "WORKBENCH":
         return
     sc = self.sc
+    # randlicht duidelijker (oranje/blauw rand moet zichtbaar blijven naast het key-licht en daglicht)
+    for o in bpy.data.objects:
+        if o.type == "LIGHT" and o.name.startswith("Randlicht_"):
+            o.data.energy *= 1.8 if self.night else 2.6
     try:
         ng = bpy.data.node_groups.new("Filmlook", "CompositorNodeTree")
         sc.compositing_node_group = ng
@@ -597,7 +601,7 @@ def _cine_post(self):
         mr = N.new("ShaderNodeMapRange")
         L.new(bl.outputs[0], mr.inputs[0])
         mr.inputs[1].default_value, mr.inputs[2].default_value = 0.0, 1.0
-        mr.inputs[3].default_value, mr.inputs[4].default_value = 0.78, 1.0
+        mr.inputs[3].default_value, mr.inputs[4].default_value = 0.62, 1.0
         mx = N.new("ShaderNodeMix")
         mx.data_type, mx.blend_type = "RGBA", "MULTIPLY"
         mx.inputs[0].default_value = 1.0

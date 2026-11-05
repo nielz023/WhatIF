@@ -148,12 +148,12 @@ S.hold(bro, END)
 # ---------------------------------------------------------------- camera's
 S.black(0.0, CARD, "1 YEAR LATER")
 # 18a WIDE trage crane omlaag over de moestuinen, het klimrek achterin
-S.cam(0.0, ((2.0, -24.0, 7.5), (-9.0, -10.0, 0.5), 26))
-S.cam(t_a, ((2.0, -24.0, 7.5), (-9.0, -10.0, 0.5), 26), ((0.5, -21.5, 3.6), (-9.0, -9.5, 0.9), 26))
+S.cam(0.0, ((3.6, -24.6, 7.5), (-9.0, -10.0, 0.5), 26))
+S.cam(t_a, ((3.6, -24.6, 7.5), (-9.0, -10.0, 0.5), 26), ((1.6, -22.2, 3.6), (-9.0, -9.5, 0.9), 26))
 # 18b MEDIUM het broertje met het hondje, schuin van voren meelopend
 S.cam(t_b, None, fn=S.follow(bro, (-2.2, -2.6, 0.9), lens=30, look_offset=(0.3, 0.2, -0.25)), shake=S.shake(0.2))
 # 18c DETAIL push-in op het bordje
-S.cam(t_c, ((3.9, -6.5, 1.0), ROOT + V(0.35, 0, 0.72), 32), ((3.8, -6.2, 0.98), ROOT + V(0.35, 0, 0.72), 35))
+S.cam(t_c, (ROOT + V(-1.3, -2.9, 1.05), ROOT + V(0.4, 0, 0.8), 30), (ROOT + V(-1.15, -2.6, 1.02), ROOT + V(0.4, 0, 0.8), 32))   # schuin van voren: zijn gezicht vrij van het bord
 
 # ---------------------------------------------------------------- HUD, geluid
 S.counter("YEAR 1", 212, t0=t_a)

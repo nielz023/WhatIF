@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from v3 import *  # noqa: E402,F401,F403
 
-S = Scene3("n18d", "school", "nr_jaar1", exposure=0.3)
+S = Scene3("n18d", "school", "nr_jaar1", exposure=0.05)
 sh = S.cuts([3.2, 4.6])
 END = sh[-1][1]
 t_e = sh[1][0]
