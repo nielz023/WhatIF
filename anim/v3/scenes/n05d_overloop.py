@@ -112,17 +112,17 @@ S.beat(mama, t_e + 0.9, "armen_over", amount=1.0, face="verbaasd", face_amt=0.5,
 
 # ---------------------------------------------------------------- 5f opa schuift zijn bril recht
 S.beat(opa, 0.0, "staan", face="neutraal", face_amt=0.5, at=S.head(bro, 0.0))
-EYES = S.headpos(opa, t_f) + V(0.0, -0.22, 0.05)
+# één hand (rechts) schuift de bril recht, VÓÓR het grote hoofd langs (niet erdoor); links blijft omlaag
+FWD = V(math.sin(math.radians(-25)), -math.cos(math.radians(-25)), 0)
+SIDE_R = V(-FWD.y, FWD.x, 0) * -1                       # rechterkant van opa
+GL = S.headpos(opa, t_f) + FWD * 0.40 + V(0, 0, 0.03)
 S.reach(opa, 0.0, "R", inf=0.0)
 S.reach(opa, 0.0, "L", inf=0.0)
 S.reach(opa, t_f + 0.1, "R", inf=0.0)
-S.reach(opa, t_f + 0.1, "L", inf=0.0)
-S.reach(opa, t_f + 0.55, "R", EYES + V(0.17, 0.04, 0.0))
-S.reach(opa, t_f + 0.55, "L", EYES + V(-0.17, 0.04, 0.0))
-S.reach(opa, t_f + 1.0, "R", EYES + V(0.16, 0.06, 0.03))
-S.reach(opa, t_f + 1.0, "L", EYES + V(-0.16, 0.06, 0.03))
+S.reach(opa, t_f + 0.55, "R", GL + SIDE_R * 0.06)
+S.reach(opa, t_f + 1.0, "R", GL + SIDE_R * 0.03 + V(0, 0, 0.03))
 S.reach(opa, t_f + 1.4, "R", inf=0.0)
-S.reach(opa, t_f + 1.4, "L", inf=0.0)
+S.reach(opa, END, "L", inf=0.0)
 S.beat(opa, t_f + 0.5, "staan", face="neutraal", face_amt=0.4, look=(0.0, 0.0), body={"head": (-4, 0, 0)})
 S.beat(opa, t_f + 1.3, "staan", face="vastberaden", face_amt=0.4, at=S.head(bro, t_f + 1.3))
 S.say("N05-03", who=opa, at=t_f + 0.4)

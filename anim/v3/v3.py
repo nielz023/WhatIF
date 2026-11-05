@@ -298,6 +298,18 @@ class Scene3(_v2.Scene2):
                         hp = M @ pb[bn].tail
                         if (hp - hcen).length < hr * 0.6:
                             warn("HAND_DOOR_HOOFD", t, ch.name)
+                    # hele arm (boven- en onderarm, 5 punten per bot) mag niet in de hoofdbol zitten
+                    hit = False
+                    for ab in (f"upper_arm.{side}", f"forearm.{side}"):
+                        if ab not in pb or hit:
+                            continue
+                        a0, a1 = M @ pb[ab].head, M @ pb[ab].tail
+                        for k in range(1, 6):
+                            q = a0.lerp(a1, k / 5)
+                            if (q - hcen).length < hr * 0.85:
+                                warn("ARM_DOOR_HOOFD", t, f"{ch.name} {side}")
+                                hit = True
+                                break
             for i in range(len(heads)):
                 for j in range(i + 1, len(heads)):
                     a, b = heads[i], heads[j]

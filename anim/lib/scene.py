@@ -383,7 +383,8 @@ class Scene:
             A.pose(ch, f, s["pose"], amount=s["amount"], extra=body)
             if s["arms"]:
                 s["arms"](ch, f)
-            if s["feet"] != "keep":                      # "keep": tijdens walk() de benen niet aanraken
+            riding = any(a - 1e-3 <= t <= b + 1e-3 for a, b in (getattr(ch, "riding", None) or ()))
+            if s["feet"] != "keep" and not riding:       # "keep": tijdens walk() de benen niet aanraken; fietsen idem
                 A.crouch(ch, f, *s["crouch"])
                 fl, fr = s["feet"] or ((0, 0, 0), (0, 0, 0))
                 A.foot(ch, f, "L", fl)
@@ -1129,8 +1130,8 @@ def prop_bike(S, ch, name="Fiets", color=(0.85, 0.15, 0.15)):
     parts.append(T.box(f"{name}_spatbord", (0, 0.40, 0.53), (0.08, 0.3, 0.02), fr, bevel=0.01, ol=0))
     bike = T.merge(name, parts, ol=0.006)
     crank = T.merge(name + "_crank", [T.box(f"{name}_crankarm", (0, 0, -0.13), (0.03, 0.03, 0.26), met, base=False, bevel=0.005, ol=0),
-                                      T.box(f"{name}_pedaal1", (0.07, 0, -0.13), (0.09, 0.05, 0.02), blk, base=False, bevel=0, ol=0),
-                                      T.box(f"{name}_pedaal2", (-0.07, 0, 0.13), (0.09, 0.05, 0.02), blk, base=False, bevel=0, ol=0),
+                                      T.box(f"{name}_pedaal1", (0.09, 0, -0.13), (0.12, 0.07, 0.022), blk, base=False, bevel=0, ol=0),
+                                      T.box(f"{name}_pedaal2", (-0.09, 0, 0.13), (0.12, 0.07, 0.022), blk, base=False, bevel=0, ol=0),
                                       T.cyl(f"{name}_tandwiel", (0.04, 0, 0), 0.08, 0.01, met, rot=(0, 90, 0), seg=20, ol=0)], ol=0.004)
     for o in (bike, crank):
         o.parent = ch.rig
@@ -1141,17 +1142,30 @@ def prop_bike(S, ch, name="Fiets", color=(0.85, 0.15, 0.15)):
 
 
 def ride(S, ch, crank, t0, t1, cadence=2.2, lean=24, phase=0.0):
-    """Fietsen: zit op het zadel, handen aan het stuur, voeten op de trappers die rondgaan."""
-    for f in range(F(t0), F(t1) + 1, 2):
+    """Fietsen: zit op het zadel, handen aan het stuur, voeten OP de trappers die rondgaan (knieën gebogen).
+    De enkels volgen exact de trappers van prop_bike (trapas (0, 0, 0.25), crank 0.13); de heupen zakken tot op
+    het zadel, zodat de benen altijd gebogen zijn. beat() laat de benen met rust zolang hij fietst."""
+    bones = ch.rig.data.bones
+    hip_z = bones["hips"].head_local.z
+    depth = max(0.0, hip_z - 0.68)                       # heup op ~0.68 m: op het zadel (bovenkant 0.65)
+    rest = {sd: bones["foot_ik." + sd].head_local.copy() for sd in ("L", "R")}
+    if not hasattr(ch, "riding") or ch.riding is None:
+        ch.riding = []
+    ch.riding.append((t0, t1))
+    for f in range(F(t0), F(t1) + 1):
         t = (f - 1) / FPS
         ph = phase + (t - t0) * cadence * 2 * math.pi
-        A.crouch(ch, f, 0.07, lean)
-        for side, off in (("R", 0.0), ("L", math.pi)):
-            a = ph + off
-            A.foot(ch, f, side, (0, 0.13 * math.cos(a), 0.15 + 0.13 * math.sin(a)), (-15 * math.sin(a), 0, 0))
+        A.crouch(ch, f, depth, lean, shift=(0, -0.05))
+        # trapper 1 (+x, links) en trapper 2 (-x, rechts), zoals de crank-mesh draait (rotatie om x = ph)
+        for sd, sgn in (("L", 1.0), ("R", -1.0)):
+            r = rest[sd]
+            py = sgn * 0.13 * math.sin(ph)
+            pz = 0.25 - sgn * 0.13 * math.cos(ph)
+            tgt = Vector((r.x, py, pz + 0.01 + r.z))
+            d = tgt - r
+            A.foot(ch, f, sd, (d.x, -d.y, d.z), (-12 * sgn * math.sin(ph), 0, 0))
         crank.rotation_euler = (ph, 0, 0)
         crank.keyframe_insert("rotation_euler", frame=f)
-    M = S._root_matrix(ch, t0)
     for side, x in (("L", 0.2), ("R", -0.2)):
         for t in (t0, t1):
             M = S._root_matrix(ch, t)
