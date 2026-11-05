@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Component, lazy, Suspense, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../store/useGame';
 import { Avatar, DemoBadge } from '../components/ui';
@@ -9,6 +9,17 @@ import { relTime } from '../lib/util';
 
 const OfficeScene = lazy(() => import('../components/office/OfficeScene'));
 
+class OfficeBoundary extends Component<{ children: ReactNode }, { err: boolean }> {
+  state = { err: false };
+  static getDerivedStateFromError() { return { err: true }; }
+  componentDidCatch(e: unknown) { console.warn('[HQ] 3D-kantoor fout', e); }
+  render() {
+    return this.state.err
+      ? <div className="flex h-full items-center justify-center p-6 text-center text-slate-400">Het 3D-kantoor kon niet laden op dit apparaat. De rest van het HQ werkt gewoon.</div>
+      : this.props.children;
+  }
+}
+
 export default function HQPage() {
   const s = useGame();
   const active = s.projects.filter((p) => p.status !== 'Published' && p.status !== 'Cancelled').slice(0, 5);
@@ -18,9 +29,11 @@ export default function HQPage() {
 
   return (
     <div className="relative h-full w-full">
-      <Suspense fallback={<div className="flex h-full items-center justify-center text-slate-400">Building the office…</div>}>
-        <OfficeScene />
-      </Suspense>
+      <OfficeBoundary>
+        <Suspense fallback={<div className="flex h-full items-center justify-center text-slate-400">Kantoor wordt gebouwd…</div>}>
+          <OfficeScene />
+        </Suspense>
+      </OfficeBoundary>
 
       {/* title */}
       <div className="pointer-events-none absolute left-4 top-3 select-none">

@@ -3,9 +3,9 @@
  * Huisstijl: oranje hoodie van het hoofdpersonage, nachtblauw/paars, geel accent,
  * glans-look (warm hoofdlicht + oranje/blauw randlicht), portalen zoals op de banner.
  */
-import { useMemo, useRef } from 'react';
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three';
 
 type V3 = [number, number, number];
@@ -119,31 +119,55 @@ function Vinyl({ color, ...rest }: { color: string } & Partial<THREE.MeshPhysica
   return <meshPhysicalMaterial color={color} roughness={0.38} clearcoat={0.8} clearcoatRoughness={0.25} sheen={0.4} {...rest} />;
 }
 /* het echte hoofdpersonage (hoofdpersonage.glb uit de projectbestanden) */
-const HERO_URL = './models/hoofdpersonage.gltf.json';
-function HeroModel({ height = 2.9 }: { height?: number }) {
-  const { scene } = useGLTF(HERO_URL);
+const HERO_URL = './models/hoofdpersonage.glb.txt';
+let heroPromise: Promise<THREE.Group> | null = null;
+function loadHero(): Promise<THREE.Group> {
+  if (!heroPromise) {
+    heroPromise = fetch(HERO_URL)
+      .then((r) => { if (!r.ok) throw new Error('hero ' + r.status); return r.text(); })
+      .then((b64) => {
+        const bin = atob(b64.trim());
+        const buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        return new Promise<THREE.Group>((res, rej) => new GLTFLoader().parse(buf.buffer, '', (g) => res(g.scene), rej));
+      });
+    heroPromise.catch(() => { /* stil: dan geen beeld */ });
+  }
+  return heroPromise;
+}
+class SafeBoundary extends Component<{ children: ReactNode }, { err: boolean }> {
+  state = { err: false };
+  static getDerivedStateFromError() { return { err: true }; }
+  componentDidCatch(e: unknown) { console.warn('[HQ] hoofdpersonage niet geladen', e); }
+  render() { return this.state.err ? null : this.props.children; }
+}
+function HeroInner({ height = 2.9 }: { height?: number }) {
+  const [scene, setScene] = useState<THREE.Group | null>(null);
+  useEffect(() => { let on = true; loadHero().then((s) => on && setScene(s)).catch((e) => console.warn('[HQ] hero', e)); return () => { on = false; }; }, []);
   const obj = useMemo(() => {
+    if (!scene) return null;
     const c = scene.clone(true);
     c.traverse((o) => {
       const m = o as THREE.Mesh;
       if (m.isMesh) {
         m.castShadow = true; m.receiveShadow = true;
         const mats = (Array.isArray(m.material) ? m.material : [m.material]) as THREE.MeshStandardMaterial[];
-        mats.forEach((mt) => { if ('roughness' in mt) { mt.roughness = Math.min(mt.roughness ?? 0.6, 0.45); mt.envMapIntensity = 1.2; } });
+        mats.forEach((mt) => { if (mt && 'roughness' in mt) { mt.roughness = Math.min(mt.roughness ?? 0.6, 0.45); mt.envMapIntensity = 1.2; } });
       }
     });
     const box = new THREE.Box3().setFromObject(c);
     const size = box.getSize(new THREE.Vector3());
-    const k = height / (size.y || 1);
-    c.scale.setScalar(k);
+    c.scale.setScalar(height / (size.y || 1));
     const box2 = new THREE.Box3().setFromObject(c);
     const ctr = box2.getCenter(new THREE.Vector3());
     c.position.set(-ctr.x, -box2.min.y, -ctr.z);
     return c;
   }, [scene, height]);
-  return <primitive object={obj} />;
+  return obj ? <primitive object={obj} /> : null;
 }
-useGLTF.preload(HERO_URL);
+function HeroModel(props: { height?: number }) {
+  return <SafeBoundary><HeroInner {...props} /></SafeBoundary>;
+}
 
 export function Mascot({ p, rot = 0, s = 1 }: { p: V3; rot?: number; s?: number }) {
   const g = useRef<THREE.Group>(null);
