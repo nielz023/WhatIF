@@ -1,8 +1,8 @@
 # Script video 4: What IF You Could Never Die?
 
-Versie 1.0, 5 november 2026. Gebaseerd op het verloop (https://claude.ai/artifact/YJScz92N3RPdqtLeCLpGRu), het productiehandboek en de lessen uit video 1-3.
+Versie 1.1, 5 november 2026: ingekort/herrekend naar ongeveer 12 minuten (wens niels). Gebaseerd op het verloop (https://claude.ai/artifact/YJScz92N3RPdqtLeCLpGRu), het productiehandboek en de lessen uit video 1-3.
 
-- **Lengte:** ongeveer 16:30, circa 1.000 gesproken woorden (voice-over plus dialoog, net als video 3); de rest draagt het beeld, met muziek en de tik.
+- **Lengte:** ongeveer 12:00 (11:52 berekend uit shotlengtes en spreektempo, plus korte pauzes), circa 1.230 gesproken woorden (voice-over plus dialoog).
 - **Taal:** alles wat gesproken of op beeld getoond wordt is Engels. Regie, shots en bewegingen staan in het Nederlands.
 - **Twist:** optie B, gekozen door niels op 5 nov: in het totale donker tikt er iets terug.
 - **Toon:** geen bloed en geen geweld in beeld. Gezinsleden sterven buiten beeld (lege stoel, bloemen, grafsteen). Pijn is cartoonesk en kort (grimas, "ow"). De echte pijn is alleen overblijven.
@@ -44,9 +44,9 @@ Elke sprong gaat via **de heuvel**: dezelfde bank, dezelfde boom, hetzelfde came
 
 ---
 
-# DEEL 0 · COLD OPEN (0:00-0:35)
+# DEEL 0 · COLD OPEN (0:00-0:36)
 
-## Scène 0 · De rode zon (0:00-0:08)
+## Scène 0 · De rode zon (0:00-0:09)
 
 **Set:** dode aarde, jaar 5 miljard (nieuw: variant van de heuvel). Zwartgebakken grond met gloeiende oranje scheuren, de hele lucht gevuld met een enorme rode zon, hitte-trilling in de lucht, as die opwaait. **HUD:** geen. **Muziek:** geen, alleen een diep, aanzwellend gebrul van de zon. **Licht:** fel rood-oranje van boven, blauw randlicht op zijn rug (glans-look), bloom.
 
@@ -63,7 +63,7 @@ Zijn hand houdt opa's zakhorloge vast, de ketting om zijn vingers. Het glas is g
 Hij staat klein op de gebarsten heuvel. De rand van de zon komt over de horizon op hem af, een muur van vuur.
 - **VO:** "And you'll still be standing here."
 
-## Scène 1 · Flash-forwards (0:08-0:22)
+## Scène 1 · Flash-forwards (0:09-0:21)
 
 **HUD:** geen. **Muziek:** pulserende sub-beat, elke cut op de tik van het horloge. Witte flits-frame tussen de shots. Elk shot 2 s.
 
@@ -74,7 +74,7 @@ Hij staat klein op de gebarsten heuvel. De rand van de zon komt over de horizon 
 - **1e · WIDE · statisch · 2 s:** een sterrenhemel. De sterren gaan één voor één uit.
 - **1f · CLOSE · push-in · 2 s:** alleen zijn gezicht nog, verlicht door één laatste sterretje. Het gaat uit. Zwart.
 
-## Scène 2 · De klap en de titel (0:22-0:35)
+## Scène 2 · De klap en de titel (0:21-0:36)
 
 **2a · Zwart · 1 s**
 In het zwart: tik.
@@ -100,9 +100,9 @@ Hij springt uit bed en stoot zijn teen keihard tegen het bedframe.
 
 ---
 
-# DEEL 1 · LEUK (0:35-4:00) · YEAR 2026
+# DEEL 1 · LEUK (0:36-3:16) · YEAR 2026
 
-## Scène 3 · De regels (0:35-1:00)
+## Scène 3 · De regels (0:36-0:57)
 
 **Set:** slaapkamer, gang, keuken (hergebruik). **HUD:** aan. **Muziek:** licht pulserende synths en felt piano, nog niet zwaar.
 
@@ -123,15 +123,19 @@ Hij kijkt in de spiegel (camera schuin voor hem, niet achter zijn hoofd). In de 
 - **VO:** "Sounds amazing, right? One more thing. You'll still feel everything."
 - **Beweging:** hij grijnst nog. Hij weet niet wat er komt.
 
+**3d2 · MEDIUM · 4 s · gang**
+Hij glijdt op zijn sokken over de gang naar de trap, grijnzend, en slaat met zijn hand tegen de deurpost: kraak. Hij schudt zijn hand uit.
+- **VO:** "Because forever is a very, very long time to feel things."
+
 **3e · DETAIL · 2 s**
 - **VO:** "Remember that."
 - **SFX:** tik.
 
-## Scène 4 · De val (1:00-1:40)
+## Scène 4 · De val (0:57-1:25)
 
 **Set:** achtertuin met schuur (achtertuin-set video 1, schuur nieuw of aangepast), zonnige ochtend. **Muziek:** stopt bij de val.
 
-**4a · WIDE · trage pan · 3 s**
+**4a · WIDE · trage pan · 6,5 s**
 Het broertje staat in de tuin en wijst naar het dak van de schuur. Zijn voetbal ligt in de dakgoot. Hij staat al op het dak, op zijn tenen bij de rand.
 - **VO:** "Twenty minutes after you wake up, you get the first real test."
 - **BROERTJE:** "Get it! Get it!"
@@ -164,13 +168,17 @@ Mama laat de wasmand vallen. Wasgoed op de tegels.
 Broertje vangt de bal, mond open.
 - **BROERTJE:** "Do it again!"
 
-## Scène 5 · Opa's horloge (1:40-2:20)
+## Scène 5 · Opa's horloge (1:25-1:57)
 
 **Set:** keuken, verjaardag (zondagsdiner-set met slingers en taart, 14 kaarsjes). **Muziek:** het horlogethema verschijnt voor het eerst: vier noten op felt piano, in het ritme van de tik.
 
 **5a · WIDE · trage push · 3,5 s**
 Het hele gezin aan tafel: mama, papa, opa, oma, broertje. Hij blaast de kaarsjes uit. Iedereen klapt.
 - **VO:** "That afternoon, the whole family squeezes around the kitchen table. Fourteen candles. One wish."
+
+**5a2 · CLOSE · oma · 3,5 s**
+Oma knijpt in zijn wang en bekijkt hem van top tot teen.
+- **OMA:** "Fourteen already. You'll be grown before we know it."
 
 **5b · MEDIUM · 3 s**
 Opa schuift een klein doosje over tafel.
@@ -194,11 +202,11 @@ Hij kijkt van het horloge naar opa. Glimlach verdwijnt langzaam.
 - **VO:** "Except you. And at fourteen... you haven't figured out what that means yet."
 - **SFX:** tik.
 
-## Scène 6 · Testen (2:20-3:15)
+## Scène 6 · Testen (1:57-2:35)
 
 **Set:** park met skatehelling (park uit video 3), straat met vuilniswagen (video 2), winkel. **Muziek:** pulserende beat, snel en speels-spannend (niet kinderlijk). Montage, elk shot 2-3 s.
 
-**6a · WIDE · 2,5 s · skatehelling**
+**6a · WIDE · trage push-in · 7 s · skatehelling**
 De beste vriend filmt met zijn telefoon. De pestkop staat boven op de hoogste helling naast hem.
 - **VO:** "Of course, nobody believes you. So your best friend wants proof."
 - **PESTKOP:** "If you're lying, this is gonna hurt."
@@ -224,14 +232,18 @@ De vuilnisman (cast video 2) kijkt naar de deuk, dan naar de jongen.
 **6g · DETAIL · 3 s · telefoon van de vriend**
 Het filmpje op zijn telefoon: **4.2M views**, dan **11M**, dan **38M**.
 
-**6h · CLOSE · 4 s**
-- **VO:** "This part is real. Your cells can only copy themselves about fifty times. Then they stop. It's called the Hayflick limit, and it's why everybody gets old."
+**6h · CLOSE · trage push-in · 6,5 s**
+- **VO:** "This part is real. Your cells can only copy themselves about fifty times. Then they stop."
+
+**6h2 · DETAIL · trage push-in · 5 s**
+Microscoopbeeld in glans-look: een cel deelt zich, en nog eens, en dan wordt hij grijs en stopt. Daarnaast zijn cel, die blijft delen.
+- **VO:** "Scientists call it the Hayflick limit. It's the reason everybody gets old."
 - **Beweging:** hij zit op de stoep en kijkt naar zijn hand, draait hem om.
 
 **6i · CLOSE · 2 s**
 - **VO:** "Everybody... except you."
 
-## Scène 7 · Het lab (3:15-4:00)
+## Scène 7 · Het lab (2:35-3:16)
 
 **Set:** lab van de wetenschapper (hergebruik). Koel blauw licht, schermen. **Muziek:** zachter, synths met cello.
 
@@ -248,7 +260,11 @@ De wetenschapper zet een glazen bak met een klein, gloeiend kwalletje naast hem.
 
 **7d · DETAIL · 4 s**
 Het kwalletje krimpt en wordt weer jong, in een lus.
-- **VO:** "Here's the crazy part. The Turritopsis jellyfish can turn itself young again. Over and over. It's the closest thing to immortal that scientists have ever found."
+- **VO:** "Here's the crazy part. The Turritopsis jellyfish can turn itself young again. Over and over."
+
+**7d2 · CLOSE · push-in · 4,5 s**
+Hij drukt zijn neus tegen het glas, het kwalletje drijft vlak voor zijn oog.
+- **VO:** "It's the closest thing to immortal that scientists have ever found. Until you."
 
 **7e · CLOSE · wetenschapper · 3 s**
 Ze haalt haar bril af, zacht:
@@ -270,9 +286,9 @@ Hij haalt het horloge uit zijn zak. Tik.
 
 ---
 
-# DEEL 2 · INDRUKWEKKEND (4:00-8:00) · YEAR 2027-2110
+# DEEL 2 · INDRUKWEKKEND (3:16-5:50) · YEAR 2027-2110
 
-## Scène 8 · De heuvel, 2032 (4:00-4:45)
+## Scène 8 · De heuvel, 2032 (3:16-3:45)
 
 **Set:** **de heuvel** (nieuw): houten bank, grote eik, uitzicht op de stad van video 3 in de verte, zonsondergang. Vast camerastandpunt CAM_HEUVEL. **HUD:** `YEAR 2032 · AGE 14`. **Muziek:** horlogethema op piano, met strijkers eronder.
 
@@ -284,7 +300,7 @@ Op de bank: hij (14) en de beste vriend, nu 20, groot, met een sikje. De vriend 
 - **BESTE VRIEND:** "Want a ride? Oh wait. You're fourteen. Forever."
 - **Beweging:** vriend grijnst, stoot hem met zijn elleboog.
 
-**8c · MEDIUM · 3 s · ingang club, nacht**
+**8c · MEDIUM · trage dolly · 7 s · ingang club, nacht**
 De hele oude klas gaat een club binnen. De portier legt zijn hand plat voor de jongen.
 - **VO:** "Your whole class goes out to celebrate. You go too. For about four seconds."
 - **PORTIER:** "Nice try, kid."
@@ -293,7 +309,12 @@ De hele oude klas gaat een club binnen. De portier legt zijn hand plat voor de j
 Hij kijkt de klas na. De deur valt dicht.
 - **VO:** "You will never, ever get in."
 
-**8e · DETAIL · 3 s · groepsfoto eindexamen**
+**8d2 · MEDIUM · handheld · 4 s · parkeerplaats**
+Hij zit achter het stuur van de auto van de vriend, kan net over het stuur kijken. Een agent klopt op het raam.
+- **AGENT:** "License, kid?"
+- **JONGEN:** "I'm thirty-two!"
+
+**8e · DETAIL · 4 s · groepsfoto eindexamen**
 De klas met diploma's, iedereen volwassen. Hij staat ervoor als een broertje dat per ongeluk mee op de foto staat.
 - **VO:** "On every photo, you look more and more like somebody's little brother."
 
@@ -301,7 +322,7 @@ De klas met diploma's, iedereen volwassen. Hij staat ervoor als een broertje dat
 Hij lacht erom. Nog wel.
 - **SFX:** tik. Whoosh.
 
-## Scène 9 · De heuvel, 2051 (4:45-5:30)
+## Scène 9 · De heuvel, 2051 (3:45-4:15)
 
 **HUD:** `YEAR 2051 · AGE 14`. **Set:** de heuvel, herfst, de stad heeft twee nieuwe glazen torens.
 
@@ -317,6 +338,10 @@ Een oude tante knijpt in zijn wang.
 Mama en papa aan een tafel, allebei grijs. Mama zwaait naar hem. Ze ziet er moe uit.
 - **VO:** "And for the first time, you notice it. Mom gets tired faster than you do."
 
+**9c2 · MEDIUM · 4,5 s**
+Papa staat op voor een speech, zoekt naar een woord, glimlacht verontschuldigend. Mama legt haar hand op zijn arm.
+- **VO:** "Twenty-five years. For them, that's half a life. For you, it's a long weekend."
+
 **9d · WIDE · CAM_HEUVEL · statisch · 4 s**
 De heuvel. Op de bank: alleen het zakhorloge, opengeklapt. Naast de bank een bosje bloemen. Opa is er niet meer (alleen dit beeld, geen sterfscène).
 - **VO:** geen. 2 s alleen wind en de tik.
@@ -329,7 +354,7 @@ Hij komt aanlopen in zwart, gaat zitten, pakt het horloge.
 - **VO:** "Nobody... except you."
 - **Beweging:** hij klikt de klep dicht. Tik.
 
-## Scène 10 · De redder, 2066 (5:30-6:15)
+## Scène 10 · De redder, 2066 (4:15-4:44)
 
 Spektakel tussendoor, zodat er geen drie rustige scènes achter elkaar komen. **HUD:** `YEAR 2066 · AGE 14`. **Set:** straat bij nacht met een brandend appartementengebouw (straat-set met vuuranimatie), daarna een vliegveld/lucht. **Muziek:** drums en pulserende synths.
 
@@ -344,6 +369,11 @@ Hij rent tussen de brandweermannen door het gebouw in.
 **10c · WIDE · 3 s**
 Rook, oranje gloed. Hij komt de deur uit met een klein meisje op zijn rug. Zijn hoodie smeult (geen brandwonden in beeld).
 - **VO:** "Being unkillable turns out to be very useful."
+
+**10c2 · MEDIUM · 3,5 s**
+Het meisje rent naar haar moeder. De moeder kijkt over haar schouder naar hem, met grote ogen.
+- **MOEDER:** "How old are you?"
+- **JONGEN:** "It's complicated."
 
 **10d · CLOSE · 2,5 s · pestkop als agent**
 De pestkop, nu politieagent van in de vijftig, buik, snor, kijkt toe en schudt langzaam zijn hoofd. Bijna een glimlach.
@@ -364,7 +394,7 @@ Hij kruipt uit de krater, spuugt een maïskorrel uit.
 - **VO:** "You feel every single bone."
 - **JONGEN:** "Okay. No more planes."
 
-## Scène 11 · Little brother, 2086 (6:15-7:15)
+## Scène 11 · Little brother, 2086 (4:44-5:18)
 
 **HUD:** `YEAR 2086 · AGE 14`. **Set:** de heuvel, winter, kale eik, sneeuw op de bank. De stad heeft vliegende lichtjes boven de daken. **Muziek:** horlogethema, cello erbij.
 
@@ -380,7 +410,11 @@ De oude man legt een hand op zijn hoofd en woelt door zijn haar. (Zelfde render 
 - **JONGEN:** "I'm older than you."
 - **BROERTJE:** "Not where it counts."
 
-**11d · DETAIL · 3 s**
+**11c2 · WIDE · CAM_HEUVEL · statisch · 4 s**
+Ze zitten naast elkaar en kijken naar de stad. Het broertje haalt een papieren zak met snoep tevoorschijn, net als vroeger, en geeft hem de helft.
+- **VO:** "Seventy-two years ago, he wanted you to get his football off the roof."
+
+**11d · DETAIL · 4 s**
 De oude man geeft hem een vergeelde foto: het gezin aan de keukentafel op zijn 14e verjaardag, taart, opa met het doosje.
 - **VO:** "He kept it for seventy years. Just for you."
 
@@ -398,7 +432,7 @@ Hij kijkt naar de foto. Zijn duim gaat over mama's gezicht.
 **11h · DETAIL · 2 s**
 Sneeuw valt op het horloge in zijn hand. Tik.
 
-## Scène 12 · De laatste die je kent, 2110 (7:15-8:00)
+## Scène 12 · De laatste die je kent, 2110 (5:18-5:50)
 
 **HUD:** `YEAR 2110 · AGE 14`. **Set:** de heuvel, lente, eik weer in blad. De bank is vervangen door een nieuwe stenen bank.
 
@@ -415,7 +449,15 @@ Een heel oude man in een rolstoel wordt de heuvel op geduwd door een verpleger. 
 - **Beweging:** zijn hand trilt als hij die uitsteekt. De jongen pakt hem vast.
 
 **12d · CLOSE · 3 s**
-- **VO:** "Here's the hard part. The oldest human who ever lived made it to one hundred and twenty-two."
+- **VO:** "Here's the hard part. The oldest person who ever lived..."
+
+**12d2 · DETAIL · 3,5 s**
+Een oud zwart-witfoto van een heel oude vrouw, met eronder in grote letters **122 YEARS**.
+- **VO:** "...made it to one hundred and twenty-two."
+
+**12d3 · DETAIL · 4 s**
+De oude pestkop drukt iets in zijn hand: zijn oude politiepenning. **OFFICER**, met een kras erover.
+- **PESTKOP:** "Somebody's gotta watch your back."
 
 **12e · WIDE · CAM_HEUVEL · statisch · 4 s**
 Dezelfde bank, een week later (bladeren iets anders, licht anders). Hij zit alleen. Niemand komt de heuvel op.
@@ -428,9 +470,9 @@ Hij kijkt naar de stad. Tik.
 
 ---
 
-# DEEL 3 · GEVAARLIJK (8:00-12:00) · YEAR 2200-1,000,000
+# DEEL 3 · GEVAARLIJK (5:50-8:42) · YEAR 2200-1,000,000
 
-## Scène 13 · Opgesloten, 2200 (8:00-9:00)
+## Scène 13 · Opgesloten, 2200 (5:50-6:30)
 
 **HUD:** `YEAR 2200 · AGE 14`. **Set:** lab-toren van de toekomst (nieuw, of lab-set video 1-3 met glaswanden, witte panelen en hologrammen), toekomststad (stad video 3 met extra torens en vliegende auto's). **Muziek:** dreigend, sub-bas en pulserende synths.
 
@@ -456,6 +498,10 @@ Een bewaker opent de deur met een dienblad. Hij duikt eronderdoor en rent.
 **13f · WIDE · track · 3 s**
 Lange witte gang, alarmlichten worden rood. Bewakers achter hem. Hij rent met gebogen knieën, armen pompend.
 
+**13f2 · MEDIUM · handheld · 3,5 s**
+Een deur schuift voor hem dicht. Hij glijdt er op zijn knieën onderdoor, net op tijd. Zijn hoodie blijft hangen en scheurt.
+- **VO:** "You're fast. They're faster. And they've got two hundred floors of security."
+
 **13g · MEDIUM · 2 s**
 Doodlopend: een enorm raam, 200 verdiepingen boven de stad.
 
@@ -470,7 +516,7 @@ Hij springt door het raam (het glas breekt in grote, ronde schilfers, geen splin
 Een krater in de stoep. Mensen van 2200 kijken op van hun hologramtelefoons. Hij staat op, kraakt zijn nek, en loopt gewoon weg tussen de mensen.
 - **VO:** "You'll still feel everything. But nobody can keep you."
 
-## Scène 14 · 1.000 jaar: onder het puin (9:00-10:00)
+## Scène 14 · 1.000 jaar: onder het puin (6:30-7:08)
 
 **HUD:** `YEAR 3026 · AGE 14`. **Set:** de heuvel, nu ruïnes: de stad is overwoekerd, de eik is een reus geworden, de bank is weg, alleen een stenen voet staat nog. Daarna: donker onder puin. **Muziek:** stil, alleen drones.
 
@@ -495,6 +541,11 @@ Zijn gezicht in het donker. Zijn lippen bewegen: hij telt.
 Het zakhorloge bij zijn oor, net bereikbaar voor zijn vingers. Tik. Tik.
 - **VO:** "So you count. One tick at a time."
 
+**14e2 · CLOSE · statisch · 4 s**
+Hij fluistert de namen, één per tik.
+- **JONGEN (fluistert):** "Mom. Dad. Opa. Oma..."
+- **VO:** "Names. Faces. Birthdays. Anything to stay you."
+
 **14f · Montage · 4 s**
 De kier licht wordt dag, nacht, dag, nacht, sneller en sneller. Teller ratelt: `YEAR 3030`, `3045`, `3066`.
 - **VO:** "Forty years."
@@ -511,7 +562,27 @@ Een kind van een jaar of acht houdt een zwevend hologramscherm omhoog en filmt h
 Hij staart naar het kind. Dan begint hij te lachen, en te huilen tegelijk.
 - **VO:** "A thousand years later... kids are exactly the same."
 
-## Scène 15 · De ijstijd, 50.000 jaar (10:00-11:00)
+## Scène 14b · Tienduizend jaar: het museum (7:08-7:24)
+
+**HUD:** `YEAR 10,000 · AGE 14`. **Set:** een strak wit toekomstmuseum (variant van de lab-set: witte panelen, glazen vitrines, hologrammen). **Muziek:** licht, droog-komisch, pulserende synths.
+
+**14b-a · WIDE · trage dolly · 4 s**
+Een museumzaal. In de vitrines: een mobiele telefoon, een sneaker, een fiets. En in de grootste vitrine: hij, op een krukje.
+- **VO:** "Ten thousand years. Nobody speaks your language anymore."
+
+**14b-b · DETAIL · 3 s**
+Het bordje onder zijn vitrine: **THE LAST OLD HUMAN. PLEASE DO NOT TAP THE GLASS.**
+
+**14b-c · MEDIUM · 3,5 s**
+Een groep toekomstkinderen tikt tegen het glas. Hij zwaait. Ze gillen en rennen weg.
+- **VO:** "To them, you're basically a dinosaur."
+
+**14b-d · CLOSE · 4 s**
+Hij leunt met zijn wang tegen het glas en zucht. Zijn adem maakt een wolkje.
+- **VO:** "So you're the only person on the planet who remembers what a Tuesday was."
+- **SFX:** tik.
+
+## Scène 15 · De ijstijd, 50.000 jaar (7:24-8:04)
 
 **HUD:** `YEAR 50,000 · AGE 14`. **Set:** de heuvel onder ijs (variant): een witte vlakte, alleen de top van de stenen bankvoet en een paar torenspitsen steken eruit. Blauw-wit, sneeuwstorm, volumetrisch licht. **Muziek:** strijkers, koud.
 
@@ -519,9 +590,13 @@ Hij staart naar het kind. Dan begint hij te lachen, en te huilen tegelijk.
 Een witte vlakte tot de horizon. Eén figuurtje loopt erover. (Zelfde render als flash-forward 1c.)
 - **VO:** "And this is where physics gets you."
 
-**15b · WIDE · 4 s**
+**15b · WIDE · trage crane · 7 s**
 Een torenspits steekt een paar meter uit het ijs.
-- **VO:** "Earth's orbit wobbles in long, slow cycles. And every hundred thousand years or so, the ice comes back. Your city is under a kilometer of it."
+- **VO:** "Earth's orbit wobbles in long, slow cycles. And every hundred thousand years or so, the ice comes back."
+
+**15b2 · WIDE · drone, trage crane omlaag · 5 s**
+De camera zakt door het ijs (doorsnede, als in een documentaire): onder een kilometer blauw ijs ligt de stad, met de heuvel en de eik.
+- **VO:** "Your city is down there. Under a kilometer of it."
 
 **15c · MEDIUM · 3 s**
 Hij loopt voorovergebogen in de storm. Ijs in zijn wimpers. Hij rilt.
@@ -537,7 +612,7 @@ Hij schudt het horloge, houdt het bij zijn oor. Niets.
 **15f · DETAIL · 3 s**
 Hij haalt de oude foto tevoorschijn, verkleurd en gekreukt. Mama's gezicht is bijna weg.
 
-**15g · CLOSE · trage push-in · 4 s**
+**15g · CLOSE · trage push-in · 6,5 s**
 Hij kijkt lang naar de foto. Fronst.
 - **VO:** "Here's what nobody warns you about. After fifty thousand years... you can't remember your mom's face."
 
@@ -545,7 +620,7 @@ Hij kijkt lang naar de foto. Fronst.
 - **VO:** "Only the photo can."
 - **Beweging:** hij stopt de foto heel voorzichtig terug, binnen in zijn jas, tegen zijn borst.
 
-## Scène 16 · Een miljoen jaar: achtergelaten (11:00-12:00)
+## Scène 16 · Een miljoen jaar: achtergelaten (8:04-8:42)
 
 **HUD:** `YEAR 1,000,000 · AGE 14`. **Set:** de heuvel, het ijs is weg, een woeste groene vlakte met vreemde, grote dieren in de verte (simpele silhouetten, een soort grote vogelachtige grazers). Aan de horizon: enorme ruimteschepen die opstijgen. Gouden licht. **Muziek:** groot, filmisch, strijkers en koor-pad (instrumentaal).
 
@@ -553,7 +628,7 @@ Hij kijkt lang naar de foto. Fronst.
 De vlakte. In de verte stijgen drie enorme schepen op, met lange vuurstaarten.
 - **VO:** "A million years. Humans are leaving Earth for good."
 
-**16b · MEDIUM · 3 s**
+**16b · MEDIUM · trage push-in · 7 s**
 Bij een loopplank van een schip staat een lange, slanke toekomstmens (hoofdpersonage-proporties aangepast, glans-look). Ze schudt haar hoofd.
 - **VO:** "You ask for a seat. Just one."
 - **TOEKOMSTMENS:** "Every seat is for someone with a lifetime. You have... all of them."
@@ -561,6 +636,10 @@ Bij een loopplank van een schip staat een lange, slanke toekomstmens (hoofdperso
 **16c · CLOSE · 3 s**
 - **JONGEN:** "So you're just leaving me here?"
 - **Beweging:** de loopplank schuift omhoog voor hij antwoord krijgt.
+
+**16c2 · DETAIL · 4,5 s**
+Op een enorm scherm op de zijkant van het schip: **GOODBYE, EARTH**, en daaronder een aftelling die op nul springt.
+- **VO:** "Seven billion years of history. And they leave it with you."
 
 **16d · WIDE · LOW · 4 s**
 Het laatste schip stijgt op. De luchtdruk blaast zijn haar en jas naar achteren. Het geluid zwelt aan en ebt weg.
@@ -584,15 +663,19 @@ Hij glimlacht voor het eerst in duizenden jaren.
 
 ---
 
-# DEEL 4 · SCHOKKEND (12:00-15:30) · YEAR 250 MILJOEN-10^100
+# DEEL 4 · SCHOKKEND (8:42-10:51) · YEAR 250 MILJOEN-10^100
 
-## Scène 17 · Het supercontinent, 250 miljoen jaar (12:00-12:45)
+## Scène 17 · Het supercontinent, 250 miljoen jaar (8:42-9:00)
 
 **HUD:** `YEAR 250,000,000 · AGE 14`. **Set:** rotsachtig binnenland van een supercontinent (variant van de heuvel: rode rotsen, droge bergen, een woestijnachtig landschap). Daarna een globe-animatie. **Muziek:** pulserende synths.
 
 **17a · DETAIL · globe · 4 s**
 Een animatie van de aarde: de continenten schuiven naar elkaar toe tot één grote landmassa.
-- **VO:** "This part is real. In about two hundred and fifty million years, all the continents crash back together into one giant supercontinent."
+- **VO:** "This part is real. In about two hundred and fifty million years..."
+
+**17a2 · DETAIL · globe · 4 s**
+De laatste continenten klappen tegen elkaar. Bergketens schieten omhoog.
+- **VO:** "...all the continents crash back together into one giant supercontinent."
 
 **17b · WIDE · track · 3 s**
 Hij loopt over een droge vlakte tussen rode rotsen. Ver weg een gebergte.
@@ -606,7 +689,26 @@ Hij komt over een bergkam. Aan de andere kant: dezelfde soort vlakte.
 - **JONGEN (schor, tegen niemand):** "Took me six hundred years."
 - **Beweging:** hij gaat zitten, schudt zand uit zijn schoen.
 
-## Scène 18 · Een miljard jaar: de oceanen koken (12:45-13:30)
+## Scène 17b · De laatste zonsverduistering, 600 miljoen jaar (9:00-9:19)
+
+**HUD:** `YEAR 600,000,000 · AGE 14`. **Set:** de rode rotsvlakte van scène 17, middag. **Muziek:** strijkers, opbouwend naar één grote akkoord.
+
+**17b-a · WIDE · LOW · statisch met drift · 4 s**
+De maan schuift voor de zon. Het wordt schemerig, de schaduw raast over de vlakte.
+- **VO:** "Every year, the Moon drifts about four centimeters away from Earth."
+
+**17b-b · DETAIL · 4 s**
+De maan bedekt de zon nét niet helemaal: een dunne, vurige ring blijft over.
+- **VO:** "So one day, it's too small to cover the Sun anymore."
+
+**17b-c · CLOSE · trage push-in · 6,5 s**
+Zijn gezicht in het schemerlicht, de ring weerspiegeld in zijn ogen.
+- **VO:** "You're watching the last total eclipse there will ever be. And nobody else will ever know."
+
+**17b-d · WIDE · 3 s · GROOT MOMENT**
+Het licht komt terug over de vlakte. 3 s alleen muziek.
+
+## Scène 18 · Een miljard jaar: de oceanen koken (9:19-9:44)
 
 **HUD:** `YEAR 1,000,000,000 · AGE 14`. **Set:** droge zeebodem (nieuw, of variant van de heuvel): witte zoutvlakte, een scheepswrak van een toekomstschip half in het zout, stoom die opstijgt uit de laatste plassen. De zon is groter en witter. **Muziek:** drones, zwaar.
 
@@ -622,6 +724,10 @@ Hij loopt langs het wrak. Zijn kleren zijn rafels, zijn huid glimt van het zweet
 De laatste plas water borrelt, damp stijgt op, en dan is hij weg. Zoutkorst.
 - **VO:** "The last puddle on Earth takes three seconds to disappear."
 
+**18c2 · WIDE · track · 5 s**
+Hij loopt langs een oude vuurtoren van een toekomstige stad, half begraven in het zout, roestig en scheef.
+- **VO:** "Somewhere under here are the oceans you swam in. They're just... gone."
+
 **18d · WIDE · CAM_HEUVEL-hoek · 4 s**
 Geen dier, geen plant. Hij alleen.
 - **VO:** "No plants. No animals. No bacteria. You are the last living thing on Earth."
@@ -630,13 +736,17 @@ Geen dier, geen plant. Hij alleen.
 Hij houdt het horloge tegen zijn oor. Tik.
 - **VO:** "And the clock is still ticking."
 
-## Scène 19 · Vijf miljard jaar: de rode reus (13:30-14:15)
+## Scène 19 · Vijf miljard jaar: de rode reus (9:44-10:14)
 
 **HUD:** `YEAR 5,000,000,000 · AGE 14` (verdwijnt met een glitch in 19f). **Set:** dode aarde, rode zon (dezelfde set als de cold open). **Muziek:** geen muziek bij het hoogtepunt, alleen het gebrul van de zon.
 
 **19a · WIDE · LOW · trage push · 4 s**
 De rode zon vult de lucht. De grond barst open, gloeit oranje.
-- **VO:** "Scientists think the Sun will swell up to two hundred times its size. And it might swallow the Earth whole."
+- **VO:** "Scientists think the Sun will swell up to two hundred times its size."
+
+**19a2 · WIDE · trage crane · 4 s**
+Van hoog: de rode zon over de horizon, de aarde als een klein zwart bolletje ervoor.
+- **VO:** "And it might swallow the Earth whole."
 
 **19b · CLOSE · push-in · 3 s**
 Zijn gezicht, rood verlicht. Precies het beeld van de cold open (0a), nu met alles wat we weten.
@@ -663,7 +773,7 @@ Stilte. Hij zweeft in de ruimte, zonder pak, langzaam draaiend. Achter hem een r
 Zijn mond gaat open alsof hij naar adem hapt. Niets.
 - **VO:** "You'll still feel everything. Remember?"
 
-## Scène 20 · Het einde van alles (14:15-15:30)
+## Scène 20 · Het einde van alles (10:14-10:51)
 
 **HUD:** terug, alleen het jaartal en AGE: `YEAR 100 TRILLION · AGE 14`, dan `YEAR 10^100 · AGE 14`. **Set:** de ruimte (ruimte-set video 1, uitgebreid met een sterrenveld van duizenden lichtjes die je één voor één kunt uitzetten). **Muziek:** heel zacht, één aanhoudende cello-noot en de tik.
 
@@ -671,7 +781,11 @@ Zijn mond gaat open alsof hij naar adem hapt. Niets.
 Een prachtige sterrenhemel, sterrenstelsels.
 - **VO:** "Here's the strangest part."
 
-**20b · WIDE · 5 s · trage camera, de enige uitzondering op de 6 s blijft onder de 6**
+**20a2 · WIDE · trage drift · 4,5 s**
+De sterrenstelsels drijven langzaam van elkaar weg, steeds kleiner, tot de lucht om hem heen bijna leeg is.
+- **VO:** "First, the galaxies drift so far apart you can't see them anymore."
+
+**20b · WIDE · trage camera · 5 s**
 De sterren gaan één voor één uit, steeds sneller.
 - **VO:** "In about a hundred trillion years, the last stars in the universe burn out."
 
@@ -682,6 +796,10 @@ Zijn gezicht, verlicht door één laatste rood sterretje. (Zelfde render als 1f.
 
 **20d · CLOSE · 2 s**
 Het sterretje gaat uit. Zwart. Teller springt naar `YEAR 10^100`.
+
+**20d2 · WIDE · trage drift · 5 s**
+In het zwart: zwarte gaten, alleen zichtbaar als dunne, gloeiende ringen. Eén voor één verdampen ze in een zwakke flits.
+- **VO:** "Then, very slowly, even the black holes evaporate."
 
 **20e · ZWART · 4 s**
 Totaal zwart. Alleen de tik, heel zacht.
@@ -697,9 +815,9 @@ Zijn silhouet is nog net te zien door een heel zwakke blauwe rand (anders is het
 
 ---
 
-# DEEL 5 · DE TWIST (15:30-16:10)
+# DEEL 5 · DE TWIST (10:51-11:30)
 
-## Scène 21 · Er tikt iets terug (15:30-16:10)
+## Scène 21 · Er tikt iets terug (10:51-11:30)
 
 **HUD:** geen. **Set:** het totale donker. Het enige licht: een heel zwakke warme gloed uit het horloge (de lichtgevende wijzers) die zijn handen en de onderkant van zijn gezicht raakt. **Muziek:** geen. Alleen de tik, dan stilte, dan de tweede tik.
 
@@ -738,15 +856,19 @@ Het eindeloze zwart. Heel ver weg, één piepklein warm lichtpuntje, dat op de m
 Hij klapt opa's horloge open en houdt het omhoog naar het lichtje, zodat de wijzers gloeien. Hij tikt terug: hij laat de secondewijzer los. Tik.
 - **SFX:** zijn tik. Dan, ver weg: tik, tik. Twee keer. Een antwoord.
 
+**21i2 · WIDE · trage push-in · 4 s**
+Het lichtpuntje wordt heel iets groter. Het komt dichterbij, of hij komt dichterbij. Tik. Tik.
+- **VO:** "Something else made it to the end of everything."
+
 **21j · CLOSE · 3 s**
 Op zijn gezicht verschijnt heel langzaam een glimlach, de eerste sinds de heuvel.
 - **VO:** "After a googol years... you are not alone."
 
 ---
 
-# OUTRO (16:10-16:35)
+# OUTRO (11:30-11:52)
 
-## Scène 22 · Eindvraag en slotbeeld (16:10-16:35)
+## Scène 22 · Eindvraag en slotbeeld (11:30-11:52)
 
 **22a · DETAIL · trage push-in · 4 s · keuken, 2026 (flashback, geen HUD)**
 De verjaardagstafel van scène 5. Opa klikt het doosje open. Het horloge glanst.
@@ -761,6 +883,10 @@ Het lichtpuntje en zijn kleine gloed, steeds kleiner in het zwart.
 - **VO:** "And hit subscribe. You've got time."
 - **SFX:** tik... tik.
 
+**22c2 · DETAIL · 3 s**
+Het horloge in zijn hand, de klep open. De gravure licht nog één keer op: **TIME IS THE ONE THING NOBODY GETS MORE OF.**
+- **SFX:** tik.
+
 **22d · Zwart · 2 s**
 Driftmark-logo. Geen verwijzing naar een volgende video en geen titel van een andere video.
 
@@ -774,7 +900,8 @@ Driftmark-logo. Geen verwijzing naar een volgende video en geen titel van een an
 |---|---|---|
 | **De heuvel** met bank, eik en uitzicht op de stad (vast camerastandpunt CAM_HEUVEL) | nieuw, met varianten 2032, 2051 herfst, 2086 winter, 2110 lente, ruïne 3026, ijs 50.000, groene vlakte 1 mln | 8, 9, 11, 12, 14, 15, 16 |
 | Dode aarde met rode zon (variant van de heuvel) | nieuw | 0, 2, 19 |
-| Supercontinent en droge zeebodem (varianten van de heuvel/woestijn) | nieuw (eenvoudige terreinen) | 17, 18 |
+| Toekomstmuseum (variant lab-set, witte vitrines) | variant | 14b |
+| Supercontinent en droge zeebodem (varianten van de heuvel/woestijn) | nieuw (eenvoudige terreinen) | 17, 17b, 18 |
 | Lab-toren 2200 (lab-set met glazen kamer en gang) | variant | 13 |
 | Ruimte met uitschakelbaar sterrenveld | variant van ruimte video 1 | 1, 19, 20, 21, 22 |
 | Slaapkamer ochtend | hergebruik | 2 |
@@ -792,7 +919,7 @@ Driftmark-logo. Geen verwijzing naar een volgende video en geen titel van een an
 - **Hoofdpersonage:** altijd 14. Kleding verandert per tijdperk (hoodie 2026, te groot pak 2051, toekomstjas 2200, rafels vanaf 1 miljard jaar). Geen leeftijdsvarianten.
 - **Gezin:** mama (ook grijs, 2051), papa (ook grijs), opa (alleen 2026), oma (2026), broertje (2026 en als man van 80 in 2086).
 - **Vaste cast:** beste vriend (2026, 20 jaar in 2032, rond de 40 bij de bruiloft), pestkop (2026, als agent van 50+ in 2066, 98 jaar in rolstoel in 2110), wetenschapper, nieuwslezeres, vuilnisman (video 2).
-- **Nieuw/overig:** portier, tante, brandweerman, meisje uit de brand, EVERGREEN-directeur en bewakers, toekomstmensen (3026 en 1 mln), kind met hologramtelefoon, de lange toekomstvrouw, vreemde grazers (silhouetten), kwalletje.
+- **Nieuw/overig:** portier, tante, brandweerman, meisje uit de brand, EVERGREEN-directeur en bewakers, toekomstmensen (3026 en 1 mln), kind met hologramtelefoon, museumkinderen, moeder van het meisje, de lange toekomstvrouw, vreemde grazers (silhouetten), kwalletje.
 
 ## C. Props die terugkomen (planten en oogsten)
 
@@ -807,7 +934,7 @@ Driftmark-logo. Geen verwijzing naar een volgende video en geen titel van een an
 | Laatste sterretje | 1f | 20c-20d |
 | "You'll still feel everything. Remember that." | 3d-3e | 13j, 14d, 19h |
 
-## D. Wetenschapsmomenten (10x, elk met een andere inleiding)
+## D. Wetenschapsmomenten (11x, elk met een andere inleiding)
 
 1. Hayflick-limiet: cellen delen zich ongeveer 50 keer (6h, "This part is real.").
 2. Turritopsis-kwal die zichzelf weer jong maakt (7d, "Here's the crazy part.").
@@ -818,7 +945,8 @@ Driftmark-logo. Geen verwijzing naar een volgende video en geen titel van een an
 7. De zon wordt elke miljard jaar ongeveer 10% feller, de oceanen verdampen (18a-18b).
 8. Rode reus tot ongeveer 200 keer zo groot, slokt de aarde misschien op (19a, "Scientists think...").
 9. Laatste sterren doven na ongeveer 100 biljoen (100 trillion) jaar (20b, "Here's the strangest part.").
-10. Een googol jaar, en geluid reist niet door de lege ruimte (20e, 21f).
+10. De maan drijft elk jaar ongeveer 4 cm weg; over ongeveer 600 miljoen jaar is er geen totale zonsverduistering meer (17b-a, 17b-b).
+11. Een googol jaar, en geluid reist niet door de lege ruimte (20e, 21f).
 
 Alle getallen zijn de gangbare wetenschappelijke schattingen; bij de rode reus en de ijstijden zegt de VO bewust "think", "might" en "or so".
 
@@ -828,31 +956,34 @@ Alle getallen zijn de gangbare wetenschappelijke schattingen; bij de rode reus e
 - **Thumbnail:** zijn gezicht groot, doodsbang, rood verlicht door de enorme zon, gloeiende scheuren in de grond, het gebarsten horloge in zijn hand. Tekst: **YEAR 5 BILLION** (drie woorden), klein eronder **AGE 14**. Dat is precies shot 0a/19b.
 - **Hoofdstukken voor de beschrijving:**
   - 0:00 Year 5,000,000,000
-  - 0:35 Day 1
-  - 1:40 Grandpa's Watch
-  - 2:20 Testing It
-  - 4:00 Year 2032
-  - 5:30 Year 2066
-  - 6:15 Year 2086
-  - 7:15 Year 2110
-  - 8:00 Year 2200
-  - 9:00 Year 3026
-  - 10:00 Year 50,000
-  - 11:00 Year 1,000,000
-  - 12:00 Year 250,000,000
-  - 12:45 Year 1,000,000,000
-  - 13:30 Year 5,000,000,000
-  - 14:15 The End of Everything
-  - 15:30 Tick
+  - 0:36 Day 1
+  - 1:25 Grandpa's Watch
+  - 1:57 Testing It
+  - 3:16 Year 2032
+  - 4:15 Year 2066
+  - 4:44 Year 2086
+  - 5:18 Year 2110
+  - 5:50 Year 2200
+  - 6:30 Year 3026
+  - 7:08 Year 10,000
+  - 7:24 Year 50,000
+  - 8:04 Year 1,000,000
+  - 8:42 Year 250,000,000
+  - 9:00 Year 600,000,000
+  - 9:19 Year 1,000,000,000
+  - 9:44 Year 5,000,000,000
+  - 10:14 The End of Everything
+  - 10:51 Tick
 
 ## F. Controle tegen de checklist
 
 - Frame 1 is gevaar én de hoofdpersoon: zijn gezicht voor de rode zon, eerste woord op frame 1. Thumbnail en titel beloven precies dat beeld.
-- Cold open en flash-forwards samen 22 s, titel op 0:25. Geen uitleg in de eerste minuut: de regels komen als grappen in beeld (teen, blauwe plek, spiegel), binnen 25 s.
-- Er staat iets op het spel op 1:40-2:20 (opa's horloge: hij gaat iedereen overleven).
+- Cold open en flash-forwards samen 21 s, titel op 0:24. Geen uitleg in de eerste minuut: de regels komen als grappen in beeld (teen, blauwe plek, spiegel), binnen 25 s.
+- Er staat iets op het spel op 1:25-1:57 (opa's horloge: hij gaat iedereen overleven).
 - Elke 60-90 s een nieuw probleem of tijdsprong. Nooit drie rustige scènes na elkaar: tussen bruiloft (9) en broertje (11) zit de brand en de val (10); na de pestkop (12) komt de ontsnapping (13).
 - Shots 2-5 s, geen enkel shot langer dan 6 s zonder bewegende camera.
-- 10 wetenschapsmomenten met verschillende inleidingen.
+- 11 wetenschapsmomenten met verschillende inleidingen (nieuw: de maan drijft weg, 4 cm per jaar).
+- Totale lengte ongeveer 12:00 (wens niels 5 nov). Een paar shots met veel tekst duren 6,5-7 s, altijd met een bewegende camera.
 - Bijfiguur met ontwikkeling: de pestkop (duwt hem in 2026, beschermt van een afstand in 2066, zegt sorry in 2110).
 - HUD wit met donkere rand; AGE springt nooit; weg in cold open, flash-forwards en twist.
 - Grote momenten met 2-3 s zonder verteller: 4e, 9d, 11e, 16d, 19e, 20g, 21c.
