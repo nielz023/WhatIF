@@ -185,7 +185,7 @@ export const ACTIVITY: { title: string; id: string; state: string; last: string;
  {
   "title": "Bouw cast en sets voor geen-regels-video",
   "id": "cmsg_01LkmukDuDNkj8pXsDu4v8WGCHT43zJaABsdPF4uv4swV5",
-  "state": "blocked",
+  "state": "done",
   "last": "5 nov 00:25",
   "doing": "Cast (37 figuren), dieren en 36 set-varianten klaar in videos/geen-regels/ (cast, dieren, sets + overzicht_sets_no_rules.jpg). Wacht op jouw akkoord."
  },
