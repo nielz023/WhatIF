@@ -1,12 +1,13 @@
-import { useEffect, Component, type ReactNode } from 'react';
+import { useEffect, useRef, Component, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from './store/useGame';
 import { MobileNav, StudioTabs, STUDIO, MAIN } from './components/layout/Sidebar';
-import GlassNav from './components/layout/GlassNav';
+import GlassNav, { GlassSide } from './components/layout/GlassNav';
 import WorldLayer from './world/WorldLayer';
 import HomeHud from './world/HomeHud';
 import { HoloPanel } from './world/HoloPanel';
 import { useWorld } from './world/useWorld';
+import { startSounds, play } from './world/sound';
 import type { WorldMode } from './world/NeonOffice';
 import Coach from './components/shared/Coach';
 import Tour from './components/shared/Tour';
@@ -51,7 +52,7 @@ function useSimulationLoop() {
       if (realTick() !== st.tick) useGame.setState({ tick: realTick() });
     };
     sync();
-    startLive(); startTools();
+    startLive(); startTools(); startSounds();
     const id = setInterval(sync, 10000);
     return () => clearInterval(id);
   }, []);
@@ -100,7 +101,10 @@ export default function App() {
   const mode: WorldMode = page === 'driftmark' ? 'home' : page === 'hq' ? 'studio' : 'panel';
   const meta = TITLES[page] ?? (studio ? { t: `Studio · ${STUDIO.find((x) => x.id === page)?.label ?? ''}`, sub: 'Het kantoor beheren', c: '#398CFF' } : { t: MAIN.find((x) => x.id === page)?.label ?? '', sub: '', c: '#FF7A24' });
 
-  useEffect(() => { bump(); }, [page, bump]);
+  const prevMode = useRef(mode);
+  useEffect(() => { bump(); if (mode === 'panel') play('open'); else if (prevMode.current === 'panel') play('close'); prevMode.current = mode; }, [page, bump, mode]);
+  const focus = useWorld((s) => s.focus); const worker = useWorld((s) => s.worker);
+  useEffect(() => { if (focus || worker) play('zoom'); }, [focus, worker]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -124,6 +128,7 @@ export default function App() {
         <div className="pointer-events-auto"><TopBar /></div>
         <GlassNav />
         <main className="relative min-h-0 flex-1 pb-[64px] md:pb-0">
+          {mode === 'home' && <GlassSide />}
           {mode === 'home' && <HomeHud />}
           {mode === 'studio' && (
             <div className="pointer-events-none absolute inset-0 flex flex-col">

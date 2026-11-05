@@ -1,3 +1,4 @@
+import { play } from '../world/sound';
 /**
  * ECHT-MODUS: acties in de app worden echte opdrachten voor Claude.
  * Elke actie wordt als reactie op de pagina geplaatst en naar Claude gestuurd
@@ -70,6 +71,7 @@ setInterval(() => void useReal.getState().refresh(), 30000);
 
 /** Stuurt een opdracht en laat een toast zien in de game. */
 export function order(text: string, toast?: (t: string, k?: 'success' | 'info' | 'warning') => void) {
+  play('send');
   void useReal.getState().send(text).then((o) => {
     toast?.(o.status === 'verstuurd' ? '✅ Echte opdracht naar Claude gestuurd' : `⏳ Opdracht in de wachtrij: ${o.reason ?? ''}`, o.status === 'verstuurd' ? 'success' : 'warning');
   });

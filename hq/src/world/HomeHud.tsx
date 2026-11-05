@@ -213,9 +213,9 @@ export default function HomeHud() {
   const rm = reducedMotion();
   return (
     <div className="pointer-events-none absolute inset-0">
-      <motion.div className="absolute left-3 top-3 right-3 flex flex-wrap items-start gap-2 md:left-5 md:top-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: rm ? 0 : 0.6, duration: 0.5 }}>
+      <motion.div className="absolute left-3 top-3 right-3 flex flex-wrap items-start justify-start gap-2 md:left-5 md:top-4 xl:left-auto xl:right-5 xl:justify-end" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: rm ? 0 : 0.6, duration: 0.5 }}>
         <div className="holo-mini pointer-events-auto hidden px-3 py-2 text-[12px] text-slate-300 lg:block">Klik op een afdeling of medewerker · sleep om te schuiven · scroll om te zoomen</div>
-        <button onClick={() => setPage('overzicht')} className="glass-chip pointer-events-auto" style={{ ['--c' as string]: '#FF7A24' }}><LayoutDashboard size={14} />Dagoverzicht</button>
+        <button onClick={() => setPage('overzicht')} className="glass-chip pointer-events-auto xl:hidden" style={{ ['--c' as string]: '#FF7A24' }}><LayoutDashboard size={14} />Dagoverzicht</button>
       </motion.div>
       <motion.div className="absolute bottom-[92px] left-3 hidden space-y-2 md:block lg:left-5" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: rm ? 0 : 0.7, duration: 0.6, ease: EASE }}>
         <Projects />

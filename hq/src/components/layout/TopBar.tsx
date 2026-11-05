@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Users, Wallet, Eye, Tv, HelpCircle } from 'lucide-react';
+import { Bell, Users, Wallet, Eye, Tv, HelpCircle, Volume2, VolumeX } from 'lucide-react';
+import { soundOn, setSound, onSoundChange } from '../../world/sound';
 import { useGame } from '../../store/useGame';
 import { compact, relTime } from '../../lib/util';
 import { DemoBadge } from '../ui';
@@ -36,6 +37,7 @@ export default function TopBar() {
       <div className="ml-auto flex items-center gap-2">
         {/* echte klok */}
         <span className="hidden sm:inline"><RealClock /></span>
+        <SoundBtn />
         <button onClick={() => window.dispatchEvent(new Event('dm-tour'))} className="rounded-xl border border-hq-line/60 bg-hq-panel/60 p-2 text-slate-300 hover:text-white" aria-label="Uitleg: rondleiding" title="Rondleiding: hoe werkt het HQ?"><HelpCircle size={18} /></button>
 
         {/* notifications */}
@@ -69,6 +71,7 @@ export default function TopBar() {
             )}
           </AnimatePresence>
         </div>
+        <div className="hidden h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#FF4DB8] to-[#A855F7] text-[14px] font-bold text-white shadow-[0_0_14px_rgba(255,77,184,.45)] sm:flex" title="niels">N</div>
       </div>
     </header>
   );
@@ -83,5 +86,15 @@ function RealClock() {
       <span className="text-[13px] font-semibold text-slate-200">{now.toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })}</span>
       <span className="hidden text-[12px] uppercase tracking-wider text-slate-500 sm:inline">echte tijd</span>
     </div>
+  );
+}
+
+function SoundBtn() {
+  const [on, setOn] = useState(soundOn());
+  useEffect(() => onSoundChange(setOn), []);
+  return (
+    <button onClick={() => setSound(!on)} className="glass-stat p-2 text-slate-300 hover:text-white" aria-label={on ? 'Geluid uit' : 'Geluid aan'} title={on ? 'Geluidjes uitzetten' : 'Geluidjes aanzetten'}>
+      {on ? <Volume2 size={18} /> : <VolumeX size={18} />}
+    </button>
   );
 }

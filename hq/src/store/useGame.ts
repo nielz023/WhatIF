@@ -1,3 +1,4 @@
+import { play } from '../world/sound';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -120,6 +121,7 @@ export const useGame = create<GameStore>()(
       askConfirm: (c) => set((s) => { s.confirm = c as never; }),
       closeConfirm: () => set((s) => { s.confirm = null; }),
       toast: (text, kind = 'info') => {
+        if (kind === 'success') play('success'); else if (kind === 'warning') play('notify');
         const id = uid('t');
         set((s) => { s.toasts.push({ id, text, kind }); });
         setTimeout(() => get().dismissToast(id), 3800);

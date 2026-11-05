@@ -149,3 +149,30 @@ body { background: var(--dm-bg); }
   .holo-scan { animation: none; display: none; }
   .glass-btn, .glass-chip, .dm-roomsign { transition: none; transform: none !important; }
 }
+
+/* ---- v2: dichter bij het referentiebeeld ---- */
+.glass-btn { min-width: 132px; padding: 14px 22px 12px; font-size: 16px; border-radius: 18px; transform: rotateX(10deg) rotateY(var(--ry, 0deg)); border-width: 1.5px;
+  background: linear-gradient(180deg, rgba(40,60,120,.55), rgba(10,16,40,.78)); }
+.glass-btn:hover { transform: rotateX(0deg) rotateY(var(--ry, 0deg)) translateY(-3px) scale(1.04); }
+.glass-btn[data-active='true'] { transform: rotateX(0deg) rotateY(var(--ry, 0deg)) scale(1.07); }
+@media (max-width: 1280px) { .glass-btn { min-width: 104px; padding: 10px 14px; font-size: 14px; } }
+@media (max-width: 1000px) { .glass-btn { min-width: 84px; padding: 8px 10px; font-size: 13px; } }
+
+.glass-side {
+  border-radius: 22px; transform: perspective(900px) rotateY(9deg); transform-origin: left center;
+  background: linear-gradient(180deg, rgba(30,46,92,.55), rgba(10,16,38,.7));
+  border: 1.5px solid rgba(57,140,255,.38); box-shadow: 0 20px 50px rgba(0,0,0,.45), 0 0 24px rgba(57,140,255,.15), 0 1px 0 rgba(255,255,255,.08) inset;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.glass-side-btn { display: flex; width: 100%; align-items: center; gap: 12px; padding: 11px 14px; margin-bottom: 4px; border-radius: 14px;
+  font-size: 15px; font-weight: 700; color: #cbd5e1; border: 1px solid transparent; transition: background .25s, color .2s, transform .3s var(--dm-ease); }
+.glass-side-btn svg { color: #20D9FF; }
+.glass-side-btn:hover { background: rgba(255,255,255,.05); color: #fff; transform: translateX(3px); }
+.glass-side-btn[data-active='true'] { color: #fff; background: linear-gradient(90deg, rgba(255,122,36,.4), rgba(255,122,36,.12)); border-color: rgba(255,122,36,.7); box-shadow: 0 0 18px rgba(255,122,36,.3); }
+.glass-side-btn[data-active='true'] svg { color: #FFB070; }
+
+.glass-bar { border-radius: 20px; background: linear-gradient(180deg, rgba(24,36,74,.6), rgba(8,12,30,.8)); border: 1.5px solid rgba(57,140,255,.3);
+  box-shadow: 0 16px 40px rgba(0,0,0,.45), 0 0 20px rgba(57,140,255,.12); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.glass-bar-btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 14px; font-weight: 700; color: #e2e8f0;
+  background: rgba(16,24,48,.7); border: 1px solid rgba(148,163,184,.22); transition: all .25s var(--dm-ease); }
+.glass-bar-btn:hover { border-color: rgba(32,217,255,.6); color: #fff; box-shadow: 0 0 16px rgba(32,217,255,.2); transform: translateY(-1px); }
