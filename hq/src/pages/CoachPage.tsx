@@ -395,9 +395,9 @@ function KennisTab() {
   return (
     <div className="space-y-3">
       <div className={`panel p-4 ${cursus.length ? '' : 'border-orange-400/50'}`}>
-        <div className="font-display text-lg font-bold text-white">YouTube A-Z Guide</div>
+        <div className="font-display text-lg font-bold text-white">Je cursus (Faceless Education)</div>
         {cursus.length ? <div className="text-[14px] text-slate-300">{cursus.map((c) => `${c.doc} (${c.taal.toUpperCase()}, ${c.fragmenten} stukjes)`).join(' · ')}</div>
-          : <div className="text-[14px] text-orange-100">Nog niet in de kennisbank. Stuur de Nederlandse en Engelse cursus (PDF of tekst) in de thread, dan zet ik ze erin. Tot die tijd zegt de coach eerlijk dat zijn advies geen cursusadvies is.</div>}
+          : <div className="text-[14px] text-orange-100">Nog niet in de kennisbank. Stuur de cursus (PDF of tekst) in de thread, dan zet ik hem erin.</div>}
       </div>
       <div className="panel p-4">
         <div className="mb-2 font-display text-lg font-bold text-white">Driftmark-documenten</div>

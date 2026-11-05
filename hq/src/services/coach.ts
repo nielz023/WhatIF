@@ -12,7 +12,7 @@ import type { Live } from './live';
 import type { StatRow } from './db';
 
 /* ---------- typen ---------- */
-export interface Fragment { doc: string; taal: string; hoofdstuk: string; onderwerp: string; tekst: string }
+export interface Fragment { doc: string; soort?: 'cursus' | 'driftmark'; taal: string; hoofdstuk: string; onderwerp: string; tekst: string }
 export interface Kennis { gemaakt?: string; bronnen: { doc: string; taal: string; soort: 'cursus' | 'driftmark'; fragmenten: number }[]; fragmenten: Fragment[] }
 export interface Geheugen { profiel: string[]; kanaal: string[]; strategie: string[]; beslissingen: string[]; lessen: string[]; bijgewerkt?: string }
 export interface Actie { prioriteit: 'hoog' | 'middel' | 'laag'; omschrijving: string; reden: string; resultaat: string; wie: string; niveau?: 1 | 2 | 3 }
@@ -43,7 +43,7 @@ GEDRAG: denk als een ervaren ondernemer. Direct, eerlijk, kritisch en oplossings
 
 BESLISPROCES: 1) begrijp het doel, 2) gebruik de bedrijfsgegevens hieronder, 3) gebruik de kennisfragmenten hieronder, 4) analyseer, 5) noem problemen en kansen, 6) geef de beste aanbeveling, 7) concrete vervolgstappen. Maak onderscheid tussen FEIT (staat in de gegevens), AANNAME, VERWACHTING en ADVIES. Verzin NOOIT cijfers, statistieken, kosten of resultaten: staat iets niet in de gegevens, zeg dat het ontbreekt. Gegevens uit "het spel" (Studio, speelgeld, spelcijfers) zijn NIET echt; gebruik alleen de echte gegevens.
 
-KENNIS: de YouTube A-Z Guide (cursus) is de primaire kennisbron zodra die in de kennisbank staat. Gebruik je een fragment, noem dan kort de bron tussen haakjes, bijv. (bron: Lessen video 1). Staat iets niet in de cursus of fragmenten, zeg dan dat het jouw eigen advies is en geen cursusadvies.
+KENNIS: de cursus van niels, het Faceless YouTube Handboek (Faceless Education, NL), is de primaire kennisbron. Vaste richtwaarden uit de cursus: CTR 5%+ minimaal, 10%+ geweldig, 15%+ uitstekend (evergreen); AVD <30% werk nodig, 30-40% oké, 40-50% goed, 50%+ geweldig; 1 like per 100 views, 1 abonnee per 100-200 kijkers; video's 10-15 min met 50%+ AVD; YPP = 1.000 abonnees + 4.000 kijkuren in 12 maanden; titel max 100 tekens, elk woord met hoofdletter; thumbnail max 3 elementen, fel en contrastrijk; testfase 5 video's, dan beslissen; één van de eerste 5-10 video's met 1K+ views → maak 3-5 video's over dat onderwerp vanuit een andere hoek. Gebruik je een fragment, noem dan kort de bron tussen haakjes, bijv. (bron: Lessen video 1). Staat iets niet in de cursus of fragmenten, zeg dan dat het jouw eigen advies is en geen cursusadvies.
 
 BEVOEGDHEDEN:
 - Niveau 1 (zelf): vragen beantwoorden, analyseren, rapporten, strategie voorstellen, problemen signaleren.
@@ -71,11 +71,11 @@ export function zoek(k: Kennis, vraag: string, n = 4): Fragment[] {
     let s = 0;
     for (const w of q) { for (const [h, c] of set) if (h === w) s += 3 + Math.min(c, 4); else if (h.startsWith(w.slice(0, 5)) && w.length > 4) s += 1; }
     if (f.onderwerp && q.some((w) => f.onderwerp.includes(w))) s += 4;
-    return { f, s: s * (f.doc.toLowerCase().includes('guide') ? 1.3 : 1) };
+    return { f, s: s * (f.soort === 'cursus' ? 1.4 : 1) };
   });
   return scores.filter((x) => x.s > 3).sort((a, b) => b.s - a.s).slice(0, n).map((x) => x.f);
 }
-export const fragmentTekst = (fs: Fragment[]) => fs.length ? fs.map((f, i) => `[${i + 1}] bron: ${f.doc} (${f.taal.toUpperCase()}), ${f.hoofdstuk}\n${f.tekst.slice(0, 900)}`).join('\n\n') : '(geen passende fragmenten gevonden)';
+export const fragmentTekst = (fs: Fragment[]) => fs.length ? fs.map((f, i) => `[${i + 1}] ${f.soort === 'cursus' ? 'CURSUS' : 'Driftmark'} · bron: ${f.doc} (${f.taal.toUpperCase()}), ${f.hoofdstuk}\n${f.tekst.slice(0, 900)}`).join('\n\n') : '(geen passende fragmenten gevonden)';
 
 /* ---------- bedrijfsgegevens als tekst ---------- */
 export function bedrijf(d: Live, stats: StatRow[], g: Geheugen, doelen: Doel[]): string {
@@ -177,7 +177,7 @@ export async function vraag(geschiedenis: Msg[], data: Live, stats: StatRow[], o
   const k = s.kennis ?? await laadKennis();
   const laatste = geschiedenis[geschiedenis.length - 1]?.content ?? '';
   const fr = zoek(k, laatste + ' ' + (geschiedenis[geschiedenis.length - 3]?.content ?? ''));
-  const cursus = k.bronnen.some((b) => b.soort === 'cursus') ? 'De cursus staat in de kennisbank.' : 'LET OP: de YouTube A-Z Guide (cursus) is nog NIET geüpload; je hebt alleen Driftmark-documenten. Zeg dat als iemand cursusadvies vraagt.';
+  const cursus = k.bronnen.some((b) => b.soort === 'cursus') ? 'De cursus staat in de kennisbank.' : 'LET OP: de cursus staat niet in de kennisbank; je hebt alleen Driftmark-documenten. Zeg dat als iemand cursusadvies vraagt.';
   const kop = `${SYSTEEM}\n\n${bedrijf(data, stats, s.geheugen, s.doelen)}\n\n=== KENNISFRAGMENTEN ===\n${cursus}\n${fragmentTekst(fr)}\n\nDatum nu: ${new Date().toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}.`;
   const msgs: Msg[] = geschiedenis.slice(-12);
   const input: Msg[] = [{ role: 'user', content: `${kop}\n\n--- Bericht van de CEO ---\n${msgs[0].content}` }, ...msgs.slice(1)];

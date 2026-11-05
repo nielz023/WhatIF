@@ -96,6 +96,22 @@ for a in d.get('activity', []):
             nieuw.append({'soort': 'herinnering', 'taak': a['title'], 'thread': a['id'], 'key': key})
             logs.append(('waarschuwing', f'"{a["title"]}" wacht al meer dan een dag op jou.'))
 
+# 6. cursus: 48 uur na een lange upload CTR, AVD en verkeersbronnen bekijken (Faceless YouTube Handboek, h. 9)
+for v in (d.get('youtube') or {}).get('videos', []):
+    if v.get('type') != 'long' or (v.get('status') or 'public') != 'public':
+        continue
+    ds = v.get('datum') or v.get('date')
+    try:
+        t = dt.datetime.fromisoformat(str(ds)[:10]).replace(tzinfo=dt.timezone.utc)
+    except ValueError:
+        continue
+    uren = (now - t).total_seconds() / 3600
+    if 48 <= uren <= 96:
+        key = f"cursus48:{v.get('id') or v['title']}"
+        if key not in gemeld:
+            nieuw.append({'soort': 'herinnering', 'tekst': f'"{v["title"]}" staat 2 dagen online. Cursus: bekijk nu in YouTube Studio de CTR (doel 5%+), AVD (doel 40%+) en verkeersbronnen, en stuur een screenshot. Lage CTR en weinig uit Aanbevolen = thumbnail vervangen.', 'key': key})
+            logs.append(('info', f'Cursus-herinnering: CTR/AVD van "{v["title"]}" bekijken (48 uur online).'))
+
 # nieuwe fouten/waarschuwingen (voor de melding aan niels), elk maar één keer
 for k, t in logs:
     if k in ('fout', 'waarschuwing'):

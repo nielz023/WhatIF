@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CursusMeter } from './Cursus';
 import { useLive } from '../services/live';
 import { useDb, type StatRow } from '../services/db';
 
@@ -76,6 +77,7 @@ export default function KanaalPage() {
         <button key={r.id} onClick={() => setRange(r.id)} className={`rounded-full px-4 py-2 text-[14px] font-semibold ${range === r.id ? 'bg-orange-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>{r.label}</button>
       ))}</div>
 
+      <CursusMeter />
       <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
         <Chart rows={stats} k="subscribers" color="#ff8a3d" label="Abonnees" info="Mensen die je kanaal volgen. Elk uur een meetpunt." />
         <Chart rows={stats} k="views" color="#3db8ff" label="Weergaven" info="Alle keren dat iemand iets van je bekeek, bij elkaar opgeteld." />

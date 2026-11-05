@@ -76,7 +76,7 @@ def onderwerp(tekst, standaard):
     return beste[0] if beste[1] >= 2 else standaard
 
 
-def knip(doc, tekst, taal_, standaard):
+def knip(doc, tekst, taal_, standaard, soort='driftmark'):
     stukken, hoofdstuk, buf = [], 'Algemeen', []
 
     def klaar():
@@ -84,7 +84,7 @@ def knip(doc, tekst, taal_, standaard):
         if len(t) > 60:
             for i in range(0, len(t), 1100):
                 deel = t[i:i + 1200]
-                stukken.append({'doc': doc, 'taal': taal_, 'hoofdstuk': hoofdstuk, 'onderwerp': onderwerp(hoofdstuk + ' ' + deel, standaard), 'tekst': deel})
+                stukken.append({'doc': doc, 'soort': soort, 'taal': taal_, 'hoofdstuk': hoofdstuk, 'onderwerp': onderwerp(hoofdstuk + ' ' + deel, standaard), 'tekst': deel})
         buf.clear()
 
     for regel in tekst.splitlines():
@@ -107,7 +107,7 @@ def main():
             if t and t.strip():
                 tl = taal(naam, t)
                 doc = os.path.splitext(naam)[0]
-                s = knip(doc, t, tl, 'algemeen')
+                s = knip(doc, t, tl, 'algemeen', 'cursus')
                 alles += s
                 bronnen.append({'doc': doc, 'taal': tl, 'soort': 'cursus', 'fragmenten': len(s)})
     for pad, doc, ond in VAST:

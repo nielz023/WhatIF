@@ -3,6 +3,7 @@ import { ExternalLink, Clapperboard, Users, Map, ListChecks, Lightbulb, Wrench, 
 import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
 import { RULES, CAST, VOICES, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
+import { CursusCheck, TitelTester, CursusStappen, CursusTip } from './Cursus';
 import { useLive, startLive } from '../services/live';
 import { ToolsPanel, CostsPanel, RepliesPanel, Outputs, AutomationPanel } from './DriftmarkExtra';
 import { useEffect } from 'react';
@@ -127,11 +128,12 @@ function Section({ icon, title, children, right }: { icon: React.ReactNode; titl
 }
 
 type Tab = 'v1' | 'v2' | 'v3';
-type View = 'overzicht' | 'threads' | 'videos' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
+type View = 'overzicht' | 'threads' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
 const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'overzicht', label: 'Overzicht', uitleg: 'Wat er nu gebeurt en wat jij moet doen' },
   { id: 'threads', label: 'Alle taken', uitleg: 'Elke Claude-taak in je project, per video. Klik om hem te openen' },
   { id: 'videos', label: "Video's", uitleg: 'Elke lange video met zijn productielijn en bestanden' },
+  { id: 'cursus', label: 'Cursuscheck', uitleg: 'Checklist uit je cursus per video, plus de titeltester' },
   { id: 'kalender', label: 'Uploadkalender', uitleg: 'Wat er wanneer online ging en wat er ingepland staat' },
   { id: 'shorts', label: 'Shorts', uitleg: 'Welke shorts er zijn en wanneer ze online gaan' },
   { id: 'cast', label: 'Cast & sets', uitleg: 'De figuren en decors per video' },
@@ -153,7 +155,7 @@ function Step({ n, title, text }: { n: number; title: string; text: string }) {
 }
 
 type Mode = 'home' | 'videos' | 'meer';
-const MODE_VIEWS: Record<Mode, View[]> = { home: [], videos: ['videos', 'kalender', 'shorts'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'] };
+const MODE_VIEWS: Record<Mode, View[]> = { home: [], videos: ['videos', 'cursus', 'kalender', 'shorts'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'] };
 const MODE_TITLE: Record<Mode, [string, string]> = {
   home: ['Home', ''],
   videos: ["Video's", 'Elke video van idee tot upload. De gloeiende halte is waar hij nu is.'],
@@ -315,6 +317,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
           {bezig.length > 4 && <button className="mt-2 text-[14px] text-sky-300 hover:text-white" onClick={() => { try { localStorage.setItem('driftmark-view-meer', 'threads'); } catch { /* */ } setPage('meer'); }}>Alle {bezig.length} taken bekijken →</button>}
         </section>
 
+        <div className="mb-4"><CursusTip /></div>
         <RepliesPanel />
         <AutomationPanel />
 
@@ -349,6 +352,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         </div>
       )}
 
+      {view === 'cursus' && <><CursusCheck /><TitelTester /></>}
       {view === 'videos' && <div className="grid gap-3 lg:grid-cols-2">{[...VIDEOS].reverse().map((v) => <VideoCard key={v.nr} v={v} />)}</div>}
 
       {view === 'shorts' && (
@@ -390,6 +394,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         </div>
       )}
 
+      {view === 'werkwijze' && <CursusStappen />}
       {view === 'werkwijze' && (
         <Section icon={<ListChecks size={16} />} title="Werkwijze & regels">
           <div className="grid gap-2 sm:grid-cols-2">
