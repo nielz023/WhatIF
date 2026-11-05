@@ -44,6 +44,18 @@ def year_fmt(y):
 
 
 class Scene4(_v3.Scene3):
+    def finish(self, length=None, tail=0.0, **kw):
+        """Zoals altijd, maar een stemregel wordt nooit afgekapt: loopt een regel voorbij het einde, dan wordt de scène
+        verlengd tot de regel klaar is + 0,25 s (laatste shot loopt door) en meldt de QC dat."""
+        if length is not None and self.voice:
+            ends = [(t0 + audio_len(os.path.join(AUDIO, rel)), rel) for rel, t0 in self.voice]
+            need, rel = max(ends)
+            if need + 0.25 > length:
+                print(f"QC STEM_AFGEKAPT       {os.path.basename(rel)} eindigt op {need:.2f} s, scène was {length:.2f} s"
+                      f" -> verlengd tot {need + 0.25:.2f} s")
+                length = need + 0.25
+        return super().finish(length=length, tail=tail, **kw)
+
     def __init__(self, code, set_name=None, variant=None, samples=None, exposure=0.15, night=False):
         super().__init__(code, set_name, variant, samples=samples, exposure=exposure, night=night)
 
