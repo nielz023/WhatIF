@@ -95,7 +95,9 @@ for k in range(int((END - t_e) / 0.45)):
     A.bone_rot(held, F(t), "chest", (-4 if k % 2 else 3, 0, 0))
 # 1g: kijkt recht in de lens, slikt, kaak spant aan
 t_g = sh[5][0]
-S.beat(held, t_g, "staan", face="nerveus", face_amt=0.8, look=(0.0, 0.0))
+S.beat(held, t_g, "staan", face="verbaasd", face_amt=1.0, look=(0.0, 0.0))          # = thumbnailbeeld
+S.beat(held, t_g + 0.9, "staan", face="nerveus", face_amt=0.8, look=(0.0, 0.0))
+A.key_prop(held.rig, "mond_open", 0.55, F(t_g))
 A.key_prop(held.rig, "mond_open", 0.15, F(t_g + 0.6))
 A.key_prop(held.rig, "mond_open", 0.0, F(t_g + 1.0))
 S.beat(held, t_g + 1.4, "staan", face="vastberaden", face_amt=0.8, look=(0.0, 0.0))
@@ -117,7 +119,8 @@ S.cam(t_e, ((-3.6, -3.4, 1.05), H0 + V(0, 0.4, 0), 30), ((-3.1, -1.2, 0.85), H0 
 S.cam(sh[4][0], ((0.5, 4.5, 0.3), (0.0, -8.0, 6.5), 16), ((0.8, 8.0, 0.25), (0.0, -8.0, 7.5), 14), handheld=0.15)
 # 1g CLOSE: recht in de lens
 HH = S.headpos(held, t_g + 1.0)
-S.cam(t_g, (HH + V(0.25, 1.7, -0.05), HH + V(0, 0, 0.0), 45), (HH + V(0.22, 1.5, -0.05), HH, 48))
+# 1g zoals de thumbnail: hij groot rechts in beeld, links de lege nachtstraat achter hem
+S.cam(t_g, (HH + V(0.75, 1.65, -0.1), HH + V(0.55, 0, -0.05), 32), (HH + V(0.6, 1.45, -0.1), HH + V(0.45, 0, -0.05), 35))
 
 # rood flakkeren op zijn gezicht in 1g
 fl = T.point_light("N01_rood_flakker", tuple(HH + V(0.8, -1.2, 1.0)), color=(1.0, 0.08, 0.05), energy=0, radius=0.5, shadow=False)
