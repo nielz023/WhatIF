@@ -17,37 +17,71 @@ END = sh[-1][1]
 t_f, t_g = sh[1][0], sh[2][0]
 
 # ---------------------------------------------------------------- de jongen half liggend tegen zijn kussen
-BX, BY = -1.52, 0.86
-held = S.actor("hoofdpersonage_pyjama", (BX, 0.3, 0.5), 0)
-TILT = -70.0                                          # achterover tegen het kussen (hoofd naar het hoofdeinde, +y)
+BX, BY = -1.38, 0.86
+# zoals n05a: hij LIGT onder het dekbed (benen en buik eronder), alleen armen en hoofd erboven; licht rechtop tegen het kussen
+LIE_AT = V(-1.38, 0.1, 0.4)
+for o in bpy.data.objects:
+    if o.name.startswith("Dekbed_bobbel"):
+        o.hide_render = o.hide_viewport = True
+duv = S.obj("Dekbed_blauw")
+DUV_TOP = 0.80
+held = S.actor("hoofdpersonage_pyjama", LIE_AT, 0)
+spec, rz = sit(held, seat_top=0.52, lean=4)
+LEG = held.J["pelvis"].z - held.J["ankle.L"].z
+FZ = 0.6 - rz
+spec["feet"] = ((0.06, 0.8 * LEG, FZ), (-0.06, 0.8 * LEG, FZ))
+P_ = held.J["pelvis"].z
+HIP = LIE_AT + V(0, P_ * math.sin(math.radians(75)), P_ * math.cos(math.radians(75)))
+SIT_AT = V(LIE_AT.x, HIP.y - 0.05, rz)
+YB = HIP.y - 0.12
+T.box("Dekbed_benen", (-1.47, (YB - 0.62) / 2, 0.44), (1.12, YB + 0.62, DUV_TOP - 0.44), duv.active_material, bevel=0.12, ol=0)
+# dekbed tot over zijn borst (onder de oksels), de armen met de telefoon erboven
+T.box("Dekbed_borst", (-1.47, YB + 0.22, 0.44), (1.12, 0.44, 0.40), duv.active_material, bevel=0.14, ol=0)
+HIPZ = rz + held.J["pelvis"].z - spec["crouch"][0]
+PIV = V(LIE_AT.x, HIP.y, HIPZ)
+piv = bpy.data.objects.new("N04b_heup_draaipunt", None)
+T._link(piv)
+piv.location = PIV
+held.rig.parent = piv
+ad = held.rig.animation_data
+if ad and ad.action:
+    for fc in list(A._fcurves(held.rig)):
+        if fc.data_path in ("location", "rotation_euler"):
+            try:
+                ad.action.fcurves.remove(fc)
+            except Exception:
+                fc.keyframe_points.clear()
+held.rig.location = V(0, 0.0, -P_)                    # liggend: heup = draaipunt, benen gestrekt naar het voeteneinde
+held.rig.rotation_euler = (0, 0, 0)
+held.rig.keyframe_insert("location", frame=F(0.0))
+held.rig.keyframe_insert("rotation_euler", frame=F(0.0))
+TILT = -74.0                                          # half liggend tegen het kussen (hoofd naar het hoofdeinde, +y)
 for t in (0.0, END):
-    held.rig.rotation_euler = (math.radians(TILT), 0, 0)
-    held.rig.keyframe_insert("rotation_euler", frame=F(t))
-    held.rig.location = (BX, 0.32, 0.5)
-    held.rig.keyframe_insert("location", frame=F(t))
+    piv.rotation_euler = (math.radians(TILT), 0, 0)
+    piv.keyframe_insert("rotation_euler", frame=F(t))
 held.last = None
 
 # telefoon in zijn handen boven zijn gezicht, met schermlicht op zijn gezicht
 phone = prop_phone(S, "Telefoon_bed", screen=(0.5, 0.75, 1.0))
 grab(S, phone, held, 0.0, "hand.R", loc=(0, 0.07, 0.02), rot=(90, 0, 180), release=t_f - 0.05)
 HOLD = arms(arm("R", (0.25, 0.55, -0.6), (-0.35, 0.85, 0.35)), arm("L", (0.25, 0.55, -0.6), (-0.4, 0.85, 0.3)))
-S.beat(held, 0.0, "staan", arms=HOLD, face="neutraal", face_amt=0.6, look=(0.0, -0.4), feet="keep")
+S.beat(held, 0.0, "staan", arms=HOLD, face="neutraal", face_amt=0.6, look=(0.0, -0.4))
 glow = T.point_light("Schermlicht", (BX, 0.75, 1.15), color=(0.55, 0.75, 1.0), energy=25, radius=0.1, shadow=False)
 # duim scrolt
 for k, t in enumerate(frange(0.2, 1.6, 0.3)):
     A.bone_rot(held, F(t), "hand.R", (8 if k % 2 else -6, 0, 0))
 # gaapt en rekt zich uit
-S.beat(held, 1.7, "staan", arms=HOLD, face="verbaasd", face_amt=0.9, look=(0.0, 0.3), feet="keep")
+S.beat(held, 1.7, "staan", arms=HOLD, face="verbaasd", face_amt=0.9, look=(0.0, 0.3))
 A.key_prop(held.rig, "mond_open", 0.0, F(1.6))
 A.key_prop(held.rig, "mond_open", 0.9, F(2.0))
 A.key_prop(held.rig, "mond_open", 0.9, F(2.5))
 A.key_prop(held.rig, "mond_open", 0.0, F(2.9))
-S.beat(held, 2.1, "armen_omhoog", amount=0.6, face="verbaasd", face_amt=0.8, look=(0.0, 0.5), feet="keep")
-S.beat(held, 2.9, "staan", arms=HOLD, face="neutraal", face_amt=0.6, look=(0.0, -0.4), feet="keep")
+S.beat(held, 2.1, "armen_omhoog", amount=0.6, face="verbaasd", face_amt=0.8, look=(0.0, 0.5))
+S.beat(held, 2.9, "staan", arms=HOLD, face="neutraal", face_amt=0.6, look=(0.0, -0.4))
 A.blink_at(held, F(2.95), closed=6)
 # 4g: half in slaap, ogen vallen bijna dicht
 S.beat(held, t_g, "staan", arms=arms(arm("R", (0.2, 0.3, -0.93), (0.0, 0.9, -0.3)), arm("L", (0.2, 0.3, -0.93), (0.0, 0.9, -0.3))),
-       face="neutraal", face_amt=0.4, look=(0.0, -0.2), feet="keep")
+       face="neutraal", face_amt=0.4, look=(0.0, -0.2))
 A.blink_at(held, F(t_g + 0.5), closed=9)                # ogen vallen bijna dicht (zware, trage knipper)
 S.hold(held, END)
 

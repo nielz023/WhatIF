@@ -189,7 +189,11 @@ class Scene3(_v2.Scene2):
                         d["t0"] = b
 
     def post_cams(self):
+        if os.environ.get("WHATIF_LIGHT", "1") != "0":
+            self._cine_light()
         super().post_cams()
+        if os.environ.get("WHATIF_LIGHT", "1") != "0":
+            self._cine_post()
         sc = self.sc
         sc.view_settings.exposure = self.exposure + (0.15 if _v2.ENGINE == "EEVEE" else 0.0)
         try:                                   # grote sets: anders 'Shadow buffer full' en ontbrekende schaduwen
@@ -455,6 +459,147 @@ def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway
         for f in range(F(t0), F(t1) + 1, 2):
             A.crouch(ch, f, -0.12, lean + 10)
     ch.last = None
+
+
+# ---------------------------------------------------------------- filmische belichting (niels 2026-11-05)
+def _subjects(S, t0, t1, cam, maxd=7.0):
+    """Figuren die in dit shot het onderwerp zijn: dichtbij de camera en dicht bij het midden van het beeld."""
+    out = []
+    tm = 0.5 * (t0 + t1)
+    loc, tgt, lens = S._cam_eval(cam, tm, t1)
+    loc, tgt = Vector(loc), Vector(tgt)
+    fwd = (tgt - loc).normalized()
+    half = math.atan(18.0 / max(8.0, lens))              # halve beeldhoek (horizontaal, 36 mm sensor)
+    for ch in S.cast:
+        try:
+            h = S.headpos(ch, tm)
+        except Exception:
+            continue
+        v = h - loc
+        d = v.length
+        if d < 0.3 or d > maxd * max(1.0, lens / 35.0):
+            continue
+        ang = fwd.angle(v.normalized(), math.pi)
+        if ang > half * 1.1:
+            continue
+        out.append((ang / half + d / (maxd * 2), ch, h, loc))
+    out.sort(key=lambda x: x[0])
+    return out[:2]
+
+
+def _cine_light(self):
+    """Per shot een zacht key-licht van de camerakant op de onderwerpen (light linking: alleen op het figuur),
+    plus oranje/blauwe randlichten (zoals bij het hoofdpersonage) voor iedereen die ergens onderwerp is."""
+    night = getattr(self, "night", False)
+    keys = {}
+    order = []
+    for t0, t1, camobj in getattr(self, "shots_plan", []) or []:
+        pass
+    cams = sorted(self.cams, key=lambda c: c["t0"])
+    for k, c in enumerate(cams):
+        t0 = c["t0"]
+        t1 = cams[k + 1]["t0"] if k + 1 < len(cams) else self.length
+        if t1 - t0 < 0.05:
+            continue
+        for rank, (_, ch, h, cl) in enumerate(_subjects(self, t0, t1, c)):
+            if ch not in keys:
+                ld = bpy.data.lights.new(f"Key_{ch.name}", "AREA")
+                ld.shape, ld.size = "DISK", 1.2
+                ld.color = (0.75, 0.82, 1.0) if night else (1.0, 0.88, 0.74)
+                ld.energy = 0.0
+                lo = bpy.data.objects.new(ld.name, ld)
+                lo.visible_camera = False
+                lo.light_linking.receiver_collection = ch.rig.users_collection[0]
+                bpy.context.scene.collection.objects.link(lo)
+                ld.keyframe_insert("energy", frame=1)
+                keys[ch] = lo
+                order.append(ch)
+            lo = keys[ch]
+            d = cl - h
+            d.z = 0
+            if d.length < 1e-3:
+                d = Vector((0, -1, 0))
+            d.normalize()
+            side = Vector((-d.y, d.x, 0))
+            sc_ = ch.rig.scale.z
+            dist = 1.7 * sc_
+            lo.location = h + (d * math.cos(0.6) + side * math.sin(0.6)) * dist + Vector((0, 0, 0.75 * sc_))
+            lo.rotation_euler = (h - lo.location).to_track_quat("-Z", "Y").to_euler()
+            e = (95.0 if rank == 0 else 55.0) * sc_ * sc_ * (0.8 if night else 1.0)
+            for f, en in ((F(t0), e), (max(F(t0), F(t1) - 1), e)):
+                lo.data.energy = en
+                lo.data.keyframe_insert("energy", frame=f)
+                lo.keyframe_insert("location", frame=f)
+                lo.keyframe_insert("rotation_euler", frame=f)
+            lo.data.energy = 0.0
+            lo.data.keyframe_insert("energy", frame=F(t1))
+    for lo in keys.values():
+        for owner in (lo, lo.data):
+            for fc in A._fcurves(owner):
+                for kp in fc.keyframe_points:
+                    kp.interpolation = "CONSTANT"
+    # randlichten ook voor de belangrijkste bijfiguren (max 4 extra)
+    for ch in order[:6]:
+        if ch not in self.heroes and len(self.heroes) < 5:
+            self.heroes.append(ch)
+
+
+def _cine_post(self):
+    """Compositor: zachte bloom op lampen/schermen en een lichte vignet (filmlook). Alleen EEVEE/Cycles."""
+    if _v2.ENGINE == "WORKBENCH":
+        return
+    sc = self.sc
+    try:
+        ng = bpy.data.node_groups.new("Filmlook", "CompositorNodeTree")
+        sc.compositing_node_group = ng
+        N, L = ng.nodes, ng.links
+        rl = N.new("CompositorNodeRLayers")
+        out = N.new("NodeGroupOutput")
+        ng.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+        gl = N.new("CompositorNodeGlare")
+        for k, v in (("glare_type", "BLOOM"), ("quality", "HIGH")):
+            try:
+                setattr(gl, k, v)
+            except Exception:
+                pass
+        for name, v in (("Threshold", 1.0), ("Strength", 0.35), ("Size", 0.6)):
+            if name in gl.inputs:
+                gl.inputs[name].default_value = v
+        L.new(rl.outputs["Image"], gl.inputs["Image"])
+        em = N.new("CompositorNodeEllipseMask")
+        for name, v in (("Size", (0.95, 0.85)),):
+            if name in em.inputs:
+                em.inputs[name].default_value = v
+        try:
+            em.width, em.height = 0.95, 0.85
+        except Exception:
+            pass
+        bl = N.new("CompositorNodeBlur")
+        try:
+            bl.size_x = bl.size_y = 400
+        except Exception:
+            if "Size" in bl.inputs:
+                bl.inputs["Size"].default_value = (400, 400)
+        L.new(em.outputs[0], bl.inputs[0])
+        mx = N.new("ShaderNodeMix") if False else N.new("CompositorNodeMixRGB")
+        try:
+            mx.blend_type = "MULTIPLY"
+        except Exception:
+            pass
+        mr = N.new("CompositorNodeMapRange")
+        L.new(bl.outputs[0], mr.inputs[0])
+        mr.inputs[1].default_value, mr.inputs[2].default_value = 0.0, 1.0
+        mr.inputs[3].default_value, mr.inputs[4].default_value = 0.78, 1.0
+        L.new(gl.outputs["Image"], mx.inputs[1])
+        L.new(mr.outputs[0], mx.inputs[2])
+        L.new(mx.outputs[0], out.inputs[0])
+        sc.render.use_compositing = True
+    except Exception as ex:                              # nooit een render laten vallen op de filmlook
+        print("FILMLOOK overgeslagen:", ex)
+
+
+Scene3._cine_light = _cine_light
+Scene3._cine_post = _cine_post
 
 
 # ---------------------------------------------------------------- dieren (hondje, hondje_oud, zebra)
