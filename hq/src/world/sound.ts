@@ -5,7 +5,7 @@
  * glazen klokjes in een pentatonische toonladder, een zacht "whoosh" bij panelen.
  * Aan/uit staat in localStorage (dm-geluid). Volume bewust laag.
  */
-type Kind = 'click' | 'hover' | 'scroll' | 'open' | 'close' | 'zoom' | 'send' | 'success' | 'tab' | 'notify';
+type Kind = 'click' | 'hover' | 'scroll' | 'open' | 'close' | 'zoom' | 'send' | 'success' | 'tab' | 'notify' | 'applause' | 'alarm' | 'ping';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -81,7 +81,71 @@ export function play(kind: Kind) {
     case 'send': [0, 2, 4, 5].forEach((n, i) => tone(PENTA[n], { t: i * 0.07, dur: 0.5, vol: 0.06 })); break;
     case 'success': tone(PENTA[3], { dur: 0.6, vol: 0.06 }); tone(PENTA[5], { t: 0.09, dur: 0.8, vol: 0.05 }); break;
     case 'notify': tone(PENTA[5], { dur: 0.4, vol: 0.05 }); tone(PENTA[3], { t: 0.12, dur: 0.6, vol: 0.045 }); break;
+    case 'ping': tone(1318.5, { dur: 0.25, vol: 0.05 }); tone(1975.5, { t: 0.08, dur: 0.4, vol: 0.04 }); break;
+    case 'applause': { // klappende collega's: veel korte ruisstootjes, eerst aanzwellend dan uitstervend
+      for (let i = 0; i < 70; i++) { const t = Math.pow(Math.random(), 1.4) * 2.8; clap(t, 0.02 + Math.random() * 0.03 * (1 - t / 3.2)); }
+      [0, 2, 4, 6].forEach((n, i) => tone(PENTA[n % PENTA.length] * (n > 4 ? 1 : 1), { t: 0.1 + i * 0.09, dur: 0.7, vol: 0.04 }));
+      break;
+    }
+    case 'alarm': { // zachte tweetonige sirene, één keer
+      for (let k = 0; k < 3; k++) { tone(660, { t: k * 0.55, dur: 0.26, vol: 0.05, type: 'triangle', glide: 1.35, wet: false }); tone(880, { t: k * 0.55 + 0.27, dur: 0.26, vol: 0.045, type: 'triangle', glide: 0.75, wet: false }); }
+      break;
+    }
   }
+}
+
+function clap(t: number, vol: number) {
+  const c = ac(); if (!c || !master) return;
+  const t0 = c.currentTime + t; const len = Math.floor(c.sampleRate * 0.05);
+  const buf = c.createBuffer(1, len, c.sampleRate); const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.18));
+  const src = c.createBufferSource(); src.buffer = buf;
+  const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900 + Math.random() * 1800; f.Q.value = 0.9;
+  const g = c.createGain(); g.gain.value = vol;
+  src.connect(f).connect(g); g.connect(master); if (verb) g.connect(verb);
+  src.start(t0);
+}
+
+/* ---------- KANTOORGELUID (verbeterpunt: geroezemoes, toetsenborden, eigen volume) ---------- */
+let amb: { gain: GainNode; murmur: GainNode; timer: number } | null = null;
+let ambVol = (() => { try { const v = parseFloat(localStorage.getItem('dm-kantoor') ?? ''); return isNaN(v) ? 0.35 : v; } catch { return 0.35; } })();
+let ambLevel = { typing: 3, people: 0.5 };
+const ambListeners = new Set<(v: number) => void>();
+export const officeVolume = () => ambVol;
+export function setOfficeVolume(v: number) {
+  ambVol = Math.max(0, Math.min(1, v)); try { localStorage.setItem('dm-kantoor', String(ambVol)); } catch { /* */ }
+  if (amb && ctx) amb.gain.gain.setTargetAtTime(ambVol * 0.5, ctx.currentTime, 0.2);
+  ambListeners.forEach((f) => f(ambVol));
+}
+export function onOfficeVolume(f: (v: number) => void) { ambListeners.add(f); return () => { ambListeners.delete(f); }; }
+/** door het kantoor bijgewerkt: hoeveel mensen typen en hoe druk het is (0..1) */
+export function setAmbience(typing: number, people: number) { ambLevel = { typing, people }; if (amb && ctx) amb.murmur.gain.setTargetAtTime(0.04 + people * 0.1, ctx.currentTime, 1.5); }
+function startAmbience() {
+  const c = ac(); if (!c || !master || amb) return;
+  const gain = c.createGain(); gain.gain.value = ambVol * 0.5; gain.connect(master);
+  // geroezemoes: zachte ruis door een laagdoorlaatfilter, langzaam golvend
+  const len = c.sampleRate * 4; const buf = c.createBuffer(1, len, c.sampleRate); const d = buf.getChannelData(0);
+  let b0 = 0, b1 = 0; for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; b0 = 0.99 * b0 + w * 0.06; b1 = 0.6 * b1 + w * 0.2; d[i] = b0 + b1 * 0.25; }
+  const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520; lp.Q.value = 0.4;
+  const murmur = c.createGain(); murmur.gain.value = 0.04 + ambLevel.people * 0.1;
+  const lfo = c.createOscillator(); lfo.frequency.value = 0.13; const lfoG = c.createGain(); lfoG.gain.value = 0.025; lfo.connect(lfoG).connect(murmur.gain); lfo.start();
+  src.connect(lp).connect(murmur).connect(gain); src.start();
+  // toetsenborden: losse zachte tikjes, meer als er meer mensen typen
+  const timer = window.setInterval(() => {
+    if (!on || !ctx || ctx.state !== 'running' || ambVol <= 0.01 || document.hidden) return;
+    const p = Math.min(0.85, ambLevel.typing * 0.07);
+    if (Math.random() > p) return;
+    const n = 1 + Math.floor(Math.random() * 3);
+    for (let k = 0; k < n; k++) {
+      const t0 = ctx.currentTime + k * (0.06 + Math.random() * 0.07); const L = Math.floor(ctx.sampleRate * 0.012);
+      const bb = ctx.createBuffer(1, L, ctx.sampleRate); const dd = bb.getChannelData(0);
+      for (let i = 0; i < L; i++) dd[i] = (Math.random() * 2 - 1) * Math.exp(-i / (L * 0.25));
+      const s2 = ctx.createBufferSource(); s2.buffer = bb; const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800 + Math.random() * 1500;
+      const g2 = ctx.createGain(); g2.gain.value = 0.05 + Math.random() * 0.05; s2.connect(hp).connect(g2).connect(gain); s2.start(t0);
+    }
+  }, 140);
+  amb = { gain, murmur, timer };
 }
 
 export const soundOn = () => on;
@@ -94,6 +158,8 @@ export function onSoundChange(f: (v: boolean) => void) { listeners.add(f); retur
 
 /** Eén keer aanroepen: luistert naar klikken, hover op knoppen en scrollen in de hele app. */
 export function startSounds() {
+  window.addEventListener('pointerdown', () => { if (on) startAmbience(); }, { capture: true });
+  onSoundChange((v) => { if (v) startAmbience(); });
   const isUi = (el: EventTarget | null) => (el as HTMLElement | null)?.closest?.('button, a, [role="button"], [role="tab"], summary, select, input[type="checkbox"], input[type="radio"]');
   window.addEventListener('pointerdown', (e) => {
     const el = isUi(e.target) as HTMLElement | null;

@@ -8,7 +8,13 @@ import { create } from 'zustand';
 import * as B from '../data/driftmark';
 import { useDb, startDb } from './db';
 
-export interface Activity { title: string; id: string; state: string; last: string; doing?: string; video?: number; lastIso?: string }
+export interface Activity {
+  title: string; id: string; state: string; last: string; doing?: string; video?: number; lastIso?: string;
+  /** sessie van de thread bij Claude Code Remote (session_...), voor de live stand en het hele gesprek */
+  session?: string;
+  /** live uit de connector: staat er iets voor niels klaar, wat deed Claude net, en de checklist */
+  live?: boolean; needs?: string; recent?: string; checklist?: string;
+}
 export interface Output { name: string; path: string; kind?: 'image' | 'video' | 'file' }
 export interface Cost { datum: string; wat: string; bedrag?: number | null; credits?: string; notitie?: string }
 export interface Reply { at: string; opdracht: string; antwoord: string; thread?: string }
@@ -18,6 +24,12 @@ export interface Live {
   updated: string; channel: typeof B.CHANNEL; videos: B.RealVideo[]; shorts: B.ShortGroup[]; next: string[];
   ideas: typeof B.IDEAS; links: typeof B.LINKS; activity: Activity[];
   outputs?: Record<string, Output[]>; costs?: Cost[]; replies?: Reply[]; blender?: Blender; youtube?: YT;
+  /** stand van de verbeterpunten per studio (id + klaar), zie data/verbeter.ts */
+  verbeter?: { id: string; klaar?: boolean; af?: string; studio?: string; tekst?: string }[];
+  /** begin van het script dat nu in productie is (whiteboard in de scriptkamer) */
+  script?: { video?: number; regels: string[] };
+  /** sessie(s) van de coördinator (projectchat), nieuwste eerst */
+  coordinator?: string[];
 }
 const builtIn: Live = { updated: B.UPDATED, channel: B.CHANNEL, videos: B.VIDEOS, shorts: B.SHORTS, next: B.NEXT, ideas: B.IDEAS, links: B.LINKS, activity: B.ACTIVITY, youtube: B.YOUTUBE };
 

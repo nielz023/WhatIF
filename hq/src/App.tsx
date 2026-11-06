@@ -16,6 +16,8 @@ import BottomActions from './components/layout/BottomActions';
 import { ConfirmDialog, Toasts } from './components/layout/Overlays';
 import { AllModals } from './components/modals/Modals';
 import AgentDrawer from './components/shared/AgentDrawer';
+import GesprekDrawer from './components/shared/Gesprek';
+import { startThreads } from './services/threads';
 import ProjectDrawer from './components/shared/ProjectDrawer';
 import DepartmentDrawer from './components/shared/DepartmentDrawer';
 import HQPage from './pages/HQPage';
@@ -52,7 +54,7 @@ function useSimulationLoop() {
       if (realTick() !== st.tick) useGame.setState({ tick: realTick() });
     };
     sync();
-    startLive(); startTools(); startSounds();
+    startLive(); startTools(); startSounds(); void startThreads();
     const id = setInterval(sync, 10000);
     return () => clearInterval(id);
   }, []);
@@ -156,6 +158,7 @@ export default function App() {
         <DepartmentDrawer />
         <ProjectDrawer />
         <AgentDrawer />
+        <GesprekDrawer />
         <AllModals />
         <ConfirmDialog />
         <Toasts />

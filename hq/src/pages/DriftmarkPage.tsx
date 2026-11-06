@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ExternalLink, Clapperboard, Users, Map, ListChecks, Lightbulb, Wrench, Mic, Youtube, Play, Building2 } from 'lucide-react';
+import { ExternalLink, Clapperboard, Users, Map, ListChecks, Lightbulb, Wrench, Mic, Youtube, Play, Building2, MessageSquare } from 'lucide-react';
 import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
 import { RULES, CAST, VOICES, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
 import { CursusCheck, TitelTester, CursusStappen, CursusTip } from './Cursus';
 import { useLive, startLive } from '../services/live';
+import { openGesprek } from '../components/shared/Gesprek';
 import { ToolsPanel, CostsPanel, RepliesPanel, Outputs, AutomationPanel } from './DriftmarkExtra';
 import { useEffect } from 'react';
 import gallery from '../data/gallery.json';
@@ -221,10 +222,12 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         <div className="flex flex-wrap items-center justify-between gap-x-2"><span className="min-w-0 font-display text-[17px] font-bold text-white">{a.title}</span><span className="flex shrink-0 items-center gap-1.5 text-[13px] font-semibold" style={{ color: c }}><span className={`h-2.5 w-2.5 rounded-full ${a.state === 'working' ? 'animate-pulse' : ''}`} style={{ background: c }} />{l}</span></div>
         {a.doing && <div className="mt-1 line-clamp-3 text-[14px] text-slate-300">{a.doing}</div>}
         {pct != null && !big && <div className="mt-2"><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-sky-400" style={{ width: `${pct}%` }} /></div><div className="mt-0.5 text-[12px] text-slate-500">Video {v!.nr}: {pct}% van de productielijn</div></div>}
+        {a.needs && a.needs !== a.doing && (a.state === 'blocked' || a.state === 'review_ready') && <div className="mt-1.5 rounded-lg bg-orange-500/10 px-2.5 py-1.5 text-[13px] text-orange-100"><b className="text-orange-300">Jij: </b>{a.needs}</div>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <a href={threadUrl(a.id)} target="_blank" rel="noreferrer" className={big ? 'btn-primary text-[13px]' : 'btn-ghost text-[13px]'}>Bekijk</a>
+          {a.id ? <a href={threadUrl(a.id)} target="_blank" rel="noreferrer" className={big ? 'btn-primary text-[13px]' : 'btn-ghost text-[13px]'}>Bekijk</a> : null}
+          {a.session && <button className="btn-ghost text-[13px]" onClick={() => openGesprek({ kind: 'thread', session: a.session, title: a.title, thread: a.id || undefined })}><MessageSquare size={13} />Gesprek</button>}
           {big && a.state === 'review_ready' && <button className="btn-success text-[13px]" onClick={() => order(`Goedgekeurd: taak "${a.doing ?? a.title}".`, toast)}>Goedkeuren</button>}
-          <span className="text-[12px] text-slate-500">laatst actief {a.last}</span>
+          <span className="text-[12px] text-slate-500">{a.live ? <span className="mr-1 text-[#3ddc97]" title="Live uit Claude Code Remote">●</span> : null}laatst actief {a.last}</span>
         </div>
       </div>
     );
@@ -283,7 +286,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
       {mode === 'home' && (<>
         <section className="mb-5">
           <h2 className="mb-2 flex items-center font-display text-[20px] font-bold text-orange-300">Wacht op jou<Info text="Dingen waar Claude jouw keuze of blik voor nodig heeft. Klik op Bekijk om de taak te openen." /></h2>
-          {wachten.length ? <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{wachten.map((a) => <ActCard key={a.id} a={a} big />)}</div>
+          {wachten.length ? <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{wachten.map((a) => <ActCard key={a.id || a.session} a={a} big />)}</div>
             : <div className="panel flex items-center gap-3 p-4 text-[15px] text-slate-200"><span className="text-2xl">✅</span>Alles is bij, chill 😎 Je hoeft nu niets te doen.</div>}
         </section>
 
@@ -313,7 +316,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
 
         <section className="mb-5">
           <h2 className="mb-2 flex items-center font-display text-[20px] font-bold text-sky-300">Nu bezig ({bezig.length})<Info text="Claude-taken die nu aan het werk zijn. Het balkje toont hoe ver de video is." /></h2>
-          {bezig.length ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{bezig.slice(0, 4).map((a) => <ActCard key={a.id} a={a} />)}</div> : <div className="panel p-4 text-[15px] text-slate-400">Er werkt nu geen taak.</div>}
+          {bezig.length ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{bezig.slice(0, 4).map((a) => <ActCard key={a.id || a.session} a={a} />)}</div> : <div className="panel p-4 text-[15px] text-slate-400">Er werkt nu geen taak.</div>}
           {bezig.length > 4 && <button className="mt-2 text-[14px] text-sky-300 hover:text-white" onClick={() => { try { localStorage.setItem('driftmark-view-meer', 'threads'); } catch { /* */ } setPage('meer'); }}>Alle {bezig.length} taken bekijken →</button>}
         </section>
 
@@ -338,6 +341,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
             <span style={{ color: STATE.working[1] }}>● {bezig.length} bezig</span>
             <span style={{ color: STATE.blocked[1] }}>● {wachten.length} wacht op jou</span>
             <span className="text-slate-500">● {activity.filter((a) => a.state === 'done').length} klaar</span>
+            <button className="ml-auto btn-ghost !py-1 text-[13px]" onClick={() => openGesprek({ kind: 'project', title: 'Projectchat' })}><MessageSquare size={13} />Projectchat lezen</button>
           </div>
           {[...new Set([...VIDEOS.map((v) => v.nr).sort((a, b) => b - a), 0])].map((nr) => {
             const list = activity.filter((a) => (a.video ?? 0) === nr);
@@ -345,7 +349,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
             const v = VIDEOS.find((x) => x.nr === nr);
             return (
               <Section key={nr} icon={<Users size={16} />} title={nr ? `Video ${nr}${v ? ` · ${v.werktitel}` : ''}` : 'Kanaal, HQ en overig'}>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">{list.map((a) => <ActCard key={a.id} a={a} />)}</div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">{list.map((a) => <ActCard key={a.id || a.session} a={a} />)}</div>
               </Section>
             );
           })}

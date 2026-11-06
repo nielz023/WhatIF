@@ -51,13 +51,14 @@ export function roomOf(a: Activity): RoomId {
   return 'ceo';
 }
 
-export type Status = 'werkt' | 'bezig' | 'wacht' | 'probleem' | 'offline';
+export type Status = 'werkt' | 'bezig' | 'wacht' | 'probleem' | 'offline' | 'klaar';
 export const STATUS: Record<Status, { kleur: string; label: string }> = {
   werkt: { kleur: '#21D6A0', label: 'Aan het werk' },
   bezig: { kleur: '#398CFF', label: 'Bezig met een taak' },
   wacht: { kleur: '#FF9F1C', label: 'Wacht op jouw input' },
   probleem: { kleur: '#FF3B4E', label: 'Probleem' },
   offline: { kleur: '#64748B', label: 'Geen taak (offline)' },
+  klaar: { kleur: '#4ADE80', label: 'Verbeterpunt klaar ✓' },
 };
 
 const recent = (a: Activity) => (a.lastIso ? Date.now() - new Date(a.lastIso).getTime() < 45 * 60e3 : false);

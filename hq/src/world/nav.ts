@@ -6,6 +6,24 @@
 export interface NavMeta { half: number; res: number; n: number; doors: Record<string, { o: [number, number]; i: [number, number] }>; coffee: Record<string, { p: [number, number]; l: [number, number] }> }
 export interface Nav { meta: NavMeta; free: Uint8Array; n: number }
 
+/** Alleen het grootste aaneengesloten loopgebied telt (kleine ingesloten hoekjes niet), zodat elke route lukt. */
+function mainArea(free: Uint8Array, n: number, seeds: [number, number][], half: number, res: number) {
+  const reach = new Uint8Array(n * n); const q = new Int32Array(n * n);
+  let best: Uint8Array | null = null; let bestN = 0;
+  for (const [x, z] of seeds) {
+    const i0 = Math.floor((x + half) / res), j0 = Math.floor((z + half) / res); const id0 = j0 * n + i0;
+    if (i0 < 0 || j0 < 0 || i0 >= n || j0 >= n || !free[id0] || reach[id0]) continue;
+    const mark = new Uint8Array(n * n); let h = 0, t = 0; q[t++] = id0; mark[id0] = 1; reach[id0] = 1;
+    while (h < t) { const id = q[h++]; const i = id % n, j = (id / n) | 0;
+      if (i > 0 && free[id - 1] && !mark[id - 1]) { mark[id - 1] = 1; reach[id - 1] = 1; q[t++] = id - 1; }
+      if (i < n - 1 && free[id + 1] && !mark[id + 1]) { mark[id + 1] = 1; reach[id + 1] = 1; q[t++] = id + 1; }
+      if (j > 0 && free[id - n] && !mark[id - n]) { mark[id - n] = 1; reach[id - n] = 1; q[t++] = id - n; }
+      if (j < n - 1 && free[id + n] && !mark[id + n]) { mark[id + n] = 1; reach[id + n] = 1; q[t++] = id + n; } }
+    if (t > bestN) { bestN = t; best = mark; }
+  }
+  return best ?? free;
+}
+
 let promise: Promise<Nav | null> | null = null;
 export function loadNav(): Promise<Nav | null> {
   if (!promise) {
@@ -19,7 +37,8 @@ export function loadNav(): Promise<Nav | null> {
         const d = g.getImageData(0, 0, meta.n, meta.n).data;
         const free = new Uint8Array(meta.n * meta.n);
         for (let i = 0; i < free.length; i++) free[i] = d[i * 4] > 127 ? 1 : 0;
-        return { meta, free, n: meta.n };
+        const seeds = Object.values(meta.doors).map((x) => x.o);
+        return { meta, free: mainArea(free, meta.n, seeds, meta.half, meta.res), n: meta.n };
       } catch (e) { console.warn('[HQ] looproutekaart niet geladen', e); return null; }
     })();
   }
@@ -30,7 +49,7 @@ const toCell = (nav: Nav, x: number, z: number): [number, number] => [Math.floor
 const toWorld = (nav: Nav, i: number, j: number): [number, number] => [(i + 0.5) * nav.meta.res - nav.meta.half, (j + 0.5) * nav.meta.res - nav.meta.half];
 export const isFree = (nav: Nav, x: number, z: number) => { const [i, j] = toCell(nav, x, z); return i >= 0 && j >= 0 && i < nav.n && j < nav.n && nav.free[j * nav.n + i] === 1; };
 
-/** dichtstbijzijnde vrije plek (spiraal-zoektocht tot ~1,5 m) */
+/** dichtstbijzijnde vrije plek in het loopgebied (spiraal-zoektocht tot ~1,5 m) */
 export function nearestFree(nav: Nav, x: number, z: number): [number, number] | null {
   const [ci, cj] = toCell(nav, x, z);
   for (let r = 0; r < 30; r++) {
@@ -53,6 +72,7 @@ export function lineFree(nav: Nav, ax: number, az: number, bx: number, bz: numbe
   return true;
 }
 
+let buf: { n: number; g: Float32Array; came: Int32Array; closed: Uint8Array } | null = null; // hergebruikt per zoektocht
 /** A* over het raster (8 richtingen), daarna touwtje-trekken voor rechte stukken */
 export function findPath(nav: Nav, from: [number, number], to: [number, number]): [number, number][] | null {
   const a = nearestFree(nav, from[0], from[1]); const b = nearestFree(nav, to[0], to[1]);
@@ -60,7 +80,8 @@ export function findPath(nav: Nav, from: [number, number], to: [number, number])
   if (lineFree(nav, a[0], a[1], b[0], b[1])) return [a, b];
   const n = nav.n; const [si, sj] = toCell(nav, a[0], a[1]); const [ti, tj] = toCell(nav, b[0], b[1]);
   const start = sj * n + si, goal = tj * n + ti;
-  const g = new Float32Array(n * n).fill(Infinity); const came = new Int32Array(n * n).fill(-1); const closed = new Uint8Array(n * n);
+  if (!buf || buf.n !== n) buf = { n, g: new Float32Array(n * n), came: new Int32Array(n * n), closed: new Uint8Array(n * n) };
+  const { g, came, closed } = buf; g.fill(Infinity); came.fill(-1); closed.fill(0);
   // eenvoudige binaire heap
   const heap: number[] = []; const fsc: number[] = [];
   const push = (id: number, f: number) => { heap.push(id); fsc.push(f); let k = heap.length - 1; while (k > 0) { const p = (k - 1) >> 1; if (fsc[p] <= fsc[k]) break; [heap[p], heap[k]] = [heap[k], heap[p]]; [fsc[p], fsc[k]] = [fsc[k], fsc[p]]; k = p; } };

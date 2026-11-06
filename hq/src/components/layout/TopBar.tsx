@@ -2,7 +2,7 @@ import { useWorld } from '../../world/useWorld';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Users, Wallet, Eye, Tv, HelpCircle, Volume2, VolumeX } from 'lucide-react';
-import { soundOn, setSound, onSoundChange } from '../../world/sound';
+import { soundOn, setSound, onSoundChange, officeVolume, setOfficeVolume, onOfficeVolume } from '../../world/sound';
 import { useGame } from '../../store/useGame';
 import { compact, relTime } from '../../lib/util';
 import { DemoBadge } from '../ui';
@@ -106,10 +106,56 @@ function QualityBtn() {
 
 function SoundBtn() {
   const [on, setOn] = useState(soundOn());
+  const [vol, setVol] = useState(officeVolume());
+  const [open, setOpen] = useState(false);
+  const { theme, setTheme, focusMode, setFocusMode, quality, setQuality } = useWorld();
   useEffect(() => onSoundChange(setOn), []);
+  useEffect(() => onOfficeVolume(setVol), []);
+  useEffect(() => {
+    if (!open) return;
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
+  }, [open]);
+  const Seg = <T extends string>({ value, opts, set }: { value: T; opts: [T, string][]; set: (v: T) => void }) => (
+    <div className="grid grid-flow-col gap-1 rounded-lg bg-black/30 p-1">
+      {opts.map(([v, l]) => (
+        <button key={v} onClick={() => set(v)} className={`rounded-md px-2 py-1 text-[12px] font-semibold ${value === v ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'}`}>{l}</button>
+      ))}
+    </div>
+  );
   return (
-    <button onClick={() => setSound(!on)} className="glass-stat p-2 text-slate-300 hover:text-white" aria-label={on ? 'Geluid uit' : 'Geluid aan'} title={on ? 'Geluidjes uitzetten' : 'Geluidjes aanzetten'}>
-      {on ? <Volume2 size={18} /> : <VolumeX size={18} />}
-    </button>
+    <div className="relative">
+      <button onClick={() => setOpen(!open)} className="glass-stat p-2 text-slate-300 hover:text-white" aria-expanded={open} aria-label="Geluid, thema en beeld" title="Geluid, kantoorgeluid, thema en focusmodus">
+        {on ? <Volume2 size={18} /> : <VolumeX size={18} />}
+      </button>
+      <AnimatePresence>
+        {open && (<>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.16 }}
+            className="absolute right-0 top-12 z-50 w-[290px] space-y-3 rounded-2xl border border-white/10 bg-[#0b1130]/95 p-4 text-slate-200 shadow-2xl backdrop-blur">
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] font-semibold">Geluidjes</span>
+              <button onClick={() => setSound(!on)} className={`rounded-full px-3 py-1 text-[12px] font-bold ${on ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-slate-400'}`}>{on ? 'Aan' : 'Uit'}</button>
+            </div>
+            <label className="block">
+              <div className="mb-1 flex justify-between text-[13px]"><span className="font-semibold">Kantoorgeluid</span><span className="text-slate-400">{Math.round(vol * 100)}%</span></div>
+              <input type="range" min={0} max={1} step={0.05} value={vol} onChange={(e) => setOfficeVolume(parseFloat(e.target.value))} className="w-full accent-[#FF7A24]" aria-label="Volume van het kantoorgeluid" />
+              <div className="text-[11px] text-slate-500">Geroezemoes en toetsenborden; harder als er meer agents werken.</div>
+            </label>
+            <div><div className="mb-1 text-[13px] font-semibold">Thema</div>
+              <Seg value={theme} set={setTheme} opts={[['auto', 'Klok'], ['dag', 'Dag'], ['nacht', 'Nacht'], ['feest', 'Feest']]} />
+              <div className="mt-1 text-[11px] text-slate-500">Klok: licht en lucht volgen de echte tijd.</div>
+            </div>
+            <div><div className="mb-1 text-[13px] font-semibold">Beeld</div>
+              <Seg value={quality} set={setQuality} opts={[['auto', 'Auto'], ['4k', '4K'], ['snel', 'Snel']]} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div><div className="text-[13px] font-semibold">Focusmodus</div><div className="text-[11px] text-slate-500">Kantoor gedimd, alleen wat op jou wacht.</div></div>
+              <button onClick={() => setFocusMode(!focusMode)} className={`rounded-full px-3 py-1 text-[12px] font-bold ${focusMode ? 'bg-[#FF7A24]/25 text-[#FFB27A]' : 'bg-white/10 text-slate-400'}`}>{focusMode ? 'Aan' : 'Uit'}</button>
+            </div>
+          </motion.div>
+        </>)}
+      </AnimatePresence>
+    </div>
   );
 }

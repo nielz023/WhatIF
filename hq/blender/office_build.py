@@ -749,6 +749,8 @@ if BAKE:
     for m in me.materials:
         nt = m.node_tree; nd = nt.nodes.new('ShaderNodeTexImage'); nd.image = img; nd.select = True; nt.nodes.active = nd
     scn.cycles.samples = SAMPLES
+    # geen ruisfilter tijdens het bakken (dat doet de compositor hieronder); scheelt veel geheugen bij 8K
+    scn.cycles.use_denoising = False
     scn.render.bake.use_pass_direct = True; scn.render.bake.use_pass_indirect = True
     scn.render.bake.margin = max(4, BAKE // 1024)
     bpy.ops.object.select_all(action='DESELECT'); bk.select_set(True); bpy.context.view_layer.objects.active = bk
