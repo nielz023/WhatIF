@@ -1,0 +1,10 @@
+[
+ {"scene": "n01", "file": "VUL_IN_n01_1a_UE.mp4", "t0": 0.0},
+ {"scene": "n01", "file": "VUL_IN_n01_1f_UE.mp4", "t0": 0.0},
+ {"scene": "n12a", "file": "VUL_IN_n12a_UE.mp4", "t0": 0.0},
+ {"scene": "n13a", "file": "VUL_IN_n13a_UE.mp4", "t0": 0.0},
+ {"scene": "n16f", "file": "VUL_IN_n16f_16f_UE.mp4", "t0": 0.0},
+ {"scene": "n16f", "file": "VUL_IN_n16f_16g2_UE.mp4", "t0": 9.2},
+ {"scene": "n19a", "file": "VUL_IN_n19a_UE.mp4", "t0": 0.0},
+ {"scene": "n20a", "file": "VUL_IN_n20a_UE.mp4", "t0": 0.0}
+]

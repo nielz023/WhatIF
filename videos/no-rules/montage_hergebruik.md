@@ -14,3 +14,13 @@ Volgens het script hebben scène 0 (teaser) en scène 2 (flash-forwards) geen ei
 | 2b-kaart "1 DAY EARLIER" | zwart met witte tekst, 1 s | klok-tik |
 
 Elk flash-forward-shot duurt 1,5-2 s, met een witte flitsframe ertussen en de beat op elke cut. Daaronder staat geen HUD.
+
+## Eindmontage draaien (op de pc)
+
+```
+blender -b -P anim/edit/assemble_v3.py -- --scenes "<WHAT IF>\video3\scenes" --json "<map met out\<code>\montage.json>" --out "<WHAT IF>\video3\WHAT_IF_NO_RULES.mp4"
+```
+
+- `--preview 0-45` maakt een proefstuk op halve resolutie, `--allow-missing` zet zwart op de plek van ontbrekende scènes.
+- In `videos/no-rules/ue_overlays.json` staat per Unreal-clip de scène, de bestandsnaam en de starttijd binnen die scène (t0, in seconden). De clip ligt als beeld over de Blender-scène, zonder eigen geluid.
+- De mix wordt gemeten en via een limiter op -1 dBFS naar -14 LUFS gezet. Daarna is `<uit>_mix_master.wav` het enige geluidsspoor.
