@@ -94,8 +94,8 @@ function CameraRig({ mode }: { mode: WorldMode }) {
   const fit = useMemo(() => {
     const tv = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
     const aspect = size.width / Math.max(1, size.height);
-    const dh = (R_BASE * 1.28) / (tv * aspect);
-    const dv = (R_BASE * 0.62) / tv;
+    const dh = (R_BASE * 1.5) / (tv * aspect);
+    const dv = (R_BASE * 0.74) / tv;
     return Math.max(dh, dv);
   }, [size.width, size.height, cam.fov]);
   const dir = useMemo(() => new THREE.Vector3(0, Math.sin(ELEV), Math.cos(ELEV)), []);
@@ -108,7 +108,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     const wide = size.width >= 900;
     if (mode === 'home' && r) { const p = roomCenter(r); return { t: new THREE.Vector3(p[0] + (wide ? 3 : 0), 0.6, p[2] + 0.6), d: fit * 0.5 }; }
     if (mode === 'panel') return { t: new THREE.Vector3(0, 0.5, 1.5), d: fit * 1.04 };
-    return { t: new THREE.Vector3(0, 0.5, wide ? 1.5 : 0), d: fit };
+    return { t: new THREE.Vector3(0, 0.5, wide ? 0.6 : 0), d: fit };
   };
 
   useEffect(() => {
@@ -330,10 +330,10 @@ function Wing({ r, seats, lit, alert, onSelect, onHover, screens, baked }: { r: 
     onPointerOut: () => { onHover(false); document.body.style.cursor = 'auto'; },
   };
   const signEl = (
-    <Billboard position={polar(tallR, a, H + (baked ? 1.15 : 1.4))}>
-      <mesh onClick={(e) => { e.stopPropagation(); onSelect(); }}>
+    <Billboard position={polar(tallR, a, H + (baked ? (r.props === 'ceo' ? 0.55 : 1.15) : 1.4))}>
+      <mesh renderOrder={r.props === 'ceo' ? 11 : 0} onClick={(e) => { e.stopPropagation(); onSelect(); }}>
         <planeGeometry args={baked ? [5.4, 1.58] : [7.2, 2.1]} />
-        <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} opacity={lit ? 1 : 0.95} />
+        <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!(baked && r.props === 'ceo')} opacity={lit ? 1 : 0.95} />
       </mesh>
     </Billboard>
   );
@@ -490,7 +490,7 @@ function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]
           <planeGeometry args={[1.6, 1]} /><meshBasicMaterial map={screens[sd > 0 ? 3 : 0]} transparent opacity={0.85} toneMapped={false} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      <Billboard position={[0, 10.2, 0]}><mesh><planeGeometry args={[7.4, 3.7]} /><meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} /></mesh></Billboard>
+      <Billboard position={[0, baked ? 7.7 : 10.2, 0]}><mesh renderOrder={10}><planeGeometry args={baked ? [6.0, 3.0] : [7.4, 3.7]} /><meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!baked} /></mesh></Billboard>
       <pointLight position={[0, 4, 0]} color="#20D9FF" intensity={lit ? 60 : 40} distance={16} decay={1.5} />
       <pointLight position={[0, 2.2, 2.5]} color="#FFB070" intensity={22} distance={8} decay={1.6} />
       {!baked && (<>
@@ -536,15 +536,15 @@ function City() {
     t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
   }, []);
   const blds = useMemo(() => Array.from({ length: 70 }, (_, i) => {
-    const a = (i / 70) * Math.PI * 2 + Math.random() * 0.05; const r = 48 + Math.random() * 36;
+    const a = (i / 70) * Math.PI * 2 + Math.random() * 0.05; const r = 62 + Math.random() * 40;
     return { p: polar(r, a, 0), h: 14 + Math.random() * 46, w: 5 + Math.random() * 8, a };
   }).filter((b) => Math.cos(b.a) < 0.55), []);
   return (
     <group>
       {blds.map((b, i) => (
-        <mesh key={i} position={[b.p[0], b.h / 2 - 6, b.p[2]]} rotation={[0, b.a, 0]}>
+        <mesh key={i} position={[b.p[0], b.h / 2 - 22, b.p[2]]} rotation={[0, b.a, 0]}>
           <boxGeometry args={[b.w, b.h, b.w]} />
-          <meshBasicMaterial map={win} color="#ffffff" toneMapped={false} fog />
+          <meshBasicMaterial map={win} color="#5a5a5a" toneMapped={false} fog />
         </mesh>
       ))}
       <Sparkles count={60} scale={[140, 30, 60]} position={[0, 14, -55]} size={26} speed={0.15} opacity={0.5} color="#FFB070" />

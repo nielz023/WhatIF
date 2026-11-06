@@ -1,4 +1,4 @@
-import { BarChart3, Clapperboard, LineChart, Sparkles, Layers, LayoutGrid, Home, LayoutDashboard } from 'lucide-react';
+import { BarChart3, Clapperboard, LineChart, Sparkles, Layers, LayoutGrid, Home, LayoutDashboard, SquarePlay } from 'lucide-react';
 import { useGame } from '../../store/useGame';
 import { useLive } from '../../services/live';
 import { mainOf } from './Sidebar';
@@ -8,7 +8,7 @@ import type { PageId } from '../../types';
 const ITEMS: { id: PageId; label: string; icon: typeof BarChart3; uitleg: string }[] = [
   { id: 'driftmark', label: 'Overzicht', icon: BarChart3, uitleg: 'Het 3D-kantoor: je hele bedrijf in één blik' },
   { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts' },
-  { id: 'kanaal', label: 'Kanaal', icon: LineChart, uitleg: 'Abonnees, weergaven, kijkduur en cursusmeter' },
+  { id: 'kanaal', label: 'Kanaal', icon: SquarePlay, uitleg: 'Abonnees, weergaven, kijkduur en cursusmeter' },
   { id: 'coach', label: 'Coach', icon: Sparkles, uitleg: 'Je CEO Coach: gesprek, briefing, doelen, beslissingen' },
   { id: 'hq', label: 'Studio', icon: Layers, uitleg: 'Het kantoor beheren: teamleden, projecten, spel' },
   { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
