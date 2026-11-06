@@ -120,6 +120,7 @@ S.beat(held, t_b + 2.6, "schrik", face="geschrokken", face_amt=1.0, at=TB + V(-d
 S.beat(held, t_b + 3.6, "handen_hoofd", face="bang", face_amt=1.0, at=TGT + V(0, 0, 4))
 S.hold(held, t_c)
 show(held.rig, 0.0, t_c)
+print("DBG14", tuple(round(x, 2) for x in S.headpos(held, t_b + 2.0)), tuple(round(x, 2) for x in STAND))
 
 # ---------------------------------------------------------------- 14c-14i: hij ligt onder het puin (eigen figuur, gekanteld)
 lig = S.actor("hoofdpersonage_2200", HOLE, 0, label="hoofdpersonage_puin")
@@ -177,7 +178,7 @@ kier.data.keyframe_insert("energy", frame=F(t_g))
 for k, t in enumerate(frange(t_d + 0.3, t_e - 0.2, 0.32)):
     S.beat(lig, t, "staan", arms=PINNED, face="vastberaden", face_amt=0.4, mouth=0.35 if k % 2 == 0 else 0.05,
            look=(0.0, 0.3), **LEGS)
-WATCH = HD + SIDE * 0.42 + AX * 0.05 - UP * 0.1
+WATCH = HD + SIDE * 0.55 - AX * 0.2 - UP * 0.12
 w = S.watch(None, name="Zakhorloge_puin", open_=1.0, world=tuple(WATCH), rot=(0, 0, rotz + 90), scale=1.3)
 S.watch_hands("Zakhorloge_puin", t_c, t_g, every=1.0)
 S.reach(lig, t_e + 0.2, "R", None, 0.0)
@@ -210,14 +211,14 @@ key(drone, t_g + 2.6, loc=tuple(DR + V(-0.6, 1.2, 5.0)))
 key(slab_a, t_g, loc=tuple(DR))
 key(slab_a, t_g + 2.6, loc=tuple(DR + V(-0.6, 1.2, 2.0)))
 for t in (t_g + 0.2, t_g + 0.6):
-    S.puff(DR, t, n=6, r=(0.3, 0.7), grow=1.6, dur=1.2, color=(0.70, 0.68, 0.64), rise=1.0, spread=1.0)
+    S.puff(DR, t, n=3, r=(0.2, 0.4), grow=1.4, dur=1.2, color=(0.70, 0.68, 0.64), rise=1.0, spread=1.0)
 
 # mensen in lichtgevende kleren rond het gat
 RING = [("toekomst_a", 125), ("toekomstvrouw", 200), ("toekomst_b", 260)]
 mensen = []
 for name, ang in RING:
     a = math.radians(ang)
-    p = HIP + V(math.cos(a), math.sin(a), 0) * 2.4
+    p = HIP + V(math.cos(a), math.sin(a), 0) * 2.9
     p.z = ground(p.x, p.y)
     ch = S.actor(name, p, face(p, HIP))
     show(ch.rig, t_g)
@@ -268,15 +269,15 @@ S.cam(0.0, CAMH, (V(-3.45, -9.2, 2.3), V(0.8, 8.0, -0.6), 22))
 S.cam(t_b, (V(1.6, -3.4, 1.1), V(0.6, 6.0, 4.0), 20), (V(1.5, -3.25, 1.1), V(0.8, 6.0, 4.6), 20), handheld=0.35)
 IN = HD + UP * 0.75 + AX * 0.25                            # in de kier, boven zijn gezicht
 S.cam(t_c, (IN + UP * 0.25, HD, 35), (IN, HD, 35))
-S.cam(t_d, (HD + UP * 0.5 + AX * 0.2 - SIDE * 0.1, HD + UP * 0.05, 45), (HD + UP * 0.44 + AX * 0.18 - SIDE * 0.1, HD + UP * 0.05, 45))
+S.cam(t_d, (HD + UP * 0.68 + AX * 0.22 - SIDE * 0.1, HD + UP * 0.05, 35), (HD + UP * 0.62 + AX * 0.2 - SIDE * 0.1, HD + UP * 0.05, 35))
 S.cam(t_e, (WATCH + UP * 0.32 + SIDE * 0.1 + AX * 0.12, WATCH, 50), (WATCH + UP * 0.28 + SIDE * 0.08 + AX * 0.1, WATCH, 50))
-S.cam(t_e2, (HD + UP * 0.45 + AX * 0.2 + SIDE * 0.15, HD + UP * 0.05, 45), (HD + UP * 0.40 + AX * 0.18 + SIDE * 0.13, HD + UP * 0.05, 45))
-S.cam(t_e3, (HD + UP * 0.55 + AX * 0.3 - SIDE * 0.2, HD, 40), (HD + UP * 0.5 + AX * 0.27 - SIDE * 0.18, HD, 40))
+S.cam(t_e2, (HD + UP * 0.68 + AX * 0.25 + SIDE * 0.12, HD + UP * 0.05, 35), (HD + UP * 0.62 + AX * 0.22 + SIDE * 0.1, HD + UP * 0.05, 35))
+S.cam(t_e3, (HD + UP * 0.7 + AX * 0.3 + SIDE * 0.05, HD, 32), (HD + UP * 0.64 + AX * 0.27 + SIDE * 0.05, HD, 32))
 S.cam(t_f, (IN + UP * 0.1, HD, 30))
-S.cam(t_g, (HIP - AX * 4.5 - SIDE * 3.0 + UP * 2.6, HIP + UP * 0.9, 24), (HIP - AX * 4.2 - SIDE * 2.8 + UP * 2.4, HIP + UP * 1.1, 24))
-S.cam(t_h, (HD + UP * 0.35, KH, 30), (HD + UP * 0.35 + (KH - HD) * 0.06, KH, 30))
-S.cam(t_i, (HD + UP * 0.55 + AX * 0.15 + SIDE * 0.1, HD + UP * 0.05, 40),
-      (HD + UP * 0.46 + AX * 0.12 + SIDE * 0.08, HD + UP * 0.05, 40))
+S.cam(t_g, (HIP + SIDE * 4.2 - AX * 1.2 + UP * 2.8, HIP + UP * 0.6, 24), (HIP + SIDE * 3.9 - AX * 1.1 + UP * 2.6, HIP + UP * 0.8, 24))
+S.cam(t_h, (HD + UP * 0.45, KH, 50), (HD + UP * 0.45 + (KH - HD) * 0.06, KH, 50))
+S.cam(t_i, (HD + UP * 0.8 + AX * 0.2 + SIDE * 0.1, HD + UP * 0.05, 32),
+      (HD + UP * 0.7 + AX * 0.18 + SIDE * 0.08, HD + UP * 0.05, 32))
 
 # ---------------------------------------------------------------- HUD, stem en geluid
 S.year([(0.0, 3026), (t_f + 0.3, 3030), (t_f + 1.4, 3045), (t_f + 2.6, 3066)], t0=0.0, big=True)
