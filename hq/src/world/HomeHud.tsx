@@ -423,7 +423,7 @@ export default function HomeHud() {
       <MorningBriefing />
       <FocusOverlay />
       <motion.div className="absolute left-3 top-3 right-3 flex flex-wrap items-start justify-start gap-2 md:left-5 md:top-4 xl:left-auto xl:right-5 xl:justify-end" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: rm ? 0 : 0.6, duration: 0.5 }}>
-        <div className="holo-mini pointer-events-auto hidden px-3 py-2 text-[12px] text-slate-300 lg:block">Klik op een afdeling of medewerker · rechts slepen = schuiven · scrollen = zoomen · scrollknop ingedrukt = rond draaien</div>
+        <StartHint intro={intro} />
         <button onClick={() => setPage('overzicht')} className="glass-chip pointer-events-auto xl:hidden" style={{ ['--c' as string]: '#FF7A24' }}><LayoutDashboard size={14} />Dagoverzicht</button>
       </motion.div>
       <motion.div className="absolute bottom-[92px] left-3 hidden space-y-2 md:block lg:left-5" initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: rm ? 0 : 0.7, duration: 0.6, ease: EASE }}>
@@ -454,3 +454,23 @@ export default function HomeHud() {
 
 
 export type { RoomId };
+
+/** Bedieningsuitleg: alleen de eerste 5 seconden nadat het kantoor bij het opstarten in beeld komt (niels 6 nov). */
+let hintKlaar = false;
+function StartHint({ intro }: { intro: boolean }) {
+  const [zien, setZien] = useState(!hintKlaar);
+  useEffect(() => {
+    if (hintKlaar || intro) return;
+    const t = window.setTimeout(() => { hintKlaar = true; setZien(false); }, 5000);
+    return () => window.clearTimeout(t);
+  }, [intro]);
+  return (
+    <AnimatePresence>
+      {zien && !hintKlaar && (
+        <motion.div key="hint" exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="holo-mini pointer-events-auto hidden px-3 py-2 text-[12px] text-slate-300 lg:block">Klik op een afdeling of medewerker · rechts slepen = schuiven · scrollen = zoomen · scrollknop ingedrukt = rond draaien</motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+
