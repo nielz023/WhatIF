@@ -87,6 +87,28 @@ class Layer:
         ob = bpy.data.objects.new(self.name, me); scn.collection.objects.link(ob)
         return ob
 
+NAV = []  # vlakken die in de looproute staan (voor de looproutekaart van de medewerkers)
+UVL = ('props',)  # lagen die box-UV's in meters krijgen (texturen in de browser)
+
+def _uv_box(pts):
+    a, b, c = Vector(pts[0]), Vector(pts[1]), Vector(pts[2])
+    n = (b - a).cross(c - a); ax = max(range(3), key=lambda i: abs(n[i]))
+    if ax == 1: return [(p[0], p[2]) for p in pts]
+    if ax == 0: return [(p[2], p[1]) for p in pts]
+    return [(p[0], p[1]) for p in pts]
+
+_poly0 = Layer.poly
+def _poly(self, pts, m):
+    f = _poly0(self, pts, m)
+    if self.name in UVL or self.name.startswith('chair_'):
+        uvl = self.bm.loops.layers.uv.verify()
+        for lp, uv in zip(f.loops, _uv_box(pts)): lp[uvl].uv = uv
+    if self.name in ('baked', 'props', 'glass') or self.name.startswith('chair_'):
+        ys = [p[1] for p in pts]
+        if max(ys) >= 0.10 and min(ys) <= 1.75: NAV.append([(round(p[0], 3), round(p[2], 3)) for p in pts])
+    return f
+Layer.poly = _poly
+
 LAYERS = {}
 def L(name):
     if name not in LAYERS: LAYERS[name] = Layer(name)
@@ -158,6 +180,8 @@ def screen(c, w, h, ry=0.0, rx=0.0, kind='d'):
     for lp, uv in zip(f.loops, ((0, 0), (1, 0), (1, 1), (0, 1))): lp[uvl].uv = uv
     SCREENS.append(kind)
 
+DOORS = []  # (kamer, punt in de gang, punt net binnen)
+COFFEE = []  # (kamer, staplek, kijkrichting)
 SEATS = []
 def seat(room, p, ry=0.0):
     SEATS.append((room, p, ry))
@@ -173,13 +197,53 @@ M = {
     'step': mat('step', '#1a2350', 0.3, 0.4), 'white': mat('white', '#f4f6fb', 0.4), 'metal': mat('metal', '#8a93a8', 0.25, 0.9),
     'glass': mat('glass', '#a9e4ff', 0.05, 0.0, transmission=1.0), 'screen': mat('screen', '#000000', 0.2, 0, emit='#5aa8ff', strength=2.2),
     'book': [mat(f'book{i}', c, 0.6) for i, c in enumerate(['#d9534f', '#f0ad4e', '#5bc0de', '#5cb85c', '#9b59b6', '#ecf0f1'])],
+    'desktop': mat('desktop', '#c9a47c', 0.45), 'cable': mat('cable', '#101421', 0.5), 'earcup': mat('earcup', '#2b2f45', 0.4),
+    'bottle': mat('bottle', '#3db8ff', 0.15), 'leaf3': mat('leaf3', '#7ed957', 0.5), 'cabinet': mat('cabinet', '#a77b52', 0.5),
+    'foam': mat('foam', '#3a2370', 0.95),
 }
+def texturize(m, kind):
+    """procedurele textuur in de basiskleur; wordt mee in de lightmap gebakken"""
+    nt = m.node_tree; bs = nt.nodes['Principled BSDF']
+    base = tuple(bs.inputs['Base Color'].default_value)
+    tc = nt.nodes.new('ShaderNodeTexCoord')
+    mix = nt.nodes.new('ShaderNodeMix'); mix.data_type = 'RGBA'
+    lo = tuple(c * 0.9 for c in base[:3]) + (1,); hi = tuple(min(1, c * 1.12) for c in base[:3]) + (1,)
+    mix.inputs[6].default_value = lo; mix.inputs[7].default_value = hi
+    if kind.startswith('tiles'):
+        size = float(kind.split(':')[1]) if ':' in kind else 0.9
+        br = nt.nodes.new('ShaderNodeTexBrick'); br.offset = 0.0; br.squash = 1.0
+        br.inputs['Scale'].default_value = 1.0; br.inputs['Brick Width'].default_value = size; br.inputs['Row Height'].default_value = size
+        br.inputs['Mortar Size'].default_value = 0.012; br.inputs['Mortar Smooth'].default_value = 0.3
+        br.inputs['Color1'].default_value = lo; br.inputs['Color2'].default_value = tuple(c * 1.02 for c in base[:3]) + (1,)
+        br.inputs['Mortar'].default_value = tuple(min(1, c * 2.2 + 0.01) for c in base[:3]) + (1,)
+        nz = nt.nodes.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 3.0; nz.inputs['Detail'].default_value = 4
+        nt.links.new(tc.outputs['Object'], br.inputs['Vector']); nt.links.new(tc.outputs['Object'], nz.inputs['Vector'])
+        mx2 = nt.nodes.new('ShaderNodeMix'); mx2.data_type = 'RGBA'; mx2.blend_type = 'MULTIPLY'; mx2.inputs[0].default_value = 0.25
+        nt.links.new(br.outputs['Color'], mx2.inputs[6]); nt.links.new(nz.outputs['Color'], mx2.inputs[7])
+        nt.links.new(mx2.outputs[2], bs.inputs['Base Color']); return
+    if kind == 'rings':
+        tx = nt.nodes.new('ShaderNodeTexWave'); tx.wave_type = 'RINGS'; tx.inputs['Scale'].default_value = 9.0
+        tx.inputs['Distortion'].default_value = 0.0; tx.inputs['Detail'].default_value = 0.0
+    elif kind == 'brushed':
+        mp = nt.nodes.new('ShaderNodeMapping'); mp.inputs['Scale'].default_value = (60.0, 60.0, 1.5)
+        nt.links.new(tc.outputs['Object'], mp.inputs['Vector'])
+        tx = nt.nodes.new('ShaderNodeTexNoise'); tx.inputs['Scale'].default_value = 1.0; tx.inputs['Detail'].default_value = 2
+        nt.links.new(mp.outputs['Vector'], tx.inputs['Vector']); nt.links.new(tx.outputs['Fac'], mix.inputs[0])
+        nt.links.new(mix.outputs[2], bs.inputs['Base Color']); return
+    else:  # 'fabric'
+        tx = nt.nodes.new('ShaderNodeTexNoise'); tx.inputs['Scale'].default_value = 140.0; tx.inputs['Detail'].default_value = 6
+    nt.links.new(tc.outputs['Object'], tx.inputs['Vector']); nt.links.new(tx.outputs['Fac'], mix.inputs[0])
+    nt.links.new(mix.outputs[2], bs.inputs['Base Color'])
+
 def neon(col, s=7.0):
     return mat('neon' + col, col, 0.3, 0, emit=col, strength=s)
+texturize(M['corr'], 'tiles:1.2'); texturize(M['podium'], 'rings'); texturize(M['wall'], 'brushed'); texturize(M['panel'], 'brushed')
+texturize(M['carpet'], 'fabric'); texturize(M['step'], 'tiles:0.5'); texturize(M['hubdesk'], 'brushed')
+FLOOR_MATS = {'corr', 'podium'}
 
 # ---------- meubels ----------
 def chair(layer, c, ry=0.0):
-    layer = 'props'
+    if not layer.startswith('chair_'): layer = 'props'
     box(layer, (c[0], 0.47, c[2]), (0.52, 0.09, 0.5), M['chair'], ry)
     box(layer, tf(c, ry, (0, 0.85, 0.24)), (0.5, 0.62, 0.08), M['chair'], ry, rx=-0.12)
     cyl(layer, (c[0], 0.08, c[2]), 0.04, 0.38, M['chairb'], 8)
@@ -190,7 +254,7 @@ def chair(layer, c, ry=0.0):
 def desk(layer, c, n=2, room=None, seat_ry=0.0):
     layer = 'props'
     """bureau met n schermen naar +z; stoel aan de camerakant"""
-    box(layer, (c[0], 0.75, c[2]), (1.9, 0.06, 0.8), M['desk'])
+    box(layer, (c[0], 0.75, c[2]), (1.9, 0.06, 0.8), M['desktop'])
     for sx in (-0.86, 0.86):
         box(layer, (c[0] + sx, 0.37, c[2]), (0.06, 0.72, 0.72), M['leg'])
     box(layer, (c[0], 0.5, c[2] - 0.36), (1.7, 0.42, 0.03), M['leg'])
@@ -206,42 +270,91 @@ def desk(layer, c, n=2, room=None, seat_ry=0.0):
     box(layer, (c[0] + 0.4, 0.79, c[2] + 0.14), (0.07, 0.02, 0.11), M['kbd'])
     # koffiebeker
     cyl(layer, (c[0] - 0.62, 0.78, c[2] + 0.12), 0.045, 0.11, M['white'], 10)
+    # kabels van de schermen naar de vloer
+    for x in xs[:2]:
+        tube(layer, [(c[0] + x, 0.95, c[2] - 0.27), (c[0] + x * 0.7, 0.7, c[2] - 0.33), (c[0] + x * 0.4, 0.3, c[2] - 0.3), (c[0] + x * 0.3, 0.03, c[2] - 0.2)], 0.012, M['cable'], 4)
+    r = random.random()
+    if r < 0.45:  # koptelefoon op het bureau
+        hc = (c[0] + 0.62, 0.8, c[2] + 0.1)
+        tube(layer, [(hc[0] + math.cos(t) * 0.09, hc[1] + 0.02 + math.sin(t) * 0.09 * 0.25, hc[2] + math.sin(t) * 0.02) for t in (math.pi * k / 8 for k in range(9))], 0.012, M['mon'], 5)
+        for sx in (-0.09, 0.09): cyl(layer, (hc[0] + sx, 0.79, hc[2]), 0.045, 0.035, M['earcup'], 10)
+    elif r < 0.75:  # bureaulamp
+        lc = (c[0] + 0.78, 0.78, c[2] - 0.2)
+        cyl(layer, lc, 0.07, 0.015, M['metal'], 10)
+        tube(layer, [lc, (lc[0] - 0.02, 1.05, lc[2] + 0.02), (lc[0] - 0.15, 1.18, lc[2] + 0.1)], 0.01, M['metal'], 4)
+        cyl(layer, (lc[0] - 0.17, 1.12, lc[2] + 0.12), 0.06, 0.07, M['white'], 10, r2=0.03)
+    else:  # waterfles en notitieblok
+        cyl(layer, (c[0] + 0.75, 0.78, c[2] + 0.05), 0.035, 0.2, M['bottle'], 10)
+        box(layer, (c[0] - 0.35, 0.785, c[2] + 0.2), (0.16, 0.01, 0.22), M['white'], 0.2)
     ch = (c[0], 0, c[2] + 0.72)
-    chair(layer, ch, 0.0)
+    idx = sum(1 for s in SEATS if s[0] == room) if room else 0
+    chair(f'chair_{room}_{idx}' if room else layer, ch, 0.0)
     if room: seat(room, (c[0], 0, c[2] + 0.66), seat_ry)
+
+def _leaf(layer, base, d, side, ln, wd, m, droop=0.35, segs=6):
+    """echt blad: spits toelopend, met middennerf (licht gevouwen) en doorbuiging"""
+    d = Vector(d).normalized(); side = Vector(side).normalized(); up = d.cross(side).normalized()
+    if up.y < 0: up = -up
+    prev = None
+    for j in range(segs + 1):
+        t = j / segs
+        w = wd * math.sin(math.pi * min(1.0, t * 1.05 + 0.04)) * (1 - 0.15 * t)
+        c0 = Vector(base) + d * (ln * t) - Vector((0, 1, 0)) * (droop * ln * t * t)
+        fold = up * (w * 0.18)
+        row = (tuple(c0 - side * w), tuple(c0 + fold), tuple(c0 + side * w))
+        if prev:
+            L(layer).poly([prev[0], row[0], row[1], prev[1]], m)
+            L(layer).poly([prev[1], row[1], row[2], prev[2]], m)
+        prev = row
 
 def plant(layer, c, s=1.0, kind=0):
     layer = 'props'
     box_pot = kind == 2
     if box_pot: box(layer, (c[0], 0.3 * s, c[2]), (0.62 * s, 0.6 * s, 0.62 * s), M['pot'])
     else: cyl(layer, (c[0], 0, c[2]), 0.33 * s, 0.55 * s, M['pot'], 16, r2=0.25 * s)
-    cyl(layer, (c[0], 0.5 * s if not box_pot else 0.56 * s, c[2]), 0.28 * s, 0.03, M['soil'], 12)
-    if kind == 1:  # vijgenboompje: stam + bolletjes
-        cyl(layer, (c[0], 0.5 * s, c[2]), 0.04 * s, 1.1 * s, M['stem'], 6)
-        for k in range(26):
-            a = random.random() * math.tau; h = 1.1 + random.random() * 0.9; rr = 0.15 + random.random() * 0.45
-            p = (c[0] + math.sin(a) * rr * s, h * s, c[2] + math.cos(a) * rr * s)
-            box(layer, p, (0.28 * s, 0.04 * s, 0.18 * s), M['leaf2' if k % 2 else 'leaf'], random.random() * math.tau, rx=random.uniform(-0.7, 0.7))
+    top_soil = 0.5 * s if not box_pot else 0.56 * s
+    cyl(layer, (c[0], top_soil, c[2]), 0.28 * s, 0.03, M['soil'], 12)
+    greens = [M['leaf'], M['leaf2'], M['leaf3']]
+    if kind == 1:  # vijgenboompje: stam, takjes en veel kleine ovale blaadjes
+        cyl(layer, (c[0], top_soil, c[2]), 0.035 * s, 1.0 * s, M['stem'], 6)
+        crown = (c[0], top_soil + 1.25 * s, c[2])
+        for k in range(4):
+            a = k * math.tau / 4 + 0.4
+            tube(layer, [(c[0], top_soil + 0.85 * s, c[2]), (c[0] + math.sin(a) * 0.25 * s, top_soil + 1.15 * s, c[2] + math.cos(a) * 0.25 * s)], 0.015 * s, M['stem'], 4)
+        for k in range(70):
+            u = random.uniform(-1, 1); th = random.random() * math.tau; rr = (0.25 + random.random() * 0.25) * s
+            q = math.sqrt(1 - u * u)
+            p = (crown[0] + math.cos(th) * q * rr * 1.1, crown[1] + u * rr * 0.8, crown[2] + math.sin(th) * q * rr * 1.1)
+            dvec = (math.cos(th) * q + random.uniform(-0.3, 0.3), 0.3 + u * 0.4, math.sin(th) * q + random.uniform(-0.3, 0.3))
+            sd = Vector(dvec).cross(Vector((0, 1, 0)))
+            if sd.length < 1e-3: sd = Vector((1, 0, 0))
+            _leaf(layer, p, dvec, sd, 0.13 * s, 0.045 * s, random.choice(greens), droop=0.15, segs=3)
         return
-    # palm / monstera: lange gebogen bladeren
-    cnt = 11 if kind == 0 else 9
-    top = 0.55 * s
-    if kind == 0: cyl(layer, (c[0], 0.5 * s, c[2]), 0.05 * s, 0.9 * s, M['stem'], 6); top = 1.35 * s
-    for k in range(cnt):
-        a = k * math.tau / cnt + random.uniform(-0.2, 0.2); ln = (0.85 + random.random() * 0.45) * s
-        tilt = random.uniform(0.25, 0.9)
-        prev = None
-        segs = 5
-        for j in range(segs):
-            t0, t1 = j / segs, (j + 1) / segs
-            def pt(t):
-                d = t * ln; y = top + math.sin((1 - tilt) * 1.2 + 0.2) * d * 0.9 - (t ** 2) * ln * tilt * 0.9
-                return (c[0] + math.sin(a) * d, y, c[2] + math.cos(a) * d)
-            p0, p1 = pt(t0), pt(t1)
-            w = 0.2 * s * math.sin(math.pi * (t0 + t1) / 2 + 0.15) + 0.03
-            perp = (math.cos(a) * w, 0, -math.sin(a) * w)
-            L(layer).poly([(p0[0] - perp[0], p0[1], p0[2] - perp[2]), (p0[0] + perp[0], p0[1], p0[2] + perp[2]),
-                           (p1[0] + perp[0], p1[1], p1[2] + perp[2]), (p1[0] - perp[0], p1[1], p1[2] - perp[2])], M['leaf' if k % 2 else 'leaf2'])
+    if kind == 2:  # monstera: grote hartvormige bladeren op lange stelen
+        for k in range(7):
+            a = k * math.tau / 7 + random.uniform(-0.2, 0.2); h = (0.45 + random.random() * 0.45) * s
+            tip = (c[0] + math.sin(a) * 0.35 * s, top_soil + h, c[2] + math.cos(a) * 0.35 * s)
+            tube(layer, [(c[0], top_soil, c[2]), (c[0] + math.sin(a) * 0.12 * s, top_soil + h * 0.6, c[2] + math.cos(a) * 0.12 * s), tip], 0.012 * s, M['leaf'], 4)
+            dvec = (math.sin(a), -0.15, math.cos(a)); sd = (math.cos(a), 0, -math.sin(a))
+            _leaf(layer, tip, dvec, sd, 0.42 * s, 0.2 * s, greens[k % 2], droop=0.3, segs=7)
+        return
+    # palm: bladstengels met veel smalle blaadjes aan twee kanten
+    cyl(layer, (c[0], top_soil, c[2]), 0.05 * s, 0.9 * s, M['stem'], 6)
+    top = top_soil + 0.85 * s
+    for k in range(9):
+        a = k * math.tau / 9 + random.uniform(-0.2, 0.2); ln = (0.95 + random.random() * 0.4) * s
+        tilt = random.uniform(0.35, 0.75)
+        pts = []
+        for j in range(8):
+            t = j / 7; dd = t * ln
+            pts.append((c[0] + math.sin(a) * dd, top + math.sin(0.9) * dd * 0.55 - (t ** 2) * ln * tilt, c[2] + math.cos(a) * dd))
+        tube(layer, pts, 0.012 * s, M['stem'], 4)
+        sd = Vector((math.cos(a), 0, -math.sin(a)))
+        for j in range(1, 7):
+            p0 = Vector(pts[j]); dirv = (Vector(pts[j + 1]) - Vector(pts[j - 1])).normalized()
+            lf = (0.32 - 0.035 * j) * s
+            for sg in (-1, 1):
+                _leaf(layer, tuple(p0), tuple(sd * sg + dirv * 0.55 - Vector((0, 0.25, 0))), tuple(dirv), lf, 0.035 * s, greens[(j + (sg > 0)) % 3], droop=0.2, segs=3)
 
 def sofa(layer, c, ry=0.0, m=None):
     layer = 'props'
@@ -287,6 +400,18 @@ def beanbag(layer, c, col):
     layer = 'props'
     cyl(layer, (c[0], 0, c[2]), 0.42, 0.42, mat('bb' + col, col, 0.85), 14, r2=0.5)
 
+def coffee(c, rid, ry, N):
+    """kastje met koffiemachine en bekers; COFFEE krijgt de plek waar je staat om koffie te pakken"""
+    lay = 'props'
+    box(lay, tf((c[0], 0, c[2]), ry, (0, 0.42, 0)), (0.8, 0.84, 0.45), M['cabinet'], ry)
+    box(lay, tf((c[0], 0, c[2]), ry, (0, 0.86, 0)), (0.84, 0.04, 0.49), M['white'], ry)
+    box(lay, tf((c[0], 0, c[2]), ry, (0.12, 1.07, -0.06)), (0.3, 0.38, 0.28), M['mon'], ry)
+    box(f'neon_{rid}', tf((c[0], 0, c[2]), ry, (0.12, 1.12, 0.085)), (0.16, 0.05, 0.01), N, ry)
+    for dx in (-0.2, -0.3):
+        cyl(lay, tf((c[0], 0.88, c[2]), ry, (dx, 0, 0.08)), 0.04, 0.1, M['white'], 10)
+    stand = tf((c[0], 0, c[2]), ry, (0, 0, 0.62)); look = tf((c[0], 0, c[2]), ry, (0, 0, 0))
+    COFFEE.append((rid, stand, look))
+
 # ---------- de afdelingen ----------
 for rid, slot, col, props in ROOMS:
     a = slot * SPAN; a0, a1 = a - SPAN / 2 + GAPA, a + SPAN / 2 - GAPA
@@ -295,8 +420,9 @@ for rid, slot, col, props in ROOMS:
     def at(u, v, y=0.0):
         rad = RM + v; ang = a + u / rad; return polar(rad, ang, y)
     lay = 'baked'; nl = f'neon_{rid}'; N = neon(col, 7.0)
-    tint = mat('floor_' + rid, '#1a2246', 0.28, 0.35)
+    tint = mat('floor_' + rid, '#1a2246', 0.28, 0.35); FLOOR_MATS.add('floor_' + rid)
     tint.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = tuple(x * 0.82 + y * 0.18 for x, y in zip(hexc('#1a2246')[:3], hexc(col)[:3])) + (1,)
+    texturize(tint, 'tiles:0.9')
     # vloer + verhoogde rand + tapijt
     sector(lay, R_IN, R_OUT, a0, a1, 0.0, 0.06, tint, 30)
     sector(lay, R_IN + 1.0, R_OUT - 1.0, a0 + 0.05, a1 - 0.05, 0.06, 0.075, M['carpet'], 24, sides=False)
@@ -304,10 +430,26 @@ for rid, slot, col, props in ROOMS:
     glassR = R_OUT if front else R_IN
     # hoge wand met panelen (lichte kant naar binnen)
     tw0 = tallR - (0.0 if front else 0.18); tw1 = tallR + (0.18 if front else 0.0)
-    sector(lay, tw0, tw1, a0, a1, 0.06, H, M['wall'], 28)
+    # deur naar de gang (zodat medewerkers naar andere afdelingen kunnen lopen)
+    ud = (1.3 if slot < 5 else -1.3) if front else 0.0
+    door_r = (tallR + 0.09) if front else (glassR + 0.05)
+    da = a + ud / door_r; dh = 0.5 / door_r; d0, d1 = da - dh, da + dh
+    DOORS.append((rid, polar(R_IN - 0.42, da), polar(R_IN + 0.75, da)))
+    if front:
+        sector(lay, tw0, tw1, a0, d0, 0.06, H, M['wall'], 14)
+        sector(lay, tw0, tw1, d1, a1, 0.06, H, M['wall'], 6)
+        sector(lay, tw0, tw1, d0, d1, 2.3, H, M['wall'], 4)
+        tube(nl, arc(tallR + 0.2, d0, d1, 2.3, 8), 0.04, N)
+        tube(nl, arc(tallR - 0.02, d0, d1, 2.3, 8), 0.04, N)
+        for ang in (d0, d1):
+            tube(nl, [polar(tallR + 0.2, ang, 0.06), polar(tallR + 0.2, ang, 2.3)], 0.04, N)
+            tube(nl, [polar(tallR - 0.02, ang, 0.06), polar(tallR - 0.02, ang, 2.3)], 0.04, N)
+    else:
+        sector(lay, tw0, tw1, a0, a1, 0.06, H, M['wall'], 28)
     pr = tallR + 0.19 if front else tallR - 0.19
     for k in range(6):
         t0 = a0 + (a1 - a0) * (k + 0.08) / 6; t1 = a0 + (a1 - a0) * (k + 0.92) / 6
+        if front and t1 > d0 - 0.02 and t0 < d1 + 0.02: continue
         sector(lay, min(pr, pr + 0.02), max(pr, pr + 0.02), t0, t1, 0.35, H - 0.35, M['panel'], 4)
     # neon op de wanden en vloer
     tube(nl, arc(tallR + (0.2 if front else -0.2), a0, a1, H, 30), 0.055, N)
@@ -327,14 +469,24 @@ for rid, slot, col, props in ROOMS:
     g = L('glass')
     for k in range(24):
         t0 = a0 + (a1 - a0) * k / 24; t1 = a0 + (a1 - a0) * (k + 1) / 24
+        if not front and t1 > d0 and t0 < d1: continue  # deuropening
         q0, q1 = polar(glassR + (-0.05 if front else 0.05), t0), polar(glassR + (-0.05 if front else 0.05), t1)
         g.poly([(q0[0], 0.06, q0[2]), (q1[0], 0.06, q1[2]), (q1[0], HG, q1[2]), (q0[0], HG, q0[2])], M['glass'])
+    if not front:  # deurstijlen met neon
+        for ang in (d0, d1):
+            tube(nl, [polar(glassR + 0.05, ang, 0.06), polar(glassR + 0.05, ang, HG)], 0.045, N)
+            box(lay, polar(glassR + 0.05, ang, HG / 2), (0.07, HG, 0.07), M['trim'], ang)
     # groot wandscherm met lijst
     wr = tallR + (0.22 if front else -0.22); wry = a if front else a + math.pi
-    wc = polar(wr, a, 1.75)
-    box(lay, wc, (3.2, 1.55, 0.05), M['mon'], wry)
-    tube(nl, [tf(wc, wry, p) for p in [(-1.62, -0.8, 0.03), (1.62, -0.8, 0.03), (1.62, 0.8, 0.03), (-1.62, 0.8, 0.03), (-1.62, -0.8, 0.03)]], 0.025, N)
-    screen(tf(wc, wry, (0, 0, 0.03)), 3.0, 1.38, wry, kind='w')
+    if front:  # kleiner scherm, opzij van de deur
+        us = -0.6 if ud > 0 else 0.6; sw, sh = 2.3, 1.25
+        wc = polar(wr, a + us / wr, 1.75); wry = a + us / wr
+    else:
+        wc = polar(wr, a, 1.75); sw, sh = 3.0, 1.38
+    box(lay, wc, (sw + 0.2, sh + 0.17, 0.05), M['mon'], wry)
+    hw2, hh2 = sw / 2 + 0.12, sh / 2 + 0.11
+    tube(nl, [tf(wc, wry, p) for p in [(-hw2, -hh2, 0.03), (hw2, -hh2, 0.03), (hw2, hh2, 0.03), (-hw2, hh2, 0.03), (-hw2, -hh2, 0.03)]], 0.025, N)
+    screen(tf(wc, wry, (0, 0, 0.03)), sw, sh, wry, kind='w')
     # plafondbalk (geeft diepte zoals op de foto)
     # bureaus
     nd = 2 if props in ('crisis',) else 4
@@ -344,6 +496,25 @@ for rid, slot, col, props in ROOMS:
     # planten
     plant(lay, at(-2.55, 3.4), 1.05, 0); plant(lay, at(2.55, 3.4), 0.9, 1)
     plant(lay, at(-2.6, -3.5), 0.8, 2); plant(lay, at(2.6, -3.5), 0.85, 0)
+    # koffiehoek bij de deur (de medewerkers halen hier koffie als het rustig is)
+    occ = []
+    for (u, v) in pts[:nd]:
+        dc = at(u, v); occ.append((dc[0] - 1.2, dc[2] - 0.65, dc[0] + 1.2, dc[2] + 1.35))
+    for (u, v) in ((-2.55, 3.4), (2.55, 3.4), (-2.6, -3.5), (2.6, -3.5)):
+        pc = at(u, v); occ.append((pc[0] - 0.55, pc[2] - 0.55, pc[0] + 0.55, pc[2] + 0.55))
+    dpt = polar(R_IN + 0.6, da); occ.append((dpt[0] - 0.75, dpt[2] - 0.75, dpt[0] + 0.75, dpt[2] + 0.75))
+    # kandidaten: raster in de kamer, dichtst bij de deur eerst; middenachter is voor de eigen inrichting
+    du = ud
+    cands = [(u / 10, v / 10) for u in range(-21, 22, 3) for v in range(-37, 37, 3) if not (v / 10 > 1.0 and abs(u / 10) < 1.8)]
+    cands.sort(key=lambda q: (q[0] - du) ** 2 + (q[1] + 4.0) ** 2)
+    placed = False
+    for (u, v) in cands:
+        cc = at(u, v); bb = (cc[0] - 0.45, cc[2] - 0.45, cc[0] + 0.45, cc[2] + 0.45)
+        if any(not (bb[2] < o[0] or bb[0] > o[2] or bb[3] < o[1] or bb[1] > o[3]) for o in occ): continue
+        rr2 = math.hypot(cc[0], cc[2]); ang2 = math.atan2(cc[0], cc[2]); dd = (ang2 - a + math.pi) % math.tau - math.pi
+        if not (R_IN + 0.5 < rr2 < R_OUT - 0.5 and abs(dd) * rr2 < (SPAN / 2 - GAPA) * rr2 - 0.45): continue
+        coffee(cc, rid, a if v < 0 else a + math.pi, N); placed = True; print('KOFFIE', rid, round(u, 1), round(v, 1)); break
+    if not placed: print('GEEN KOFFIEHOEK', rid)
     # eigen inrichting
     face = a + math.pi  # naar het midden
     if props == 'research':
@@ -368,6 +539,11 @@ for rid, slot, col, props in ROOMS:
         tube(nl, [tf(bc, a, p) for p in [(-1.22, 2.52, -1.02), (1.22, 2.52, -1.02), (1.22, 2.52, 1.02), (-1.22, 2.52, 1.02), (-1.22, 2.52, -1.02)]], 0.045, neon('#A855F7', 7))
         cyl(lay, (bc[0], 0.06, bc[2]), 0.18, 0.03, M['metal'], 12); cyl(lay, (bc[0], 0.06, bc[2]), 0.02, 1.45, M['metal'], 6)
         cyl(lay, (bc[0], 1.45, bc[2]), 0.07, 0.22, M['metal'], 12)
+        # popfilter voor de microfoon
+        pc = tf((bc[0], 0, bc[2]), a, (0, 1.56, 0.2))
+        tube('props', [tf(pc, a, (math.cos(t) * 0.1, math.sin(t) * 0.1, 0)) for t in (math.tau * k / 16 for k in range(17))], 0.008, M['metal'], 4)
+        L('props').poly([tf(pc, a, (math.cos(t) * 0.095, math.sin(t) * 0.095, 0)) for t in (math.tau * k / 12 for k in range(12))], mat('popf', '#1b1f33', 0.9))
+        tube('props', [(bc[0], 1.5, bc[2]), tf((bc[0], 0, bc[2]), a, (0.05, 1.5, 0.1)), tf(pc, a, (0, -0.1, 0))], 0.006, M['metal'], 4)
         box(lay, tf(bc, a, (0, 1.4, -0.95)), (2.2, 1.6, 0.06), mat('foam', '#3a2370', 0.95), a)
     elif props == 'production':
         rack(lay, at(-2.0, 3.55), a + math.pi, col); rack(lay, at(-1.15, 3.55), a + math.pi, col)
@@ -460,6 +636,25 @@ for slot in range(1, SLOTS):
     ang = slot * SPAN + SPAN / 2
     tube(NH, [polar(R_IN, ang, 0.02), polar(R_BASE - 0.5, ang, 0.02)], 0.025, neon('#398CFF', 5))
 
+# ---------- vloerlogo voor de balie (wordt mee gebakken) ----------
+LOGO = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'floor_logo.png')
+if os.path.exists(LOGO):
+    lm = bpy.data.materials.new('logo'); lm.use_nodes = True; nt = lm.node_tree; bs = nt.nodes['Principled BSDF']
+    im = nt.nodes.new('ShaderNodeTexImage'); im.image = bpy.data.images.load(LOGO); im.extension = 'CLIP'
+    uvn = nt.nodes.new('ShaderNodeUVMap'); uvn.uv_map = 'UVMap'; nt.links.new(uvn.outputs[0], im.inputs[0])
+    mx = nt.nodes.new('ShaderNodeMix'); mx.data_type = 'RGBA'; mx.inputs[6].default_value = hexc('#141c3e')
+    nt.links.new(im.outputs['Alpha'], mx.inputs[0]); nt.links.new(im.outputs['Color'], mx.inputs[7]); nt.links.new(mx.outputs[2], bs.inputs['Base Color'])
+    ml = nt.nodes.new('ShaderNodeMath'); ml.operation = 'MULTIPLY'; ml.inputs[1].default_value = 2.6
+    nt.links.new(im.outputs['Alpha'], ml.inputs[0]); nt.links.new(ml.outputs[0], bs.inputs['Emission Strength'])
+    nt.links.new(im.outputs['Color'], bs.inputs['Emission Color'])
+    bs.inputs['Roughness'].default_value = 0.3
+    FLOOR_MATS.add('logo')
+    y = 0.507; lw, z0, z1 = 1.35, 3.72, 4.43
+    f = L('baked').poly([(-lw, y, z1), (lw, y, z1), (lw, y, z0), (-lw, y, z0)], lm)
+    _bm = L('baked').bm; uvl = _bm.loops.layers.uv.get('UVMap') or _bm.loops.layers.uv.new('UVMap')
+    for lp, uv in zip(f.loops, ((0, 0), (1, 0), (1, 1), (0, 1))): lp[uvl].uv = uv
+    print('LOGO geplaatst')
+
 # ---------- objecten maken ----------
 objs = {k: l.finish() for k, l in LAYERS.items()}
 for room, p, ry in SEATS:
@@ -468,7 +663,15 @@ seat_count = {}
 for room, p, ry in SEATS:
     i = seat_count.get(room, 0); seat_count[room] = i + 1
     e = bpy.data.objects.new(f'seat_{room}_{i}', None); e.location = P(*p); scn.collection.objects.link(e)
-print('LAGEN', len(objs), 'schermen', len(SCREENS), 'stoelen', len(SEATS))
+def empty(name, p):
+    e = bpy.data.objects.new(name, None); e.location = P(*p); scn.collection.objects.link(e)
+for rid, po, pi in DOORS: empty(f'door_{rid}_o', po); empty(f'door_{rid}_i', pi)
+for rid, st, lk in COFFEE: empty(f'coffee_{rid}', st); empty(f'coffeeL_{rid}', lk)
+import json as _json
+with open(os.path.join(os.path.dirname(OUT), 'office_nav_raw.json'), 'w') as fh:
+    _json.dump({'faces': NAV, 'doors': [(r, po, pi) for r, po, pi in DOORS], 'coffee': [(r, st, lk) for r, st, lk in COFFEE],
+                'seats': [(r, p) for r, p, _ in SEATS]}, fh)
+print('LAGEN', len(objs), 'schermen', len(SCREENS), 'stoelen', len(SEATS), 'navvlakken', len(NAV), 'koffie', len(COFFEE))
 
 # ---------- licht voor de bake / preview ----------
 world = bpy.data.worlds.new('w'); scn.world = world; world.use_nodes = True
@@ -514,20 +717,20 @@ if BAKE:
     me = bk.data
     uv = me.uv_layers.new(name='lm'); me.uv_layers.active = uv
     bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.0015, area_weight=0.0, scale_to_bounds=False)
-    bpy.ops.uv.pack_islands(margin=0.0015, rotate=True)
+    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.001, area_weight=0.0, scale_to_bounds=False)
+    bpy.ops.uv.pack_islands(margin=0.001, rotate=True)
     bpy.ops.object.mode_set(mode='OBJECT')
     img = bpy.data.images.new('lightmap', BAKE, BAKE, float_buffer=True)
     for m in me.materials:
         nt = m.node_tree; nd = nt.nodes.new('ShaderNodeTexImage'); nd.image = img; nd.select = True; nt.nodes.active = nd
     scn.cycles.samples = SAMPLES
     scn.render.bake.use_pass_direct = True; scn.render.bake.use_pass_indirect = True
-    scn.render.bake.margin = 4
+    scn.render.bake.margin = max(4, BAKE // 1024)
     bpy.ops.object.select_all(action='DESELECT'); bk.select_set(True); bpy.context.view_layer.objects.active = bk
     print('BAKEN...', flush=True)
     bpy.ops.object.bake(type='COMBINED', pass_filter={'DIRECT', 'INDIRECT', 'DIFFUSE', 'EMIT', 'TRANSMISSION'}, use_clear=True)
     # ruis eruit via de compositor
-    img.filepath_raw = '/tmp/lm_raw.exr'; img.file_format = 'OPEN_EXR'; img.save()
+    img.filepath_raw = os.path.join(os.path.dirname(OUT), 'office_lightmap_raw.exr'); img.file_format = 'OPEN_EXR'; img.save()
     scn.use_nodes = True; nt = scn.node_tree; [nt.nodes.remove(x) for x in list(nt.nodes)]
     i_n = nt.nodes.new('CompositorNodeImage'); i_n.image = img
     dn = nt.nodes.new('CompositorNodeDenoise'); dn.prefilter = 'NONE'
@@ -535,20 +738,28 @@ if BAKE:
     nt.links.new(i_n.outputs[0], dn.inputs[0]); nt.links.new(dn.outputs[0], out.inputs[0])
     scn.render.resolution_x = scn.render.resolution_y = BAKE; scn.render.resolution_percentage = 100
     scn.view_settings.view_transform = 'AgX'; scn.view_settings.look = 'None'
-    scn.render.image_settings.file_format = 'JPEG'; scn.render.image_settings.quality = 88
-    jpg = os.path.join(os.path.dirname(OUT), 'office_lightmap.jpg')
+    scn.render.image_settings.file_format = 'PNG'; scn.render.image_settings.color_mode = 'RGB'; scn.render.image_settings.color_depth = '8'; scn.render.image_settings.compression = 15
+    jpg = os.path.join(os.path.dirname(OUT), 'office_lightmap.png')
     scn.render.filepath = jpg
     scn.camera = scn.camera or bpy.data.objects.new('c', bpy.data.cameras.new('c'))
     if scn.camera.name not in scn.collection.objects: scn.collection.objects.link(scn.camera)
     bpy.ops.render.render(write_still=True)
     print('LIGHTMAP', jpg)
-    # vervang materialen door één eenvoudig materiaal met de lightmap
-    baked = bpy.data.materials.new('baked'); baked.use_nodes = True; nt = baked.node_tree
-    bs = nt.nodes['Principled BSDF']; tx = nt.nodes.new('ShaderNodeTexImage'); tx.image = bpy.data.images.load(jpg)
-    uvn = nt.nodes.new('ShaderNodeUVMap'); uvn.uv_map = 'lm'; nt.links.new(uvn.outputs[0], tx.inputs[0])
-    nt.links.new(tx.outputs[0], bs.inputs['Emission Color']); bs.inputs['Emission Strength'].default_value = 1.0
-    bs.inputs['Base Color'].default_value = (0, 0, 0, 1); bs.inputs['Roughness'].default_value = 0.42
-    me.materials.clear(); me.materials.append(baked)
+    # vervang materialen door twee eenvoudige materialen (vloer apart: die krijgt in de browser reflecties)
+    # in de GLB zit alleen een kleine voorlopige lightmap; de browser laadt daarna de scherpe versie los
+    big = bpy.data.images.load(jpg); small = big.copy(); small.scale(512, 512)
+    small.filepath_raw = os.path.join(os.path.dirname(OUT), 'office_lightmap_512.jpg'); small.file_format = 'JPEG'; small.save()
+    floor_flags = [me.materials[pl.material_index].name.split('.')[0] in FLOOR_MATS for pl in me.polygons]
+    def lmmat(name):
+        bm_ = bpy.data.materials.new(name); bm_.use_nodes = True; nt = bm_.node_tree
+        bs = nt.nodes['Principled BSDF']; tx = nt.nodes.new('ShaderNodeTexImage'); tx.image = small
+        uvn = nt.nodes.new('ShaderNodeUVMap'); uvn.uv_map = 'lm'; nt.links.new(uvn.outputs[0], tx.inputs[0])
+        nt.links.new(tx.outputs[0], bs.inputs['Emission Color']); bs.inputs['Emission Strength'].default_value = 1.0
+        bs.inputs['Base Color'].default_value = (0, 0, 0, 1); bs.inputs['Roughness'].default_value = 0.42
+        return bm_
+    me.materials.clear(); me.materials.append(lmmat('baked')); me.materials.append(lmmat('baked_floor'))
+    for pl, fl in zip(me.polygons, floor_flags): pl.material_index = 1 if fl else 0
+    print('VLOERVLAKKEN', sum(floor_flags), 'van', len(floor_flags))
     # alleen de lightmap-UV houden
     for u in [u for u in me.uv_layers if u.name != 'lm']: me.uv_layers.remove(u)
     # export

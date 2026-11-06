@@ -1,2 +1,4 @@
 office.glb
-office_lightmap.jpg
+office_lightmap*
+office_nav_raw.json
+*.exr
