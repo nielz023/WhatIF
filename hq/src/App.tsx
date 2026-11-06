@@ -30,6 +30,7 @@ import WarRoomPage from './pages/WarRoomPage';
 import DriftmarkPage, { VideosPage, MeerPage } from './pages/DriftmarkPage';
 import KanaalPage from './pages/KanaalPage';
 import CoachPage from './pages/CoachPage';
+import KennisPage from './pages/KennisPage';
 import type { PageId } from './types';
 import { realTick } from './lib/util';
 import { startLive } from './services/live';
@@ -46,6 +47,7 @@ const PAGES: Record<PageId, () => JSX.Element | null> = {
   driftmark: () => null, overzicht: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: NaarKantoor,
   threads: NaarKantoor, finances: NaarKantoor, upgrades: NaarKantoor, achievements: NaarKantoor,
   settings: SettingsPage, warroom: WarRoomPage,
+  kennis: KennisPage,
 };
 
 /** De klok loopt met de echte tijd mee: 1 tick = 1 echt uur. Na afwezigheid wordt bijgewerkt (max 30 dagen). */

@@ -60,8 +60,9 @@ const VEILIG = /^[A-Za-z0-9_-]{1,160}$/;
 type Lees = { ok: true; data: Any } | { ok: false; code: string; wacht?: number };
 const pauze = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** één JSON-bestand uit de projectbestanden, zoals live.ts status.json leest (eerst zonder, dan met / ervoor) */
-async function leesJson(rel: string): Promise<Lees> {
+/** één JSON-bestand uit de projectbestanden, zoals live.ts status.json leest (eerst zonder, dan met / ervoor).
+ *  Ook gebruikt door services/kennis.ts en coach.ts. */
+export async function leesJson(rel: string): Promise<Lees> {
   const fs = await filesApi();
   if (!fs) return { ok: false, code: 'geen-files' };
   const codes: string[] = [];
@@ -206,7 +207,13 @@ useThreads.subscribe((st, prev) => {
 });
 
 /* ================= gesprekken ================= */
-export interface Msg { id: string; who: 'niels' | 'claude' | 'keuze' | 'checklist' | 'systeem'; text: string; at: string; author?: string; options?: string[] }
+export interface Msg {
+  id: string; who: 'niels' | 'claude' | 'keuze' | 'checklist' | 'systeem'; text: string; at: string; author?: string; options?: string[];
+  /** keuzekaart: welke optie niels koos (index in options) */
+  chosen?: number;
+  /** systeembericht "nieuwe thread gestart": de id van die nieuwe thread */
+  thread?: string;
+}
 export interface GesprekBestand { id: string; title: string; at?: string; hasMore: boolean; msgs: Msg[] }
 export type GesprekLees = { kind: 'ok'; g: GesprekBestand } | { kind: 'ontbreekt' } | { kind: 'geen-toegang' } | { kind: 'fout'; code: string };
 const WIE: Record<string, Msg['who']> = { niels: 'niels', user: 'niels', claude: 'claude', assistant: 'claude', keuze: 'keuze', checklist: 'checklist', systeem: 'systeem' };
@@ -217,11 +224,16 @@ function leesGesprek(j: Any, id: string): GesprekBestand | null {
   (Array.isArray(j.msgs) ? j.msgs : []).forEach((m: Any, i: number) => {
     if (!m || typeof m !== 'object') return;
     const text = typeof m.text === 'string' ? m.text : '';
-    const options = Array.isArray(m.options) ? m.options.filter((o: unknown): o is string => typeof o === 'string' && !!o.trim()) : [];
+    const ruw: unknown[] = Array.isArray(m.options) ? m.options : [];
+    const options = ruw.filter((o: unknown): o is string => typeof o === 'string' && !!o.trim());
     if (!text.trim() && !options.length) return;
+    // chosen telt in de lijst zoals hij in het bestand staat; lege opties vallen weg, dus via de tekst terugzoeken
+    const keus = Number.isInteger(m.chosen) && m.chosen >= 0 && m.chosen < ruw.length ? options.indexOf(ruw[m.chosen] as string) : -1;
+    const chosen = keus >= 0 ? keus : undefined;
     msgs.push({
       id: typeof m.id === 'string' && m.id ? m.id : `m${i}`, who: WIE[String(m.who)] ?? 'systeem', text, at: typeof m.at === 'string' ? m.at : '',
       author: typeof m.author === 'string' && m.author.trim() ? m.author.trim() : undefined, options: options.length ? options : undefined,
+      ...(chosen != null ? { chosen } : {}), ...(typeof m.thread === 'string' && VEILIG.test(m.thread) ? { thread: m.thread } : {}),
     });
   });
   // oudste eerst, zo hoort het bestand te zijn; staat het andersom, dan draaien we het om

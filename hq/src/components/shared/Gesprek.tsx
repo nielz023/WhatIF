@@ -3,8 +3,12 @@
  * Claude zet elk gesprek ongeveer elk uur als bestand in driftmark-hq/gesprekken/ (zie services/threads.ts). Het
  * paneel leest dat bestand zodra het opengaat en daarna elke minuut, zolang het open blijft. Oudste berichten
  * bovenaan, nieuwste onderaan. Staat niet alles in het bestand, dan staat bovenaan waar de rest te lezen is.
+ * v35 kennis: de bestanden hebben nu de hele geschiedenis (de HQ-thread ruim 360 berichten). Eerst de nieuwste 60,
+ * met "Toon oudere berichten" (100 per keer). openGesprek({..., msg}) springt naar één bericht en licht het op.
+ * Berichten zijn Markdown (components/shared/Md.tsx): links naar buiten in een nieuw tabblad, #cmsg_... opent die
+ * thread hier, een geheugennotitie of projectbestand opent in Kennis.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ExternalLink, ListChecks, MessageSquare, RefreshCw, X } from 'lucide-react';
 import { create } from 'zustand';
@@ -14,10 +18,12 @@ import { useLive } from '../../services/live';
 import { order } from '../../services/real';
 import { useGame } from '../../store/useGame';
 import { useAfkeuren } from './Afkeuren';
+import { Md, type MdLink } from './Md';
+import { openKennis } from '../../services/kennis';
 
 interface G {
   /** kind 'thread': thread is de thread-id (cmsg_...). session is van vroeger en wordt niet meer gebruikt. */
-  open: { kind: 'thread' | 'project'; title: string; thread?: string; session?: string } | null;
+  open: { kind: 'thread' | 'project'; title: string; thread?: string; session?: string; msg?: string } | null;
   show: (o: G['open']) => void;
 }
 export const useGesprek = create<G>((set) => ({ open: null, show: (open) => set({ open }) }));
@@ -33,23 +39,17 @@ const STAND: Record<string, string> = { working: 'bezig', blocked: 'wacht op jou
 /** al om gevraagd in deze sessie (knop "Nu ophalen"), zodat niels niet twee keer dezelfde opdracht stuurt */
 const gevraagdOp = new Set<string>();
 
-/** tekst met klikbare links ([tekst](url) en losse https-adressen) en **vet** */
-function Rich({ text }: { text: string }) {
-  const parts = useMemo(() => {
-    const out: (string | { t: string; href?: string; b?: boolean })[] = [];
-    const re = /\[([^\]]+)\]\((https?:\/\/[^)\s]+|#[^)\s]+|\/mnt\/[^)\s]+)\)|(https?:\/\/[^\s)]+)|\*\*([^*]+)\*\*/g;
-    let last = 0; let m: RegExpExecArray | null;
-    while ((m = re.exec(text))) {
-      if (m.index > last) out.push(text.slice(last, m.index));
-      if (m[1]) out.push({ t: m[1], href: /^https?:/.test(m[2]) ? m[2] : undefined });
-      else if (m[3]) out.push({ t: m[3], href: m[3] });
-      else if (m[4]) out.push({ t: m[4], b: true });
-      last = m.index + m[0].length;
-    }
-    if (last < text.length) out.push(text.slice(last));
-    return out;
-  }, [text]);
-  return <>{parts.map((p, i) => typeof p === 'string' ? <span key={i}>{p}</span> : p.href ? <a key={i} href={p.href} target="_blank" rel="noreferrer" className="text-sky-300 underline hover:text-white">{p.t}</a> : p.b ? <b key={i} className="text-white">{p.t}</b> : <span key={i} className="text-sky-200">{p.t}</span>)}</>;
+/** Een link in een bericht volgen: een thread (#cmsg_...) hier openen, een notitie of bestand in Kennis. */
+export function volgLink(l: MdLink, hier?: (id: string) => boolean) {
+  if (l.soort === 'thread') {
+    if (hier?.(l.id)) return;
+    const t = useThreads.getState().threads[l.id];
+    openGesprek({ kind: 'thread', title: t?.title || l.label || 'Thread', thread: l.id });
+  } else {
+    useGesprek.getState().show(null);
+    if (l.soort === 'notitie') openKennis({ tab: 'geheugen', notitie: l.naam, hl: undefined });
+    else openKennis({ tab: 'documenten', bestand: { path: l.pad } });
+  }
 }
 
 const KLEUR: Record<string, string> = { '✓': '#21D6A0', '✱': '#398CFF', '○': '#64748B' };
@@ -74,14 +74,31 @@ function Checklist({ m, open }: { m: Msg; open: boolean }) {
   );
 }
 
-function Bubble({ m, open }: { m: Msg; open: boolean }) {
-  if (m.who === 'systeem') return <div className="mx-auto max-w-[90%] text-center text-[11px] italic leading-snug text-slate-500" title={fmt(m.at)}><Rich text={m.text} /></div>;
+function Bubble({ m, open, onLink }: { m: Msg; open: boolean; onLink: (l: MdLink) => void }) {
+  if (m.who === 'systeem') return (
+    <div className="mx-auto max-w-[90%] text-center text-[11px] italic leading-snug text-slate-500" title={fmt(m.at)}>
+      <Md text={m.text} compact onLink={onLink} />
+      {m.thread && <button type="button" className="mt-0.5 text-sky-300 underline not-italic hover:text-white" onClick={() => onLink({ soort: 'thread', id: m.thread!, label: 'Nieuwe thread' })}>Open deze thread</button>}
+    </div>
+  );
   if (m.who === 'checklist') return <Checklist m={m} open={open} />;
   if (m.who === 'keuze') return (
     <div className="mx-auto w-full max-w-[92%] rounded-xl border border-amber-400/30 bg-amber-400/[.07] p-3 text-[13px] text-slate-200">
-      <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-amber-300">{m.options ? 'Keuze voor jou' : 'Gekozen'}</div>
-      <div className="whitespace-pre-wrap break-words"><Rich text={m.text} /></div>
-      {m.options && <ul className="mt-2 space-y-1">{m.options.map((o, i) => <li key={i} className="rounded-lg border border-amber-400/20 bg-black/20 px-2.5 py-1 text-[12px] text-slate-200"><Rich text={o} /></li>)}</ul>}
+      <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-amber-300">{m.options ? (m.chosen != null ? 'Keuze, beantwoord' : 'Keuze voor jou') : 'Gekozen'}</div>
+      <Md text={m.text} compact onLink={onLink} />
+      {m.options && (
+        <ul className="mt-2 space-y-1">
+          {m.options.map((o, i) => {
+            const gekozen = m.chosen === i;
+            return (
+              <li key={i} data-gekozen={gekozen || undefined} className={`flex gap-2 rounded-lg border px-2.5 py-1 text-[12px] ${gekozen ? 'border-emerald-400/60 bg-emerald-500/15 text-white' : m.chosen != null ? 'border-white/10 bg-black/20 text-slate-400' : 'border-amber-400/20 bg-black/20 text-slate-200'}`}>
+                {gekozen && <span className="shrink-0 font-bold text-emerald-300">✓ gekozen</span>}
+                <span className="min-w-0 flex-1"><Md text={o} compact onLink={onLink} /></span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       <div className="mt-1 text-right text-[10px] text-slate-500">{m.author ? `${m.author} · ` : ''}{fmt(m.at)}</div>
     </div>
   );
@@ -89,9 +106,70 @@ function Bubble({ m, open }: { m: Msg; open: boolean }) {
   return (
     <div className={`flex ${me ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[86%] rounded-2xl px-3.5 py-2 text-[13.5px] leading-relaxed shadow ${me ? 'rounded-br-md bg-orange-500/90 text-white' : 'rounded-bl-md border border-white/10 bg-[#121a36] text-slate-100'}`}>
-        <div className="whitespace-pre-wrap break-words"><Rich text={m.text} /></div>
+        <Md text={m.text} compact onLink={onLink} className={me ? '[&_a]:!text-white [&_button]:!text-white' : ''} />
         <div className={`mt-1 text-[10px] ${me ? 'text-orange-100/80' : 'text-slate-500'}`}>{me ? (m.author ?? 'niels') : 'Claude'} · {fmt(m.at)}</div>
       </div>
+    </div>
+  );
+}
+
+const EERST = 60; const MEER = 100;
+/**
+ * De berichten van één gesprek in een eigen scrollvak: eerst de nieuwste 60, met een knop voor oudere (de plek
+ * waar je zat blijft staan). doel: spring naar dat bericht en licht het even op (een nieuw object = opnieuw springen).
+ * Geef key={g.id} mee, zodat een ander gesprek weer bij de nieuwste berichten begint.
+ */
+export function Berichten({ g, doel, waar, link, onLink, className = '' }: { g: GesprekBestand; doel?: { id: string }; waar: string; link?: string; onLink: (l: MdLink, hier: (id: string) => boolean) => void; className?: string }) {
+  const box = useRef<HTMLDivElement>(null);
+  const stick = useRef(!doel);
+  const [begin, setBegin] = useState(() => Math.max(0, g.msgs.length - EERST));
+  const [flits, setFlits] = useState<number | null>(null);
+  const [binnen, setBinnen] = useState<{ id: string } | undefined>(undefined);
+  const hoogte = useRef<number | null>(null);
+  const gesprongen = useRef<{ id: string } | null>(null);
+  const len = g.msgs.length;
+  const start = Math.min(begin, Math.max(0, len - 1));
+  const laatsteChecklist = useMemo(() => g.msgs.map((m) => m.who).lastIndexOf('checklist'), [g]);
+  const nu = binnen ?? doel;
+
+  // oudere berichten erbij: de plek waar je zat blijft staan
+  useLayoutEffect(() => { const b = box.current; if (b && hoogte.current != null) { b.scrollTop = b.scrollHeight - hoogte.current; hoogte.current = null; } }, [start]);
+  // onderaan blijven als je onderaan was (zo zie je meteen de nieuwste berichten)
+  useLayoutEffect(() => { const b = box.current; if (b && stick.current) b.scrollTop = b.scrollHeight; }, [len]);
+  // naar een bericht springen
+  useLayoutEffect(() => {
+    if (!nu || gesprongen.current === nu) return;
+    let i = g.msgs.findIndex((m) => m.id === nu.id);
+    if (i < 0 && nu.id === g.id) i = 0;
+    if (i < 0) { gesprongen.current = nu; return; }
+    if (i < start) { setBegin(Math.max(0, i - 5)); return; }
+    const b = box.current; const el = b?.querySelector<HTMLElement>(`[data-msg-i="${i}"]`);
+    if (!b || !el) return;
+    gesprongen.current = nu; stick.current = false;
+    b.scrollTop = Math.max(0, el.offsetTop - b.clientHeight / 2 + Math.min(el.offsetHeight, b.clientHeight) / 2);
+    setFlits(i);
+  }, [nu, g, start]);
+  useEffect(() => { if (flits == null) return; const t = setTimeout(() => setFlits(null), 3500); return () => clearTimeout(t); }, [flits]);
+
+  const hier = (id: string) => { if (!g.msgs.some((m) => m.id === id) && id !== g.id) return false; setBinnen({ id }); return true; };
+  const ouder = () => { const b = box.current; if (b) hoogte.current = b.scrollHeight - b.scrollTop; setBegin((x) => Math.max(0, Math.min(x, len - 1) - MEER)); };
+  return (
+    <div ref={box} className={`relative min-h-0 space-y-2.5 overflow-y-auto px-4 py-3 ${className}`} onScroll={(e) => { const b = e.currentTarget; stick.current = b.scrollHeight - b.scrollTop - b.clientHeight < 60; }}>
+      {start > 0
+        ? <div className="text-center"><button type="button" onClick={ouder} className="btn-ghost !py-1 text-[12px]">Toon oudere berichten ({Math.min(MEER, start)} van {start})</button></div>
+        : g.hasMore
+          ? <div className="rounded-xl border border-sky-400/25 bg-sky-500/[.06] px-3 py-2 text-center text-[12px] text-slate-300">Oudere berichten staan in de {waar} zelf. {link && <a className="text-sky-300 underline hover:text-white" href={link} target="_blank" rel="noreferrer">Open de {waar}</a>}</div>
+          : len > 0 && <div className="text-center text-[11px] text-slate-500">Begin van het gesprek</div>}
+      {!len && <div className="py-10 text-center text-[13px] text-slate-500">Nog geen berichten.</div>}
+      {g.msgs.slice(start).map((m, j) => {
+        const i = start + j;
+        return (
+          <div key={`${m.id}:${i}`} data-msg-i={i} data-msg={m.id} className={`rounded-2xl transition-shadow duration-700 ${flits === i ? 'bg-amber-300/[.06] shadow-[0_0_0_2px_rgba(252,211,77,.7)]' : ''}`}>
+            {dayKey(m.at) && (j === 0 || dayKey(g.msgs[i - 1].at) !== dayKey(m.at)) && <div className="my-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">{dayLabel(m.at)}</div>}
+            <Bubble m={m} open={i === laatsteChecklist} onLink={(l) => onLink(l, hier)} />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -110,13 +188,13 @@ export default function GesprekDrawer() {
   const [st, setSt] = useState<Fase>({ fase: 'laden' });
   const [poging, setPoging] = useState(0);
   const [, setGevraagd] = useState(0);
-  const box = useRef<HTMLDivElement>(null); const stick = useRef(true);
+  const [doel, setDoel] = useState<{ id: string } | undefined>(undefined);
+  useEffect(() => { setDoel(open?.msg ? { id: open.msg } : undefined); }, [open]);
 
   // lezen bij openen en daarna elke minuut zolang het paneel open is (en de pagina zichtbaar);
   // een lading van een vorig gesprek die nog onderweg is, schrijft niets meer weg
   useEffect(() => {
     if (!open) return;
-    stick.current = true;
     if (!id) { setSt({ fase: 'geen-id' }); return; }
     setSt({ fase: 'laden' });
     let weg = false; let loopt = false;
@@ -135,9 +213,6 @@ export default function GesprekDrawer() {
     return () => { weg = true; clearInterval(t); };
   }, [open, id, poging]);
 
-  // onderaan blijven als je onderaan was (zo zie je meteen de nieuwste berichten)
-  const n = st.fase === 'ok' ? st.g.msgs.length : -1;
-  useEffect(() => { const b = box.current; if (b && stick.current) b.scrollTop = b.scrollHeight; }, [n, st.fase]);
   // Esc sluit alleen het gesprek (en niet ook nog het paneel of de afdeling eronder): vangen vóór de app-brede Esc.
   // Staat het Afkeuren-venster open, dan is die Esc voor dat venster.
   useEffect(() => {
@@ -146,7 +221,6 @@ export default function GesprekDrawer() {
   }, []);
 
   const g = st.fase === 'ok' ? st.g : null;
-  const laatsteChecklist = useMemo(() => (g ? g.msgs.map((m) => m.who).lastIndexOf('checklist') : -1), [g]);
   const stand = info ? STAND[stateOf(info)] : rij ? STAND[rij.state] : undefined;
   const link = project ? PROJECT_URL : id ? threadUrl(id) : '';
   const waar = project ? 'projectchat' : 'thread';
@@ -179,7 +253,8 @@ export default function GesprekDrawer() {
                 <div className="rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-[13px] text-orange-100"><b className="text-orange-300">Wacht op jou: </b>{rij.needs}</div>
               </div>
             )}
-            <div ref={box} className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-4 py-3" onScroll={(e) => { const b = e.currentTarget; stick.current = b.scrollHeight - b.scrollTop - b.clientHeight < 60; }}>
+            {g ? <Berichten key={g.id} g={g} doel={doel} waar={waar} link={link} onLink={volgLink} className="flex-1" /> : (
+            <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-4 py-3">
               {st.fase === 'laden' && <div className="py-10 text-center text-[13px] text-slate-400"><RefreshCw size={16} className="mx-auto mb-2 animate-spin" />Gesprek laden…</div>}
               {st.fase === 'geen-id' && <Uitleg>Bij deze taak hoort geen thread, dus er is hier geen gesprek om te lezen.</Uitleg>}
               {st.fase === 'geen-toegang' && (
@@ -197,17 +272,8 @@ export default function GesprekDrawer() {
                 </div>
               )}
               {st.fase === 'fout' && <Uitleg>Het gesprek kon nu niet geladen worden. <button className="text-sky-300 underline hover:text-white" onClick={() => setPoging((p) => p + 1)}>Opnieuw proberen</button></Uitleg>}
-              {g && (g.hasMore
-                ? <div className="rounded-xl border border-sky-400/25 bg-sky-500/[.06] px-3 py-2 text-center text-[12px] text-slate-300">Oudere berichten staan in de {waar} zelf. {link && <a className="text-sky-300 underline hover:text-white" href={link} target="_blank" rel="noreferrer">Open de {waar}</a>}</div>
-                : g.msgs.length > 0 && <div className="text-center text-[11px] text-slate-500">Begin van het gesprek</div>)}
-              {g && !g.msgs.length && <div className="py-10 text-center text-[13px] text-slate-500">Nog geen berichten.</div>}
-              {g?.msgs.map((m, i) => (
-                <div key={`${m.id}:${i}`}>
-                  {dayKey(m.at) && (i === 0 || dayKey(g.msgs[i - 1].at) !== dayKey(m.at)) && <div className="my-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">{dayLabel(m.at)}</div>}
-                  <Bubble m={m} open={i === laatsteChecklist} />
-                </div>
-              ))}
             </div>
+            )}
           </motion.aside>
         </motion.div>
       )}

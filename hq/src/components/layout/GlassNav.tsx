@@ -7,6 +7,7 @@ import { useLive, type Activity } from '../../services/live';
 import { openGesprek } from '../shared/Gesprek';
 import { mainOf } from './Sidebar';
 import type { PageId } from '../../types';
+import { Library } from 'lucide-react';
 
 /** De zwevende glazen hoofdnavigatie boven het kantoor. */
 const ITEMS: { id: PageId; label: string; icon: typeof BarChart3; uitleg: string }[] = [
@@ -17,6 +18,8 @@ const ITEMS: { id: PageId; label: string; icon: typeof BarChart3; uitleg: string
   { id: 'hq', label: 'Studio', icon: Layers, uitleg: 'Het kantoor beheren: teamleden en projecten' },
   { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
 ];
+// Kennis (v35) direct na Coach, net als in Sidebar.tsx; op een eigen regel zodat andere wijzigingen in de lijst er los van staan
+ITEMS.splice(ITEMS.findIndex((x) => x.id === 'coach') + 1, 0, { id: 'kennis', label: 'Kennis', icon: Library, uitleg: 'Alles wat is opgeslagen: geheugen, threads, documenten' });
 
 const ago = (iso?: string) => {
   const t = Date.parse(iso ?? ''); if (isNaN(t)) return '';
@@ -80,7 +83,7 @@ export default function GlassNav() {
           const lijst = id === 'driftmark' && waiting > 0;
           return (
             <div key={id} className="relative" style={{ perspective: 900 }} onMouseEnter={lijst ? enter : undefined} onMouseLeave={lijst ? leave : undefined}>
-              <button onClick={() => { if (lijst) close(); setPage(id); }} title={lijst ? undefined : uitleg} data-active={active} className="glass-btn group" style={{ ['--ry' as string]: `${(i - 2.5) * -5}deg` }} aria-current={active ? 'page' : undefined}
+              <button onClick={() => { if (lijst) close(); setPage(id); }} title={lijst ? undefined : uitleg} data-active={active} className="glass-btn group" style={{ ['--ry' as string]: `${(i - (ITEMS.length - 1) / 2) * -5}deg` }} aria-current={active ? 'page' : undefined}
                 aria-describedby={lijst && open ? 'dm-wachtlijst' : undefined} onFocus={lijst ? enter : undefined} onBlur={lijst ? leave : undefined}>
                 <Icon size={26} className="glass-btn-ico" />
                 <span>{label}</span>
@@ -104,6 +107,7 @@ const SIDE: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: 'hq', label: 'Studio', icon: Layers },
   { id: 'meer', label: 'Meer', icon: LayoutGrid },
 ];
+SIDE.splice(SIDE.findIndex((x) => x.id === 'coach') + 1, 0, { id: 'kennis', label: 'Kennis', icon: Library });
 
 /** Zwevende glazen zijbalk links (zoals op het referentiebeeld), alleen op grote schermen. */
 export function GlassSide() {
