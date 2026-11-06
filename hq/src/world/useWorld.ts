@@ -25,6 +25,8 @@ interface W {
   clickAt: { x: number; y: number } | null;
   /** drone-intro bij openen loopt */
   intro: boolean; setIntro: (v: boolean) => void;
+  /** rondlopen in eerste persoon (Walk.tsx); bij het starten gaan open afdelingspanelen dicht */
+  walk: boolean; setWalk: (v: boolean) => void;
 }
 const read = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const write = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* */ } };
@@ -47,6 +49,7 @@ export const useWorld = create<W>((set) => ({
   focusMode: read('dm-focus') === 'aan', setFocusMode: (focusMode) => { write('dm-focus', focusMode ? 'aan' : 'uit'); set({ focusMode }); },
   clickAt: null,
   intro: false, setIntro: (intro) => set({ intro }),
+  walk: false, setWalk: (walk) => set((s) => (walk === s.walk ? {} : walk ? { walk, focus: null, worker: null, hover: null } : { walk })),
 }));
 /** pixeldichtheid van het 3D-kantoor per kwaliteitsstand */
 export function dprFor(q: Quality, auto: number) {

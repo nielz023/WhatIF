@@ -7,7 +7,7 @@
  * Eén blijvende scène achter de hele HQ; de camera vliegt naar een afdeling bij klik,
  * maakt een intro van 1 s bij openen en een kleine beweging bij elke paginawissel.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Billboard, Environment, Lightformer, MeshReflectorMaterial, OrbitControls, PerformanceMonitor, PerspectiveCamera, Sparkles } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -30,6 +30,8 @@ import { alarmsFrom } from './alarms';
 import { mergePunten } from '../data/verbeter';
 import { Sky, Drone, Confetti, Beacon, Snow, Disco, VoiceProps, PostIts } from './extras';
 import { setAmbience } from './sound';
+import { WalkController, lookAngles } from './Walk';
+import { selectRoom } from './select';
 
 type V3 = [number, number, number];
 export type WorldMode = 'home' | 'studio' | 'panel';
@@ -136,6 +138,7 @@ interface CamAnim { t: number; dur: number; fT: THREE.Vector3; tT: THREE.Vector3
  * Camera: vliegt naar een afdeling bij klik, maakt bij openen een drone-intro van 3 s (klik of scroll slaat
  * hem over) en laat je met de ingedrukte scrollknop (of in de Studio met de linkermuisknop, op een telefoon
  * met één vinger) helemaal om het kantoor heen draaien (niels 2026-11-06).
+ * Tijdens het rondlopen (Walk.tsx) staat hij stil; daarna vliegt hij zelf terug naar het gewone beeld.
  */
 function CameraRig({ mode }: { mode: WorldMode }) {
   const { camera, size, gl, scene } = useThree();
@@ -175,6 +178,24 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     anim.current = { t: reducedMotion() ? 1 : 0, dur, fT: c ? c.target.clone() : g.t, tT: g.t, fD: cur.current.d, tD: g.d, fEl: el(), tEl, fAz, tAz: fAz + angDiff(fAz, tAz) };
   };
 
+  // rondlopen: zolang je loopt doen camera en orbit-besturing niets; daarna een terugvlucht vanaf ooghoogte.
+  // "flying" wordt al bij het renderen gezet, zodat de orbit-besturing geen enkel beeld te vroeg weer aan gaat.
+  const walk = useWorld((s) => s.walk);
+  const [flying, setFlying] = useState(false);
+  const [prevWalk, setPrevWalk] = useState(walk);
+  if (walk !== prevWalk) { setPrevWalk(walk); setFlying(!walk); }
+  const back = useRef<{ t: number; p0: THREE.Vector3; yaw: number; pitch: number; fov: number; near: number } | null>(null);
+  const wasWalk = useRef(false);
+  const eul = useMemo(() => new THREE.Euler(0, 0, 0, 'YXZ'), []);
+  useLayoutEffect(() => {
+    if (walk) { wasWalk.current = true; if (anim.current?.intro) setIntro(false); anim.current = null; back.current = null; return; }
+    if (!wasWalk.current) return;
+    wasWalk.current = false;
+    const a = lookAngles(cam.getWorldDirection(new THREE.Vector3()));
+    back.current = { t: reducedMotion() ? 1 : 0, p0: cam.position.clone(), yaw: a.yaw, pitch: a.pitch, fov: cam.fov, near: cam.near };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walk]);
+
   useEffect(() => {
     if (first.current) {
       first.current = false;
@@ -188,6 +209,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
       if (!seen) setIntro(true);
       return;
     }
+    if (useWorld.getState().walk || back.current) return; // rondlopen of de terugvlucht stuurt de camera al
     start(0.85, goal(az()), az(), mode === 'panel' ? ELEV : Math.min(Math.max(el(), 0.52), 1.1));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus, mode, fit]);
@@ -196,7 +218,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
   useEffect(() => {
     // niet bij het openen (dan loopt de drone-intro) en nooit midden in de intro
     if (introKey === lastKey.current) return; lastKey.current = introKey;
-    if (first.current || reducedMotion() || anim.current?.intro) return;
+    if (first.current || reducedMotion() || anim.current?.intro || useWorld.getState().walk || back.current) return;
     const g = goal(az());
     anim.current = { t: 0, dur: 0.7, fT: g.t.clone().add(new THREE.Vector3(1.5, 0, -1.5)), tT: g.t, fD: g.d * 1.05, tD: g.d, fEl: el(), tEl: el(), fAz: az(), tAz: az() };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,7 +229,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     const el2 = gl.domElement;
     const skip = () => { const a = anim.current; if (a?.intro) a.t = 1; };
     const mid = (e: MouseEvent) => { if (e.button === 1) e.preventDefault(); };
-    const reset = () => start(0.9, goal(0), 0);
+    const reset = () => { if (!useWorld.getState().walk && !back.current) start(0.9, goal(0), 0); };
     el2.addEventListener('pointerdown', skip); el2.addEventListener('wheel', skip, { passive: true }); window.addEventListener('keydown', skip);
     el2.addEventListener('mousedown', mid); el2.addEventListener('auxclick', mid);
     window.addEventListener('dm-reset-view', reset);
@@ -220,6 +242,20 @@ function CameraRig({ mode }: { mode: WorldMode }) {
 
   const btn = useRef(0);
   useFrame((_, dt) => {
+    if (useWorld.getState().walk) return; // Walk.tsx stuurt de camera
+    const bk = back.current;
+    if (bk && controls.current) {
+      // terug uit het rondlopen: eerst omhoog over de wanden, dan naar het gewone Home-beeld (of de afdeling die net openging)
+      const oc = controls.current;
+      bk.t = Math.min(1, bk.t + dt / 1.35);
+      const k = ease(bk.t); const ky = ease(Math.min(1, bk.t * 1.7));
+      const g = goal(0); const pe = camPos(g.t, g.d, ELEV, 0); const e = lookAngles(g.t.clone().sub(pe).normalize());
+      cam.position.set(bk.p0.x + (pe.x - bk.p0.x) * k, bk.p0.y + (pe.y - bk.p0.y) * ky + Math.sin(Math.PI * k) * 4, bk.p0.z + (pe.z - bk.p0.z) * k);
+      eul.set(bk.pitch + (e.pitch - bk.pitch) * k, bk.yaw + angDiff(bk.yaw, e.yaw) * k, 0, 'YXZ'); cam.quaternion.setFromEuler(eul);
+      cam.fov = bk.fov + (FOV - bk.fov) * k; cam.near = bk.near + (0.5 - bk.near) * k; cam.updateProjectionMatrix();
+      if (bk.t >= 1) { back.current = null; oc.target.copy(g.t); cam.position.copy(pe); oc.update(); cur.current.d = g.d; setFlying(false); }
+      return;
+    }
     const a = anim.current; const c = controls.current;
     // knop "terug naar vooraanzicht" tonen zodra je flink gedraaid hebt
     btn.current -= dt;
@@ -240,7 +276,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
 
   const studio = mode === 'studio';
   return (
-    <OrbitControls ref={controls as never} enabled={mode !== 'panel'} enableRotate enablePan
+    <OrbitControls ref={controls as never} enabled={mode !== 'panel' && !walk && !flying} enableRotate enablePan
       mouseButtons={{ ...(studio ? { LEFT: THREE.MOUSE.ROTATE } : {}), MIDDLE: THREE.MOUSE.ROTATE, RIGHT: THREE.MOUSE.PAN }}
       touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
       minPolarAngle={0.45} maxPolarAngle={mode === 'home' ? 1.38 : 1.05} rotateSpeed={0.7}
@@ -360,7 +396,7 @@ function Rocket({ p, color }: { p: V3; color: string }) {
     </group></group>);
 }
 
-function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: RoomDef; lit: boolean; alert: 'wacht' | 'probleem' | null; busy: boolean; onSelect: () => void; onHover: (h: boolean) => void; screens: THREE.Texture[]; baked?: OfficeModel | null }) {
+function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked, walk }: { r: RoomDef; lit: boolean; alert: 'wacht' | 'probleem' | null; busy: boolean; onSelect: () => void; onHover: (h: boolean) => void; screens: THREE.Texture[]; baked?: OfficeModel | null; walk?: boolean }) {
   const a = slotAngle(r.slot);
   const a0 = a - SPAN / 2 + GAPA, a1 = a + SPAN / 2 - GAPA;
   const c = r.color;
@@ -388,14 +424,16 @@ function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: R
     onPointerOut: () => { onHover(false); document.body.style.cursor = 'auto'; },
   };
   const [sw, sh] = baked ? [5.4, 1.58] : [7.2, 2.1];
+  // het CEO-bord staat in het overzicht altijd vooraan (door de zuil heen); tijdens het rondlopen niet door wanden heen
+  const onTop = !!baked && r.props === 'ceo' && !walk;
   const signEl = (
     <Billboard position={polar(tallR, a, H + (baked ? (r.props === 'ceo' ? 0.55 : 1.15) : 1.4))}>
       <mesh renderOrder={r.props === 'ceo' ? 11 : 0} onClick={(e) => { e.stopPropagation(); onSelect(); }}>
         <planeGeometry args={[sw, sh]} />
-        <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!(baked && r.props === 'ceo')} opacity={lit ? 1 : 0.95} />
+        <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!onTop} opacity={lit ? 1 : 0.95} />
       </mesh>
       {/* rechtsboven op de hoek van het bord, zoals een melding op een app-icoon */}
-      {alert && <AlertBadge kind={alert} size={sh * 0.6} pos={[sw / 2 - sh * 0.12, sh / 2 - sh * 0.12, 0.02]} top={!!baked && r.props === 'ceo'} />}
+      {alert && <AlertBadge kind={alert} size={sh * 0.6} pos={[sw / 2 - sh * 0.12, sh / 2 - sh * 0.12, 0.02]} top={onTop} />}
     </Billboard>
   );
   if (baked) {
@@ -494,7 +532,7 @@ function playTex() {
   });
 }
 
-function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]; onSelect: () => void; lit: boolean; baked?: boolean }) {
+function Reception({ screens, onSelect, lit, baked, walk }: { screens: THREE.Texture[]; onSelect: () => void; lit: boolean; baked?: boolean; walk?: boolean }) {
   const holo = useRef<THREE.MeshStandardMaterial>(null); const ring1 = useRef<THREE.Mesh>(null); const ring2 = useRef<THREE.Mesh>(null); const play = useRef<THREE.Group>(null);
   const sign = useMemo(hqSignTex, []); const pt = useMemo(playTex, []);
   useFrame(({ clock }) => {
@@ -543,7 +581,7 @@ function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]
           <planeGeometry args={[1.6, 1]} /><meshBasicMaterial map={screens[sd > 0 ? 3 : 0]} transparent opacity={0.85} toneMapped={false} side={THREE.DoubleSide} />
         </mesh>
       ))}
-      <Billboard position={[0, baked ? 7.7 : 10.2, 0]}><mesh renderOrder={10}><planeGeometry args={baked ? [6.0, 3.0] : [7.4, 3.7]} /><meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!baked} /></mesh></Billboard>
+      <Billboard position={[0, baked ? 7.7 : 10.2, 0]}><mesh renderOrder={10}><planeGeometry args={baked ? [6.0, 3.0] : [7.4, 3.7]} /><meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!baked || !!walk} /></mesh></Billboard>
       <pointLight position={[0, 4, 0]} color="#20D9FF" intensity={lit ? 22 : 14} distance={16} decay={1.5} />
       <pointLight position={[0, 2.2, 2.5]} color="#FFE2C4" intensity={18} distance={8} decay={1.6} />
       {!baked && (<>
@@ -648,8 +686,8 @@ function City() {
 function Scene({ mode }: { mode: WorldMode }) {
   const live = useLive((s) => s.data);
   const activity = live.activity;
-  const { agents, selectDept, selectAgent, setPage } = useGame(useShallow((s) => ({ agents: s.agents, selectDept: s.selectDept, selectAgent: s.selectAgent, setPage: s.setPage })));
-  const { focus, setFocus, openWorker, hover, setHover } = useWorld(useShallow((s) => ({ focus: s.focus, setFocus: s.setFocus, openWorker: s.openWorker, hover: s.hover, setHover: s.setHover })));
+  const { agents, selectAgent, setPage } = useGame(useShallow((s) => ({ agents: s.agents, selectAgent: s.selectAgent, setPage: s.setPage })));
+  const { focus, openWorker, hover, setHover, walk } = useWorld(useShallow((s) => ({ focus: s.focus, openWorker: s.openWorker, hover: s.hover, setHover: s.setHover, walk: s.walk })));
   const per = useMemo(() => threadsPerRoom(activity), [activity]);
   const quality = useWorld((s) => s.quality);
   const phone = useMemo(() => isPhone(), []);
@@ -682,11 +720,8 @@ function Scene({ mode }: { mode: WorldMode }) {
   useEffect(() => { const n = members.filter((m) => m.status === 'werkt' || m.status === 'bezig').length; setAmbience(Math.min(8, n), Math.min(1, n / 14)); }, [members]);
   const roomName = (id: string) => roomById(id as RoomId)?.naam ?? id;
 
-  const select = (r: RoomDef) => {
-    if (mode === 'studio') { if (r.game) selectDept(r.game as never); else setPage(r.page ?? 'coach'); return; }
-    if (mode === 'panel') setPage('driftmark');
-    setFocus(r.id as RoomId);
-  };
+  // klik op een afdeling (zelfde handeling als "Openen" bij het rondlopen)
+  const select = (r: RoomDef) => selectRoom(r, mode);
   const coach = ROOMS.find((x) => x.id === 'coach')!;
   const busyRoom = (id: RoomId) => members.some((m) => m.room === id && (m.status === 'werkt' || m.status === 'bezig'));
 
@@ -696,6 +731,7 @@ function Scene({ mode }: { mode: WorldMode }) {
       <fog attach="fog" args={['#0a0f2a', 180, 480]} />
       <PerspectiveCamera makeDefault fov={FOV} near={0.5} far={400} position={[0, 60, 45]} />
       <CameraRig mode={mode} />
+      <WalkController mode={mode} />
       <FpsProbe />
       <Environment resolution={128} frames={1}>
         <Lightformer form="ring" intensity={2} color="#FF7A24" scale={14} position={[-18, 8, -10]} />
@@ -722,12 +758,12 @@ function Scene({ mode }: { mode: WorldMode }) {
       </>)}
       {office && <BakedOffice model={office} screens={screens} dash={dash} lit={(id) => focus === id || hover === id} />}
       {office && <PostIts screens={office.screens} />}
-      <Reception screens={screens} baked={!!office} lit={focus === 'coach' || hover === 'coach'} onSelect={() => select(coach)} />
+      <Reception screens={screens} baked={!!office} walk={walk} lit={focus === 'coach' || hover === 'coach'} onSelect={() => select(coach)} />
       {!office && <Entrance />}
       {ROOMS.filter((r) => r.slot >= 0).map((r) => {
         const st = statusOf(per[r.id]);
         return (
-          <Wing key={r.id} r={r} baked={office} screens={screens} busy={busyRoom(r.id)} lit={focus === r.id || hover === r.id} alert={mode !== 'studio' && (st === 'wacht' || st === 'probleem') ? st : null}
+          <Wing key={r.id} r={r} baked={office} walk={walk} screens={screens} busy={busyRoom(r.id)} lit={focus === r.id || hover === r.id} alert={mode !== 'studio' && (st === 'wacht' || st === 'probleem') ? st : null}
             onHover={(h) => setHover(h ? r.id : null)} onSelect={() => select(r)} />
         );
       })}
@@ -755,7 +791,7 @@ export default function NeonOffice({ mode }: { mode: WorldMode }) {
   const setFocus = useWorld((s) => s.setFocus);
   return (
     <Canvas shadows dpr={dprFor(quality, dpr)} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
-      onPointerMissed={(e) => { if (mode === 'home' && (e.target as HTMLElement)?.tagName === 'CANVAS') setFocus(null); }}>
+      onPointerMissed={(e) => { if (mode === 'home' && !useWorld.getState().walk && (e.target as HTMLElement)?.tagName === 'CANVAS') setFocus(null); }}>
       <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.75)} />
       <Scene mode={mode} />
     </Canvas>
