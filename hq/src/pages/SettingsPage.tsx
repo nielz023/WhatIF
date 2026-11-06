@@ -95,11 +95,11 @@ export default function SettingsPage() {
             </div>
             <div className="grid grid-cols-[1fr_170px] gap-2">
               <div><label className="label">Anthropic API key</label><input className="input" type="password" value={f.anthropicKey} onChange={(e) => set('anthropicKey', e.target.value)} placeholder="sk-ant-…" autoComplete="off" /></div>
-              <div><label className="label">Claude model</label><input className="input" value={f.anthropicModel} onChange={(e) => set('anthropicModel', e.target.value)} /></div>
+              <div><label className="label">Claude model</label><input data-geen-mic className="input" value={f.anthropicModel} onChange={(e) => set('anthropicModel', e.target.value)} /></div>
             </div>
             <div className="grid grid-cols-[1fr_170px] gap-2">
               <div><label className="label">OpenAI API key</label><input className="input" type="password" value={f.openaiKey} onChange={(e) => set('openaiKey', e.target.value)} placeholder="sk-…" autoComplete="off" /></div>
-              <div><label className="label">OpenAI model</label><input className="input" value={f.openaiModel} onChange={(e) => set('openaiModel', e.target.value)} /></div>
+              <div><label className="label">OpenAI model</label><input data-geen-mic className="input" value={f.openaiModel} onChange={(e) => set('openaiModel', e.target.value)} /></div>
             </div>
             <div><label className="label">YouTube Data API key (read-only stats)</label><input className="input" type="password" value={f.youtubeApiKey} onChange={(e) => set('youtubeApiKey', e.target.value)} autoComplete="off" /></div>
             <div className="grid grid-cols-2 gap-2">
@@ -107,7 +107,7 @@ export default function SettingsPage() {
               <div><label className="label">Voice API key</label><input className="input" type="password" value={f.elevenLabsKey} onChange={(e) => set('elevenLabsKey', e.target.value)} autoComplete="off" /></div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div><label className="label">Supabase URL</label><input className="input" value={f.supabaseUrl} onChange={(e) => set('supabaseUrl', e.target.value)} placeholder="https://xyz.supabase.co" /></div>
+              <div><label className="label">Supabase URL</label><input data-geen-mic className="input" value={f.supabaseUrl} onChange={(e) => set('supabaseUrl', e.target.value)} placeholder="https://xyz.supabase.co" /></div>
               <div><label className="label">Supabase anon key</label><input className="input" type="password" value={f.supabaseAnonKey} onChange={(e) => set('supabaseAnonKey', e.target.value)} autoComplete="off" /></div>
             </div>
             <button className="btn-primary" onClick={() => { s.updateSettings(f); s.toast('Settings saved locally.', 'success'); }}>Save settings</button>
@@ -118,7 +118,7 @@ export default function SettingsPage() {
           <div className="mb-3 font-semibold text-white">YouTube Data API test (read-only)</div>
           <div className="mb-2 text-xs text-slate-400">Geen API-sleutel nodig: zonder sleutel haalt de HQ je cijfers via vidIQ. De ID van Driftmark staat al ingevuld.</div>
           <div className="flex gap-2">
-            <input className="input" value={ytId} onChange={(e) => setYtId(e.target.value)} placeholder="Channel ID, e.g. UC_x5XG1OV2P6uZZ5FSM9Ttw" />
+            <input data-geen-mic className="input" value={ytId} onChange={(e) => setYtId(e.target.value)} placeholder="Channel ID, e.g. UC_x5XG1OV2P6uZZ5FSM9Ttw" />
             <button className="btn-ghost" disabled={!ytId} onClick={async () => {
               const fmt = (a: number, b: number, c: number, bron: string) => `${Number(a).toLocaleString('nl-NL')} abonnees · ${Number(b).toLocaleString('nl-NL')} weergaven · ${c} video's (${bron})`;
               if (!s.settings.youtubeApiKey) {

@@ -37,6 +37,7 @@ import CoachPage from './pages/CoachPage';
 import type { PageId } from './types';
 import { realTick } from './lib/util';
 import { startLive } from './services/live';
+import { startMic } from './lib/mic';
 import { startTools } from './services/tools';
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
@@ -54,7 +55,7 @@ function useSimulationLoop() {
       if (realTick() !== st.tick) useGame.setState({ tick: realTick() });
     };
     sync();
-    startLive(); startTools(); startSounds(); void startThreads();
+    startLive(); startTools(); startSounds(); void startThreads(); startMic();
     const id = setInterval(sync, 10000);
     return () => clearInterval(id);
   }, []);
