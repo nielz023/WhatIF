@@ -1,3 +1,4 @@
+import SpotifyBar from './SpotifyBar';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Users, Wallet, Eye, Tv, HelpCircle, Volume2, VolumeX } from 'lucide-react';
@@ -36,6 +37,7 @@ export default function TopBar() {
 
       <div className="ml-auto flex items-center gap-2">
         {/* echte klok */}
+        <SpotifyBar />
         <span className="hidden sm:inline"><RealClock /></span>
         <span id="dm-fps" title="Beelden per seconde van het 3D-kantoor" className="hidden rounded-xl border border-hq-line/60 bg-hq-panel/60 px-2 py-1.5 font-mono text-[11px] text-slate-300 lg:inline">— fps</span>
         <SoundBtn />
