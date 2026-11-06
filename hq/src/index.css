@@ -176,3 +176,25 @@ body { background: var(--dm-bg); }
 .glass-bar-btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 14px; font-weight: 700; color: #e2e8f0;
   background: rgba(16,24,48,.7); border: 1px solid rgba(148,163,184,.22); transition: all .25s var(--dm-ease); }
 .glass-bar-btn:hover { border-color: rgba(32,217,255,.6); color: #fff; box-shadow: 0 0 16px rgba(32,217,255,.2); transform: translateY(-1px); }
+
+/* v35 microfoon: icoon in elk tekstvak (klasse gezet door src/lib/mic.ts) */
+.dm-mic {
+  --dm-mic-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237dd3fc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='2' width='6' height='12' rx='3'/%3E%3Cpath d='M5 10v1a7 7 0 0 0 14 0v-1M12 18v4M8 22h8'/%3E%3C/svg%3E");
+  background-image: var(--dm-mic-img) !important;
+  background-repeat: no-repeat !important;
+  background-size: 17px 17px !important;
+  background-position: right 9px center !important;
+  padding-right: 36px !important;
+}
+textarea.dm-mic { background-position: right 9px top 9px !important; }
+.dm-mic:hover { --dm-mic-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffb070' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='2' width='6' height='12' rx='3'/%3E%3Cpath d='M5 10v1a7 7 0 0 0 14 0v-1M12 18v4M8 22h8'/%3E%3C/svg%3E"); }
+.dm-mic.dm-mic-aan {
+  --dm-mic-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f43f5e' stroke='%23f43f5e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='2' width='6' height='12' rx='3'/%3E%3Cpath fill='none' d='M5 10v1a7 7 0 0 0 14 0v-1M12 18v4M8 22h8'/%3E%3C/svg%3E");
+  border-color: rgba(244,63,94,.75) !important;
+  animation: dm-mic-puls 1.6s ease-in-out infinite;
+}
+@keyframes dm-mic-puls {
+  0%, 100% { background-size: 17px 17px; box-shadow: 0 0 0 0 rgba(244,63,94,.45); }
+  50% { background-size: 21px 21px; box-shadow: 0 0 0 4px rgba(244,63,94,.18); }
+}
+@media (prefers-reduced-motion: reduce) { .dm-mic.dm-mic-aan { animation: none; box-shadow: 0 0 0 3px rgba(244,63,94,.3); } }
