@@ -13,8 +13,10 @@ const hoursAgo = (iso?: string) => { if (!iso) return Infinity; const t = new Da
 export function alarmsFrom(L: Live): Alarm[] {
   const out: Alarm[] = [];
   for (const a of L.activity ?? []) {
-    if (a.state === 'failed') out.push({ level: 'rood', text: `Taak mislukt: ${a.title}`, key: `f:${a.id}` });
-    if (a.state === 'blocked' && hoursAgo(a.lastIso) > 24) out.push({ level: 'oranje', text: `Wacht al ${Math.round(hoursAgo(a.lastIso))} uur op jou: ${a.title}`, key: `b:${a.id}` });
+    const id = a.id || a.session || a.title; // live threads die nog niet in status.json staan hebben (nog) geen id
+    if (a.state === 'failed') out.push({ level: 'rood', text: `Taak mislukt: ${a.title}`, key: `f:${id}` });
+    const h = hoursAgo(a.lastIso);
+    if (a.state === 'blocked' && Number.isFinite(h) && h > 24) out.push({ level: 'oranje', text: `Wacht al ${Math.round(h)} uur op jou: ${a.title}`, key: `b:${id}` });
   }
   const b = L.blender;
   if (b) {

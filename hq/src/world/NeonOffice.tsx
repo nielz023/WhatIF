@@ -21,6 +21,7 @@ import { Mascot } from '../components/office/DriftmarkDecor';
 import { ROOMS, threadsPerRoom, statusOf, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, roomById, type RoomDef, type RoomId } from './rooms';
 import { useWorld, reducedMotion, dprFor, dayPhase, dayAmount, isPhone } from './useWorld';
 import { useOffice, BakedOffice, type OfficeModel } from './BakedOffice';
+import { useOfficeLoad } from './loadState';
 import { Crew } from './crew';
 import { staffFor, gameStaff } from './staff';
 import { Pipeline, handoffsFor } from './pipeline';
@@ -98,7 +99,7 @@ const FOV = 40;
 const angDiff = (a: number, b: number) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 /** camera op afstand d, hoogtehoek el en draaihoek az (0 = vooraan) rond doel t */
 const camPos = (t: THREE.Vector3, d: number, el: number, az: number) => new THREE.Vector3(t.x + Math.cos(el) * Math.sin(az) * d, t.y + Math.sin(el) * d, t.z + Math.cos(el) * Math.cos(az) * d);
-interface CamAnim { t: number; dur: number; fT: THREE.Vector3; tT: THREE.Vector3; fD: number; tD: number; fEl: number; tEl: number; fAz: number; tAz: number; intro?: boolean }
+interface CamAnim { t: number; dur: number; fT: THREE.Vector3; tT: THREE.Vector3; fD: number; tD: number; fEl: number; tEl: number; fAz: number; tAz: number; intro?: boolean; hold?: number }
 /**
  * Camera: vliegt naar een afdeling bij klik, maakt bij openen een drone-intro van 3 s (klik of scroll slaat
  * hem over) en laat je met de ingedrukte scrollknop (of in de Studio met de linkermuisknop, op een telefoon
@@ -113,13 +114,15 @@ function CameraRig({ mode }: { mode: WorldMode }) {
   const focus = useWorld((s) => s.focus);
   const introKey = useWorld((s) => s.introKey);
   const setIntro = useWorld((s) => s.setIntro);
+  // met de vaste FOV (niet cam.fov): bij het wisselen naar onze eigen camera mag de afstand niet veranderen,
+  // anders start de camera opnieuw en is de drone-intro weg
   const fit = useMemo(() => {
-    const tv = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
+    const tv = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
     const aspect = size.width / Math.max(1, size.height);
     const dh = (R_BASE * 1.5) / (tv * aspect);
     const dv = (R_BASE * 0.74) / tv;
     return Math.max(dh, dv);
-  }, [size.width, size.height, cam.fov]);
+  }, [size.width, size.height]);
   const anim = useRef<CamAnim | null>(null);
   const first = useRef(true);
   const cur = useRef({ d: fit });
@@ -136,6 +139,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
   };
   const start = (dur: number, g: { t: THREE.Vector3; d: number }, tAz: number, tEl = ELEV) => {
     const c = controls.current; const fAz = az();
+    if (anim.current?.intro) setIntro(false); // intro onderbroken (klik op een afdeling): de hint moet ook weg
     anim.current = { t: reducedMotion() ? 1 : 0, dur, fT: c ? c.target.clone() : g.t, tT: g.t, fD: cur.current.d, tD: g.d, fEl: el(), tEl, fAz, tAz: fAz + angDiff(fAz, tAz) };
   };
 
@@ -156,8 +160,11 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus, mode, fit]);
 
+  const lastKey = useRef(introKey);
   useEffect(() => {
-    if (first.current || reducedMotion()) return;
+    // niet bij het openen (dan loopt de drone-intro) en nooit midden in de intro
+    if (introKey === lastKey.current) return; lastKey.current = introKey;
+    if (first.current || reducedMotion() || anim.current?.intro) return;
     const g = goal(az());
     anim.current = { t: 0, dur: 0.7, fT: g.t.clone().add(new THREE.Vector3(1.5, 0, -1.5)), tT: g.t, fD: g.d * 1.05, tD: g.d, fEl: el(), tEl: el(), fAz: az(), tAz: az() };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,7 +193,9 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     btn.current -= dt;
     if (btn.current <= 0 && c) { btn.current = 0.25; const b = document.getElementById('dm-reset'); if (b) b.style.display = Math.abs(angDiff(0, c.getAzimuthalAngle())) > 0.35 && !a ? 'flex' : 'none'; }
     if (!a || !c) return;
-    a.t = Math.min(1, a.t + dt / a.dur);
+    // de drone-intro wacht tot het kantoor geladen is (anders vliegt hij achter het laadscherm); hooguit 20 s
+    if (a.intro && a.t < 1 && !useOfficeLoad.getState().done && (a.hold = (a.hold ?? 0) + dt) < 20) { /* wachten */ }
+    else a.t = Math.min(1, a.t + dt / a.dur);
     const k = a.intro ? 1 - Math.pow(1 - a.t, 3) * (1 - a.t * 0.2) : ease(a.t);
     const tgt = a.fT.clone().lerp(a.tT, k);
     const d = a.fD + (a.tD - a.fD) * k;

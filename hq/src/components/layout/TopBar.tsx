@@ -8,6 +8,12 @@ import { compact, relTime } from '../../lib/util';
 import { DemoBadge } from '../ui';
 import { useLive } from '../../services/live';
 
+/** meldingen over threads openen de echte takenlijst (Meer → Alle taken), ook als Meer al open staat */
+function openTaken() {
+  try { localStorage.setItem('driftmark-view-meer', 'threads'); } catch { /* */ }
+  window.dispatchEvent(new CustomEvent('dm-view', { detail: { mode: 'meer', view: 'threads' } }));
+}
+
 export default function TopBar() {
   const s = useGame();
   const live = useLive((x) => x.data);
@@ -60,7 +66,7 @@ export default function TopBar() {
                   {s.notifications.slice(0, 40).map((n) => (
                     <button
                       key={n.id}
-                      onClick={() => { useGame.setState((st) => { const x = st.notifications.find((y) => y.id === n.id); if (x) x.read = true; }); if (n.link) s.setPage(n.link); s.setNotifOpen(false); }}
+                      onClick={() => { useGame.setState((st) => { const x = st.notifications.find((y) => y.id === n.id); if (x) x.read = true; }); if (n.link === 'meer') openTaken(); if (n.link) s.setPage(n.link); s.setNotifOpen(false); }}
                       className={`flex w-full gap-2 border-b border-hq-line/40 px-4 py-2.5 text-left text-sm hover:bg-white/5 ${n.read ? 'text-slate-400' : 'text-slate-100'}`}
                     >
                       {!n.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-400" />}

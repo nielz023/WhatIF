@@ -161,28 +161,29 @@ export function drawRoom(g: G, room: string, h: number, d: DashData) {
   }
 }
 
-/** één canvas-textuur per afdeling; tekent opnieuw bij nieuwe gegevens */
+/** één canvas-textuur per afdeling en schermvorm (zelfde verhouding = zelfde textuur); tekent opnieuw bij nieuwe gegevens */
 export class Dashboards {
-  tex = new Map<string, { t: THREE.CanvasTexture; h: number }>();
+  tex = new Map<string, { t: THREE.CanvasTexture; h: number; room: string }>();
   data: DashData | null = null;
   constructor() { redraw = () => this.draw(); }
   get(room: string, aspect: number) {
-    let e = this.tex.get(room);
+    const h = Math.round(W / Math.max(1.2, Math.min(3, aspect)));
+    const key = room + ':' + h;
+    let e = this.tex.get(key);
     if (!e) {
-      const h = Math.round(W / Math.max(1.2, Math.min(3, aspect)));
       const c = document.createElement('canvas'); c.width = W; c.height = h;
       const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.flipY = false;
-      e = { t, h }; this.tex.set(room, e); this.drawOne(room);
+      e = { t, h, room }; this.tex.set(key, e); this.drawOne(key);
     }
     return e.t;
   }
   set(d: DashData) { this.data = d; this.draw(); }
   draw() { for (const k of this.tex.keys()) this.drawOne(k); }
-  drawOne(room: string) {
-    const e = this.tex.get(room); if (!e || !this.data) return;
+  drawOne(key: string) {
+    const e = this.tex.get(key); if (!e || !this.data) return;
     const c = e.t.image as HTMLCanvasElement; const g = c.getContext('2d')!;
     g.save(); g.clearRect(0, 0, c.width, c.height);
-    try { drawRoom(g, room, e.h, this.data); } catch (err) { console.warn('[HQ] scherm', room, err); }
+    try { drawRoom(g, e.room, e.h, this.data); } catch (err) { console.warn('[HQ] scherm', e.room, err); }
     g.restore(); e.t.needsUpdate = true;
   }
 }

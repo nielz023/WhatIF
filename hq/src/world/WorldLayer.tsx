@@ -8,7 +8,7 @@ const NeonOffice = lazy(() => import('./NeonOffice'));
 class Boundary extends Component<{ children: ReactNode }, { err: boolean }> {
   state = { err: false };
   static getDerivedStateFromError() { return { err: true }; }
-  componentDidCatch(e: unknown) { console.warn('[HQ] 3D-kantoor fout', e); }
+  componentDidCatch(e: unknown) { useOfficeLoad.setState({ failed: true, done: true }); console.warn('[HQ] 3D-kantoor fout', e); }
   render() { return this.state.err ? <Fallback text="Het 3D-kantoor liep vast op dit apparaat. Alle knoppen en panelen werken gewoon." /> : this.props.children; }
 }
 

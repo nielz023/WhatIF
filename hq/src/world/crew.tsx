@@ -288,7 +288,8 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     sims.current = list.map((m) => {
       const o = old.get(m.key);
       const home: V2 = m.standAt ? m.standAt.p : [seats[m.room][m.seat][0], seats[m.room][m.seat][2] + 0.06];
-      if (o) { o.m = m; o.seatP = home; o.homeFace = m.standAt?.face; o.snapped = false; return o; }
+      // andere stoel (bv. als het Blender-kantoor binnenkomt): opstaplek opnieuw bepalen
+      if (o) { if (!o.stander && (o.seatP[0] !== home[0] || o.seatP[1] !== home[1])) o.standP = null; o.m = m; o.seatP = home; o.homeFace = m.standAt?.face; o.snapped = false; return o; }
       const seed = hash(m.key); const stander = !!m.standAt;
       return {
         m, seatP: home, standP: stander ? home : null, stander, homeFace: m.standAt?.face, x: home[0], z: home[1], y: 0,
@@ -373,6 +374,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
 
   // ---- hover ----
   const [hover, setHover] = useState<number | null>(null);
+  const [nu, setNu] = useState<string | null>(null); const nuRef = useRef<string | null>(null);
   const label = useRef<THREE.Group>(null);
   const idxOf = (e: ThreeEvent<PointerEvent | MouseEvent>) => { const i = e.instanceId ?? -1; return PER[e.object.name as PartKey] === 2 ? Math.floor(i / 2) : i; };
   const onOver = (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); const ii = idxOf(e); if (ii >= 0 && sims.current[ii]) { setHover(ii); onHoverRoom?.(sims.current[ii].m.room); document.body.style.cursor = 'pointer'; } };
@@ -435,7 +437,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     const side = Math.random() < 0.5 ? -0.66 : 0.66;
     const tp = nearPoint(o, [side, 0.35]); if (!tp) { s.next = 30; return; }
     const oi = sims.current.indexOf(o);
-    s.target = o.m.room;
+    s.target = o.m.room; o.next = Math.max(o.next, 45); // de collega blijft zitten tot het gesprek klaar is
     plan(s, [{ k: 'walk', to: tp }, { k: 'wait', t: rnd(5, 9), face: [o.seatP[0], o.seatP[1]], pose: 'talk', meet: oi }]);
   }
 
@@ -446,7 +448,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     const s = from[Math.floor(Math.random() * from.length)]; const o = to.find((x) => x.m.big) ?? to[0];
     if (!s || !o) return false;
     const tp = nearPoint(o, [0.66, 0.35]); if (!tp || !standPoint(s)) return false;
-    s.target = h.to;
+    s.target = h.to; o.next = Math.max(o.next, 45);
     plan(s, [{ k: 'carry', c: 'folder' }, { k: 'walk', to: tp }, { k: 'wait', t: 4.5, face: [o.seatP[0], o.seatP[1]], pose: 'talk', meet: sims.current.indexOf(o) }, { k: 'carry', c: 'none' }]);
     return true;
   }
@@ -463,6 +465,10 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     tmp.earL.compose(new THREE.Vector3(-0.299, -0.021, -0.021), q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI - 0.25), new THREE.Vector3(1, 1, 1));
   }, [tmp]);
 
+  const doing = (s: Sim) => s.mode === 'sit' || s.mode === 'down' ? null
+    : s.carry === 'folder' ? `brengt een map${s.target && roomName ? ` naar ${roomName(s.target)}` : ''}`
+      : s.carry === 'cup' || s.pose === 'pour' ? 'haalt koffie'
+        : s.target && s.target !== s.m.room && roomName ? `overlegt bij ${roomName(s.target)}` : s.target ? 'overlegt met een collega' : 'loopt even rond';
   useFrame(({ clock }, dtRaw) => {
     const dt = Math.min(0.05, dtRaw); const t = clock.elapsedTime; const now = performance.now() / 1000;
     plansThisFrame.current = 0;
@@ -472,6 +478,8 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     handoffT.current -= dt;
     if (handoffT.current <= 0) { handoffT.current = rnd(40, 75); const h = handoffs[Math.floor(Math.random() * handoffs.length)]; if (h) courier(h); }
 
+    // stoelen eerst terug op hun plek; hieronder schuiven alleen de stoelen van de huidige medewerkers opzij
+    if (chairs) for (const arr of Object.values(chairs)) for (const ch of arr) { const b = ch?.userData.base as THREE.Vector3 | undefined; if (b) ch.position.z = b.z; }
     for (const s of all) {
       // een staande medewerker op de dichtstbijzijnde vrije plek zetten (niet in een tafel)
       if (s.stander && nav && !s.snapped) { s.snapped = true; const p = nearestFree(nav, s.seatP[0], s.seatP[1]); if (p) { s.seatP = p; s.standP = p; } }
@@ -503,7 +511,9 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
       } else if (s.mode === 'wait') {
         s.walkAmt = Math.max(0, s.walkAmt - dt * 4); s.wait -= dt;
         if (s.face) s.yaw += angDiff(s.yaw, yawTo(s.face[0] - s.x, s.face[1] - s.z)) * Math.min(1, dt * 5);
-        if (s.meet >= 0 && all[s.meet]) { const o = all[s.meet]; o.lookT = 0.4; o.look = THREE.MathUtils.clamp(angDiff(o.stander ? o.yaw : 0, yawTo(s.x - o.x, s.z - o.z)), -1.3, 1.3); }
+        const o = s.meet >= 0 ? all[s.meet] : undefined;
+        if (o && (o.mode === 'sit' || o.stander)) { o.lookT = 0.4; o.look = THREE.MathUtils.clamp(angDiff(o.stander ? o.yaw : 0, yawTo(s.x - o.x, s.z - o.z)), -1.3, 1.3); }
+        else if (o) s.wait = Math.min(s.wait, 0.5); // collega is weg: gesprek kort afronden
         if (s.wait <= 0) { s.meet = -1; nextAct(s); }
       }
       s.lookT -= dt; if (s.lookT <= 0) s.look *= 1 - Math.min(1, dt * 2);
@@ -601,6 +611,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     });
     faceAttr.needsUpdate = true;
     for (const [key, m] of Object.entries(M) as [PartKey, THREE.InstancedMesh | null][]) if (m) { m.count = all.length * (PER[key] ?? 1); m.instanceMatrix.needsUpdate = true; }
+    { const d = hover !== null && all[hover] ? doing(all[hover]) : null; if (d !== nuRef.current) { nuRef.current = d; setNu(d); } }
     if (hover !== null && label.current && all[hover]) {
       const s = all[hover]; const scale = FIG * (s.m.big ? BIG : 1);
       const top = (s.sit > 0.5 ? HIP_SIT_W - s.y + (HEAD_Y + HEAD_R) * scale : (HIP + HEAD_Y + HEAD_R) * scale);
@@ -609,10 +620,6 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
   });
 
   const hovered = hover !== null ? sims.current[hover] : null;
-  const doing = (s: Sim) => s.mode === 'sit' || s.mode === 'down' ? null
-    : s.carry === 'folder' ? `brengt een map${s.target && roomName ? ` naar ${roomName(s.target)}` : ''}`
-      : s.carry === 'cup' || s.pose === 'pour' ? 'haalt koffie'
-        : s.target && s.target !== s.m.room && roomName ? `overlegt bij ${roomName(s.target)}` : s.target ? 'overlegt met een collega' : 'loopt even rond';
   return (
     <group>
       {PARTS.map(([k, mat, events]) => {
@@ -632,7 +639,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
               </div>
               {hovered.m.task && <div className="mt-0.5 leading-snug">{hovered.m.taskDone ? <span className="text-[#4ADE80]">✓ Klaar: </span> : <span className="text-sky-300">Verbetert: </span>}{hovered.m.task}</div>}
               {hovered.m.thread && <div className="mt-0.5 leading-snug text-slate-300"><span className="text-orange-300">Taak: </span>{hovered.m.thread}</div>}
-              {doing(hovered) && <div className="mt-0.5 text-slate-400">Nu: {doing(hovered)}</div>}
+              {nu && <div className="mt-0.5 text-slate-400">Nu: {nu}</div>}
             </div>
           </Html>
         )}

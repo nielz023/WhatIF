@@ -209,6 +209,7 @@ function IdeasBoard() {
   const kaarten = useMemo<Kaart[]>(() => doc?.kaarten ?? ideas.slice(0, 12).map((x, i) => ({ id: `i${i}`, tekst: x.title, kolom: 'idee' as Kolom })), [doc, ideas]);
   const [nieuw, setNieuw] = useState(''); const [drag, setDrag] = useState<string | null>(null); const [scoring, setScoring] = useState<string | null>(null);
   const [melding, setMelding] = useState<string | null>(null);
+  const kaartenRef = useRef(kaarten); kaartenRef.current = kaarten; // nieuwste bord (na het wachten op de coach)
   const zet = async (lijst: Kaart[]) => { const ok = await save({ kaarten: lijst, at: new Date().toISOString() }); if (!ok) setMelding('Niet opgeslagen: het bord bewaart alleen op de gepubliceerde pagina.'); };
   const move = (id: string, kolom: Kolom) => void zet(kaarten.map((k) => (k.id === id ? { ...k, kolom } : k)));
   const step = (k: Kaart, d: 1 | -1) => { const i = KOLOMMEN.findIndex(([c]) => c === k.kolom) + d; if (i >= 0 && i < KOLOMMEN.length) move(k.id, KOLOMMEN[i][0]); };
@@ -219,7 +220,7 @@ function IdeasBoard() {
     try {
       const j = await sample.json(`Je bent de coach van Driftmark, een faceless YouTube-kanaal met 3D-animatie in de stijl "What IF ...?" (escalatie: eerst leuk, dan indrukwekkend, dan gevaarlijk, dan schokkend, met een twist of prijs aan het eind). Beste onderwerpen tot nu toe: tijd en snelheid, getallen in de titel, je lichaam dat verandert. Geef dit video-idee een score van 1 tot 10 voor kans op veel kijkers en kijktijd, en één korte zin waarom (Nederlands). Idee: "${k.tekst}". Antwoord als JSON: {"score": getal, "waarom": "zin"}`, { modelTier: 'quick' });
       const s = Math.max(1, Math.min(10, Math.round(Number(j?.score) || 0)));
-      await zet(kaarten.map((x) => (x.id === k.id ? { ...x, score: s, waarom: String(j?.waarom ?? '').slice(0, 200) } : x)));
+      await zet(kaartenRef.current.map((x) => (x.id === k.id ? { ...x, score: s, waarom: String(j?.waarom ?? '').slice(0, 200) } : x)));
     } catch (e) { setMelding(foutTekst(e)); }
     setScoring(null);
   };
@@ -351,7 +352,7 @@ function ThumbCompare() {
       const lim = await sample.limits?.().catch(() => null);
       const blobs = lim?.images ? await Promise.all(longs.map((v) => fetch(`./thumbs/${v.id}.jpg`).then((r) => (r.ok ? r.blob() : null)).catch(() => null))) : [];
       const imgs = blobs.filter(Boolean) as Blob[];
-      const j = await sample.json(`Je bent thumbnail-expert voor het YouTube-kanaal Driftmark (3D "What IF"-video's, kleine kanaal, ~28 abonnees). ${imgs.length ? 'Bekijk de thumbnails (in deze volgorde).' : 'Je ziet de plaatjes niet, alleen de titels; zeg dat eerlijk.'} Titels: ${longs.map((v, i) => `${i + 1}) "${v.title}"`).join(' ')}. Schat per video de kans op een goede klikratio (CTR) voor dit soort kanaal, als een bereik zoals "3-5%", met één korte zin waarom. Geef daarna 2 concrete tips voor de volgende thumbnail. Nederlands. JSON: {"videos":[{"ctr":"x-y%","oordeel":"zin"}],"tips":["tip","tip"]}`, { modelTier: 'default', ...(imgs.length ? { images: imgs } : {}) });
+      const j = await sample.json(`Je bent thumbnail-expert voor het YouTube-kanaal Driftmark (3D "What IF"-video's, kleine kanaal, ~28 abonnees). ${imgs.length ? 'Bekijk de thumbnails (in deze volgorde).' : 'Je ziet de plaatjes niet, alleen de titels; zeg dat eerlijk.'} Titels: ${longs.map((v, i) => `${i + 1}) "${v.title}"`).join(' ')}. Schat per video de kans op een goede klikratio (CTR) voor dit soort kanaal, als een bereik zoals "3-5%", met één korte zin waarom. Geef daarna 2 concrete tips voor de volgende thumbnail. Nederlands. JSON: {"videos":[{"ctr":"x-y%","oordeel":"zin"}],"tips":["tip","tip"]}`, { modelTier: 'default', cache: false, ...(imgs.length ? { images: imgs } : {}) });
       setRes((j?.videos ?? []).slice(0, longs.length).map((x: Any) => ({ ctr: String(x?.ctr ?? '?'), oordeel: String(x?.oordeel ?? '') })));
       setTips((j?.tips ?? []).slice(0, 3).map(String));
     } catch (e) { setFout(foutTekst(e)); }
@@ -404,7 +405,12 @@ function Check48Panel() {
 function Orders() {
   const orders = useReal((s) => s.orders); const resend = useReal((s) => s.resend); const replies = useLive((s) => s.data.replies);
   const rows = [...orders].sort((a, b) => b.at - a.at).slice(0, 8);
-  const reply = (text: string) => replies?.find((r) => r.opdracht && (r.opdracht.includes(text.slice(0, 40)) || text.includes(r.opdracht.slice(0, 40))));
+  // vergelijk op de eigen tekst, zonder het vaste voorvoegsel "[Afdeling X · Agent]" (anders lijkt elk antwoord van die afdeling te passen)
+  const kern = (t: string) => t.replace(/^\s*\[[^\]]*\]\s*/, '').trim().slice(0, 40);
+  const reply = (text: string) => {
+    const k = kern(text); if (k.length < 8) return undefined;
+    return replies?.find((r) => { if (!r.opdracht) return false; const rk = kern(r.opdracht); return rk.length >= 8 && (r.opdracht.includes(k) || text.includes(rk)); });
+  };
   return (
     <Sec title="Jouw opdrachten" icon={<Send size={13} />} color="#398CFF">
       {!rows.length ? <Leeg>Nog geen opdrachten vanuit het HQ. Geef er een via "Taak geven" of het vak onderaan een afdeling.</Leeg> : (
@@ -445,14 +451,16 @@ function Notes({ r }: { r: RoomDef }) {
   const [tekst, setTekst] = useState(() => { try { return localStorage.getItem(key) ?? ''; } catch { return ''; } });
   const [status, setStatus] = useState<'' | 'bezig' | 'ok' | 'lokaal'>('');
   const dirty = useRef(false); const timer = useRef<number | undefined>(undefined);
+  const pending = useRef<string | null>(null); const saveRef = useRef(save); saveRef.current = save;
   useEffect(() => { if (doc && !dirty.current) setTekst(doc.tekst ?? ''); }, [doc]);
   const change = (v: string) => {
     setTekst(v); dirty.current = true; setStatus('bezig');
     try { localStorage.setItem(key, v); } catch { /* */ }
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => { void save({ tekst: v, at: new Date().toISOString() }).then((ok) => { dirty.current = false; setStatus(ok ? 'ok' : 'lokaal'); }); }, 1200);
+    window.clearTimeout(timer.current); pending.current = v;
+    timer.current = window.setTimeout(() => { pending.current = null; void save({ tekst: v, at: new Date().toISOString() }).then((ok) => { dirty.current = false; setStatus(ok ? 'ok' : 'lokaal'); }); }, 1200);
   };
-  useEffect(() => () => window.clearTimeout(timer.current), []);
+  // paneel dicht binnen 1,2 s na typen: de laatste tekst toch opslaan (anders overschrijft de oude versie hem)
+  useEffect(() => () => { window.clearTimeout(timer.current); if (pending.current !== null) void saveRef.current({ tekst: pending.current, at: new Date().toISOString() }); }, []);
   return (
     <Sec title="Notities" icon={<StickyNote size={13} />} color="#FFE66D" right={<span className="text-[11px] text-slate-500">{status === 'bezig' ? 'opslaan…' : status === 'ok' ? 'opgeslagen' : status === 'lokaal' || st === 'geen' ? 'alleen in deze browser' : doc?.at ? new Date(doc.at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }) : ''}</span>}>
       <textarea value={tekst} onChange={(e) => change(e.target.value)} rows={3} placeholder={`Notitie voor ${r.naam}…`}

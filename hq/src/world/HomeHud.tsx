@@ -3,7 +3,7 @@
  * het afdelingspaneel (na klik op een ruimte) en het profielpaneel van een medewerker.
  * Alles is echt: taken komen uit status.json, opdrachten gaan naar Claude.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { play } from './sound';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, ExternalLink, LayoutDashboard, MessageSquare, RotateCcw, Send, User } from 'lucide-react';
@@ -14,7 +14,7 @@ import { order } from '../services/real';
 import { threadUrl } from '../data/driftmark';
 import { HoloPanel, EASE } from './HoloPanel';
 import { ROOMS, roomById, threadsPerRoom, statusOf, STATUS, type RoomDef, type RoomId } from './rooms';
-import { useWorld, reducedMotion } from './useWorld';
+import { useWorld, reducedMotion, isPhone } from './useWorld';
 import { teamFor } from './staff';
 import { mergePunten, puntenVoor } from '../data/verbeter';
 import { openGesprek } from '../components/shared/Gesprek';
@@ -261,26 +261,38 @@ function milestonesFrom(L: Live): { key: string; text: string; rank: number }[] 
   }
   return out;
 }
+// al gevierd in deze sessie (ook als localStorage geblokkeerd is, anders komt hetzelfde feestje steeds terug)
+const celebrated = new Set<string>();
 function useMilestones() {
   const live = useLive((s) => s.data); const source = useLive((s) => s.source);
   const celebrate = useWorld((s) => s.celebrate);
+  // alleen opnieuw kijken als de mijlpalen zelf veranderen, niet bij elke verversing van de live stand
+  const all = useMemo(() => milestonesFrom(live), [live]);
+  const sig = all.map((m) => m.key).join('|');
   useEffect(() => {
     if (source !== 'live' && source !== 'database') return; // alleen met de echte stand
-    const all = milestonesFrom(live); if (!all.length) return;
+    if (!all.length) return;
     let seen: string[] | null = null; try { seen = JSON.parse(localStorage.getItem('dm-mijlpalen') ?? 'null'); } catch { /* */ }
-    const fresh = all.filter((m) => !seen?.includes(m.key)); if (!fresh.length) return;
-    try { localStorage.setItem('dm-mijlpalen', JSON.stringify([...(seen ?? []), ...fresh.map((m) => m.key)].slice(-400))); } catch { /* */ }
+    const fresh = all.filter((m) => !seen?.includes(m.key) && !celebrated.has(m.key)); if (!fresh.length) return;
     const best = fresh.reduce((a, b) => (b.rank > a.rank || (b.rank === a.rank && all.indexOf(b) > all.indexOf(a)) ? b : a));
     const more = seen ? fresh.length - 1 : 0;
-    const t = setTimeout(() => celebrate(best.text + (more > 0 ? ` En nog ${more} andere mijlpaal${more > 1 ? 'en' : ''}.` : '')), 3600);
+    // pas als het feestje echt begint als "gezien" opslaan (een onderbroken wachttijd mag het niet laten verdwijnen)
+    const t = setTimeout(() => {
+      fresh.forEach((m) => celebrated.add(m.key));
+      try { localStorage.setItem('dm-mijlpalen', JSON.stringify([...(seen ?? []), ...fresh.map((m) => m.key)].slice(-400))); } catch { /* */ }
+      celebrate(best.text + (more > 0 ? ` En nog ${more} andere mijlpaal${more > 1 ? 'en' : ''}.` : ''));
+    }, 3600);
     return () => clearTimeout(t);
-  }, [live, source, celebrate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig, source, celebrate]);
 }
 function PartyToast() {
   const party = useWorld((s) => s.party); const text = useWorld((s) => s.partyText);
   const [show, setShow] = useState(false);
+  // alleen feestjes van ná het openen van Home tonen (niet het vorige opnieuw bij terugkomen)
+  const startParty = useRef(useWorld.getState().party);
   useEffect(() => {
-    if (!party) return;
+    if (!party || party <= startParty.current) return;
     setShow(true); play('applause');
     const t = setTimeout(() => setShow(false), 6500); return () => clearTimeout(t);
   }, [party]);
@@ -317,10 +329,13 @@ function MorningBriefing() {
   const taken = useMemo(() => {
     const out: { t: string; sub?: string; c: string; a?: Activity }[] = [];
     for (const a of live.activity.filter((x) => x.state === 'blocked' || x.state === 'review_ready').slice(0, 2)) out.push({ t: a.state === 'review_ready' ? `Bekijk: ${a.title}` : `Reageer op: ${a.title}`, sub: a.needs, c: '#FF9F1C', a });
-    const dag = new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', timeZone: 'Europe/Amsterdam' }).replace('.', '');
-    const up = (live.youtube?.videos ?? []).find((v) => (v.status ?? '').startsWith('gepland') && (v.status ?? '').includes(dag));
-    if (up) out.push({ t: `Vandaag online: ${up.title}`, sub: (up.status ?? '').replace('gepland ', 'gepland om ').replace(dag, '').trim(), c: '#3ddc97' });
-    for (const x of briefing?.datum === vandaagKey() ? briefing.acties ?? [] : []) if (out.length < 3 && x.omschrijving) out.push({ t: x.omschrijving, sub: x.reden, c: '#A855F7' });
+    const vandaag = vandaagKey();
+    const up = (live.youtube?.videos ?? []).find((v) => (v.status ?? '').startsWith('gepland') && v.datum === vandaag);
+    const tijd = up && /\b(\d{1,2}:\d{2})\b/.exec(up.status ?? '')?.[1];
+    if (up) out.push({ t: `Vandaag online: ${up.title}`, sub: tijd ? `gepland om ${tijd}` : up.status, c: '#3ddc97' });
+    // de briefing van de coach: zijn datum in Nederlandse tijd (hij schrijft een UTC-datum)
+    const bDag = briefing?.gemaakt ? new Date(briefing.gemaakt).toLocaleDateString('sv-SE', { timeZone: 'Europe/Amsterdam' }) : briefing?.datum;
+    for (const x of briefing && bDag === vandaag ? briefing.acties ?? [] : []) if (out.length < 3 && x.omschrijving) out.push({ t: x.omschrijving, sub: x.reden, c: '#A855F7' });
     for (const v of live.videos.filter((x) => x.status !== 'Online')) {
       if (out.length >= 3) break;
       const st = v.steps.find((x) => x.active)?.label ?? v.steps.find((x) => !x.done)?.label;
@@ -329,10 +344,12 @@ function MorningBriefing() {
     return out.slice(0, 3);
   }, [live, briefing]);
   const delta = useMemo(() => {
-    if (stats.length < 2) return null;
-    const last = stats[stats.length - 1]; const dagGeleden = Date.parse(last.at) - 864e5;
-    const prev = [...stats].reverse().find((r) => Date.parse(r.at) <= dagGeleden) ?? stats[0];
-    return { subs: (last.subscribers ?? 0) - (prev.subscribers ?? 0), views: (last.views ?? 0) - (prev.views ?? 0) };
+    // alleen rijen met echte getallen (als vidIQ niet bereikbaar was, schrijft de ronde lege rijen)
+    const ok = stats.filter((r) => typeof r.subscribers === 'number' && typeof r.views === 'number');
+    if (ok.length < 2) return null;
+    const last = ok[ok.length - 1]; const dagGeleden = Date.parse(last.at) - 864e5;
+    const prev = [...ok].reverse().find((r) => Date.parse(r.at) <= dagGeleden) ?? ok[0];
+    return { subs: last.subscribers! - prev.subscribers!, views: last.views! - prev.views! };
   }, [stats]);
   const h = Number(new Date().toLocaleString('nl-NL', { hour: 'numeric', hour12: false, timeZone: 'Europe/Amsterdam' }));
   const groet = h < 12 ? 'Goedemorgen' : h < 18 ? 'Goedemiddag' : 'Goedenavond';
@@ -419,7 +436,7 @@ export default function HomeHud() {
       <AnimatePresence>
         {intro && (
           <motion.div key="skip" className="absolute bottom-[136px] left-1/2 -translate-x-1/2 md:bottom-[92px]" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ delay: rm ? 0 : 0.8 }}>
-            <div className="holo-mini px-3 py-1.5 text-[12px] text-slate-300">Klik of druk op een toets om de intro over te slaan</div>
+            <div className="holo-mini px-3 py-1.5 text-[12px] text-slate-300">{isPhone() ? 'Tik om de intro over te slaan' : 'Klik of druk op een toets om de intro over te slaan'}</div>
           </motion.div>
         )}
       </AnimatePresence>

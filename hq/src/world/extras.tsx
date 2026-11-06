@@ -106,7 +106,7 @@ export function Sky({ baked }: { baked: boolean }) {
       sky.day = dayAmount(ph); sky.dusk = theme === 'auto' ? duskAmount(ph) : 0; sky.feest = theme === 'feest';
       // zon: komt op in het oosten, gaat onder in het westen, laag boven de stad (november)
       const k = Math.max(0, Math.min(1, (ph * 24 - 7.5) / 10));
-      const az = -1.15 + k * 2.3; const el = -0.36 + Math.sin(k * Math.PI) * 0.16;
+      const az = -1.15 + k * 2.3; const el = -0.16 + Math.sin(k * Math.PI) * 0.4; // overdag boven de nevel, zodat je de zon ziet
       sky.sun.set(Math.sin(az) * Math.sqrt(1 - el * el), el, -Math.cos(az) * Math.sqrt(1 - el * el)).normalize();
     }
     const u = dome.uniforms;
@@ -319,6 +319,7 @@ export function Confetti() {
 
 /* ---------------- zwaailicht bij de crisiskamer ---------------- */
 const HEARD = 'dm-alarm-gehoord';
+const heardHere = new Set<string>(); // sirenes die in deze sessie al klonken
 export function Beacon({ alarms }: { alarms: Alarm[] }) {
   const level = alarms.some((a) => a.level === 'rood') ? 'rood' : alarms.some((a) => a.level === 'oranje') ? 'oranje' : null;
   const room = ROOMS.find((r) => r.id === 'crisis');
@@ -327,13 +328,19 @@ export function Beacon({ alarms }: { alarms: Alarm[] }) {
     return [Math.sin(a) * rad, 4.4, Math.cos(a) * rad];
   }, [room]);
   // sirene één keer per nieuw rood alarm (niet bij elke keer openen)
+  // (pas als "gehoord" opslaan als de sirene echt speelt; het effect hangt aan de rode sleutels, niet aan elke nieuwe lijst)
+  const roodKeys = alarms.filter((a) => a.level === 'rood').map((a) => a.key).join('|');
   useEffect(() => {
-    const rood = alarms.filter((a) => a.level === 'rood').map((a) => a.key); if (!rood.length) return;
+    if (!roodKeys) return;
     let heard: string[] = []; try { heard = JSON.parse(localStorage.getItem(HEARD) ?? '[]'); } catch { /* */ }
-    const fresh = rood.filter((k) => !heard.includes(k)); if (!fresh.length) return;
-    try { localStorage.setItem(HEARD, JSON.stringify([...heard, ...fresh].slice(-60))); } catch { /* */ }
-    const t = setTimeout(() => play('alarm'), 1800); return () => clearTimeout(t);
-  }, [alarms]);
+    const fresh = roodKeys.split('|').filter((k) => !heard.includes(k) && !heardHere.has(k)); if (!fresh.length) return;
+    const t = setTimeout(() => {
+      fresh.forEach((k) => heardHere.add(k)); // ook als localStorage geblokkeerd is: niet bij elke verversing opnieuw
+      play('alarm');
+      try { localStorage.setItem(HEARD, JSON.stringify([...heard, ...fresh].slice(-60))); } catch { /* */ }
+    }, 1800);
+    return () => clearTimeout(t);
+  }, [roodKeys]);
   const spin = useRef<THREE.Group>(null); const dome = useRef<THREE.MeshBasicMaterial>(null); const light = useRef<THREE.PointLight>(null);
   const beamTex = useMemo(() => canvasTex(256, 32, (g) => {
     const gr = g.createLinearGradient(0, 0, 256, 0); gr.addColorStop(0, 'rgba(255,255,255,0.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)');

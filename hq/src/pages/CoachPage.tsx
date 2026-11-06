@@ -293,10 +293,10 @@ function Besluiten() {
     <div className="space-y-3">
       <div className="text-[14px] text-slate-400">Hier staat alles wat jouw besluit nodig heeft (niveau 3): publiceren, uitgaven, grote strategiekeuzes, en taken die op jou wachten.</div>
       {taken.map((a) => (
-        <div key={a.id} className="panel flex flex-wrap items-center gap-3 border-orange-400/40 p-4">
+        <div key={a.id || a.session} className="panel flex flex-wrap items-center gap-3 border-orange-400/40 p-4">
           <div className="min-w-0 flex-1"><div className="text-[12px] font-bold uppercase text-orange-300">Taak wacht op jou</div><div className="font-semibold text-white">{a.title}</div><div className="text-[13px] text-slate-300">{a.doing}</div></div>
-          <button className="btn-primary" onClick={() => order(`Goedgekeurd: taak "${a.title}". Ga door.`, toast)}>Goedkeuren</button>
-          <a className="btn-ghost" href={threadUrl(a.id)} target="_blank" rel="noreferrer">Bekijk</a>
+          <button className="btn-primary" onClick={() => order(`Goedgekeurd: taak "${a.title}"${a.id ? ` (thread ${a.id})` : ''}. Ga door.`, toast)}>Goedkeuren</button>
+          {a.id && <a className="btn-ghost" href={threadUrl(a.id)} target="_blank" rel="noreferrer">Bekijk</a>}
         </div>
       ))}
       {open.map((b) => (
@@ -320,7 +320,7 @@ const VRAAG_AGENT = [
   { wie: 'Thumbnail', v: 'Onderzoek hoe de thumbnails van mijn lange video\'s presteren en maak drie alternatieven voor de volgende video.' },
   { wie: 'Productie', v: 'Onderzoek waarom de productie van de laatste video zo lang duurde en waar het sneller kan.' },
 ];
-const STATE: Record<string, [string, string]> = { working: ['bezig', 'text-sky-300'], blocked: ['wacht op jou', 'text-orange-300'], review_ready: ['klaar om te bekijken', 'text-orange-300'], done: ['klaar', 'text-green-300'] };
+const STATE: Record<string, [string, string]> = { working: ['bezig', 'text-sky-300'], blocked: ['wacht op jou', 'text-orange-300'], review_ready: ['klaar om te bekijken', 'text-orange-300'], done: ['klaar', 'text-green-300'], failed: ['mislukt', 'text-rose-300'] };
 function Agents() {
   const d = useLive((s) => s.data);
   const toast = useGame((s) => s.toast);
@@ -339,11 +339,11 @@ function Agents() {
             const [lab, col] = STATE[a.state] ?? [a.state, 'text-slate-300'];
             const oud = a.state === 'working' && a.lastIso && nu - Date.parse(a.lastIso) > 6 * 3600e3;
             return (
-              <div key={a.id} className="flex flex-wrap items-center gap-2 py-2.5 text-[14px]">
+              <div key={a.id || a.session} className="flex flex-wrap items-center gap-2 py-2.5 text-[14px]">
                 <span className={`w-36 shrink-0 font-semibold ${col}`}>{lab}{oud ? ' ⚠️' : ''}</span>
                 <span className="min-w-0 flex-1"><span className="text-white">{a.title}</span><span className="block text-[13px] text-slate-400">{a.doing}</span></span>
                 <span className="text-[12px] text-slate-500">{a.last}</span>
-                {oud && <button className="btn-ghost !px-2 !py-1 text-[12px]" onClick={() => order(`Controleer thread "${a.title}" (${a.id}): al meer dan 6 uur geen update. Herstart als hij vastzit en meld wat er was.`, toast)}>Controleer</button>}
+                {oud && <button className="btn-ghost !px-2 !py-1 text-[12px]" onClick={() => order(`Controleer thread "${a.title}"${a.id ? ` (${a.id})` : a.session ? ` (sessie ${a.session})` : ''}: al meer dan 6 uur geen update. Herstart als hij vastzit en meld wat er was.`, toast)}>Controleer</button>}
               </div>
             );
           })}

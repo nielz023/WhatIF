@@ -90,7 +90,8 @@ for a in d.get('activity', []):
         t = dt.datetime.fromisoformat(a['lastIso'].replace('Z', '+00:00'))
     except ValueError:
         continue
-    if (now - t).total_seconds() > 24 * 3600:
+    # ouder dan 7 dagen = oude, afgeronde thread die nog op 'review' staat: na een week geen dagelijkse herinnering meer
+    if 24 * 3600 < (now - t).total_seconds() < 7 * 24 * 3600:
         key = f"wacht:{a['id']}:{now.strftime('%Y%m%d')}"
         if key not in gemeld:
             nieuw.append({'soort': 'herinnering', 'taak': a['title'], 'thread': a['id'], 'key': key})

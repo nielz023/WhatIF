@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ExternalLink, Clapperboard, Users, Map, ListChecks, Lightbulb, Wrench, Mic, Youtube, Play, Building2, MessageSquare } from 'lucide-react';
 import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
@@ -7,7 +7,6 @@ import { CursusCheck, TitelTester, CursusStappen, CursusTip } from './Cursus';
 import { useLive, startLive } from '../services/live';
 import { openGesprek } from '../components/shared/Gesprek';
 import { ToolsPanel, CostsPanel, RepliesPanel, Outputs, AutomationPanel } from './DriftmarkExtra';
-import { useEffect } from 'react';
 import gallery from '../data/gallery.json';
 import { useReal, order } from '../services/real';
 import { useDb } from '../services/db';
@@ -143,7 +142,7 @@ const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'ideeen', label: 'Ideeën & links', uitleg: 'Onderwerpen voor de volgende video en alle documenten' },
 ];
 const STATE: Record<string, [string, string]> = {
-  working: ['Claude is bezig', '#3db8ff'], blocked: ['wacht op jou', '#ff8a3d'], review_ready: ['klaar om te bekijken', '#ff8a3d'], done: ['klaar', '#3ddc97'],
+  working: ['Claude is bezig', '#3db8ff'], blocked: ['wacht op jou', '#ff8a3d'], review_ready: ['klaar om te bekijken', '#ff8a3d'], done: ['klaar', '#3ddc97'], failed: ['mislukt', '#ff4d6d'],
 };
 
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
@@ -200,6 +199,11 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
   const key = `driftmark-view-${mode}`;
   const [view, setView] = useState<View>(() => { try { const v = localStorage.getItem(key) as View; return v && views.includes(v) ? v : views[0] ?? 'overzicht'; } catch { return views[0] ?? 'overzicht'; } });
   const go = (v: View) => { setView(v); try { localStorage.setItem(key, v); } catch { /* */ } };
+  // een melding kan vragen om een bepaald tabblad (bijv. Meer → Alle taken), ook als deze pagina al open staat
+  useEffect(() => {
+    const f = (e: Event) => { const d = (e as CustomEvent<{ mode: Mode; view: View }>).detail; if (d?.mode === mode && views.includes(d.view)) setView(d.view); };
+    window.addEventListener('dm-view', f); return () => window.removeEventListener('dm-view', f);
+  }, [mode, views]);
   const [castTab, setCastTab] = useState<Tab>('v3');
   const [setTab, setSetTab] = useState<Tab>('v3');
   const g = gallery as unknown as Record<string, [string, string][]> & { banner: string };
@@ -226,7 +230,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {a.id ? <a href={threadUrl(a.id)} target="_blank" rel="noreferrer" className={big ? 'btn-primary text-[13px]' : 'btn-ghost text-[13px]'}>Bekijk</a> : null}
           {a.session && <button className="btn-ghost text-[13px]" onClick={() => openGesprek({ kind: 'thread', session: a.session, title: a.title, thread: a.id || undefined })}><MessageSquare size={13} />Gesprek</button>}
-          {big && a.state === 'review_ready' && <button className="btn-success text-[13px]" onClick={() => order(`Goedgekeurd: taak "${a.doing ?? a.title}".`, toast)}>Goedkeuren</button>}
+          {big && a.state === 'review_ready' && <button className="btn-success text-[13px]" onClick={() => order(`Goedgekeurd: taak "${a.title}"${a.id ? ` (thread ${a.id})` : ''}.`, toast)}>Goedkeuren</button>}
           <span className="text-[12px] text-slate-500">{a.live ? <span className="mr-1 text-[#3ddc97]" title="Live uit Claude Code Remote">●</span> : null}laatst actief {a.last}</span>
         </div>
       </div>

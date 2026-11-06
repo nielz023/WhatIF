@@ -61,13 +61,26 @@ export const sessionOfThread = (a: Activity) => a.session ?? null;
 
 /* ---------- stand van alle threads ---------- */
 const unsub: (() => void)[] = [];
+const AUTHZ = new Set(['needs_reauth', 'server_not_connected', 'blocked_by_policy', 'approval_required', 'not_in_manifest', 'selection_required']);
+function retract(code?: string) {
+  for (const off of watching.values()) off();
+  watching.clear();
+  useThreads.setState({ sessions: {}, coordinators: [], src: 'geen', err: code });
+  // de takenlijst terug naar wat status.json zegt
+  if (raw) { merged = null; useLive.setState((st) => ({ data: { ...st.data, activity: raw! } })); }
+}
 let started = false;
 export async function startThreads() {
   if (started) return; started = true;
   const m = await mcp();
   if (!m) { useThreads.setState({ src: 'geen' }); return; }
   const onList = (ev: Any) => {
-    if (ev.type === 'error') { const code = ev.error?.code; useThreads.setState({ src: code === 'server_unavailable' ? useThreads.getState().src : 'fout', err: code }); return; }
+    if (ev.type === 'error') {
+      const code = ev.error?.code;
+      // geen toegang (meer): de live stand intrekken, anders blijft een oude stand ("bezig") eeuwig staan
+      if (AUTHZ.has(code)) { retract(code); return; }
+      useThreads.setState({ src: code === 'server_unavailable' ? useThreads.getState().src : 'fout', err: code }); return;
+    }
     const p = unwrap(ev.result); const data: Any[] = Array.isArray(p?.data) ? p.data : [];
     const cur = { ...useThreads.getState().sessions };
     const coords: string[] = [];
@@ -88,7 +101,7 @@ export async function startThreads() {
     unsub.push(m.watchTool(SERVER, 'list_sessions', { tags: ['hearth-thread', 'hearth-overview'], limit: 100 }, onList, { refetchInterval: 30000, cache: { staleTime: 20000 } }));
   } catch (e) {
     const code = (e as Any)?.code;
-    if (code === 'not_in_manifest' || code === 'server_not_connected' || code === 'needs_reauth' || code === 'blocked_by_policy') { useThreads.setState({ src: 'geen', err: code }); return; }
+    if (AUTHZ.has(code)) { useThreads.setState({ src: 'geen', err: code }); return; }
     unsub.push(m.watchTool(SERVER, 'list_sessions', { limit: 100 }, onList, { refetchInterval: 30000, cache: { staleTime: 20000 } }));
   }
 }
@@ -104,10 +117,11 @@ function watchActive() {
     for (const id of act) {
       if (watching.has(id)) continue;
       const off = m.watchTool(SERVER, 'get_session', { session_id: id }, (ev: Any) => {
-        if (ev.type !== 'data') return;
+        if (ev.type !== 'data' || ev.result?.cache?.revalidating) return; // een bewaarde (oude) stand: wachten op de verse
         const s = unwrap(ev.result); if (!s?.id) return;
-        const cur = useThreads.getState().sessions;
-        useThreads.setState({ sessions: { ...cur, [s.id]: toLive(s, cur[s.id]) } });
+        const cur = useThreads.getState().sessions; const old = cur[s.id];
+        if (old?.updatedAt && s.updated_at && Date.parse(s.updated_at) < Date.parse(old.updatedAt)) return; // ouder dan wat we al weten
+        useThreads.setState({ sessions: { ...cur, [s.id]: toLive(s, old) } });
       }, { refetchInterval: 30000, cache: { staleTime: 20000 } });
       watching.set(id, off);
     }
@@ -132,7 +146,8 @@ const ago = (iso?: string) => {
   if (!iso) return ''; const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
   if (m < 1) return 'net nu'; if (m < 60) return `${m} min geleden`; const h = Math.round(m / 60); if (h < 24) return `${h} uur geleden`; const d = Math.round(h / 24); return `${d} ${d === 1 ? 'dag' : 'dagen'} geleden`;
 };
-let raw: Activity[] | null = null; let merged: Activity[] | null = null;
+let raw: Activity[] | null = null; let merged: Activity[] | null = null; let mergedSig = '';
+const iso = (t?: string) => { const n = Date.parse(t ?? ''); return isNaN(n) ? undefined : new Date(n).toISOString(); }; // altijd UTC mét Z
 function merge() {
   const L = useLive.getState(); const S = useThreads.getState().sessions;
   if (L.data.activity !== merged) raw = L.data.activity;
@@ -143,20 +158,26 @@ function merge() {
     seen.add(s.id);
     // een afgeronde (opgeloste) thread blijft afgerond, ook als de sessie zelf nog "klaar voor review" zegt
     const state = a.state === 'done' && s.bucket !== 'working' ? 'done' : STATE_OF[s.bucket];
-    const newer = !a.lastIso || (s.updatedAt ?? '') > a.lastIso;
+    const su = Date.parse(s.updatedAt ?? ''); const la = Date.parse(a.lastIso ?? '');
+    const newer = !isNaN(su) && (isNaN(la) || su > la);
     return {
       ...a, state, live: true, needs: s.needs, recent: s.recent, checklist: s.checklist,
-      ...(newer && s.updatedAt ? { lastIso: s.updatedAt.slice(0, 19), last: ago(s.updatedAt) } : {}),
+      ...(newer ? { lastIso: iso(s.updatedAt), last: ago(s.updatedAt) } : {}),
       ...(s.bucket === 'working' && s.recent ? { doing: s.recent } : s.needs && (s.bucket === 'blocked' || s.bucket === 'review_ready') ? { doing: s.needs } : {}),
     } as Activity;
   });
   // nieuwe threads die nog niet in status.json staan
   for (const s of Object.values(S)) {
     if (seen.has(s.id) || s.tags?.includes('hearth-overview') || raw.some((a) => a.session === s.id)) continue;
-    if (s.bucket === 'done' && (s.updatedAt ?? '') < (useLive.getState().data.updated ?? '')) continue;
-    out.unshift({ title: s.title, id: '', session: s.id, state: STATE_OF[s.bucket], last: ago(s.updatedAt), lastIso: s.updatedAt?.slice(0, 19), doing: s.recent ?? s.detail, live: true, needs: s.needs, checklist: s.checklist } as Activity);
+    // afgerond vóór het laatste uurbestand: dat bestand had hem dan al moeten tonen, dus overslaan
+    const u = Date.parse(useLive.getState().data.updated ?? '');
+    if (s.bucket === 'done' && (isNaN(u) || Date.parse(s.updatedAt ?? '') < u)) continue;
+    out.unshift({ title: s.title, id: '', session: s.id, state: STATE_OF[s.bucket], last: ago(s.updatedAt), lastIso: iso(s.updatedAt), doing: s.recent ?? s.detail, live: true, needs: s.needs, checklist: s.checklist } as Activity);
   }
-  merged = out;
+  // niets veranderd: de store niet opnieuw zetten (anders draaien alle effecten die op de live stand letten opnieuw)
+  const sig = JSON.stringify(out);
+  if (L.data.activity === merged && sig === mergedSig) return;
+  merged = out; mergedSig = sig;
   useLive.setState((st) => ({ data: { ...st.data, activity: out } }));
 }
 useThreads.subscribe(merge);
@@ -177,7 +198,7 @@ useThreads.subscribe((st) => {
       : s.bucket === 'done' && was === 'working' ? { t: `✅ Afgerond: ${titel}`, k: 'success' as const } : null;
     if (!m) continue;
     const g = useGame.getState();
-    useGame.setState((d: Any) => { d.notifications.unshift({ id: `m${Date.now()}${Math.random().toString(36).slice(2, 6)}`, tick: d.tick ?? 0, text: m.t, kind: m.k, read: false, link: 'threads' }); if (d.notifications.length > 80) d.notifications.length = 80; });
+    useGame.setState((d: Any) => { d.notifications.unshift({ id: `m${Date.now()}${Math.random().toString(36).slice(2, 6)}`, tick: d.tick ?? 0, text: m.t, kind: m.k, read: false, link: 'meer' }); if (d.notifications.length > 80) d.notifications.length = 80; });
     g.toast(m.t, m.k === 'warning' ? 'warning' : m.k === 'approval' ? 'info' : 'success');
   }
   meldReady = true;

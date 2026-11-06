@@ -119,7 +119,7 @@ export function staffFor(opts: {
 const TOPS: Look['top'][] = ['hoodie', 'trui', 'tee', 'jas', 'shirt'];
 const HAIR: Look['hair'][] = ['kort', 'kuif', 'krul', 'knot', 'lang', 'muts', 'pet', 'kaal'];
 const HCOL = ['#2B1D14', '#17120F', '#7A4A22', '#D9A441', '#B8B8C0', '#E26D2C'];
-const GAME_STATUS: Record<string, Status> = { working: 'werkt', meeting: 'bezig', training: 'wacht', idle: 'bezig', break: 'bezig' };
+const GAME_STATUS: Record<string, Status> = { working: 'werkt', meeting: 'bezig', training: 'wacht', idle: 'offline' };
 
 /** Studio (het spel): de spelers-agents, ook als het hoofdpersonage met een eigen stijl. */
 export function gameStaff(agents: Agent[], onPick: (id: string) => void): CrewMember[] {

@@ -17,6 +17,10 @@ const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66]; // C-penta
 function ac(): AudioContext | null {
   if (!on) return null;
   try {
+    // nog nooit geklikt of getikt: geen geluid klaarzetten. Een AudioContext van vóór de eerste klik staat stil
+    // (klok op 0) en speelt bij de eerste klik alles wat intussen was klaargezet in één keer af.
+    const ua = (navigator as unknown as { userActivation?: { hasBeenActive: boolean } }).userActivation;
+    if (!ctx && ua && !ua.hasBeenActive) return null;
     if (!ctx) {
       const C = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!C) return null;
@@ -31,7 +35,7 @@ function ac(): AudioContext | null {
       verb.connect(wet).connect(master);
       master.connect(ctx.destination);
     }
-    if (ctx.state === 'suspended') void ctx.resume();
+    if (ctx.state !== 'running') { void ctx.resume().catch(() => { /* */ }); return null; } // eerst laten starten
     return ctx;
   } catch { return null; }
 }
@@ -114,7 +118,7 @@ const ambListeners = new Set<(v: number) => void>();
 export const officeVolume = () => ambVol;
 export function setOfficeVolume(v: number) {
   ambVol = Math.max(0, Math.min(1, v)); try { localStorage.setItem('dm-kantoor', String(ambVol)); } catch { /* */ }
-  if (amb && ctx) amb.gain.gain.setTargetAtTime(ambVol * 0.5, ctx.currentTime, 0.2);
+  if (amb && ctx) amb.gain.gain.setTargetAtTime(on ? ambVol * 0.5 : 0, ctx.currentTime, 0.2);
   ambListeners.forEach((f) => f(ambVol));
 }
 export function onOfficeVolume(f: (v: number) => void) { ambListeners.add(f); return () => { ambListeners.delete(f); }; }
@@ -151,14 +155,18 @@ function startAmbience() {
 export const soundOn = () => on;
 export function setSound(v: boolean) {
   on = v; try { localStorage.setItem('dm-geluid', v ? 'aan' : 'uit'); } catch { /* */ }
+  // uit = echt stil: ook het doorlopende kantoorgeluid (geroezemoes) stopt
+  if (!v && ctx) void ctx.suspend().catch(() => { /* */ });
   listeners.forEach((f) => f(v));
-  if (v) play('success');
+  if (v) void (ctx ? ctx.resume() : Promise.resolve()).then(() => play('success'), () => { /* */ });
 }
 export function onSoundChange(f: (v: boolean) => void) { listeners.add(f); return () => { listeners.delete(f); }; }
 
 /** Eén keer aanroepen: luistert naar klikken, hover op knoppen en scrollen in de hele app. */
 export function startSounds() {
   window.addEventListener('pointerdown', () => { if (on) startAmbience(); }, { capture: true });
+  // op een telefoon telt pas het loslaten (en een toets) als klik voor de browser: dan ook het geluid aanzetten
+  for (const ev of ['pointerup', 'touchend', 'keydown'] as const) window.addEventListener(ev, () => { if (on) startAmbience(); }, { capture: true, passive: true });
   onSoundChange((v) => { if (v) startAmbience(); });
   const isUi = (el: EventTarget | null) => (el as HTMLElement | null)?.closest?.('button, a, [role="button"], [role="tab"], summary, select, input[type="checkbox"], input[type="radio"]');
   window.addEventListener('pointerdown', (e) => {

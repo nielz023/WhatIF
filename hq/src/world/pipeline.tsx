@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { STEPS, type RealVideo } from '../data/driftmark';
 import { ROOMS, SPAN, type RoomId } from './rooms';
 import { play } from './sound';
+import { useLive } from '../services/live';
 import type { Handoff } from './crew';
 
 export const STEP_ROOM: Record<string, RoomId> = {
@@ -62,7 +63,11 @@ function Package({ v, idx, onPick }: { v: RealVideo; idx: number; onPick: (room:
   // vorige stand onthouden: is de video doorgeschoven, dan glijdt het pakketje er naartoe
   const anim = useRef<{ from: number; t: number } | null>(null);
   const cur = useRef(target);
+  // alleen met de echte, verse stand vergelijken en opslaan (niet met de ingebouwde of een oudere databasekopie,
+  // anders speelt het doorschuiven bij elk openen opnieuw)
+  const src = useLive((s) => s.source);
   useEffect(() => {
+    if (src !== 'live') return;
     let seen: Record<string, string> = {};
     try { seen = JSON.parse(localStorage.getItem('dm-band') ?? '{}'); } catch { /* */ }
     const prev = seen[v.nr];
@@ -71,7 +76,7 @@ function Package({ v, idx, onPick }: { v: RealVideo; idx: number; onPick: (room:
       if (pr !== room && STEPS.indexOf(label) > pi) { anim.current = { from: bandAngle(pr), t: 0 }; cur.current = bandAngle(pr); setTimeout(() => play('success'), 3200); }
     }
     seen[v.nr] = label; try { localStorage.setItem('dm-band', JSON.stringify(seen)); } catch { /* */ }
-  }, [v.nr, label, room]);
+  }, [v.nr, label, room, src]);
   useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime;
     const a = anim.current;

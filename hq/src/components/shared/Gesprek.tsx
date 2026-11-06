@@ -17,8 +17,11 @@ interface G { open: { kind: 'thread' | 'project'; session?: string; title: strin
 export const useGesprek = create<G>((set) => ({ open: null, show: (open) => set({ open }) }));
 export const openGesprek = (o: NonNullable<G['open']>) => useGesprek.getState().show(o);
 
-const fmt = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
-const dayKey = (iso: string) => iso.slice(0, 10);
+// alle tijden in de tijd van niels (Nederland), ook de indeling per dag; de connector geeft UTC
+const TZ = 'Europe/Amsterdam';
+const fmt = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleString('nl-NL', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+const dayKey = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleDateString('sv-SE', { timeZone: TZ }); };
+const dayLabel = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleDateString('nl-NL', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }); };
 
 /** tekst met klikbare links ([tekst](url) en losse https-adressen) en **vet** */
 function Rich({ text }: { text: string }) {
@@ -82,6 +85,11 @@ export default function GesprekDrawer() {
   const [state, setState] = useState<{ busy: boolean; err?: string; more: boolean; idx: number; first?: string; last?: string; scanned: number }>({ busy: false, more: false, idx: 0, scanned: 0 });
   const box = useRef<HTMLDivElement>(null); const stick = useRef(true); const st = useRef(state); st.current = state;
   const key = open ? `${open.kind}:${open.session ?? ''}` : '';
+  const chainKey = chain.join(',');
+  const chainRef = useRef(chain); chainRef.current = chain;
+  // elke keer dat het paneel een ander gesprek toont gaat dit omhoog; een lading van het vorige gesprek die
+  // nog onderweg is, ziet dan dat hij te laat is en schrijft niets meer weg
+  const gen = useRef(0);
 
   const sess = open?.session ? sessions[open.session] : undefined;
   useEffect(() => { if (open?.session) void loadSession(open.session); }, [open?.session]);
@@ -89,6 +97,7 @@ export default function GesprekDrawer() {
   // laden: nieuwste bladzijde; als er weinig berichten op staan, meteen verder terug
   const older = async (fresh = false) => {
     const s0 = fresh ? { busy: false, more: true, idx: 0, scanned: 0 } as typeof state : st.current;
+    const chain = chainRef.current; const my = gen.current;
     if (!chain.length || s0.busy) return;
     setState({ ...s0, busy: true, err: undefined });
     let { idx, first, more, scanned } = s0; let last = fresh ? undefined : s0.last;
@@ -96,6 +105,7 @@ export default function GesprekDrawer() {
     try {
       while (pages < 6 && got.length < 12 && idx < chain.length) {
         const p = await loadPage(chain[idx], first ? { before: first } : undefined); pages++; scanned++;
+        if (my !== gen.current) return; // intussen een ander gesprek geopend
         if (!first && idx === 0) last = p.lastId;
         got.unshift(...p.msgs); first = p.firstId;
         more = p.hasMore;
@@ -106,29 +116,43 @@ export default function GesprekDrawer() {
       setState({ busy: false, more, idx, first, last, scanned });
       if (!fresh) requestAnimationFrame(() => { if (box.current) box.current.scrollTop = box.current.scrollHeight - prevH; });
     } catch (e) {
+      if (my !== gen.current) return;
       const code = (e as { code?: string })?.code;
       setState({ ...s0, busy: false, err: code === 'geen' || code === 'server_not_connected' ? 'geen' : code === 'needs_reauth' ? 'reauth' : code === 'not_in_manifest' ? 'nietToegestaan' : 'fout' });
     }
   };
-  useEffect(() => { setMsgs([]); stick.current = true; if (open) void older(true); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [key, chain.join(',')]);
+  useEffect(() => { gen.current++; setMsgs([]); stick.current = true; if (open) void older(true); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [key, chainKey]);
 
-  // nieuwe berichten: elke 20 s de nieuwste gebeurtenissen erbij
+  // nieuwe berichten: elke 20 s de nieuwste gebeurtenissen erbij (bij een drukke beurt meerdere bladzijden)
   useEffect(() => {
-    if (!open || !chain.length) return;
+    if (!open || !chainKey) return;
+    let polling = false;
     const t = setInterval(async () => {
-      const s = st.current; if (s.busy || !s.last) return;
+      const s = st.current; if (polling || s.busy || !s.last) return;
+      const my = gen.current; const session = chainRef.current[0]; if (!session) return;
+      polling = true;
       try {
-        const p = await loadPage(chain[0], { after: s.last });
-        if (p.lastId) setState((x) => ({ ...x, last: p.lastId }));
-        if (p.msgs.length) setMsgs((m) => { const ids = new Set(m.map((x) => x.id)); return [...m, ...p.msgs.filter((x) => !ids.has(x.id))]; });
-      } catch { /* volgende keer */ }
+        let last = s.last; const got: Msg[] = [];
+        for (let i = 0; i < 5; i++) {
+          const p = await loadPage(session, { after: last });
+          if (my !== gen.current) return;
+          got.push(...p.msgs); if (p.lastId) last = p.lastId;
+          if (!p.hasMore || !p.lastId) break;
+        }
+        if (last !== s.last) setState((x) => ({ ...x, last }));
+        if (got.length) setMsgs((m) => { const ids = new Set(m.map((x) => x.id)); return [...m, ...got.filter((x) => !ids.has(x.id))]; });
+      } catch { /* volgende keer */ } finally { polling = false; }
     }, 20000);
     return () => clearInterval(t);
-  }, [open, chain]);
+  }, [open, chainKey]);
 
   // onderaan blijven als je onderaan was
   useEffect(() => { const b = box.current; if (b && stick.current) b.scrollTop = b.scrollHeight; }, [msgs.length]);
-  useEffect(() => { const k = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); }; window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, []);
+  // Esc sluit alleen het gesprek (en niet ook nog het paneel of de afdeling eronder): vangen vóór de app-brede Esc
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape' && useGesprek.getState().open) { e.stopPropagation(); close(); } };
+    window.addEventListener('keydown', k, true); return () => window.removeEventListener('keydown', k, true);
+  }, []);
 
   const shown = msgs.filter((m) => m.who !== 'checklist');
   const lastChecklist = sess?.checklist ?? [...msgs].reverse().find((m) => m.who === 'checklist')?.text;
@@ -167,7 +191,7 @@ export default function GesprekDrawer() {
               {!state.busy && !state.err && !shown.length && !state.more && <div className="py-10 text-center text-[13px] text-slate-500">Nog geen berichten.</div>}
               {shown.map((m, i) => (
                 <div key={m.id + i}>
-                  {(i === 0 || dayKey(shown[i - 1].at) !== dayKey(m.at)) && <div className="my-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">{new Date(m.at).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })}</div>}
+                  {(i === 0 || dayKey(shown[i - 1].at) !== dayKey(m.at)) && <div className="my-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">{dayLabel(m.at)}</div>}
                   <Bubble m={m} />
                 </div>
               ))}

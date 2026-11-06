@@ -16,7 +16,8 @@ import type { Dashboards } from './dashboards';
 import { sky } from './extras';
 import { setLoad, useOfficeLoad } from './loadState';
 
-const URL = './models/office.glb.txt';
+const URL = './models/office.glb.txt'; // meshopt-gecomprimeerd
+const URL_RAW = './models/office_raw.glb.txt'; // zelfde model zonder compressie (reserve)
 type V3 = [number, number, number];
 export interface Screen { mesh: THREE.Mesh; kind: string; room: string }
 export interface OfficeModel {
@@ -34,27 +35,41 @@ export function roomAt(x: number, z: number): string {
 }
 
 let promise: Promise<OfficeModel> | null = null;
+/** base64-tekst downloaden met voortgang voor het laadscherm */
+async function fetchText(url: string, guess: number): Promise<string> {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(url + ' ' + r.status);
+  const total = Number(r.headers.get('content-length')) || guess;
+  if (!r.body) return r.text();
+  const rd = r.body.getReader(); const parts: Uint8Array[] = []; let got = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; setLoad(0.05 + 0.75 * Math.min(1, got / total)); }
+  const all = new Uint8Array(got); let o = 0; for (const p of parts) { all.set(p, o); o += p.length; }
+  return new TextDecoder().decode(all);
+}
+function parseGlb(b64: string, decoder: unknown): Promise<THREE.Group> {
+  setLoad(0.82, 'Kantoor in elkaar zetten…');
+  const bin = atob(b64.trim()); const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  const loader = new GLTFLoader(); if (decoder) loader.setMeshoptDecoder(decoder);
+  return new Promise<THREE.Group>((res, rej) => loader.parse(buf.buffer, '', (g) => res(g.scene), rej));
+}
+/** eerst het gecomprimeerde model (meshopt, ~1,5 MB); lukt dat niet (bv. WebAssembly geblokkeerd), dan de gewone versie */
+async function loadScene(): Promise<THREE.Group> {
+  try {
+    const dec = MeshoptDecoder();
+    if (!('ready' in dec) || !dec.supported) throw new Error('meshopt niet beschikbaar');
+    await dec.ready;
+    return await parseGlb(await fetchText(URL, 1_600_000), dec);
+  } catch (e) {
+    console.warn('[HQ] gecomprimeerd kantoor lukt niet, ik laad de gewone versie', e);
+    setLoad(0.05, 'Kantoor downloaden…');
+    return parseGlb(await fetchText(URL_RAW, 6_300_000), null);
+  }
+}
 function load(): Promise<OfficeModel> {
   if (!promise) {
     setLoad(0.04, 'Kantoor downloaden…');
-    promise = fetch(URL)
-      .then(async (r) => {
-        if (!r.ok) throw new Error('office ' + r.status);
-        // voortgang voor het laadscherm
-        const total = Number(r.headers.get('content-length')) || 6_000_000;
-        if (!r.body) return r.text();
-        const rd = r.body.getReader(); const parts: Uint8Array[] = []; let got = 0;
-        for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; setLoad(0.05 + 0.75 * Math.min(1, got / total)); }
-        const all = new Uint8Array(got); let o = 0; for (const p of parts) { all.set(p, o); o += p.length; }
-        return new TextDecoder().decode(all);
-      })
-      .then((b64) => {
-        setLoad(0.82, 'Kantoor in elkaar zetten…');
-        const bin = atob(b64.trim()); const buf = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-        const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
-        return new Promise<THREE.Group>((res, rej) => loader.parse(buf.buffer, '', (g) => res(g.scene), rej));
-      })
+    promise = loadScene()
       .then((scene) => {
         const seats: Record<string, V3[]> = {}; const chairs: Record<string, THREE.Object3D[]> = {};
         const neon: Record<string, THREE.MeshStandardMaterial[]> = {}; const screens: Screen[] = [];
@@ -87,7 +102,8 @@ function load(): Promise<OfficeModel> {
           } else if (base.startsWith('glass')) {
             m.material = glass; m.renderOrder = 2;
           } else if (n.startsWith('scr_')) {
-            m.getWorldPosition(p);
+            // de schermen staan in wereldcoördinaten met hun oorsprong op (0,0,0): neem het midden van het vlak
+            m.geometry.computeBoundingBox(); m.geometry.boundingBox!.getCenter(p).applyMatrix4(m.matrixWorld);
             screens.push({ mesh: m, kind: n.split('_')[2]?.replace(/\.\d+$/, '') ?? 'd', room: roomAt(p.x, p.z) });
           } else if (n.startsWith('neon_')) {
             const room = n.split('_')[1].replace(/\.\d+$/, '');
@@ -152,7 +168,7 @@ export function BakedOffice({ model, screens, dash, lit, alert }: {
     const gen = (t: THREE.Texture) => { let c = flipped.get(t); if (!c) { c = t.clone(); c.flipY = false; c.needsUpdate = true; flipped.set(t, c); } return c; };
     model.screens.forEach(({ mesh, kind, room }, i) => {
       mesh.geometry.computeBoundingBox(); const bb = mesh.geometry.boundingBox!; const sz = new THREE.Vector3(); bb.getSize(sz);
-      const aspect = Math.max(sz.x, sz.z) / Math.max(0.01, sz.y);
+      const aspect = Math.hypot(sz.x, sz.z) / Math.max(0.01, sz.y); // ook goed voor gedraaide wandschermen
       let map: THREE.Texture;
       if (dash && kind === 'w' && room !== 'hub' && room !== 'gang') map = dash.get(room, aspect);
       else if (dash && kind === 'm') map = dash.get('crisis', aspect);
