@@ -1,205 +1,175 @@
 /**
- * LIVE THREADS (niels 2026-11-06: "voeg allle 2 de kanttekeningen toe").
- * 1. De stand van elke thread komt LIVE uit de connector "Claude Code Remote" (met niels' eigen inlog),
- *    niet meer alleen uit het uurlijkse status.json: list_sessions (alle threads in één keer, elke 30 s)
- *    en get_session (checklist en "wacht op jou"-regel van de open threads).
- * 2. De hele gesprekken: list_events geeft per thread (en voor de projectchat de coördinator-sessies) alle
- *    berichten van niels en de antwoorden van Claude, bladzijde voor bladzijde terug in de tijd.
- * Zonder connector valt alles terug op status.json; er gaat niets mis.
+ * THREADS UIT DE PROJECTBESTANDEN (v35). niels 6 nov 14:07: de connector voor de live stand bleef "Kan deze
+ * connector niet laden" geven, wat de pagina ook deed. Daarom gebruikt de HQ geen connector meer. Claude zet de
+ * stand van alle threads en de gesprekken zelf als bestanden in het project, ongeveer elk uur (en tussendoor op
+ * verzoek, met de knop "Nu ophalen" in het gesprekspaneel):
+ *   driftmark-hq/gesprekken/threads.json       stand van elke thread
+ *   driftmark-hq/gesprekken/<threadId>.json    het gesprek van één thread
+ *   driftmark-hq/gesprekken/projectchat.json   de projectchat
+ * De pagina leest ze via de files-capability, net als status.json (services/live.ts): threads.json elke minuut
+ * zolang de pagina zichtbaar is, een gesprek zodra het gesprekspaneel opengaat en daarna elke minuut.
  */
 import { create } from 'zustand';
-import { useLive, type Activity } from './live';
+import { useLive, filesApi, type Activity } from './live';
 import { useGame } from '../store/useGame';
 
-export const SERVER = 'Claude Code Remote';
-export type Bucket = 'working' | 'blocked' | 'review_ready' | 'done' | 'failed' | 'idle';
-export interface SessionLive {
-  id: string; title: string; bucket: Bucket; updatedAt?: string; createdAt?: string; tags?: string[];
-  needs?: string; detail?: string; recent?: string; checklist?: string; parent?: string; at: number;
-}
-type Src = 'laden' | 'live' | 'geen' | 'fout' | 'uit';
-interface S {
-  sessions: Record<string, SessionLive>; src: Src; err?: string; checkedAt?: number;
-  coordinators: string[]; // projectchat: alle coördinator-sessies, nieuwste eerst
-}
-export const useThreads = create<S>(() => ({ sessions: {}, src: 'laden', coordinators: [] }));
-
-/* ---------- hulpjes ---------- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
-let mcpP: Promise<Any | null> | null = null;
-function mcp(): Promise<Any | null> {
-  if (!mcpP) mcpP = (async () => { try { const c = (window as Any).claude; return c?.use ? await c.use('mcp') : null; } catch { return null; } })();
-  return mcpP;
-}
-/** antwoord van de connector: JSON (soms ingepakt in tekst of in {ccr: ...}) */
-export function unwrap(r: Any): Any {
-  let p = r?.payload ?? r;
-  if (p && typeof p === 'object' && Array.isArray(p.content) && p.payload === undefined) {
-    const t = p.content.find((b: Any) => b?.type === 'text')?.text; if (t) p = t;
-  }
-  if (typeof p === 'string') {
-    const a = p.indexOf('{'), b = p.lastIndexOf('}');
-    if (a >= 0 && b > a) { try { p = JSON.parse(p.slice(a, b + 1)); } catch { /* */ } }
-  }
-  return p?.ccr ?? p;
-}
-const BUCKET: Record<string, Bucket> = {
-  SESSION_STATUS_BUCKET_WORKING: 'working', SESSION_STATUS_BUCKET_BLOCKED: 'blocked', SESSION_STATUS_BUCKET_REVIEW_READY: 'review_ready',
-  SESSION_STATUS_BUCKET_COMPLETED: 'done', SESSION_STATUS_BUCKET_FAILED: 'failed', working: 'working', blocked: 'blocked', review_ready: 'review_ready', completed: 'done', failed: 'failed',
-};
-function toLive(s: Any, old?: SessionLive): SessionLive {
-  const pts = s.external_metadata?.post_turn_summary ?? s.post_turn_summary ?? {};
-  return {
-    ...(old ?? {}), id: s.id, title: s.title ?? old?.title ?? '', bucket: BUCKET[s.status_bucket] ?? old?.bucket ?? 'idle',
-    updatedAt: s.updated_at ?? old?.updatedAt, createdAt: s.created_at ?? old?.createdAt, tags: s.tags ?? old?.tags,
-    needs: pts.needs_action || undefined, detail: pts.status_detail || undefined, recent: pts.recent_action || old?.recent,
-    checklist: s.external_metadata?.status?.text ?? old?.checklist, parent: s.parent_session_id ?? old?.parent, at: Date.now(),
-  };
-}
-export const sessionOfThread = (a: Activity) => a.session ?? null;
 
-/* ---------- stand van alle threads ---------- */
-const unsub: (() => void)[] = [];
-const AUTHZ = new Set(['needs_reauth', 'server_not_connected', 'blocked_by_policy', 'approval_required', 'not_in_manifest', 'selection_required']);
-function retract(code?: string) {
-  for (const off of watching.values()) off();
-  watching.clear();
-  useThreads.setState({ sessions: {}, coordinators: [], src: 'geen', err: code });
-  // de takenlijst terug naar wat status.json zegt
-  if (raw) { merged = null; useLive.setState((st) => ({ data: { ...st.data, activity: raw! } })); }
+/* ---------- tijden, altijd in de tijd van niels (Nederland) ---------- */
+const MND = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+const DELEN = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Amsterdam', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' });
+const twee = (n: number) => String(n).padStart(2, '0');
+function delen(t: number) {
+  const p: Record<string, string> = {};
+  for (const x of DELEN.formatToParts(new Date(t))) p[x.type] = x.value;
+  // % 24: sommige browsers schrijven middernacht als 24
+  return { j: Number(p.year), m: Number(p.month), d: Number(p.day), u: twee(Number(p.hour) % 24), mi: twee(Number(p.minute)) };
 }
+/** "6 nov 14:21": zoals de 'last'-regels in status.json */
+export function kortNl(t: string | number | undefined): string {
+  const n = typeof t === 'number' ? t : Date.parse(t ?? ''); if (isNaN(n)) return '';
+  const x = delen(n); return `${x.d} ${MND[x.m - 1]} ${x.u}:${x.mi}`;
+}
+/** "vandaag 14:21", "gisteren 09:05" of "4 nov 18:30" */
+export function wanneerNl(iso?: string): string {
+  const n = Date.parse(iso ?? ''); if (isNaN(n)) return '';
+  const x = delen(n); const zelfde = (y: ReturnType<typeof delen>) => x.j === y.j && x.m === y.m && x.d === y.d;
+  return zelfde(delen(Date.now())) ? `vandaag ${x.u}:${x.mi}` : zelfde(delen(Date.now() - 864e5)) ? `gisteren ${x.u}:${x.mi}` : kortNl(n);
+}
+
+/* ---------- de stand van alle threads (threads.json) ---------- */
+export type ThreadState = 'working' | 'blocked' | 'review_ready' | 'done' | 'failed' | 'stopped';
+const STATES = new Set<string>(['working', 'blocked', 'review_ready', 'done', 'failed', 'stopped']);
+export interface ThreadInfo {
+  id: string; title: string; state: ThreadState; last?: string; resolved?: boolean;
+  /** aantal berichten in het gespreksbestand, en of dat bestand er al is */
+  msgs?: number; file?: boolean;
+}
+/** laden · ok · ontbreekt (threads.json is er nog niet) · geen-toegang (geen projectbestanden) · fout */
+export type ThreadsSrc = 'laden' | 'ok' | 'ontbreekt' | 'geen-toegang' | 'fout';
+interface S { threads: Record<string, ThreadInfo>; at?: string; src: ThreadsSrc }
+export const useThreads = create<S>(() => ({ threads: {}, src: 'laden' }));
+
+/** wat de stand voor niels betekent: een opgeloste thread is klaar, tenzij hij weer aan het werk is */
+export const stateOf = (t: ThreadInfo): ThreadState => (t.resolved && t.state !== 'working' ? 'done' : t.state);
+
+const DIR = 'driftmark-hq/gesprekken';
+/** thread-id's (cmsg_...) en "projectchat": alleen letters, cijfers, _ en -, dus nooit een ander pad */
+const VEILIG = /^[A-Za-z0-9_-]{1,160}$/;
+type Lees = { ok: true; data: Any } | { ok: false; code: string; wacht?: number };
+const pauze = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** één JSON-bestand uit de projectbestanden, zoals live.ts status.json leest (eerst zonder, dan met / ervoor) */
+async function leesJson(rel: string): Promise<Lees> {
+  const fs = await filesApi();
+  if (!fs) return { ok: false, code: 'geen-files' };
+  const codes: string[] = [];
+  for (const p of [rel, `/${rel}`]) {
+    let bytes: Uint8Array;
+    try { bytes = (await fs.read(p)).bytes; } catch (e) {
+      const code = String((e as Any)?.code ?? 'unavailable');
+      if (code === 'not_found' || code === 'bad_request') { codes.push(code); continue; }
+      return { ok: false, code, wacht: Number((e as Any)?.retryAfterMs) || undefined };
+    }
+    // half geschreven of geen JSON: als fout melden, de volgende lees probeert het opnieuw
+    try { return { ok: true, data: JSON.parse(new TextDecoder().decode(bytes)) }; } catch { return { ok: false, code: 'kapot' }; }
+  }
+  return { ok: false, code: codes.includes('not_found') ? 'not_found' : codes[0] ?? 'unavailable' };
+}
+
+function leesThreads(j: Any): { at?: string; threads: Record<string, ThreadInfo> } | null {
+  const lijst: Any[] | null = Array.isArray(j?.threads) ? j.threads : null;
+  if (!lijst) return null;
+  const threads: Record<string, ThreadInfo> = {};
+  for (const t of lijst) {
+    const id = typeof t?.id === 'string' ? t.id.trim() : '';
+    if (!VEILIG.test(id) || !STATES.has(t.state)) continue;
+    threads[id] = {
+      id, title: typeof t.title === 'string' ? t.title.trim() : '', state: t.state,
+      last: typeof t.last === 'string' && !isNaN(Date.parse(t.last)) ? t.last : undefined,
+      resolved: t.resolved === true || undefined,
+      msgs: Number.isFinite(t.msgs) ? Number(t.msgs) : undefined, file: typeof t.file === 'boolean' ? t.file : undefined,
+    };
+  }
+  return { at: typeof j.at === 'string' ? j.at : undefined, threads };
+}
+
+const zetSrc = (src: ThreadsSrc) => { if (useThreads.getState().src !== src) useThreads.setState({ src }); };
+let bezig = false; let gelezen = 0; let weg = false; let opnieuw: ReturnType<typeof setTimeout> | undefined;
+async function poll(herkansing = false) {
+  if (bezig || weg) return;
+  bezig = true; gelezen = Date.now(); clearTimeout(opnieuw);
+  try {
+    const r = await leesJson(`${DIR}/threads.json`);
+    const heeft = Object.keys(useThreads.getState().threads).length > 0;
+    if (r.ok) {
+      const p = leesThreads(r.data);
+      if (!p) { if (!heeft) zetSrc('fout'); return; }
+      const cur = useThreads.getState();
+      if (cur.src === 'ok' && cur.at === p.at && JSON.stringify(cur.threads) === JSON.stringify(p.threads)) return; // niets nieuws
+      useThreads.setState({ threads: p.threads, at: p.at, src: 'ok' });
+      return;
+    }
+    // geen projectbestanden in deze weergave, of niels gaf geen toestemming (dan niet blijven vragen)
+    if (r.code === 'geen-files' || r.code === 'not_granted') { if (r.code === 'not_granted') weg = true; zetSrc('geen-toegang'); return; }
+    // nog geen bestand: wat we al wisten blijft staan
+    if (r.code === 'not_found') { if (!heeft) zetSrc('ontbreekt'); return; }
+    if (!heeft) zetSrc('fout');
+    // even bezet, net veranderd of half geschreven: zo meteen nog één keer
+    if (!herkansing) opnieuw = setTimeout(() => void poll(true), Math.min(Math.max(r.wacht ?? 8000, 2000), 30000));
+  } finally { bezig = false; }
+}
+
 let started = false;
-const CCR = `mcp:${SERVER}`;
-async function perms(): Promise<Any | null> { try { const c = (window as Any).claude; return c?.use ? await c.use('permissions') : null; } catch { return null; } }
-export async function startThreads(klik = false) {
+/** Eén keer bij het starten van de app. Leest threads.json meteen na de eerste lees van status.json (dan vraagt
+ *  claude.ai hooguit één keer om toegang) en daarna elke minuut, alleen zolang de pagina zichtbaar is. */
+export function startThreads() {
   if (started) return; started = true;
-  const m = await mcp();
-  if (!m) { useThreads.setState({ src: 'geen' }); return; }
-  // niels 6 nov: bij het openen kwam steeds "Kan deze connector niet laden". Daarom alleen vanzelf live als de
-  // koppeling al is toegestaan; anders pas na een klik op "Live aanzetten" (Meer > Alle taken), dus geen venster bij elke start.
-  if (!klik) {
-    const p = await perms();
-    const st: string = p ? await p.state(CCR).catch(() => 'unavailable') : 'prompt';
-    if (st === 'denied' || st === 'unavailable') { started = false; useThreads.setState({ src: 'geen', err: st }); return; }
-    if (st !== 'granted') { started = false; useThreads.setState({ src: 'uit' }); return; }
+  if (useLive.getState().checkedAt != null) void poll();
+  else {
+    const reserve = setTimeout(() => { klaar(); void poll(); }, 20000);
+    const klaar = useLive.subscribe((s) => { if (s.checkedAt != null) { clearTimeout(reserve); klaar(); void poll(); } });
   }
-  const onList = (ev: Any) => {
-    if (ev.type === 'error') {
-      const code = ev.error?.code;
-      // geen toegang (meer): de live stand intrekken, anders blijft een oude stand ("bezig") eeuwig staan
-      if (AUTHZ.has(code)) { retract(code); return; }
-      useThreads.setState({ src: code === 'server_unavailable' ? useThreads.getState().src : 'fout', err: code }); return;
-    }
-    const p = unwrap(ev.result); const data: Any[] = Array.isArray(p?.data) ? p.data : [];
-    const cur = { ...useThreads.getState().sessions };
-    const coords: string[] = [];
-    for (const s of data) {
-      if (!s?.id) continue;
-      const tags: string[] = s.tags ?? [];
-      if (tags.includes('hearth-overview')) { cur[s.id] = toLive(s, cur[s.id]); coords.push(s.id); continue; }
-      if (tags.length && !tags.includes('hearth-thread')) continue;
-      cur[s.id] = toLive(s, cur[s.id]);
-    }
-    coords.sort((x, y) => (cur[y].createdAt ?? '').localeCompare(cur[x].createdAt ?? ''));
-    useThreads.setState({ sessions: cur, src: 'live', checkedAt: Date.now(), coordinators: coords.length ? coords : useThreads.getState().coordinators });
-    watchActive();
-  };
-  // eerst met het label-filter (alleen threads + projectchat); lukt dat niet, dan alle sessies en zelf filteren
-  try {
-    await m.callTool(SERVER, 'list_sessions', { tags: ['hearth-thread', 'hearth-overview'], limit: 100 }, { cache: { staleTime: 20000 } });
-    unsub.push(m.watchTool(SERVER, 'list_sessions', { tags: ['hearth-thread', 'hearth-overview'], limit: 100 }, onList, { refetchInterval: 30000, cache: { staleTime: 20000 } }));
-  } catch (e) {
-    const code = (e as Any)?.code;
-    if (AUTHZ.has(code)) { useThreads.setState({ src: 'geen', err: code }); return; }
-    unsub.push(m.watchTool(SERVER, 'list_sessions', { limit: 100 }, onList, { refetchInterval: 30000, cache: { staleTime: 20000 } }));
-  }
+  setInterval(() => { if (document.visibilityState === 'visible') void poll(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - gelezen >= 60000) void poll(); });
 }
 
-/** knop "Live aanzetten": vraagt toestemming voor Claude Code Remote (één venster) en start dan de live stand */
-export async function zetLiveAan(): Promise<string> {
-  const p = await perms();
-  if (p) {
-    const r: Record<string, string> = await p.request([CCR]).catch(() => ({}));
-    const st = r[CCR] ?? 'unavailable';
-    if (st === 'denied' || st === 'unavailable') { useThreads.setState({ src: 'geen', err: st }); return st; }
-  }
-  started = false;
-  await startThreads(true);
-  return useThreads.getState().src;
-}
-/** het menu Rechten van claude.ai openen (uitweg als de koppeling geweigerd is) */
-export async function openRechten(): Promise<boolean> { try { const p = await perms(); if (!p) return false; await p.manage(); return true; } catch { return false; } }
-
-/** van de threads die open zijn (bezig, wacht op jou) ook de checklist en de "wacht op jou"-regel bijhouden */
-const watching = new Map<string, () => void>();
-function watchActive() {
-  void mcp().then((m) => {
-    if (!m) return;
-    const S = useThreads.getState().sessions;
-    const act = Object.values(S).filter((s) => !s.tags?.includes('hearth-overview') && (s.bucket === 'working' || s.bucket === 'blocked' || s.bucket === 'review_ready')).map((s) => s.id);
-    for (const [id, off] of watching) if (!act.includes(id)) { off(); watching.delete(id); }
-    for (const id of act) {
-      if (watching.has(id)) continue;
-      const off = m.watchTool(SERVER, 'get_session', { session_id: id }, (ev: Any) => {
-        if (ev.type !== 'data' || ev.result?.cache?.revalidating) return; // een bewaarde (oude) stand: wachten op de verse
-        const s = unwrap(ev.result); if (!s?.id) return;
-        const cur = useThreads.getState().sessions; const old = cur[s.id];
-        if (old?.updatedAt && s.updated_at && Date.parse(s.updated_at) < Date.parse(old.updatedAt)) return; // ouder dan wat we al weten
-        useThreads.setState({ sessions: { ...cur, [s.id]: toLive(s, old) } });
-      }, { refetchInterval: 30000, cache: { staleTime: 20000 } });
-      watching.set(id, off);
-    }
-  });
+/* ---------- de stand in de takenlijst (en dus ook in het 3D-kantoor) ---------- */
+const OPEN = new Set<string>(['working', 'blocked', 'review_ready']);
+/** Legt de stand van één thread over zijn rij uit status.json. */
+function overlay(a: Activity, t: ThreadInfo, at?: string): Activity {
+  const rl = Date.parse(a.lastIso ?? '');
+  const tl = Date.parse(t.last ?? '');
+  // tot wanneer threads.json het weet: het moment van ophalen (anders de laatste activiteit van de thread)
+  const peil = isNaN(Date.parse(at ?? '')) ? tl : Date.parse(at!);
+  // status.json veranderde deze rij ná dat moment: de rij is nieuwer, laat hem zoals hij is
+  if (!isNaN(rl) && !isNaN(peil) && rl > peil) return a;
+  const nieuwer = !isNaN(tl) && (isNaN(rl) || tl > rl);
+  let state: string = stateOf(t);
+  // afgerond in status.json (bijv. na jouw Goedkeuren) en sindsdien niets nieuws in de thread: blijft klaar
+  if (a.state === 'done' && state !== 'working' && !nieuwer) state = 'done';
+  return { ...a, state, live: true, ...(nieuwer ? { lastIso: new Date(tl).toISOString(), last: kortNl(tl) } : {}) };
 }
 
-/** eenmalig de details van één thread ophalen (bij het openen van het gesprek) */
-export async function loadSession(id: string): Promise<SessionLive | null> {
-  const m = await mcp(); if (!m) return null;
-  try {
-    const s = unwrap(await m.callTool(SERVER, 'get_session', { session_id: id }, { cache: { staleTime: 15000 } }));
-    if (!s?.id) return null;
-    const cur = useThreads.getState().sessions; const v = toLive(s, cur[s.id]);
-    useThreads.setState({ sessions: { ...cur, [s.id]: v } });
-    return v;
-  } catch { return null; }
-}
-
-/* ---------- de live stand in de takenlijst (en dus ook in het 3D-kantoor) ---------- */
-const STATE_OF: Record<Bucket, string> = { working: 'working', blocked: 'blocked', review_ready: 'review_ready', done: 'done', failed: 'failed', idle: 'done' };
-const ago = (iso?: string) => {
-  if (!iso) return ''; const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return 'net nu'; if (m < 60) return `${m} min geleden`; const h = Math.round(m / 60); if (h < 24) return `${h} uur geleden`; const d = Math.round(h / 24); return `${d} ${d === 1 ? 'dag' : 'dagen'} geleden`;
-};
 let raw: Activity[] | null = null; let merged: Activity[] | null = null; let mergedSig = '';
-const iso = (t?: string) => { const n = Date.parse(t ?? ''); return isNaN(n) ? undefined : new Date(n).toISOString(); }; // altijd UTC mét Z
 function merge() {
-  const L = useLive.getState(); const S = useThreads.getState().sessions;
+  const L = useLive.getState(); const { threads: T, at } = useThreads.getState();
   if (L.data.activity !== merged) raw = L.data.activity;
-  if (!raw || !Object.keys(S).length) return;
-  const seen = new Set<string>();
-  const out = raw.map((a) => {
-    const s = a.session ? S[a.session] : undefined; if (!s) return a;
-    seen.add(s.id);
-    // een afgeronde (opgeloste) thread blijft afgerond, ook als de sessie zelf nog "klaar voor review" zegt
-    const state = a.state === 'done' && s.bucket !== 'working' ? 'done' : STATE_OF[s.bucket];
-    const su = Date.parse(s.updatedAt ?? ''); const la = Date.parse(a.lastIso ?? '');
-    const newer = !isNaN(su) && (isNaN(la) || su > la);
-    return {
-      ...a, state, live: true, needs: s.needs, recent: s.recent, checklist: s.checklist,
-      ...(newer ? { lastIso: iso(s.updatedAt), last: ago(s.updatedAt) } : {}),
-      ...(s.bucket === 'working' && s.recent ? { doing: s.recent } : s.needs && (s.bucket === 'blocked' || s.bucket === 'review_ready') ? { doing: s.needs } : {}),
-    } as Activity;
-  });
-  // nieuwe threads die nog niet in status.json staan
-  for (const s of Object.values(S)) {
-    if (seen.has(s.id) || s.tags?.includes('hearth-overview') || raw.some((a) => a.session === s.id)) continue;
-    // afgerond vóór het laatste uurbestand: dat bestand had hem dan al moeten tonen, dus overslaan
-    const u = Date.parse(useLive.getState().data.updated ?? '');
-    if (s.bucket === 'done' && (isNaN(u) || Date.parse(s.updatedAt ?? '') < u)) continue;
-    out.unshift({ title: s.title, id: '', session: s.id, state: STATE_OF[s.bucket], last: ago(s.updatedAt), lastIso: iso(s.updatedAt), doing: s.recent ?? s.detail, live: true, needs: s.needs, checklist: s.checklist } as Activity);
+  if (!raw || !Object.keys(T).length) return;
+  const gezien = new Set<string>();
+  const rijen = raw.map((a) => { const t = a.id ? T[a.id] : undefined; if (!t) return a; gezien.add(t.id); return overlay(a, t, at); });
+  // threads die nog niet in status.json staan: alleen als ze bezig zijn of op jou wachten
+  const extra: Activity[] = [];
+  for (const t of Object.values(T)) {
+    const state = stateOf(t);
+    if (gezien.has(t.id) || !OPEN.has(state)) continue;
+    const tl = Date.parse(t.last ?? '');
+    extra.push({ title: t.title || 'Nieuwe thread', id: t.id, state, last: kortNl(tl), lastIso: isNaN(tl) ? undefined : new Date(tl).toISOString(), live: true });
   }
-  // niets veranderd: de store niet opnieuw zetten (anders draaien alle effecten die op de live stand letten opnieuw)
+  extra.sort((x, y) => (Date.parse(y.lastIso ?? '') || 0) - (Date.parse(x.lastIso ?? '') || 0));
+  const out = [...extra, ...rijen];
+  // niets veranderd: de store niet opnieuw zetten (anders draaien alle effecten die op de stand letten opnieuw)
   const sig = JSON.stringify(out);
   if (L.data.activity === merged && sig === mergedSig) return;
   merged = out; mergedSig = sig;
@@ -209,86 +179,66 @@ useThreads.subscribe(merge);
 useLive.subscribe((st, prev) => { if (st.data.activity !== prev.data.activity && st.data.activity !== merged) merge(); });
 
 /* ================= meldingen: als een thread klaar is, op jou wacht of misgaat ================= */
-const lastBucket = new Map<string, Bucket>();
-let meldReady = false;
-useThreads.subscribe((st) => {
-  const S = st.sessions; const ids = Object.keys(S); if (!ids.length) return;
-  for (const id of ids) {
-    const s = S[id]; const was = lastBucket.get(id); lastBucket.set(id, s.bucket);
-    if (!meldReady || !was || was === s.bucket || s.tags?.includes('hearth-overview')) continue;
-    const titel = s.title?.slice(0, 80) || 'Een thread';
-    const m = s.bucket === 'review_ready' ? { t: `✅ Klaar om te bekijken: ${titel}`, k: 'success' as const }
-      : s.bucket === 'blocked' ? { t: `👋 Wacht op jou: ${titel}${s.needs ? ` (${s.needs.slice(0, 80)})` : ''}`, k: 'approval' as const }
-      : s.bucket === 'failed' ? { t: `⚠️ Mislukt: ${titel}`, k: 'warning' as const }
-      : s.bucket === 'done' && was === 'working' ? { t: `✅ Afgerond: ${titel}`, k: 'success' as const } : null;
+// zoals eerder bij de live stand, nu op basis van threads.json; nooit bij de eerste keer laden
+const vorige = new Map<string, ThreadState>();
+let meldKlaar = false;
+/** threads.json komt ongeveer elk uur: een korte taak staat er bij de eerste keer vaak al als klaar of wachtend in */
+const MELD_NIEUW = new Set<ThreadState>(['review_ready', 'blocked', 'failed']);
+useThreads.subscribe((st, prev) => {
+  if (st.threads === prev.threads) return;
+  let toasts = 0;
+  for (const t of Object.values(st.threads)) {
+    const nu = stateOf(t); const was = vorige.get(t.id); vorige.set(t.id, nu);
+    // eerste keer laden: alleen onthouden. Daarna: een andere stand, of een nieuwe thread die al op jou wacht
+    if (!meldKlaar || was === nu || (!was && !MELD_NIEUW.has(nu))) continue;
+    const rij = (raw ?? useLive.getState().data.activity).find((a) => a.id === t.id);
+    const titel = (rij?.title || t.title || 'Een thread').slice(0, 80);
+    const m = nu === 'review_ready' ? { t: `✅ Klaar om te bekijken: ${titel}`, k: 'success' as const }
+      : nu === 'blocked' ? { t: `👋 Wacht op jou: ${titel}${rij?.needs ? ` (${rij.needs.slice(0, 80)})` : ''}`, k: 'approval' as const }
+      : nu === 'failed' ? { t: `⚠️ Mislukt: ${titel}`, k: 'warning' as const }
+      : nu === 'done' && was === 'working' ? { t: `✅ Afgerond: ${titel}`, k: 'success' as const } : null;
     if (!m) continue;
-    const g = useGame.getState();
     useGame.setState((d: Any) => { d.notifications.unshift({ id: `m${Date.now()}${Math.random().toString(36).slice(2, 6)}`, tick: d.tick ?? 0, text: m.t, kind: m.k, read: false, link: 'meer' }); if (d.notifications.length > 80) d.notifications.length = 80; });
-    g.toast(m.t, m.k === 'warning' ? 'warning' : m.k === 'approval' ? 'info' : 'success');
+    // veel tegelijk (bijv. na een tijd weg): hooguit drie meldingen in beeld, de rest staat bij de meldingen
+    if (toasts++ < 3) useGame.getState().toast(m.t, m.k === 'warning' ? 'warning' : m.k === 'approval' ? 'info' : 'success');
   }
-  meldReady = true;
+  meldKlaar = true;
 });
 
 /* ================= gesprekken ================= */
 export interface Msg { id: string; who: 'niels' | 'claude' | 'keuze' | 'checklist' | 'systeem'; text: string; at: string; author?: string; options?: string[] }
-const ENT: Record<string, string> = { '&lt;': '<', '&gt;': '>', '&amp;': '&', '&quot;': '"', '&#39;': "'", '&apos;': "'" };
-const dec = (s: string) => s.replace(/&(lt|gt|amp|quot|#39|apos);/g, (m) => ENT[m] ?? m);
-const attr = (attrs: string, k: string) => new RegExp(`\\b${k}="([^"]*)"`).exec(attrs)?.[1];
-function textOf(content: Any): string {
-  if (typeof content === 'string') return content;
-  if (Array.isArray(content)) return content.filter((b: Any) => b?.type === 'text').map((b: Any) => b.text ?? '').join('\n');
-  return '';
+export interface GesprekBestand { id: string; title: string; at?: string; hasMore: boolean; msgs: Msg[] }
+export type GesprekLees = { kind: 'ok'; g: GesprekBestand } | { kind: 'ontbreekt' } | { kind: 'geen-toegang' } | { kind: 'fout'; code: string };
+const WIE: Record<string, Msg['who']> = { niels: 'niels', user: 'niels', claude: 'claude', assistant: 'claude', keuze: 'keuze', checklist: 'checklist', systeem: 'systeem' };
+
+function leesGesprek(j: Any, id: string): GesprekBestand | null {
+  if (!j || typeof j !== 'object' || Array.isArray(j)) return null;
+  const msgs: Msg[] = [];
+  (Array.isArray(j.msgs) ? j.msgs : []).forEach((m: Any, i: number) => {
+    if (!m || typeof m !== 'object') return;
+    const text = typeof m.text === 'string' ? m.text : '';
+    const options = Array.isArray(m.options) ? m.options.filter((o: unknown): o is string => typeof o === 'string' && !!o.trim()) : [];
+    if (!text.trim() && !options.length) return;
+    msgs.push({
+      id: typeof m.id === 'string' && m.id ? m.id : `m${i}`, who: WIE[String(m.who)] ?? 'systeem', text, at: typeof m.at === 'string' ? m.at : '',
+      author: typeof m.author === 'string' && m.author.trim() ? m.author.trim() : undefined, options: options.length ? options : undefined,
+    });
+  });
+  // oudste eerst, zo hoort het bestand te zijn; staat het andersom, dan draaien we het om
+  if (msgs.length > 1 && Date.parse(msgs[0].at) > Date.parse(msgs[msgs.length - 1].at)) msgs.reverse();
+  return { id: typeof j.id === 'string' ? j.id : id, title: typeof j.title === 'string' ? j.title : '', at: typeof j.at === 'string' ? j.at : undefined, hasMore: j.hasMore === true, msgs };
 }
 
-/** zet de ruwe gebeurtenissen om in berichten (wat niels schreef en wat Claude hem antwoordde) */
-export function parseEvents(events: Any[]): Msg[] {
-  const out: Msg[] = [];
-  for (const ev of events) {
-    const at: string = ev?.created_at ?? '';
-    const u = ev?.user?.internal_anthropic_catchall?.message ?? ev?.user?.message;
-    const a = ev?.assistant?.internal_anthropic_catchall?.message ?? ev?.assistant?.message;
-    if (u) {
-      const c = u.content;
-      if (Array.isArray(c) && c.some((b: Any) => b?.type === 'tool_result')) continue; // uitvoer van gereedschap
-      const t = textOf(c); if (!t) continue;
-      const seenText = new Set<string>();
-      // berichten van niels in een wake (thread of projectchat)
-      for (const mm of t.matchAll(/<message\b([^>]*)>([\s\S]*?)<\/message>/g)) {
-        const at2 = mm[1]; if (attr(at2, 'from') !== 'human') continue;
-        const body = dec(mm[2].trim()); if (!body || seenText.has(body)) continue; seenText.add(body);
-        out.push({ id: `${ev.user?.uuid ?? at}:${out.length}`, who: 'niels', text: body, at, author: attr(at2, 'author') });
-      }
-      // het eerste bericht van een thread komt als citaat via de coördinator
-      for (const mm of t.matchAll(/<cited\b([^>]*)>([\s\S]*?)<\/cited>/g)) {
-        const body = dec(mm[2].trim()); if (!body || seenText.has(body)) continue; seenText.add(body);
-        out.push({ id: `${ev.user?.uuid ?? at}:c${out.length}`, who: 'niels', text: body, at, author: attr(mm[1], 'author') === 'user' ? 'niels' : attr(mm[1], 'author') });
-      }
-      // keuze op een beslissingskaart
-      for (const mm of t.matchAll(/<decision\b([^>]*)>([\s\S]*?)<\/decision>/g)) out.push({ id: `${ev.user?.uuid ?? at}:d${out.length}`, who: 'keuze', text: dec(mm[2].trim()) || (attr(mm[1], 'chose') ?? ''), at });
-      continue;
-    }
-    if (a && Array.isArray(a.content)) {
-      for (const b of a.content) {
-        if (b?.type !== 'tool_use') continue;
-        const n: string = b.name ?? ''; const inp = b.input ?? {};
-        if (/hearthbot__post_message$/.test(n) && inp.text) out.push({ id: b.id, who: 'claude', text: String(inp.text), at });
-        else if (/hearthbot__edit_message$/.test(n) && inp.text) out.push({ id: b.id, who: 'systeem', text: `Bericht aangepast: ${String(inp.text).slice(0, 400)}`, at });
-        else if (/hearthbot__request_decision$/.test(n)) out.push({ id: b.id, who: 'keuze', text: String(inp.question ?? 'Keuze'), options: (inp.options ?? []).map((o: Any) => `${o.label}${o.consequence ? `: ${o.consequence}` : ''}`), at });
-        else if (/hearthbot__update_progress_checklist$/.test(n) && inp.text) out.push({ id: b.id, who: 'checklist', text: String(inp.text), at });
-        else if (/hearthbot__post_widget$/.test(n)) out.push({ id: b.id, who: 'systeem', text: 'Claude stuurde een kaart (bijv. een concept om te versturen).', at });
-      }
-    }
-  }
-  return out;
-}
-
-export interface Page { msgs: Msg[]; firstId?: string; lastId?: string; hasMore: boolean }
-/** één bladzijde (100 gebeurtenissen) van een sessie; zonder cursor de nieuwste */
-export async function loadPage(session: string, cur?: { before?: string; after?: string }): Promise<Page> {
-  const m = await mcp(); if (!m) throw Object.assign(new Error('geen connector'), { code: 'geen' });
-  const input: Record<string, unknown> = { session_id: session, kinds: ['user', 'assistant'], limit: 100 };
-  if (cur?.before) input.before_id = cur.before; if (cur?.after) input.after_id = cur.after;
-  const r = unwrap(await m.callTool(SERVER, 'list_events', input, cur?.before ? { cache: { staleTime: 10 * 60000, gcTime: 10 * 60000 } } : { cache: false }));
-  const data: Any[] = Array.isArray(r?.data) ? r.data : [];
-  return { msgs: parseEvents(data), firstId: r?.first_id, lastId: r?.last_id, hasMore: !!r?.has_more };
+/** Het gesprek van een thread (id = cmsg_...) of van de projectchat (id = "projectchat"). */
+export async function loadGesprek(id: string): Promise<GesprekLees> {
+  if (!VEILIG.test(id)) return { kind: 'ontbreekt' };
+  const pad = `${DIR}/${id}.json`;
+  let r = await leesJson(pad);
+  // een net geschreven bestand is soms een paar tellen nog niet te zien: zegt threads.json dat hij er is, dan nog één keer
+  if (!r.ok && r.code === 'not_found' && useThreads.getState().threads[id]?.file) { await pauze(2500); r = await leesJson(pad); }
+  else if (!r.ok && ['changed', 'rate_limited', 'kapot'].includes(r.code)) { await pauze(Math.min(r.wacht ?? 2000, 10000)); r = await leesJson(pad); }
+  if (r.ok) { const g = leesGesprek(r.data, id); return g ? { kind: 'ok', g } : { kind: 'fout', code: 'vorm' }; }
+  if (r.code === 'not_found') return { kind: 'ontbreekt' };
+  if (r.code === 'geen-files' || r.code === 'not_granted') return { kind: 'geen-toegang' };
+  return { kind: 'fout', code: r.code };
 }

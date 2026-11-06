@@ -10,9 +10,10 @@ import { useDb, startDb } from './db';
 
 export interface Activity {
   title: string; id: string; state: string; last: string; doing?: string; video?: number; lastIso?: string;
-  /** sessie van de thread bij Claude Code Remote (session_...), voor de live stand en het hele gesprek */
+  /** oude sessie-id van de thread (session_...); niet meer nodig, de thread-id (id) is de sleutel */
   session?: string;
-  /** live uit de connector: staat er iets voor niels klaar, wat deed Claude net, en de checklist */
+  /** live: de stand komt uit de threads (driftmark-hq/gesprekken/threads.json, ongeveer elk uur bijgewerkt);
+   *  needs: wat er voor niels klaarstaat; recent en checklist: alleen nog als status.json ze meegeeft */
   live?: boolean; needs?: string; recent?: string; checklist?: string;
 }
 export interface Output { name: string; path: string; kind?: 'image' | 'video' | 'file' }
@@ -99,6 +100,19 @@ export async function readFile(path: string): Promise<Uint8Array> {
   return (await fs.read(path)).bytes;
 }
 export async function downloadFile(path: string) { if (fs) await fs.download(path); }
+/** De files-capability, op dezelfde manier opgevraagd als hierboven (ook voor services/threads.ts).
+ *  null: deze weergave kan de projectbestanden niet lezen. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function filesApi(): Promise<any | null> {
+  if (fs === undefined) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = (window as any).claude;
+      fs = c?.use ? await c.use('files') : null;
+    } catch { return null; }
+  }
+  return fs;
+}
 
 export function startLive() {
   if (started) return; started = true;
