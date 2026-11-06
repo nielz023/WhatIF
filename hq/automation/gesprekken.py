@@ -9,6 +9,7 @@ De HQ-pagina leest deze bestanden via de files-capability:
 Gebruik:
   python3 gesprekken.py threads <bestand>
       <bestand>: één regel per thread:  thread_id|state|last_activity_at|resolved(0/1)|titel
+      (mag een deel zijn, bv. list_threads met 'since': de andere threads blijven zoals ze waren)
       Schrijft threads.json en print JSON {"ophalen": [...]}: actieve threads (working, blocked,
       review_ready) waarvan het gesprek nog niet of niet meer actueel is opgehaald, plus altijd de
       projectchat, elk met vanaf_at = tijd van het laatst opgehaalde bericht (alleen nieuwere omzetten).
@@ -62,7 +63,7 @@ def gesprek_pad(tid: str) -> str:
 
 def cmd_threads(bron: str):
     oud = {t['id']: t for t in lees(THREADS, {}).get('threads', [])}
-    rijen = []
+    nieuw = {}
     for regel in open(bron, encoding='utf-8'):
         regel = regel.strip()
         if not regel or regel.startswith('#'):
@@ -75,13 +76,15 @@ def cmd_threads(bron: str):
         if not ID_RE.match(tid):
             print(f'regel overgeslagen (geen thread-id): {regel[:80]}', file=sys.stderr)
             continue
+        nieuw[tid] = {'id': tid, 'title': titel, 'state': state, 'last': last, 'resolved': resolved in ('1', 'true', 'ja')}
+    # samenvoegen: threads die niet in het bestand staan (list_threads met 'since') blijven zoals ze waren
+    rijen = []
+    for tid in {**oud, **nieuw}:
+        t = {**(oud.get(tid) or {}), **(nieuw.get(tid) or {})}
         g = lees(gesprek_pad(tid), None)
-        rijen.append({
-            'id': tid, 'title': titel, 'state': state, 'last': last, 'resolved': resolved in ('1', 'true', 'ja'),
-            'msgs': len(g['msgs']) if g else 0, 'file': bool(g),
-            'opgehaald': (g or {}).get('at') or (oud.get(tid) or {}).get('opgehaald'),
-        })
-    rijen.sort(key=lambda t: t['last'] or '', reverse=True)
+        t.update(msgs=len(g['msgs']) if g else 0, file=bool(g), opgehaald=(g or {}).get('at') or t.get('opgehaald'))
+        rijen.append(t)
+    rijen.sort(key=lambda t: t.get('last') or '', reverse=True)
     schrijf(THREADS, {'at': nu(), 'threads': rijen})
     def item(tid, titel):
         g = lees(gesprek_pad(tid), None)

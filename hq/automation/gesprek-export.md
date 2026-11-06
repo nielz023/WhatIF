@@ -24,8 +24,9 @@ You get: **ID** (`cmsg_...` or `projectchat`), **title**, and optionally **vanaf
      - Without a cursor, start at `read_project_chat {"limit": 50}` and page forward the same way, until `has_more` is false.
      - Remember the cursor you used for the LAST call (the one that returned `has_more` false); without a cursor, nothing. You pass it to the script with `--cursor`.
      - Without vanaf_at, convert only the newest 40 messages and add `--meer`. With vanaf_at, convert only messages after vanaf_at.
-   - **If vanaf_at is given, convert ONLY messages created after vanaf_at.** If there are none, write nothing and answer "geen nieuwe berichten". For the project chat, still run the script with an empty file and `--cursor`, so the newest cursor is saved.
-2. **Convert** those messages into `/tmp/hq-ronde/gesprek_<ID>.txt` in exactly this format:
+   - **If vanaf_at is given, convert ONLY messages created after vanaf_at**, plus (for a thread) the newest checklist message (JSON body with `"kind":"status"`) even when it is older, because a checklist is updated in place.
+   - **If there is nothing to convert,** still create the file empty (`: > /tmp/hq-ronde/gesprek_<ID>.txt`) and run the script in step 3, so the thread's stand (and for the project chat the newest cursor) is saved. Then answer "geen nieuwe berichten".
+2. **Convert** those messages into `/tmp/hq-ronde/gesprek_<ID>.txt`. First run `mkdir -p /tmp/hq-ronde && rm -f /tmp/hq-ronde/gesprek_<ID>.txt`: a file from an earlier round may still be there, and Write refuses to overwrite a file you have not read. If writing the file fails, stop and report it; never run the script on a file you did not write in this round. Use exactly this format:
    ```
    @@ <message id> | <wie> | <created_at ISO> | <auteur>
    <text, may span several lines, Markdown allowed>
