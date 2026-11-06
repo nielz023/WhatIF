@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Sparkles, GraduationCap, ArrowUpCircle, ClipboardList, UserMinus, Share2 } from 'lucide-react';
-import { useGame, MAX_LEVEL, maxUpgradeCost } from '../../store/useGame';
+import { Sparkles, ClipboardList, Share2 } from 'lucide-react';
+import { useGame } from '../../store/useGame';
 import { Avatar, Drawer, Progress, StateDot, StatusBadge } from '../ui';
-import { roleById, xpForLevel } from '../../modules/agents/roles';
+import { roleById } from '../../modules/agents/roles';
 import { deptById } from '../../modules/departments/departments';
 import { getLLM } from '../../services/adapters';
-import { upgradeLevel, SALARY_FACTOR } from '../../modules/tasks/engine';
-import { eur } from '../../lib/util';
-import type { GameData } from '../../store/state';
+
+/** Vaardigheden in het Nederlands (de namen in de rollen zijn Engels). */
+const SKILL_NL: Record<string, string> = {
+  'Data Mining': 'Data zoeken', 'Trend Spotting': 'Trends zien', Accuracy: 'Nauwkeurigheid', Speed: 'Snelheid', Curiosity: 'Nieuwsgierigheid',
+  'Search Intent': 'Zoekgedrag', Creativity: 'Creativiteit', Formats: 'Formats', Copywriting: 'Tekstschrijven', 'CTR Psychology': 'Klikpsychologie',
+  SEO: 'SEO', Hooks: 'Hooks', Retention: 'Kijkers vasthouden', Pacing: 'Tempo', Writing: 'Schrijven', Structure: 'Opbouw', Narrative: 'Verhaal',
+  Emotion: 'Emotie', Research: 'Onderzoek', Rigor: 'Grondigheid', 'Attention to Detail': 'Oog voor detail', Policy: 'Richtlijnen', Direction: 'Regie',
+  Tone: 'Toon', Audio: 'Geluid', Clarity: 'Helderheid', Editing: 'Montage', Motion: 'Beweging', Sourcing: 'Materiaal zoeken', Licensing: 'Rechten',
+  Leadership: 'Leiding geven', Design: 'Ontwerp', Composition: 'Compositie', Testing: 'Testen', Data: 'Data', Operations: 'Planning en uitvoering',
+  Scheduling: 'Inplannen', Keywords: 'Zoekwoorden', Community: 'Community', Timing: 'Timing', Strategy: 'Strategie', Decisions: 'Beslissen',
+  Analytics: 'Statistieken', Insight: 'Inzicht', 'Outlier Detection': 'Uitschieters vinden', 'Pattern Analysis': 'Patronen zien', 'Market Sizing': 'Marktgrootte',
+};
 
 export default function AgentDrawer() {
   const s = useGame();
@@ -23,8 +32,6 @@ export default function AgentDrawer() {
   const dept = deptById(a.department);
   const current = s.tasks.find((t) => t.id === a.currentTaskId);
   const history = a.taskHistory.map((id) => s.tasks.find((t) => t.id === id)).filter(Boolean).reverse().slice(0, 12);
-  const lab = upgradeLevel(s as unknown as GameData, 'training_lab');
-  const trainCost = Math.round(120 * a.level * (1 - lab * 0.25));
   const llm = getLLM(s.settings);
 
   const generate = async () => {
@@ -37,32 +44,25 @@ export default function AgentDrawer() {
     } finally { setBusy(false); }
   };
 
+  // Geen salaris, niveau, XP, upgrades, training of ontslaan meer: het kantoor is geen spel (niels 2026-11-06).
   return (
-    <Drawer open onClose={() => s.selectAgent(null)} title="Agent profile" width={540}>
+    <Drawer open onClose={() => s.selectAgent(null)} title="Teamlid" width={540}>
       <div className="flex items-center gap-4">
         <Avatar agent={a} size={68} ring />
         <div className="min-w-0 flex-1">
           <div className="font-display text-xl font-bold text-white">{a.name}</div>
           <div className="text-sm text-slate-400">{role.title} · <span style={{ color: dept.color }}>{dept.icon} {dept.short}</span></div>
-          <div className="mt-1 flex items-center gap-3"><StateDot state={a.state} /><span className="text-[13px] text-slate-400">{eur(a.salary * SALARY_FACTOR, 2)}/day</span></div>
-        </div>
-        <div className="text-center">
-          <div className="font-display text-2xl font-bold text-white">{a.level}</div>
-          <div className="text-[12px] uppercase tracking-wider text-slate-500">Level</div>
+          <div className="mt-1 flex items-center gap-3"><StateDot state={a.state} /></div>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 text-[13px]">
-        <div className="rounded-xl bg-white/[.03] p-2.5"><div className="text-slate-500">XP</div><div className="mb-1 font-semibold text-white">{Math.round(a.xp)}/{xpForLevel(a.level)}</div><Progress value={(a.xp / xpForLevel(a.level)) * 100} h={4} color="#a855f7" /></div>
+      <div className="mt-4 grid grid-cols-2 gap-2 text-[13px]">
         <div className="rounded-xl bg-white/[.03] p-2.5"><div className="text-slate-500">Performance</div><div className="mb-1 font-semibold text-white">{a.performance}</div><Progress value={a.performance} h={4} color="#22c55e" /></div>
         <div className="rounded-xl bg-white/[.03] p-2.5"><div className="text-slate-500">Morale</div><div className="mb-1 font-semibold text-white">{Math.round(a.morale)}</div><Progress value={a.morale} h={4} color="#f59e0b" /></div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <button className="btn-ghost text-[13px]" onClick={() => s.openModal('assignTask', { agentId: a.id })}><ClipboardList size={14} />Assign task</button>
-        <button className="btn-ghost text-[13px]" onClick={() => s.askConfirm({ title: `Upgrade ${a.name}?`, body: `${a.name} naar niveau ${a.level + 1} voor ${eur(250 * a.level)}. Alle vaardigheden +3; dagkosten iets hoger.`, confirmLabel: 'Upgrade', onConfirm: () => s.promoteAgent(a.id) && s.toast(`${a.name} upgraded!`, 'success') })}><ArrowUpCircle size={14} />Upgrade ({eur(250 * a.level)})</button>
-        <button className="btn-primary text-[13px]" disabled={a.level >= MAX_LEVEL && Object.values(a.skills).every((v) => v >= 100)} onClick={() => s.askConfirm({ title: `${a.name} maximaal upgraden?`, body: `In één keer naar niveau ${MAX_LEVEL} met alle vaardigheden op 100, voor ${eur(maxUpgradeCost(a))} spelgeld.`, confirmLabel: 'Max upgraden', onConfirm: () => { s.maxUpgradeAgent(a.id); } })}><Sparkles size={14} />Max upgraden ({eur(maxUpgradeCost(a))})</button>
-        <button className="btn-danger ml-auto text-[13px]" onClick={() => s.askConfirm({ title: `Let ${a.name} go?`, body: 'This agent will leave the company permanently. Their open tasks return to the queue. This cannot be undone.', confirmLabel: 'Remove agent', danger: true, onConfirm: () => s.fireAgent(a.id) })}><UserMinus size={14} />Remove</button>
+        <button className="btn-ghost text-[13px]" onClick={() => s.openModal('assignTask', { agentId: a.id })}><ClipboardList size={14} />Taak geven</button>
       </div>
 
       <Section title="About">
@@ -70,14 +70,13 @@ export default function AgentDrawer() {
         <p className="mt-1 text-sm italic text-slate-400">“{a.personality}”</p>
       </Section>
 
-      <Section title={`Skills · training ${eur(trainCost)} each`}>
+      <Section title="Vaardigheden">
         <div className="space-y-2">
           {Object.entries(a.skills).map(([k, v]) => (
             <div key={k} className="flex items-center gap-3">
-              <div className="w-32 text-[13px] text-slate-300">{k}</div>
+              <div className="w-36 text-[13px] text-slate-300">{SKILL_NL[k] ?? k}</div>
               <div className="flex-1"><Progress value={v} h={5} color={dept.color} /></div>
               <div className="w-7 text-right text-[13px] text-slate-400">{v}</div>
-              <button className="rounded-lg border border-hq-line p-1 text-purple-300 hover:bg-purple-500/10 disabled:opacity-30" disabled={a.state === 'training' || !!a.currentTaskId || v >= 100} title={a.currentTaskId ? 'Busy with a task' : `Train ${k}`} onClick={() => s.trainAgent(a.id, k)}><GraduationCap size={14} /></button>
             </div>
           ))}
         </div>
@@ -98,13 +97,13 @@ export default function AgentDrawer() {
         </div>
       </Section>
 
-      <Section title={<span className="flex items-center gap-2"><Sparkles size={13} />Work session · {llm.name}</span>}>
+      <Section title={<span className="flex items-center gap-2"><Sparkles size={13} />Werksessie · {llm.name}</span>}>
         <textarea className="input min-h-[60px] text-[13px]" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={`Vraag ${a.name.split(' ')[0]} om iets, bv. "10 titelideeën voor de video over teleporteren"`} />
         <div className="mt-2 flex gap-2">
-          <button className="btn-primary text-[13px]" onClick={generate} disabled={busy}>{busy ? 'Working…' : 'Generate'}</button>
-          {out && !out.startsWith('⚠️') && <button className="btn-ghost text-[13px]" onClick={() => { s.createPost(`Report from ${a.name}:`, { title: `${role.title} deliverable`, body: out.slice(0, 1200) }); s.toast('Shared to internal Threads.', 'success'); }}><Share2 size={13} />Share to Threads</button>}
+          <button className="btn-primary text-[13px]" onClick={generate} disabled={busy}>{busy ? 'Bezig…' : 'Maken'}</button>
+          {out && !out.startsWith('⚠️') && <button className="btn-ghost text-[13px]" onClick={() => { s.createPost(`Verslag van ${a.name}:`, { title: `${role.title}: oplevering`, body: out.slice(0, 1200) }); s.toast('Gedeeld in Berichten.', 'success'); }}><Share2 size={13} />Delen in Berichten</button>}
         </div>
-        {llm.status() !== 'connected' && <p className="mt-2 text-[13px] text-slate-500">No AI model connected — output is simulated. Add a Claude or OpenAI key in Settings for real results.</p>}
+        {llm.status() !== 'connected' && <p className="mt-2 text-[13px] text-slate-500">Geen AI-model gekoppeld, de uitvoer is gesimuleerd. Echte opdrachten lopen via Driftmark HQ.</p>}
         {out && <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-black/40 p-3 text-[13px] text-slate-200">{out}</pre>}
       </Section>
 

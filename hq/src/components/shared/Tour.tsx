@@ -7,7 +7,7 @@ const STEPS: { title: string; text: string; page: PageId; emoji: string }[] = [
   { emoji: '🏠', page: 'driftmark', title: 'Home', text: 'Hier zie je in één blik wat Claude nu doet en wat op jou wacht. Oranje = jij moet iets, blauw = Claude is bezig, groen = klaar.' },
   { emoji: '⚡', page: 'driftmark', title: 'Opdracht geven', text: 'Typ wat je wilt in het opdrachtvak, of tik op een snelle keuze. Claude voert het echt uit en zet het antwoord op Home.' },
   { emoji: '🎬', page: 'videos', title: "Video's en Kanaal", text: "Bij Video's zie je elke video op de metrolijn van idee tot online. Bij Kanaal staan je echte cijfers en grafieken." },
-  { emoji: '🎮', page: 'hq', title: 'Studio en de coach', text: 'Studio is het 3D-kantoor en het spel (met speelgeld). Rechtsonder zit je coach: vraag hem alles of wacht op een tip.' },
+  { emoji: '🏢', page: 'hq', title: 'Studio en de coach', text: 'Studio is je 3D-kantoor met je teamleden en projecten. Rechtsonder zit je coach: vraag hem alles of wacht op een tip.' },
 ];
 
 export default function Tour() {

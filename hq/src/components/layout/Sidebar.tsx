@@ -1,28 +1,25 @@
-import { Sparkles, Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderKanban, Users, Tv, BarChart3, MessagesSquare, Wallet, Wrench, Trophy, ShieldAlert } from 'lucide-react';
+import { Sparkles, Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderKanban, Users, Tv, MessagesSquare, Trophy, ShieldAlert } from 'lucide-react';
 import type { PageId } from '../../types';
 import { useGame } from '../../store/useGame';
 import { useLive } from '../../services/live';
 
-/** De 5 vaste knoppen. De eerste drie zijn echt, Studio is het spel, Meer is naslag. */
+/** De vaste knoppen. Studio is het 3D-kantoor met je teamleden en projecten, Meer is naslag. */
 export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: string }[] = [
   { id: 'driftmark', label: 'Kantoor', icon: Home, uitleg: 'Wat er nu gebeurt en wat op jou wacht' },
   { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts' },
   { id: 'kanaal', label: 'Kanaal', icon: LineChart, uitleg: 'Abonnees, weergaven en wat werkt' },
   { id: 'coach', label: 'Coach', icon: Sparkles, uitleg: 'Je CEO Coach: gesprek, briefing, doelen, beslissingen' },
-  { id: 'hq', label: 'Studio', icon: Building2, uitleg: 'Het 3D-kantoor en het spel' },
+  { id: 'hq', label: 'Studio', icon: Building2, uitleg: 'Het 3D-kantoor' },
   { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
 ];
-/** Alles onder Studio (het spel). */
+/** Alles onder Studio (het 3D-kantoor). Speelgeld, spelcijfers en upgrades zijn weg (niels 2026-11-06). */
 export const STUDIO: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: 'hq', label: '3D-kantoor', icon: Building2 },
   { id: 'projects', label: 'Projecten', icon: FolderKanban },
   { id: 'agents', label: 'Teamleden', icon: Users },
   { id: 'channels', label: 'Kanalen', icon: Tv },
-  { id: 'analytics', label: 'Spelcijfers', icon: BarChart3 },
   { id: 'threads', label: 'Berichten', icon: MessagesSquare },
-  { id: 'finances', label: 'Speelgeld', icon: Wallet },
   { id: 'warroom', label: 'Crisiskamer', icon: ShieldAlert },
-  { id: 'upgrades', label: 'Upgrades', icon: Wrench },
   { id: 'achievements', label: 'Prestaties', icon: Trophy },
 ];
 /** oude naam, nog gebruikt door andere schermen */
@@ -68,7 +65,7 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="hidden px-4 pb-4 text-[12px] leading-snug text-slate-500 lg:block">Home, Video's en Kanaal zijn echt. Studio is een spel met je echte video's.</div>
+      <div className="hidden px-4 pb-4 text-[12px] leading-snug text-slate-500 lg:block">Home, Video's en Kanaal tonen je echte cijfers. Studio is je 3D-kantoor met je echte video's.</div>
     </aside>
   );
 }
@@ -94,13 +91,13 @@ export function MobileNav() {
   );
 }
 
-/** Bovenaan elk Studio-scherm: dit is het spel, plus de onderdelen. */
+/** Bovenaan elk Studio-scherm: wat Studio is, plus de onderdelen. */
 export function StudioTabs() {
   const page = useGame((s) => s.page);
   const setPage = useGame((s) => s.setPage);
   return (
     <div className="shrink-0 border-b border-hq-line bg-[#080d22]/80 px-3 pt-2 backdrop-blur md:px-6">
-      <div className="mb-1.5 text-[12px] text-slate-400"><span className="font-semibold text-sky-300">🎮 Studio is een spel</span> met je echte video's en taken. Het geld is speelgeld. Knoppen als "Nieuwe video" worden wel echte opdrachten.</div>
+      <div className="mb-1.5 text-[12px] text-slate-400"><span className="font-semibold text-sky-300">🏢 Studio is je 3D-kantoor</span> met je echte video's en taken. Knoppen als "Nieuwe video" en "Goedkeuren" worden echte opdrachten voor Claude.</div>
       <div className="flex gap-1 overflow-x-auto pb-2">
         {STUDIO.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setPage(id)} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition ${page === id ? 'bg-sky-500/20 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>

@@ -53,7 +53,7 @@ export function buildAnalysis(type: WarIssueType, channelName: string): { analys
         analysis: [
           `CEO-agent: meerdere projecten zijn over hun deadline.`,
           `Montagechef: de montage is de flessenhals, taken wachten op een animator.`,
-          `Financieel manager: vertraging kost naar schatting 12% van de maandinkomsten.`,
+          `Uploadmanager: door de vertraging schuiven de volgende uploads op.`,
         ],
         recs: [
           r('Tijdelijke freelance animator', 'Freelancer versnelt de productie 14 dagen.', 600, 'speed', 0.25),

@@ -4,19 +4,13 @@ import { uid, pick } from '../../lib/util';
 export const companyXpForLevel = (lvl: number) => 250 + (lvl - 1) * 200;
 
 export const ACHIEVEMENTS: Achievement[] = [
-  { id: 'first_video', title: 'First Upload', description: 'Publish your first video.', icon: '🎬', xp: 100 },
-  { id: 'five_videos', title: 'Content Machine', description: 'Publish 5 videos.', icon: '🏭', xp: 200 },
-  { id: 'views_100k', title: '100K Views', description: 'Reach 100,000 total views across all channels.', icon: '👀', xp: 300 },
-  { id: 'views_1m', title: 'Millionaire Views', description: 'Reach 1,000,000 total views.', icon: '💎', xp: 800 },
-  { id: 'monetized', title: 'Monetized!', description: 'Get your first channel monetized (1,000 subscribers).', icon: '💸', xp: 300 },
-  { id: 'rev_1000', title: 'First €1,000', description: 'Earn €1,000 in total ad revenue.', icon: '💶', xp: 400 },
-  { id: 'team_10', title: 'Growing Team', description: 'Hire your first new AI agent.', icon: '👥', xp: 150 },
-  { id: 'team_20', title: 'Full House', description: 'Employ 20 AI agents.', icon: '🏢', xp: 300 },
-  { id: 'first_upgrade', title: 'Interior Designer', description: 'Buy your first office upgrade.', icon: '🛋️', xp: 100 },
-  { id: 'war_room', title: 'Crisis Manager', description: 'Resolve your first War Room case.', icon: '🛡️', xp: 200 },
-  { id: 'level_5', title: 'Rising Company', description: 'Reach company level 5.', icon: '⭐', xp: 300 },
-  { id: 'two_channels', title: 'Network Builder', description: 'Launch a new channel of your own.', icon: '📺', xp: 150 },
-  { id: 'agent_lvl5', title: 'Elite Employee', description: 'Train an agent to level 5.', icon: '🎓', xp: 200 },
+  // geen prestaties meer voor geld, aannemen, upgrades of niveaus (niels 2026-11-06)
+  { id: 'first_video', title: 'Eerste upload', description: 'Publiceer je eerste video.', icon: '🎬', xp: 100 },
+  { id: 'five_videos', title: 'Contentmachine', description: "Publiceer 5 video's.", icon: '🏭', xp: 200 },
+  { id: 'views_100k', title: '100K weergaven', description: 'Haal samen 100.000 weergaven.', icon: '👀', xp: 300 },
+  { id: 'views_1m', title: 'Een miljoen weergaven', description: 'Haal samen 1.000.000 weergaven.', icon: '💎', xp: 800 },
+  { id: 'war_room', title: 'Crisismanager', description: 'Los je eerste zaak in de crisiskamer op.', icon: '🛡️', xp: 200 },
+  { id: 'two_channels', title: 'Netwerkbouwer', description: 'Start een eigen nieuw kanaal.', icon: '📺', xp: 150 },
 ];
 
 export const UPGRADES: Upgrade[] = [
@@ -30,14 +24,17 @@ export const UPGRADES: Upgrade[] = [
 ];
 
 const MISSION_TEMPLATES: { metric: MissionMetric; title: (n: number) => string; range: [number, number]; xp: number; cash: number }[] = [
-  { metric: 'start_video', title: (n) => `Start ${n} nieuwe video${n > 1 ? "'s" : ''}`, range: [1, 2], xp: 40, cash: 100 },
-  { metric: 'publish', title: () => `Publish 1 video`, range: [1, 1], xp: 80, cash: 250 },
-  { metric: 'approve', title: (n) => `Approve ${n} deliverable${n > 1 ? 's' : ''} as CEO`, range: [1, 2], xp: 50, cash: 120 },
-  { metric: 'like', title: (n) => `Like ${n} Threads-berichten`, range: [2, 4], xp: 25, cash: 50 },
-  { metric: 'post', title: () => `Post an update on Threads`, range: [1, 1], xp: 25, cash: 50 },
-  { metric: 'train', title: () => `Train an agent`, range: [1, 1], xp: 50, cash: 80 },
+  { metric: 'start_video', title: (n) => `Start ${n} nieuwe ${n > 1 ? "video's" : 'video'}`, range: [1, 2], xp: 40, cash: 100 },
+  { metric: 'publish', title: (n) => `Publiceer ${n} ${n > 1 ? "video's" : 'video'}`, range: [1, 1], xp: 80, cash: 250 },
+  { metric: 'approve', title: (n) => `Keur ${n} ${n > 1 ? 'opleveringen' : 'oplevering'} goed`, range: [1, 2], xp: 50, cash: 120 },
+  { metric: 'like', title: (n) => `Like ${n} berichten van het team`, range: [2, 4], xp: 25, cash: 50 },
+  { metric: 'post', title: () => 'Plaats een bericht voor het team', range: [1, 1], xp: 25, cash: 50 },
+  // geen trainingsmissie meer: training kostte speelgeld (niels 2026-11-06)
   { metric: 'complete_tasks', title: (n) => `Rond ${n} taken af`, range: [4, 8], xp: 60, cash: 150 },
 ];
+
+/** De titel van een missie in het Nederlands (ook voor missies die nog met een Engelse titel bewaard zijn). */
+export const missionTitle = (m: Mission) => MISSION_TEMPLATES.find((t) => t.metric === m.metric)?.title(m.target) ?? m.title;
 
 export function generateMissions(): Mission[] {
   const pool = [...MISSION_TEMPLATES].sort(() => Math.random() - 0.5).slice(0, 3);

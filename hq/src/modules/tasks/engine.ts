@@ -33,7 +33,7 @@ export function addCompanyXp(d: GameData, xp: number) {
   while (d.company.xp >= companyXpForLevel(d.company.level)) {
     d.company.xp -= companyXpForLevel(d.company.level);
     d.company.level += 1;
-    notify(d, `🏆 Bedrijf bereikt niveau ${d.company.level}!`, 'achievement');
+    // geen melding meer: niveaus horen bij het oude spel (niels 2026-11-06)
     d.company.reputation = clamp(d.company.reputation + 3, 0, 100);
   }
 }
@@ -45,7 +45,7 @@ export function addAgentXp(d: GameData, a: Agent, xp: number) {
     a.level += 1;
     a.salary += 4;
     Object.keys(a.skills).forEach((k) => (a.skills[k] = clamp(a.skills[k] + 3, 0, 100)));
-    notify(d, `⬆️ ${a.name} bereikt niveau ${a.level}.`, 'success', 'agents');
+    // geen melding meer: teamleden hebben geen niveau meer
   }
 }
 
@@ -327,9 +327,9 @@ export function dailyRollover(d: GameData, closedDay: number) {
     if (revenue > 0) ledger(d, 'Ad Revenue', revenue, `Advertentie-inkomsten · ${c.name}`, c.id, closedDay);
     if (!c.monetized && c.subscribers >= 1000) {
       c.monetized = true;
-      notify(d, `💸 ${c.name} verdient nu geld! De advertentie-inkomsten komen binnen.`, 'achievement', 'channels');
+      notify(d, `🎉 ${c.name} heeft 1.000 abonnees!`, 'achievement', 'channels');
       const fm = d.agents.find((a) => a.role === 'financial_manager' || a.role === 'ceo_agent');
-      if (fm) post(d, fm.id, 'celebration', `${c.name} heeft 1.000 abonnees en verdient nu geld 💸 Topwerk, team!`);
+      if (fm) post(d, fm.id, 'celebration', `${c.name} heeft 1.000 abonnees 🎉 Topwerk, team!`);
     }
   });
   void totalSubs;
@@ -366,22 +366,15 @@ export function detectIssues(d: GameData) {
 // ── achievements ────────────────────────────────────────────────
 export function checkAchievements(d: GameData) {
   const totalViews = d.channels.reduce((s, c) => s + c.views, 0);
-  const totalRev = d.ledger.filter((l) => l.category === 'Ad Revenue').reduce((s, l) => s + l.amount, 0);
   const published = d.projects.filter((p) => p.status === 'Published').length;
+  // geen prestaties meer voor geld, aannemen, upgrades of niveaus (niels 2026-11-06)
   const checks: Record<string, boolean> = {
     first_video: published >= 1,
     five_videos: published >= 5,
     views_100k: totalViews >= 100_000,
     views_1m: totalViews >= 1_000_000,
-    monetized: d.channels.some((c) => c.monetized),
-    rev_1000: totalRev >= 1000,
-    team_10: d.agents.some((a) => a.hiredDay > 0),
-    team_20: d.agents.length >= 20,
-    first_upgrade: d.upgrades.some((u) => u.level > 0),
     war_room: d.warCases.some((w) => w.status === 'Resolved'),
-    level_5: d.company.level >= 5,
     two_channels: d.channels.some((c) => !c.isDemo),
-    agent_lvl5: d.agents.some((a) => a.level >= 5),
   };
   d.achievements.forEach((a) => {
     if (!a.unlockedTick && checks[a.id]) {

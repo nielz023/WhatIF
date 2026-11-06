@@ -132,7 +132,7 @@ export function createSeed(): GameData {
     tick: now,
     company: { name: 'Driftmark Studio', level: 2, xp: 120, balance: 6000, reputation: 32, baseSlots: 18 },
     agents, tasks, projects, videos, channels, stats, ledger, posts,
-    notifications: [{ id: uid('n'), tick: now, text: 'Welkom in Driftmark HQ! Het hoofdscherm toont de echte stand; het kantoor is een simulatie die met jouw kanaal speelt.', kind: 'info', read: false }],
+    notifications: [{ id: uid('n'), tick: now, text: "Welkom in Driftmark HQ! Home toont je echte stand. Studio is je 3D-kantoor met je echte video's en taken.", kind: 'info', read: false }],
     achievements: ACHIEVEMENTS.map((a) => ({ ...a })),
     missions: generateMissions(),
     missionDay: SEED_DAYS,

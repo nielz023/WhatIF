@@ -105,6 +105,19 @@ const uiDefaults: UIState = {
   confirm: null, paused: false, speed: 1, toasts: [], notifOpen: false,
 };
 
+/** Schermen die weg zijn (speelgeld, upgrades, spelcijfers): een oude link gaat naar het 3D-kantoor (niels 2026-11-06). */
+export const WEG_PAGINAS: ReadonlySet<PageId> = new Set<PageId>(['finances', 'upgrades', 'analytics']);
+
+/** Meldingen uit het oude spel (geld, niveaus, upgrades, aannemen) horen niet meer in het kantoor. */
+const SPELMELDING = /bereikt niveau|naar niveau|geüpgraded|klaar met de training|is begonnen als|heeft het bedrijf verlaten|verdient nu geld|saldo|spelgeld|speelgeld|€|het kantoor is een simulatie|Prestatie behaald: (Monetized|Growing Team|Full House|Interior Designer|Rising Company|Elite Employee)/i;
+
+/** Ruimt een bewaarde stand op bij het laden, zonder nieuwe versie: spelmeldingen gaan weg. */
+function opruimen(bewaard: unknown): Partial<GameStore> {
+  const b = (bewaard ?? {}) as Partial<GameStore>;
+  if (!Array.isArray(b.notifications)) return b;
+  return { ...b, notifications: b.notifications.filter((n) => !SPELMELDING.test(n?.text ?? '')) };
+}
+
 export const useGame = create<GameStore>()(
   persist(
     immer((set, get) => ({
@@ -112,7 +125,7 @@ export const useGame = create<GameStore>()(
       ...uiDefaults,
 
       // ── UI ───────────────────────────────────────────
-      setPage: (p) => set((s) => { s.page = p; s.selectedDept = null; }),
+      setPage: (p) => set((s) => { s.page = WEG_PAGINAS.has(p) ? 'hq' : p; s.selectedDept = null; }),
       selectDept: (d) => set((s) => { s.selectedDept = d; }),
       selectAgent: (id) => set((s) => { s.selectedAgentId = id; }),
       selectProject: (id) => set((s) => { s.selectedProjectId = id; }),
@@ -357,7 +370,7 @@ export const useGame = create<GameStore>()(
           const smm = d.agents.find((a) => a.role === 'social_media_manager' || a.role === 'upload_manager');
           if (smm) post(d, smm.id, 'celebration', `🚀 "${p.title}" is LIVE on ${ch.name} (simulated). Predicted CTR ${vid.ctr}% · AVD ${vid.avd}%`);
           d.agents.filter((a) => d.tasks.some((t) => t.projectId === id && t.agentId === a.id)).forEach((a) => addAgentXp(d, a, 15));
-          notify(d, `🚀 "${p.title}" gepubliceerd.`, 'success', 'analytics');
+          notify(d, `🚀 "${p.title}" gepubliceerd.`, 'success', 'projects');
           checkAchievements(d);
         });
         get().toast('Video gepubliceerd. Claude maakt het uploadpakket klaar.', 'success');
@@ -429,8 +442,7 @@ export const useGame = create<GameStore>()(
         const m = d.missions.find((x) => x.id === id);
         if (!m || m.claimed || m.progress < m.target) return;
         m.claimed = true;
-        addCompanyXp(d, m.rewardXp);
-        ledger(d, 'Rewards', m.rewardCash, `Missiebeloning: ${m.title}`);
+        // geen beloning in punten of speelgeld meer (niels 2026-11-06)
       }),
 
       // ── channels ─────────────────────────────────────
@@ -465,7 +477,7 @@ export const useGame = create<GameStore>()(
         const w = d.warCases.find((x) => x.id === caseId);
         const r = w?.recommendations.find((x) => x.id === recId);
         if (!w || !r) return;
-        if (d.company.balance < r.cost) { get().toast('Niet genoeg saldo voor dit plan.', 'warning'); return; }
+        // een plan kost niets en wordt nooit tegengehouden: geld speelt in het kantoor geen rol
         set((s) => {
           const g = s as unknown as GameData;
           const wc = g.warCases.find((x) => x.id === caseId)!;
@@ -476,7 +488,6 @@ export const useGame = create<GameStore>()(
           if (r.effect === 'rpm') targets.forEach((c) => (c.rpm = +(c.rpm + r.magnitude).toFixed(2)));
           if (r.effect === 'schedule') targets.forEach((c) => { c.uploadsPerWeek += 1; c.uploadSchedule = `${c.uploadsPerWeek}x / week`; });
           if (r.effect === 'speed') { g.modifiers.speedBoost = r.magnitude; g.modifiers.speedBoostUntil = g.tick + 14 * TICKS_PER_DAY; }
-          ledger(g, r.effect === 'speed' ? 'Freelancers' : 'Production', -r.cost, `Plan crisiskamer: ${r.title}`, wc.channelId);
           addCompanyXp(g, 50);
           const ceo = g.agents.find((a) => a.role === 'ceo_agent');
           if (ceo) post(g, ceo.id, 'update', `niels keurde het plan "${r.title}" goed. We voeren het nu uit.`);
@@ -495,6 +506,7 @@ export const useGame = create<GameStore>()(
       name: 'driftmark-hq',
       version: 1,
       storage: createJSONStorage(() => localStorageAdapter),
+      merge: (bewaard, nu) => ({ ...nu, ...opruimen(bewaard) }),
       partialize: (s) => {
         // persist only game data (+ speed)
         const { page, selectedDept, selectedAgentId, selectedProjectId, modal, modalPayload, confirm, toasts, notifOpen, paused, ...rest } = s;
@@ -516,7 +528,7 @@ function evidenceFor(d: GameData, type: WarIssueType, channelId: string | null):
     case 'low_ctr': return `Gem. CTR laatste 7 dagen: ${ctr.toFixed(2)}%.`;
     case 'poor_retention': return `Gem. kijkduur laatste 7 dagen: ${avd.toFixed(1)}%.`;
     case 'production_delays': return `${d.projects.filter((p) => p.status === 'Active' && p.deadlineTick < d.tick).length} projecten te laat · ${d.tasks.filter((t) => t.status === 'Pending').length} taken wachten op een agent.`;
-    case 'falling_revenue': return `Inkomsten laatste 7 dagen: €${st.reduce((s, x) => s + x.revenue, 0).toFixed(2)}.`;
+    case 'falling_revenue': return 'Wordt niet meer gevolgd.'; // geld speelt in het kantoor geen rol
   }
 }
 

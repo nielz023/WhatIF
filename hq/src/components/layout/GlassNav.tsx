@@ -14,7 +14,7 @@ const ITEMS: { id: PageId; label: string; icon: typeof BarChart3; uitleg: string
   { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts' },
   { id: 'kanaal', label: 'Kanaal', icon: SquarePlay, uitleg: 'Abonnees, weergaven, kijkduur en cursusmeter' },
   { id: 'coach', label: 'Coach', icon: Sparkles, uitleg: 'Je CEO Coach: gesprek, briefing, doelen, beslissingen' },
-  { id: 'hq', label: 'Studio', icon: Layers, uitleg: 'Het kantoor beheren: teamleden, projecten, spel' },
+  { id: 'hq', label: 'Studio', icon: Layers, uitleg: 'Het kantoor beheren: teamleden en projecten' },
   { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
 ];
 
