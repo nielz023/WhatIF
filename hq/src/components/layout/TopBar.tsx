@@ -1,4 +1,5 @@
 import SpotifyBar from './SpotifyBar';
+import { useWorld } from '../../world/useWorld';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Users, Wallet, Eye, Tv, HelpCircle, Volume2, VolumeX } from 'lucide-react';
@@ -39,7 +40,7 @@ export default function TopBar() {
         {/* echte klok */}
         <SpotifyBar />
         <span className="hidden sm:inline"><RealClock /></span>
-        <span id="dm-fps" title="Beelden per seconde van het 3D-kantoor" className="hidden rounded-xl border border-hq-line/60 bg-hq-panel/60 px-2 py-1.5 font-mono text-[11px] text-slate-300 lg:inline">— fps</span>
+        <QualityBtn />
         <SoundBtn />
         <button onClick={() => window.dispatchEvent(new Event('dm-tour'))} className="rounded-xl border border-hq-line/60 bg-hq-panel/60 p-2 text-slate-300 hover:text-white" aria-label="Uitleg: rondleiding" title="Rondleiding: hoe werkt het HQ?"><HelpCircle size={18} /></button>
 
@@ -89,6 +90,19 @@ function RealClock() {
       <span className="text-[13px] font-semibold text-slate-200">{now.toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })}</span>
       <span className="hidden text-[12px] uppercase tracking-wider text-slate-500 sm:inline">echte tijd</span>
     </div>
+  );
+}
+
+function QualityBtn() {
+  const q = useWorld((s) => s.quality); const setQ = useWorld((s) => s.setQuality);
+  const next = { auto: '4k', '4k': 'snel', snel: 'auto' } as const;
+  const label = { auto: 'Auto', '4k': '4K', snel: 'Snel' }[q];
+  const uitleg = { auto: 'Auto: scherp waar het kan, soepel waar het moet', '4k': '4K-scherp: het 3D-kantoor op volle schermresolutie (zwaarder)', snel: 'Snel: lagere resolutie voor de hoogste fps' }[q];
+  return (
+    <button onClick={() => setQ(next[q])} title={uitleg + ' · klik om te wisselen'} aria-label={'Beeldkwaliteit: ' + label} className="hidden items-center gap-1.5 rounded-xl border border-hq-line/60 bg-hq-panel/60 px-2 py-1.5 font-mono text-[11px] text-slate-300 hover:text-white lg:inline-flex">
+      <span className={q === '4k' ? 'text-[#FF8A3D]' : q === 'snel' ? 'text-[#21D6A0]' : 'text-[#3db8ff]'}>{label}</span>
+      <span id="dm-fps">— fps</span>
+    </button>
   );
 }
 

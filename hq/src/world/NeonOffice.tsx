@@ -19,7 +19,7 @@ import { useLive } from '../services/live';
 import { Box, Chair, Bookshelf, MicStand, Easel, Sofa, MeetingTable, ServerRack } from '../components/office/Furniture';
 import { Mascot } from '../components/office/DriftmarkDecor';
 import { ROOMS, threadsPerRoom, statusOf, STATUS, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, type RoomDef, type RoomId, type Status } from './rooms';
-import { useWorld, reducedMotion } from './useWorld';
+import { useWorld, reducedMotion, dprFor } from './useWorld';
 import { useOffice, BakedOffice, type OfficeModel } from './BakedOffice';
 
 type V3 = [number, number, number];
@@ -643,9 +643,10 @@ function Scene({ mode }: { mode: WorldMode }) {
 
 export default function NeonOffice({ mode }: { mode: WorldMode }) {
   const [dpr, setDpr] = useState(1.5);
+  const quality = useWorld((s) => s.quality);
   const setFocus = useWorld((s) => s.setFocus);
   return (
-    <Canvas shadows dpr={mode === 'panel' ? 1 : dpr} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.25 }}
+    <Canvas shadows dpr={mode === 'panel' && quality !== '4k' ? 1 : dprFor(quality, dpr)} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.25 }}
       onPointerMissed={(e) => { if (mode === 'home' && (e.target as HTMLElement)?.tagName === 'CANVAS') setFocus(null); }}>
       <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.6)} />
       <Scene mode={mode} />
