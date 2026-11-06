@@ -44,7 +44,7 @@ grab(S, box, wet, T_GRAB, "hand.R", loc=(0.0, 0.07, 0.0), rot=(0, 0, 90))
 S.reach(wet, T_GRAB + 0.3, "R", inf=0.0)
 S.reach(wet, 0.0, "L", inf=0.0)
 S.turn(wet, T_GRAB + 0.35, T_GRAB + 1.0, 0)                        # draait zich om naar de jongen
-W1 = V(2.28, -0.12, 0)
+W1 = V(2.28, -0.25, 0)                                           # dichtbij genoeg om het doosje te geven
 S.walk(wet, T_GRAB + 1.0, T_GRAB + 2.0, [W0, W1], stride=0.4, turn=False)
 S.beat(wet, T_GRAB + 2.1, "staan", face="vastberaden", face_amt=0.5, at=S.headpos(held, 0.0), arms=HOLD_FRONT_R, feet="keep")
 S.beat(wet, t_i2 - 0.6, "staan", face="twijfel", face_amt=0.5, at=S.headpos(held, 0.0), arms=HOLD_FRONT_R, feet="keep")
@@ -56,7 +56,7 @@ S.beat(held, t_i2, "staan", face="vastberaden", face_amt=0.8, at=V(2.3, 0.05, 1.
 S.say("N13-05", who=held, at=t_i2 + 0.25)
 
 # ---------------------------------------------------------------- 13j: het doosje in zijn handen, zijn hand er nog even op
-P = V(2.24, -0.55, 0.92)
+P = V(2.22, -0.74, 0.88)                                          # vlak voor de jongen: zijn korte armen halen het
 T_GIVE, T_REL, T_OFF = t_j + 1.0, t_j + 1.6, t_j + 3.6
 S.beat(wet, t_j, "staan", face="vastberaden", face_amt=0.6, at=S.headpos(held, 0.0), arms=HOLD_FRONT_R, feet="keep")
 S.reach(wet, t_j, "R", inf=0.0)                                   # IK pas na de snede aan (geen trage overgang tijdens 13i)
@@ -74,16 +74,16 @@ for c in box.constraints:
 box.location = BOX0
 box.keyframe_insert("location", frame=1)
 box.keyframe_insert("location", frame=F(T_REL) - 1)
-box.location = P
+box.location = P + V(0, 0, 0.05)                    # ligt óp zijn handpalmen, niet ertussen
 box.keyframe_insert("location", frame=F(T_REL))
 for fc in A._fcurves(box):
     for kp in fc.keyframe_points:
         kp.interpolation = "CONSTANT"
-for side, dx in (("L", -0.1), ("R", 0.1)):          # hij kijkt naar +y: zijn rechterhand zit aan +x
+for side, dx in (("L", -0.07), ("R", 0.07)):          # hij kijkt naar +y: zijn rechterhand zit aan +x
     S.reach(held, 0.0, side, inf=0.0)
     S.reach(held, T_GIVE - 0.4, side, inf=0.0)
-    S.reach(held, T_GIVE, side, P + V(dx, -0.02, -0.04))
-    S.reach(held, END, side, P + V(dx, -0.02, -0.04))
+    S.reach(held, T_GIVE, side, P + V(dx, -0.02, -0.06))
+    S.reach(held, END, side, P + V(dx, -0.02, -0.06))
 S.beat(held, t_j, "staan", face="nerveus", face_amt=0.5, at=S.headpos(wet, 0.0) + V(0, -1.75, -0.05))
 S.beat(held, T_REL + 0.2, "staan", face="vastberaden", face_amt=0.4, at=P)
 S.beat(held, t_k, "staan", face="vastberaden", face_amt=0.7, at=P)
@@ -99,7 +99,8 @@ HH = S.headpos(held, t_i2 + 0.5)
 S.cam(t_i2, (HH + V(-0.75, 1.05, 0.05), HH + V(0, 0, -0.08), 32), (HH + V(-0.7, 0.98, 0.05), HH + V(0, 0, -0.08), 34))
 # 13j CLOSE de wetenschapper over de schouder van de jongen
 WH = S.headpos(wet, t_j + 1.0)
-S.cam(t_j, (WH + V(1.08, -1.75, -0.3), WH + V(-0.15, 0, -0.2), 30), (WH + V(1.02, -1.64, -0.28), WH + V(-0.15, 0, -0.2), 32))
+MJ = (WH + S.headpos(held, t_j + 1.0)) / 2                      # tweeshot in profiel: het doosje gaat van hand tot hand
+S.cam(t_j, (MJ + V(-1.95, 0.15, -0.2), MJ + V(0, 0, -0.32), 30), (MJ + V(-1.8, 0.12, -0.2), MJ + V(0, 0, -0.32), 32))
 # 13k DETAIL het doosje in zijn handen, trage push
 S.cam(t_k, ((P.x - 0.7, P.y + 0.5, P.z + 0.5), P + V(0, 0, 0.03), 36), ((P.x - 0.6, P.y + 0.43, P.z + 0.43), P + V(0, 0, 0.03), 40))
 
