@@ -97,21 +97,25 @@ for a in d.get('activity', []):
             nieuw.append({'soort': 'herinnering', 'taak': a['title'], 'thread': a['id'], 'key': key})
             logs.append(('waarschuwing', f'"{a["title"]}" wacht al meer dan een dag op jou.'))
 
-# 6. cursus: 48 uur na een lange upload CTR, AVD en verkeersbronnen bekijken (Faceless YouTube Handboek, h. 9)
+# 6. cursus: 48 uur na een lange upload CTR, AVD en verkeersbronnen bekijken (Faceless YouTube Handboek, h. 9).
+# De uurronde doet tussen 46 en 60 uur zelf de 48-uurcheck (1x vidIQ per lange video, akkoord niels 6 nov) en zet de
+# video dan in engine_state 'vidiq48_gedaan'. Deze herinnering is alleen nog de reserve als die check er na 60 uur niet is.
+from zoneinfo import ZoneInfo
+gedaan48 = set(es.get('vidiq48_gedaan', []))
 for v in (d.get('youtube') or {}).get('videos', []):
-    if v.get('type') != 'long' or (v.get('status') or 'public') != 'public':
+    if v.get('type') != 'long' or (v.get('status') or 'public') != 'public' or v.get('id') in gedaan48:
         continue
     ds = v.get('datum') or v.get('date')
     try:
-        t = dt.datetime.fromisoformat(str(ds)[:10]).replace(tzinfo=dt.timezone.utc)
+        t = dt.datetime.fromisoformat(f"{str(ds)[:10]}T{v.get('tijd') or '16:00'}").replace(tzinfo=ZoneInfo('Europe/Amsterdam'))
     except ValueError:
         continue
     uren = (now - t).total_seconds() / 3600
-    if 48 <= uren <= 96:
+    if 60 <= uren <= 108:
         key = f"cursus48:{v.get('id') or v['title']}"
         if key not in gemeld:
-            nieuw.append({'soort': 'herinnering', 'tekst': f'"{v["title"]}" staat 2 dagen online. Cursus: bekijk nu in YouTube Studio de CTR (doel 5%+), AVD (doel 40%+) en verkeersbronnen, en stuur een screenshot. Lage CTR en weinig uit Aanbevolen = thumbnail vervangen.', 'key': key})
-            logs.append(('info', f'Cursus-herinnering: CTR/AVD van "{v["title"]}" bekijken (48 uur online).'))
+            nieuw.append({'soort': 'herinnering', 'tekst': f'"{v["title"]}" staat 2,5 dag online en de automatische 48-uurcheck is er niet. Cursus: bekijk in YouTube Studio de CTR (doel 5%+), AVD (doel 40%+) en verkeersbronnen, en stuur een screenshot. Lage CTR en weinig uit Aanbevolen = thumbnail vervangen.', 'key': key})
+            logs.append(('info', f'Cursus-herinnering: CTR/AVD van "{v["title"]}" zelf bekijken (geen automatische 48-uurcheck).'))
 
 # nieuwe fouten/waarschuwingen (voor de melding aan niels), elk maar één keer
 for k, t in logs:
