@@ -37,6 +37,7 @@ export default function TopBar() {
       <div className="ml-auto flex items-center gap-2">
         {/* echte klok */}
         <span className="hidden sm:inline"><RealClock /></span>
+        <span id="dm-fps" title="Beelden per seconde van het 3D-kantoor" className="hidden rounded-xl border border-hq-line/60 bg-hq-panel/60 px-2 py-1.5 font-mono text-[11px] text-slate-300 lg:inline">— fps</span>
         <SoundBtn />
         <button onClick={() => window.dispatchEvent(new Event('dm-tour'))} className="rounded-xl border border-hq-line/60 bg-hq-panel/60 p-2 text-slate-300 hover:text-white" aria-label="Uitleg: rondleiding" title="Rondleiding: hoe werkt het HQ?"><HelpCircle size={18} /></button>
 

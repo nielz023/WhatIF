@@ -20,6 +20,7 @@ import { Box, Chair, Bookshelf, MicStand, Easel, Sofa, MeetingTable, ServerRack 
 import { Mascot } from '../components/office/DriftmarkDecor';
 import { ROOMS, threadsPerRoom, statusOf, STATUS, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, type RoomDef, type RoomId, type Status } from './rooms';
 import { useWorld, reducedMotion } from './useWorld';
+import { useOffice, BakedOffice, type OfficeModel } from './BakedOffice';
 
 type V3 = [number, number, number];
 export type WorldMode = 'home' | 'studio' | 'panel';
@@ -56,6 +57,12 @@ function useScreens() {
   }, []);
 }
 
+/** Namen op de borden zoals op het referentiebeeld (Engels + Nederlandse ondertitel). */
+const SIGN: Partial<Record<string, [string, string]>> = {
+  onderzoek: ['RESEARCH', 'Onderzoek'], creatief: ['CREATIVE', 'Ideeën & titels'], script: ['SCRIPT', 'Scripts & verhaallijn'],
+  stem: ['VOICE', 'Stem & audio'], productie: ['PRODUCTION', 'Animatie & montage'], thumbnail: ['THUMBNAIL', 'Design & CTR'],
+  publicatie: ['PUBLISHING', 'Upload & SEO'], ceo: ['CEO & ANALYTICS', 'Strategie & prestaties'], crisis: ['CRISIS KAMER', 'Analyse & oplossingen'],
+};
 /** Groot lichtbord per afdeling (icoon + naam + ondertitel), net als op het referentiebeeld. */
 function signTex(r: RoomDef) {
   return canvasTex(1024, 300, (g) => {
@@ -69,14 +76,15 @@ function signTex(r: RoomDef) {
     g.font = '120px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(r.icon, 144, 158);
     g.textAlign = 'left'; g.fillStyle = '#ffffff'; g.shadowColor = r.color; g.shadowBlur = 18;
-    const name = r.naam.toUpperCase();
+    const [name, sub] = SIGN[r.id] ?? [r.naam.toUpperCase(), r.sub];
     g.font = `900 ${name.length > 14 ? 74 : 92}px Inter, "Arial Black", sans-serif`; g.fillText(name, 284, 124);
-    g.shadowBlur = 0; g.fillStyle = '#cbd5f5'; g.font = '600 52px Inter, Arial, sans-serif'; g.fillText(r.sub, 288, 214);
+    g.shadowBlur = 0; g.fillStyle = '#cbd5f5'; g.font = '600 52px Inter, Arial, sans-serif'; g.fillText(sub, 288, 214);
   });
 }
 
 /* ================= camera ================= */
 const ELEV = 0.66; // ~38°, zoals het referentiebeeld
+const FOV = 40;
 function CameraRig({ mode }: { mode: WorldMode }) {
   const { camera, size } = useThree();
   const cam = camera as THREE.PerspectiveCamera;
@@ -86,8 +94,8 @@ function CameraRig({ mode }: { mode: WorldMode }) {
   const fit = useMemo(() => {
     const tv = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
     const aspect = size.width / Math.max(1, size.height);
-    const dh = (R_BASE * 1.08) / (tv * aspect);
-    const dv = (R_BASE * 0.98) / tv;
+    const dh = (R_BASE * 1.28) / (tv * aspect);
+    const dv = (R_BASE * 0.62) / tv;
     return Math.max(dh, dv);
   }, [size.width, size.height, cam.fov]);
   const dir = useMemo(() => new THREE.Vector3(0, Math.sin(ELEV), Math.cos(ELEV)), []);
@@ -99,8 +107,8 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     const r = ROOMS.find((x) => x.id === focus);
     const wide = size.width >= 900;
     if (mode === 'home' && r) { const p = roomCenter(r); return { t: new THREE.Vector3(p[0] + (wide ? 3 : 0), 0.6, p[2] + 0.6), d: fit * 0.5 }; }
-    if (mode === 'panel') return { t: new THREE.Vector3(0, 1.2, -1.2), d: fit * 1.04 };
-    return { t: new THREE.Vector3(0, 1.2, wide ? -1.2 : 0), d: fit };
+    if (mode === 'panel') return { t: new THREE.Vector3(0, 0.5, 1.5), d: fit * 1.04 };
+    return { t: new THREE.Vector3(0, 0.5, wide ? 1.5 : 0), d: fit };
   };
 
   useEffect(() => {
@@ -143,6 +151,16 @@ function CameraRig({ mode }: { mode: WorldMode }) {
       minPolarAngle={0.45} maxPolarAngle={1.05} minAzimuthAngle={-0.6} maxAzimuthAngle={0.6}
       minDistance={fit * 0.3} maxDistance={fit * 1.5} enableDamping dampingFactor={0.08} screenSpacePanning={false} />
   );
+}
+
+/** Telt beelden per seconde en zet ze in de bovenbalk (#dm-fps). */
+function FpsProbe() {
+  const acc = useRef({ n: 0, t: 0 });
+  useFrame((_, dt) => {
+    const a = acc.current; a.n++; a.t += dt;
+    if (a.t >= 0.5) { const el = document.getElementById('dm-fps'); if (el) el.textContent = `${Math.round(a.n / a.t)} fps`; a.n = 0; a.t = 0; }
+  });
+  return null;
 }
 
 /* ================= kleine bouwstenen ================= */
@@ -283,7 +301,7 @@ function Rocket({ p, color }: { p: V3; color: string }) {
     </group></group>);
 }
 
-function Wing({ r, seats, lit, alert, onSelect, onHover, screens }: { r: RoomDef; seats: Seat[]; lit: boolean; alert: boolean; onSelect: () => void; onHover: (h: boolean) => void; screens: THREE.Texture[] }) {
+function Wing({ r, seats, lit, alert, onSelect, onHover, screens, baked }: { r: RoomDef; seats: Seat[]; lit: boolean; alert: boolean; onSelect: () => void; onHover: (h: boolean) => void; screens: THREE.Texture[]; baked?: OfficeModel | null }) {
   const a = slotAngle(r.slot);
   const a0 = a - SPAN / 2 + GAPA, a1 = a + SPAN / 2 - GAPA;
   const c = r.color;
@@ -291,7 +309,7 @@ function Wing({ r, seats, lit, alert, onSelect, onHover, screens }: { r: RoomDef
   const H = 3.0, HG = front ? 1.1 : 2.5;
   const rm = (R_IN + R_OUT) / 2;
   // lokaal assenstelsel: u = langs de ring, v = naar buiten
-  const at = (u: number, v: number): V3 => { const rad = rm + v; const ang = a + u / rad; return polar(rad, ang); };
+  const at = (u: number, v: number, y = 0): V3 => { const rad = rm + v; const ang = a + u / rad; return polar(rad, ang, y); };
   const sign = useMemo(() => signTex(r), [r]);
   const edge = useRef<THREE.MeshStandardMaterial[]>([]);
   useFrame(({ clock }) => {
@@ -306,10 +324,43 @@ function Wing({ r, seats, lit, alert, onSelect, onHover, screens }: { r: RoomDef
   const warm = useMemo(() => new THREE.Color(c).lerp(new THREE.Color('#ffd9b0'), 0.45), [c]);
   const NeonMat = ({ i = 0 }: { i?: number }) => <meshStandardMaterial ref={(m) => { if (m) edge.current[i] = m; }} color={c} emissive={c} emissiveIntensity={2.4} toneMapped={false} />;
 
+  const handlers = {
+    onClick: (e: { stopPropagation: () => void }) => { e.stopPropagation(); onSelect(); },
+    onPointerOver: (e: { stopPropagation: () => void }) => { e.stopPropagation(); onHover(true); document.body.style.cursor = 'pointer'; },
+    onPointerOut: () => { onHover(false); document.body.style.cursor = 'auto'; },
+  };
+  const signEl = (
+    <Billboard position={polar(tallR, a, H + (baked ? 1.15 : 1.4))}>
+      <mesh onClick={(e) => { e.stopPropagation(); onSelect(); }}>
+        <planeGeometry args={baked ? [5.4, 1.58] : [7.2, 2.1]} />
+        <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} opacity={lit ? 1 : 0.95} />
+      </mesh>
+    </Billboard>
+  );
+  const alertEl = alert && (
+    <Html position={polar(tallR, a, H + 2.0)} center zIndexRange={[20, 10]} style={{ pointerEvents: 'none' }}>
+      <span className="rounded-full bg-[#FF9F1C] px-2 py-0.5 text-[11px] font-bold text-black shadow-[0_0_12px_#FF9F1C]">wacht op jou</span>
+    </Html>
+  );
+  if (baked) {
+    const pts = baked.seats[r.id] ?? [];
+    return (
+      <group {...handlers}>
+        {/* onzichtbaar klikvlak over de hele afdeling */}
+        <mesh position={[0, 1.4, 0]} visible={false}><cylinderGeometry args={[R_OUT, R_OUT, 2.8, 20, 1, true, a0, a1 - a0]} /><meshBasicMaterial side={THREE.DoubleSide} /></mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.09, 0]}>
+          <ringGeometry args={[R_IN, R_OUT, 24, 1, a0 - Math.PI / 2, a1 - a0]} />
+          <meshBasicMaterial color={c} transparent opacity={lit ? 0.12 : 0} depthWrite={false} toneMapped={false} />
+        </mesh>
+        {seats.slice(0, pts.length).map((s, i) => pts[i] && <Worker key={i} p={pts[i]} {...s} />)}
+        {r.props === 'research' && <Globe p={at(1.4, 2.4, 0.45)} color={c} />}
+        {r.props === 'publishing' && <Rocket p={at(1.2, 2.6, 0.3)} color={c} />}
+        {signEl}{alertEl}
+      </group>
+    );
+  }
   return (
-    <group onClick={(e) => { e.stopPropagation(); onSelect(); }}
-      onPointerOver={(e) => { e.stopPropagation(); onHover(true); document.body.style.cursor = 'pointer'; }}
-      onPointerOut={() => { onHover(false); document.body.style.cursor = 'auto'; }}>
+    <group {...handlers}>
       {/* vloer */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]} receiveShadow>
         <ringGeometry args={[R_IN, R_OUT, 40, 1, a0 - Math.PI / 2, a1 - a0]} />
@@ -365,18 +416,7 @@ function Wing({ r, seats, lit, alert, onSelect, onHover, screens }: { r: RoomDef
       {/* planten in de hoeken */}
       <Palm p={at(-3.1, 3.2)} s={0.95} />
       <Palm p={at(3.1, 3.2)} s={0.8} />
-      {/* bord */}
-      <Billboard position={polar(tallR, a, H + 1.4)}>
-        <mesh onClick={(e) => { e.stopPropagation(); onSelect(); }}>
-          <planeGeometry args={[7.2, 2.1]} />
-          <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} opacity={lit ? 1 : 0.95} />
-        </mesh>
-      </Billboard>
-      {alert && (
-        <Html position={polar(tallR, a, H + 2.0)} center zIndexRange={[20, 10]} style={{ pointerEvents: 'none' }}>
-          <span className="rounded-full bg-[#FF9F1C] px-2 py-0.5 text-[11px] font-bold text-black shadow-[0_0_12px_#FF9F1C]">wacht op jou</span>
-        </Html>
-      )}
+      {signEl}{alertEl}
     </group>
   );
 }
@@ -401,7 +441,7 @@ function playTex() {
   });
 }
 
-function Reception({ screens, onSelect, lit }: { screens: THREE.Texture[]; onSelect: () => void; lit: boolean }) {
+function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]; onSelect: () => void; lit: boolean; baked?: boolean }) {
   const holo = useRef<THREE.MeshStandardMaterial>(null); const ring1 = useRef<THREE.Mesh>(null); const ring2 = useRef<THREE.Mesh>(null); const play = useRef<THREE.Group>(null);
   const sign = useMemo(hqSignTex, []); const pt = useMemo(playTex, []);
   useFrame(({ clock }) => {
@@ -413,6 +453,7 @@ function Reception({ screens, onSelect, lit }: { screens: THREE.Texture[]; onSel
   });
   return (
     <group onClick={(e) => { e.stopPropagation(); onSelect(); }} onPointerOver={() => { document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = 'auto'; }}>
+      {!baked && (<>
       {/* podium */}
       <mesh position={[0, 0.25, 0]} castShadow receiveShadow><cylinderGeometry args={[R_HUB, R_HUB + 0.3, 0.5, 64]} /><meshStandardMaterial color="#121a38" metalness={0.6} roughness={0.2} /></mesh>
       <mesh position={[0, 0.51, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[R_HUB - 0.05, 0.07, 8, 96]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3} toneMapped={false} /></mesh>
@@ -429,14 +470,17 @@ function Reception({ screens, onSelect, lit }: { screens: THREE.Texture[]; onSel
           <mesh position={[0, 0, 0.001]}><planeGeometry args={[0.84, 0.47]} /><meshBasicMaterial map={screens[i]} toneMapped={false} /></mesh>
         </group>
       ))}
+      </>)}
       {/* het hoofdpersonage achter de balie */}
       <Mascot p={[0, 0.5, -0.4]} rot={0} s={1.05} />
       {/* glazen hologramzuil */}
       <mesh position={[0, 5.0, 0]}><cylinderGeometry args={[2.3, 2.3, 7, 64, 1, true]} /><meshStandardMaterial ref={holo} color="#7fe8ff" emissive="#20D9FF" emissiveIntensity={0.9} transparent opacity={0.2} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} /></mesh>
       <mesh ref={ring1} position={[0, 1.3, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
       <mesh ref={ring2} position={[0, 1.3, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
+      {!baked && (<>
       <mesh position={[0, 8.5, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.35, 0.09, 8, 80]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3.2} toneMapped={false} /></mesh>
       <mesh position={[0, 8.55, 0]}><cylinderGeometry args={[2.4, 2.4, 0.12, 64]} /><meshStandardMaterial color="#1a1530" metalness={0.6} roughness={0.3} /></mesh>
+      </>)}
       <group ref={play} position={[0, 4.4, 0]}>
         <Billboard><mesh><planeGeometry args={[2.4, 2.4]} /><meshBasicMaterial map={pt} transparent toneMapped={false} depthWrite={false} /></mesh></Billboard>
       </group>
@@ -449,11 +493,13 @@ function Reception({ screens, onSelect, lit }: { screens: THREE.Texture[]; onSel
       <Billboard position={[0, 10.2, 0]}><mesh><planeGeometry args={[7.4, 3.7]} /><meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} /></mesh></Billboard>
       <pointLight position={[0, 4, 0]} color="#20D9FF" intensity={lit ? 60 : 40} distance={16} decay={1.5} />
       <pointLight position={[0, 2.2, 2.5]} color="#FFB070" intensity={22} distance={8} decay={1.6} />
+      {!baked && (<>
       {/* planten op het podium */}
       <Palm p={[-3.9, 0.5, -3.1]} s={1.0} />
       <Palm p={[3.9, 0.5, -3.1]} s={1.0} />
       <Sofa p={[-4.1, 0.5, 1.6]} rot={Math.PI / 2 + 0.4} color="#26305e" />
       <Sofa p={[4.1, 0.5, 1.6]} rot={-Math.PI / 2 - 0.4} color="#26305e" />
+      </>)}
     </group>
   );
 }
@@ -514,6 +560,7 @@ function Scene({ mode }: { mode: WorldMode }) {
   const { focus, setFocus, openWorker, hover, setHover } = useWorld(useShallow((s) => ({ focus: s.focus, setFocus: s.setFocus, openWorker: s.openWorker, hover: s.hover, setHover: s.setHover })));
   const per = useMemo(() => threadsPerRoom(activity), [activity]);
   const screens = useScreens();
+  const office = useOffice();
   const SHIRTS = ['#FF7A24', '#398CFF', '#A855F7', '#21D6A0', '#FF4DB8', '#20D9FF'];
 
   const seatsFor = (r: RoomDef): Seat[] => {
@@ -546,8 +593,9 @@ function Scene({ mode }: { mode: WorldMode }) {
     <>
       <color attach="background" args={['#060a1c']} />
       <fog attach="fog" args={['#0a0f2a', 70, 170]} />
-      <PerspectiveCamera makeDefault fov={30} near={0.5} far={400} position={[0, 60, 45]} />
+      <PerspectiveCamera makeDefault fov={FOV} near={0.5} far={400} position={[0, 60, 45]} />
       <CameraRig mode={mode} />
+      <FpsProbe />
       <Environment resolution={128} frames={1}>
         <Lightformer form="ring" intensity={3} color="#FF7A24" scale={14} position={[-18, 8, -10]} />
         <Lightformer form="ring" intensity={3} color="#20D9FF" scale={14} position={[18, 8, -10]} />
@@ -556,11 +604,12 @@ function Scene({ mode }: { mode: WorldMode }) {
       </Environment>
       <ambientLight intensity={0.35} color="#8fa0ff" />
       <hemisphereLight args={['#b9c7ff', '#1a0f2e', 0.5]} />
-      <directionalLight position={[16, 40, 22]} intensity={1.1} color="#fff1e0" castShadow shadow-mapSize={[2048, 2048]}
+      <directionalLight position={[16, 40, 22]} intensity={1.1} color="#fff1e0" castShadow={!office} shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-20} shadow-camera-right={20} shadow-camera-top={20} shadow-camera-bottom={-20} shadow-bias={-0.0004} />
       <pointLight position={[-30, 12, 6]} color="#FF7A24" intensity={90} distance={80} decay={1.4} />
       <pointLight position={[30, 12, 6]} color="#398CFF" intensity={90} distance={80} decay={1.4} />
 
+      {!office && (<>
       {/* grondplaat: spiegelende vloer met oranje rand */}
       <mesh position={[0, -0.6, 0]} receiveShadow><cylinderGeometry args={[R_BASE, R_BASE + 0.4, 1.2, 8, 1]} /><meshStandardMaterial color="#0a0f24" roughness={0.35} metalness={0.6} /></mesh>
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 8]} position={[0, 0.005, 0]}>
@@ -572,18 +621,20 @@ function Scene({ mode }: { mode: WorldMode }) {
       {/* lichtlijnen in de gang */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}><ringGeometry args={[R_IN - 0.42, R_IN - 0.34, 96]} /><meshBasicMaterial color="#398CFF" toneMapped={false} /></mesh>
 
-      <Reception screens={screens} lit={focus === 'coach' || hover === 'coach'} onSelect={() => select(coach)} />
-      <Entrance />
+      </>)}
+      {office && <BakedOffice model={office} screens={screens} lit={(id) => focus === id || hover === id} alert={(id) => { const rr = ROOMS.find((x) => x.id === id); if (!rr || mode === 'studio') return false; const st = statusOf(per[rr.id]); return st === 'wacht' || st === 'probleem'; }} />}
+      <Reception screens={screens} baked={!!office} lit={focus === 'coach' || hover === 'coach'} onSelect={() => select(coach)} />
+      {!office && <Entrance />}
       {ROOMS.filter((r) => r.slot >= 0).map((r) => {
         const st = statusOf(per[r.id]);
         return (
-          <Wing key={r.id} r={r} screens={screens} seats={seatsFor(r)} lit={focus === r.id || hover === r.id} alert={mode !== 'studio' && (st === 'wacht' || st === 'probleem')}
+          <Wing key={r.id} r={r} baked={office} screens={screens} seats={seatsFor(r)} lit={focus === r.id || hover === r.id} alert={mode !== 'studio' && (st === 'wacht' || st === 'probleem')}
             onHover={(h) => setHover(h ? r.id : null)} onSelect={() => select(r)} />
         );
       })}
       <City />
       <EffectComposer multisampling={0}>
-        <Bloom intensity={1.05} luminanceThreshold={0.62} luminanceSmoothing={0.25} mipmapBlur />
+        <Bloom intensity={office ? 0.9 : 1.05} luminanceThreshold={office ? 0.8 : 0.62} luminanceSmoothing={0.25} mipmapBlur />
         <Vignette eskil={false} offset={0.3} darkness={0.55} />
       </EffectComposer>
     </>
