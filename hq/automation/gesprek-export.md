@@ -17,10 +17,14 @@ You get: **ID** (`cmsg_...` or `projectchat`), **title**, and optionally **vanaf
 ## Steps
 
 1. **Read.**
-   - For a thread: `read_thread {"thread_id": "<ID>", "limit": 40, "order": "newest_first"}`. If vanaf_at is given, a limit of 20 is enough.
-   - For the project chat: `read_project_chat {"limit": 40}`, or 20 with vanaf_at.
-   - Note `has_more`.
-   - **If vanaf_at is given, convert ONLY messages created after vanaf_at.** If there are none, write nothing and answer "geen nieuwe berichten".
+   - **For a thread:** `read_thread {"thread_id": "<ID>", "limit": 40, "order": "newest_first"}`. If vanaf_at is given, a limit of 20 is enough. Note `has_more`.
+   - **For the project chat (ID `projectchat`):** `read_project_chat` returns the OLDEST messages first, and its `cursor` points to the next, newer page.
+     - Look for a saved cursor first: `python3 -c "import json;print(json.load(open('/mnt/project-files/driftmark-hq/gesprekken/projectchat.json')).get('cursor') or '')"` (no file or empty output = no cursor).
+     - If you have a **cursor**, call `read_project_chat {"cursor": "<cursor>", "limit": 50}`. Keep following each returned cursor while `has_more` is true.
+     - Without a cursor, start at `read_project_chat {"limit": 50}` and page forward the same way, until `has_more` is false.
+     - Remember the cursor you used for the LAST call (the one that returned `has_more` false); without a cursor, nothing. You pass it to the script with `--cursor`.
+     - Without vanaf_at, convert only the newest 40 messages and add `--meer`. With vanaf_at, convert only messages after vanaf_at.
+   - **If vanaf_at is given, convert ONLY messages created after vanaf_at.** If there are none, write nothing and answer "geen nieuwe berichten". For the project chat, still run the script with an empty file and `--cursor`, so the newest cursor is saved.
 2. **Convert** those messages into `/tmp/hq-ronde/gesprek_<ID>.txt` in exactly this format:
    ```
    @@ <message id> | <wie> | <created_at ISO> | <auteur>
@@ -40,5 +44,5 @@ You get: **ID** (`cmsg_...` or `projectchat`), **title**, and optionally **vanaf
    ```
    python3 /home/user/WhatIF/hq/automation/gesprekken.py berichten <ID> /tmp/hq-ronde/gesprek_<ID>.txt --titel "<title>"
    ```
-   Add `--meer` when `has_more` was true. The script merges by message id, so messages already saved are not duplicated. Check the JSON it prints (`nieuw` and `totaal`).
+   Add `--meer` when `has_more` was true (for a thread), or when you left older project-chat messages out. For the project chat, also add `--cursor "<cursor of your last call>"`. The script merges by message id, and by time, sender and start of the text, so messages already saved are not duplicated. Copy message ids exactly; if you are unsure of an id, still copy it as well as you can. Check the JSON it prints (`nieuw` and `totaal`).
 4. **Answer** in 1-2 lines: the id, how many new messages were written, and any problems.

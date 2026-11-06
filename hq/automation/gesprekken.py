@@ -12,12 +12,13 @@ Gebruik:
       Schrijft threads.json en print JSON {"ophalen": [...]}: actieve threads (working, blocked,
       review_ready) waarvan het gesprek nog niet of niet meer actueel is opgehaald, plus altijd de
       projectchat, elk met vanaf_at = tijd van het laatst opgehaalde bericht (alleen nieuwere omzetten).
-  python3 gesprekken.py berichten <threadId|projectchat> <bestand> [--meer] [--titel "..."]
+  python3 gesprekken.py berichten <threadId|projectchat> <bestand> [--meer] [--titel "..."] [--cursor C]
       <bestand>: berichten in dit formaat (volgorde maakt niet uit):
         @@ <id> | <wie> | <iso-tijd> | <auteur>
         tekst (Markdown, mag meerdere regels zijn)
         => keuzeoptie            (alleen bij wie = keuze)
       wie: niels, claude, keuze, checklist, systeem.  --meer: er zijn oudere berichten dan deze.
+      --cursor: (projectchat) de cursor waarmee de laatste pagina van read_project_chat is gelezen.
       Voegt samen met het bestaande bestand (op id), houdt de laatste 150 berichten.
   python3 gesprekken.py stand
       Print per gesprekbestand: id, aantal berichten, laatste bericht (id, tijd), bron_last.
@@ -95,8 +96,11 @@ def cmd_threads(bron: str):
         if g and g.get('bron_last') == t['last']:
             continue
         ophalen.append(item(t['id'], t['title']))
-    # de projectchat heeft geen stand in list_threads: altijd meenemen (alleen berichten na vanaf_at)
-    ophalen.append(item('projectchat', 'Projectchat'))
+    # de projectchat heeft geen stand in list_threads: altijd meenemen. read_project_chat leest van oud naar
+    # nieuw; met de bewaarde cursor komen alleen de nieuwere pagina's (zie gesprek-export.md)
+    pc = item('projectchat', 'Projectchat')
+    pc['cursor'] = (lees(gesprek_pad('projectchat'), None) or {}).get('cursor')
+    ophalen.append(pc)
     print(json.dumps({'threads': len(rijen), 'ophalen': ophalen}, ensure_ascii=False))
 
 
@@ -133,13 +137,19 @@ def parse_berichten(bron: str):
     return msgs
 
 
-def cmd_berichten(tid: str, bron: str, meer: bool, titel: str | None):
+def cmd_berichten(tid: str, bron: str, meer: bool, titel: str | None, cursor: str | None = None):
     pad = gesprek_pad(tid)
     g = lees(pad, {'id': tid, 'title': titel or tid, 'msgs': []})
     alle = {m['id']: m for m in g.get('msgs', [])}
+    sig = lambda m: (m.get('at'), m.get('who'), (m.get('text') or '')[:60])
+    per_sig = {sig(m): k for k, m in alle.items()}
     nieuw = parse_berichten(bron)
     for m in nieuw:
+        oud_id = per_sig.get(sig(m))
+        if oud_id and oud_id != m['id']:
+            alle.pop(oud_id, None)
         alle[m['id']] = m
+        per_sig[sig(m)] = m['id']
     msgs = sorted(alle.values(), key=lambda m: (m.get('at') or '', m['id']))
     afgekapt = len(msgs) > MAX_MSGS
     msgs = msgs[-MAX_MSGS:]
@@ -149,6 +159,8 @@ def cmd_berichten(tid: str, bron: str, meer: bool, titel: str | None):
         'hasMore': bool(meer or afgekapt or g.get('hasMore')), 'msgs': msgs,
         'bron_last': (t or {}).get('last') if t else g.get('bron_last'),
     })
+    if cursor:
+        g['cursor'] = cursor
     schrijf(pad, g)
     # stand in threads.json bijwerken (aantal berichten, bestand bestaat)
     th = lees(THREADS, None)
@@ -179,7 +191,8 @@ if __name__ == '__main__':
         cmd_threads(a[1])
     elif a[0] == 'berichten' and len(a) >= 3:
         titel = a[a.index('--titel') + 1] if '--titel' in a else None
-        cmd_berichten(a[1], a[2], '--meer' in a, titel)
+        cursor = a[a.index('--cursor') + 1] if '--cursor' in a else None
+        cmd_berichten(a[1], a[2], '--meer' in a, titel, cursor)
     elif a[0] == 'stand':
         cmd_stand()
     else:
