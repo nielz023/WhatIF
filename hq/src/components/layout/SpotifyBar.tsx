@@ -2,8 +2,8 @@
  * MUZIEKBALK (niels 2026-11-06: "spotify koppelen, bovenin een muziekbalkje").
  * Leest via je eigen Spotify-koppeling in claude.ai wat er nu speelt (mcp-capability),
  * met hartje om op te slaan. Klik op het plaatje: menu met niels' playlists en de
- * Spotify-speler zelf (afspelen, pauze, volgende, vorige, nummer kiezen).
- * De speler blijft geladen als het menu dicht gaat, zodat de muziek doorspeelt.
+ * knop om die in Spotify af te spelen. Een ingebouwde Spotify-speler (iframe) blokkeert
+ * claude.ai, dus afspelen/pauze/overslaan gebeurt in Spotify zelf.
  */
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ExternalLink, Heart, Music2 } from 'lucide-react';
@@ -154,10 +154,21 @@ export default function SpotifyBar() {
             <button key={x.id} onClick={() => kies(x.id)} className={`truncate rounded-lg px-2.5 py-1.5 text-left text-[12px] font-semibold transition ${actief === x.id ? 'bg-[#1DB954] text-black' : 'bg-white/5 text-slate-200 hover:bg-white/10'}`}>{x.name}</button>
           ))}
         </div>
-        {geladen && (
-          <iframe key={geladen} title="Spotify-speler" src={`https://open.spotify.com/embed/playlist/${geladen}?utm_source=generator&theme=0`} width="100%" height="380" style={{ border: 0, borderRadius: 12 }} allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="eager" />
+        {/* claude.ai laat geen Spotify-speler in de pagina toe (getest 6 nov): afspelen gebeurt in de Spotify-app */}
+        {live && (
+          <div className="mb-3 flex items-center gap-3 rounded-xl bg-white/5 p-2.5">
+            {t.img ? <img src={t.img} alt="" className="h-16 w-16 rounded-lg object-cover shadow" /> : <span className="grid h-16 w-16 place-items-center rounded-lg bg-[#1DB954]/20 text-[#1DB954]"><Music2 size={24} /></span>}
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-slate-400">{t.playing ? 'Speelt nu' : 'Gepauzeerd'}</div>
+              <div className="truncate text-[13px] font-semibold text-white">{t.title}</div>
+              <div className="truncate text-[11px] text-slate-400">{t.artist}</div>
+            </div>
+          </div>
         )}
-        <div className="mt-2 text-[10px] leading-snug text-slate-500">Ben je niet ingelogd bij Spotify in deze browser, dan speelt de speler alleen fragmenten van 30 seconden. Log dan in via open.spotify.com.</div>
+        <a href={'https://open.spotify.com/playlist/' + actief} target="_blank" rel="noreferrer" onClick={() => setTimeout(() => setOpen(false), 300)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1DB954] px-3 py-2.5 text-[13px] font-bold text-black hover:brightness-110">
+          <Music2 size={16} /> Speel {plNaam} in de Spotify-app
+        </a>
+        <div className="mt-2 text-[10px] leading-snug text-slate-500">claude.ai laat de Spotify-speler niet in HQ toe. Afspelen, pauze en overslaan doe je in de Spotify-app; HQ laat zien wat er speelt, met het plaatje. </div>
       </div>
     </div>
   );
