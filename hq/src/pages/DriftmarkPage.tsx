@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import { ExternalLink, Clapperboard, Users, Map, ListChecks, Lightbulb, Wrench, Mic, Youtube, Play, Building2, MessageSquare } from 'lucide-react';
 import { useGame } from '../store/useGame';
 import { Tabs } from '../components/ui';
-import { RULES, CAST, VOICES, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
+import { RULES, CAST, VOICE_SETS, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
 import { CursusCheck, TitelTester, CursusStappen, CursusTip } from './Cursus';
 import { useLive, startLive } from '../services/live';
 import { openGesprek } from '../components/shared/Gesprek';
+import { useThreads, zetLiveAan, openRechten } from '../services/threads';
 import { ToolsPanel, CostsPanel, RepliesPanel, Outputs, AutomationPanel } from './DriftmarkExtra';
 import gallery from '../data/gallery.json';
 import { useReal, order } from '../services/real';
 import { useDb } from '../services/db';
 import { UploadCalendar, MetroLine } from './DriftmarkVideos';
+import YouTubeStats from './YouTubeStats';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
@@ -22,6 +24,38 @@ const AVAIL: Record<string, [string, string]> = {
   off: ['Versturen naar Claude staat hier uit', '#f43f5e'],
   geen: ['Alleen op de gepubliceerde pagina in claude.ai', '#f43f5e'],
 };
+
+/** stand van de koppeling Claude Code Remote (live stand van elke thread) met een knop om hem aan te zetten */
+function LiveKoppeling() {
+  const src = useThreads((s) => s.src); const err = useThreads((s) => s.err);
+  const toast = useGame((s) => s.toast);
+  const [bezig, setBezig] = useState(false);
+  if (src === 'live' || src === 'laden') return null;
+  const aan = async () => {
+    setBezig(true);
+    const r = await zetLiveAan().catch(() => 'fout');
+    setBezig(false);
+    if (r === 'live') toast('Live stand van je threads staat aan.', 'success');
+    else toast('claude.ai kon de koppeling Claude Code Remote niet laden. De takenlijst gebruikt de stand van de uurronde.', 'warning');
+  };
+  const geweigerd = err === 'denied';
+  const uur = 'De stand komt nu uit de uurronde (elk uur).';
+  const tekst = geweigerd ? `De koppeling Claude Code Remote is geweigerd. ${uur}`
+    : err === 'unavailable' || (src === 'geen' && !err) ? `Live stand kan in deze weergave niet. ${uur}`
+    : err === 'needs_reauth' ? `Log opnieuw in bij Claude Code Remote (claude.ai, Instellingen › Connectors). ${uur}`
+    : err === 'server_not_connected' ? `Claude Code Remote is niet gekoppeld in claude.ai. ${uur}`
+    : src === 'uit' ? `Live stand van je threads staat uit. ${uur}`
+    : `Claude Code Remote gaf een fout${err ? ` (${err})` : ''}. ${uur}`;
+  const knop = geweigerd ? 'rechten' : err === 'unavailable' || (src === 'geen' && !err) ? null : src === 'uit' ? 'Live aanzetten' : 'Opnieuw proberen';
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/[.04] px-3 py-2 text-[13px] text-slate-300">
+      <span className="h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+      <span className="min-w-0 flex-1">{tekst}</span>
+      {knop === 'rechten' ? <button className="btn-ghost !py-1 text-[13px]" onClick={() => void openRechten().then((ok) => { if (!ok) toast('Open het menu Rechten van dit artifact in claude.ai.', 'info'); })}>Rechten openen</button>
+        : knop ? <button className="btn-primary !py-1 text-[13px]" disabled={bezig} onClick={() => void aan()}>{bezig ? 'Bezig…' : knop}</button> : null}
+    </div>
+  );
+}
 
 function OrdersPanel({ quick = [] }: { quick?: string[] }) {
   const { orders, avail, send, resend } = useReal();
@@ -128,11 +162,12 @@ function Section({ icon, title, children, right }: { icon: React.ReactNode; titl
 }
 
 type Tab = 'v1' | 'v2' | 'v3';
-type View = 'overzicht' | 'threads' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
+type View = 'overzicht' | 'threads' | 'youtube' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
 const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'overzicht', label: 'Overzicht', uitleg: 'Wat er nu gebeurt en wat jij moet doen' },
   { id: 'threads', label: 'Alle taken', uitleg: 'Elke Claude-taak in je project, per video. Klik om hem te openen' },
-  { id: 'videos', label: "Video's", uitleg: 'Elke lange video met zijn productielijn en bestanden' },
+  { id: 'youtube', label: 'Op YouTube', uitleg: "Al je video's en shorts zoals ze op YouTube staan, met weergaven, likes, reacties en kijkduur" },
+  { id: 'videos', label: 'Productie', uitleg: 'Elke lange video met zijn productielijn en bestanden' },
   { id: 'cursus', label: 'Cursuscheck', uitleg: 'Checklist uit je cursus per video, plus de titeltester' },
   { id: 'kalender', label: 'Uploadkalender', uitleg: 'Wat er wanneer online ging en wat er ingepland staat' },
   { id: 'shorts', label: 'Shorts', uitleg: 'Welke shorts er zijn en wanneer ze online gaan' },
@@ -155,10 +190,10 @@ function Step({ n, title, text }: { n: number; title: string; text: string }) {
 }
 
 type Mode = 'home' | 'videos' | 'meer';
-const MODE_VIEWS: Record<Mode, View[]> = { home: [], videos: ['videos', 'cursus', 'kalender', 'shorts'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'] };
+const MODE_VIEWS: Record<Mode, View[]> = { home: [], videos: ['youtube', 'videos', 'cursus', 'kalender', 'shorts'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'] };
 const MODE_TITLE: Record<Mode, [string, string]> = {
   home: ['Home', ''],
-  videos: ["Video's", 'Elke video van idee tot upload. De gloeiende halte is waar hij nu is.'],
+  videos: ["Video's", "Je video's en shorts op YouTube met hun cijfers, en elke nieuwe video van idee tot upload."],
   meer: ['Meer', 'Alles om op terug te vallen: taken, regels, cast en gereedschap.'],
 };
 
@@ -196,7 +231,8 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
   const setPage = useGame((s) => s.setPage);
   const toast = useGame((s) => s.toast);
   const views = MODE_VIEWS[mode];
-  const key = `driftmark-view-${mode}`;
+  // v34: nieuwe sleutel voor Video's, zodat het nieuwe tabblad Op YouTube één keer vanzelf opent
+  const key = mode === 'videos' ? 'driftmark-view-videos-v34' : `driftmark-view-${mode}`;
   const [view, setView] = useState<View>(() => { try { const v = localStorage.getItem(key) as View; return v && views.includes(v) ? v : views[0] ?? 'overzicht'; } catch { return views[0] ?? 'overzicht'; } });
   const go = (v: View) => { setView(v); try { localStorage.setItem(key, v); } catch { /* */ } };
   // een melding kan vragen om een bepaald tabblad (bijv. Meer → Alle taken), ook als deze pagina al open staat
@@ -347,6 +383,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
             <span className="text-slate-500">● {activity.filter((a) => a.state === 'done').length} klaar</span>
             <button className="ml-auto btn-ghost !py-1 text-[13px]" onClick={() => openGesprek({ kind: 'project', title: 'Projectchat' })}><MessageSquare size={13} />Projectchat lezen</button>
           </div>
+          <LiveKoppeling />
           {[...new Set([...VIDEOS.map((v) => v.nr).sort((a, b) => b - a), 0])].map((nr) => {
             const list = activity.filter((a) => (a.video ?? 0) === nr);
             if (!list.length) return null;
@@ -360,6 +397,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         </div>
       )}
 
+      {view === 'youtube' && <YouTubeStats />}
       {view === 'cursus' && <><CursusCheck /><TitelTester /></>}
       {view === 'videos' && <div className="grid gap-3 lg:grid-cols-2">{[...VIDEOS].reverse().map((v) => <VideoCard key={v.nr} v={v} />)}</div>}
 
@@ -374,15 +412,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
               </div>
             ))}
           </div>
-          {(live.data.youtube?.videos?.length ?? 0) > 0 && (<>
-            <div className="mb-1 mt-4 text-[13px] font-bold uppercase tracking-wider text-slate-400">Op YouTube (via vidIQ)</div>
-            <div className="space-y-1">{live.data.youtube!.videos!.map((y: Any) => (
-              <a key={y.id ?? y.title} href={y.url} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-2 rounded-lg bg-white/[.03] px-2.5 py-1.5 text-[13px] hover:bg-white/[.07]">
-                <span className="truncate text-slate-200">{y.type === 'long' ? '🎬 ' : '📱 '}{y.title}</span>
-                <span className="shrink-0 text-slate-400">{y.status && y.status !== 'public' ? y.status : `${Number(y.views ?? 0).toLocaleString('nl-NL')} views`}</span>
-              </a>
-            ))}</div>
-          </>)}
+          <button onClick={() => go('youtube')} className="btn-ghost mt-3 text-[13px]"><Youtube size={14} />Alle shorts met weergaven, likes en kijkduur staan in Op YouTube</button>
         </Section>
       )}
 
@@ -420,9 +450,14 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         <div className="grid gap-4 xl:grid-cols-2">
           <div className="xl:col-span-2"><ToolsPanel /></div>
           <Section icon={<Mic size={16} />} title="Stemmen (ElevenLabs v4)">
-            <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-              {VOICES.map(([r, id]) => <div key={r} className="flex justify-between gap-2 rounded-lg bg-white/[.03] px-2 py-1 text-[13px]"><span className="text-slate-300">{r}</span><code className="text-slate-500">{id}</code></div>)}
-            </div>
+            {VOICE_SETS.map((set) => (
+              <div key={set.video} className="mb-3 last:mb-0">
+                <div className="mb-1 text-[12px] font-bold uppercase tracking-wider text-slate-400">{set.video}</div>
+                <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                  {set.stemmen.map(([r, id]) => <div key={r} className="flex justify-between gap-2 rounded-lg bg-white/[.03] px-2 py-1 text-[13px]"><span className="text-slate-300">{r}</span><code className="text-slate-500">{id}</code></div>)}
+                </div>
+              </div>
+            ))}
           </Section>
           <Section icon={<Wrench size={16} />} title="Waarvoor gebruik je wat">
             <div className="space-y-1.5">{TOOLS.map((t) => <div key={t.name} className="text-[13px]"><span className="font-semibold text-white">{t.name}</span> <span className="text-slate-400">· {t.use}</span></div>)}</div>

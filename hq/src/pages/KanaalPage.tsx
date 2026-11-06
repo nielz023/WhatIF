@@ -42,14 +42,12 @@ function Chart({ rows, k, color, label, info }: { rows: StatRow[]; k: 'subscribe
   );
 }
 
-const RETENTIE = [
-  { video: 'Video 1 · 2x sterker', kijkduur: '6:40 gemiddeld (26%)', curve: [100, 34, 31, 29, 28, 27, 26, 26, 25, 25], tip: '2 op de 3 kijkers haken af in de eerste minuut. Begin met het spannendste beeld binnen 5 seconden, zonder uitleg vooraf.' },
-];
 
 export default function KanaalPage() {
   const [range, setRange] = useState<number>(28);
   const allStats = useDb((s) => s.stats);
   const yt = useLive((s) => s.data.youtube);
+  const prod = useLive((s) => s.data.videos);
   const stats = range ? allStats.filter((r) => Date.now() - +new Date(r.at) < range * 864e5) : allStats;
   const vids = yt?.videos ?? [];
   const top = (t: string) => [...vids].filter((v) => v.type === t && (v.status ?? 'public') === 'public').sort((a, b) => (b.views ?? 0) - (a.views ?? 0)).slice(0, 5);
@@ -71,7 +69,7 @@ export default function KanaalPage() {
   return (
     <div className="h-full overflow-y-auto p-3 pb-28 md:p-6 md:pb-10">
       <h1 className="font-display text-[28px] font-bold text-white">Kanaal</h1>
-      <p className="mb-4 text-[15px] text-slate-400">Je echte cijfers van YouTube, elk uur bijgewerkt via vidIQ.</p>
+      <p className="mb-4 text-[15px] text-slate-400">Je echte cijfers van YouTube: kanaal en weergaven elk uur, kijkduur per video elke ochtend via vidIQ.</p>
 
       <div className="mb-4 flex gap-1.5">{RANGES.map((r) => (
         <button key={r.id} onClick={() => setRange(r.id)} className={`rounded-full px-4 py-2 text-[14px] font-semibold ${range === r.id ? 'bg-orange-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>{r.label}</button>
@@ -110,15 +108,21 @@ export default function KanaalPage() {
       </section>
 
       <section className="panel p-4">
-        <div className="mb-2 flex items-center font-display text-[18px] font-bold text-white">Retentie<Info text="Hoeveel procent van de kijkers op elk moment nog kijkt. Hoe vlakker de lijn, hoe beter." /></div>
-        {RETENTIE.map((r) => (
-          <div key={r.video} className="rounded-xl bg-white/[.03] p-3">
-            <div className="flex flex-wrap justify-between gap-2 text-[14px]"><span className="font-semibold text-white">{r.video}</span><span className="text-slate-400">kijkduur {r.kijkduur}</span></div>
-            <svg viewBox="0 0 300 80" className="mt-2 h-20 w-full" preserveAspectRatio="none"><path d={r.curve.map((v, i) => `${i ? 'L' : 'M'}${(i / (r.curve.length - 1)) * 300},${80 - (v / 100) * 76}`).join(' ')} fill="none" stroke="#ff8a3d" strokeWidth="2.5" /></svg>
-            <div className="text-[14px] text-orange-200">💡 {r.tip}</div>
-          </div>
-        ))}
-        <div className="mt-2 text-[13px] text-slate-500">Video 2 heeft nog te weinig kijkers voor een betrouwbare retentiecurve.</div>
+        <div className="mb-2 flex items-center font-display text-[18px] font-bold text-white">Kijkduur lange video's<Info text="Hoe lang kijkers gemiddeld bleven kijken (vidIQ, elke ochtend ververst). Cursus: onder 30% werk nodig, 40%+ goed." /></div>
+        <div className="space-y-2">{[...vids].filter((v) => v.type === 'long' && (v.status ?? 'public') === 'public').sort((a, b) => (b.datum ?? '').localeCompare(a.datum ?? '')).map((v) => {
+          const p = prod.find((x) => v.id && x.youtube?.includes(v.id));
+          const avp = v.avp ?? null; const kleur = avp == null ? '#94a3b8' : avp >= 40 ? '#3ddc97' : avp >= 30 ? '#3db8ff' : '#ff8a3d';
+          const mmss = (x: number) => `${Math.floor(x / 60)}:${String(Math.round(x % 60)).padStart(2, '0')}`;
+          return (
+            <div key={v.id ?? v.title} className="rounded-xl bg-white/[.03] p-3">
+              <div className="flex flex-wrap justify-between gap-2 text-[14px]"><span className="font-semibold text-white">{p ? `Video ${p.nr} · ` : ''}{v.title}</span>
+                <span style={{ color: kleur }}>{avp != null && v.avd != null ? `gemiddeld ${mmss(v.avd)} bekeken (${avp.toLocaleString('nl-NL')}%)${p?.lengte ? ` van ${p.lengte}` : ''}` : 'kijkduur volgt (Analytics loopt 1-2 dagen achter)'}</span></div>
+              {avp != null && <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full" style={{ width: `${Math.max(2, Math.min(100, avp))}%`, background: kleur }} /></div>}
+            </div>
+          );
+        })}</div>
+        <p className="mt-2 text-[14px] text-orange-200">💡 Uit je Studio-screenshot van 1 nov: bij video 1 haakten 2 op de 3 kijkers af in de eerste minuut. Begin daarom met het spannendste beeld binnen 5 seconden, zonder uitleg vooraf.</p>
+        <div className="mt-1 text-[13px] text-slate-500">De curve per seconde geeft vidIQ niet. Die staat in YouTube Studio onder Analytics › Betrokkenheid.</div>
       </section>
     </div>
   );

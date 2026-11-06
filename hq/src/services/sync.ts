@@ -97,7 +97,7 @@ export function applyReal(live: Live) {
 
   // ── video's & geld = echt ─────────────────────
   const yt = live.youtube;
-  const videos: Video[] = (yt?.videos?.length ? yt.videos.map((v, i) => ({ id: `ytv_${i}`, projectId: 'real', channelId: v.type === 'short' ? 'ch_science' : 'ch_history', title: v.title, publishedTick: now, quality: 0, ctr: 0, avd: 0, views: v.views ?? 0, revenue: 0, likes: 0 }))
+  const videos: Video[] = (yt?.videos?.length ? yt.videos.map((v, i) => ({ id: `ytv_${i}`, projectId: 'real', channelId: v.type === 'short' ? 'ch_science' : 'ch_history', title: v.title, publishedTick: now, quality: 0, ctr: 0, avd: v.avp ?? 0, views: v.views ?? 0, revenue: 0, likes: v.likes ?? 0 }))
     : live.videos.filter((v) => v.status === 'Online').map((v) => ({ id: `real_vid${v.nr}`, projectId: `real_v${v.nr}`, channelId: 'ch_history', title: v.title, publishedTick: now, quality: 0, ctr: 0, avd: v.nr === 1 ? 26.3 : 0, views: v.nr === 1 ? 48 : 0, revenue: 0, likes: 0 })));
   const ledger: LedgerEntry[] = (live.costs ?? []).filter((c) => typeof c.bedrag === 'number').map((c, i) => ({ id: `cost_${i}`, day: Math.floor(now / 24), channelId: null, category: 'AI Subscriptions', amount: -(c.bedrag as number), note: `${c.wat}${c.notitie ? ` · ${c.notitie}` : ''} (${c.datum})` }));
   const subs = yt?.subscribers;

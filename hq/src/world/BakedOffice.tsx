@@ -92,7 +92,7 @@ function load(): Promise<OfficeModel> {
           if (mats.some((x) => x.name?.startsWith('baked'))) {
             for (const mt of mats) {
               mt.roughness = 0.42; mt.metalness = 0.0; mt.envMapIntensity = 0.5; mt.emissiveIntensity = 1.0; mt.toneMapped = false;
-              if (mt.emissiveMap) { mt.emissiveMap.anisotropy = 8; mt.emissiveMap.colorSpace = THREE.SRGBColorSpace; }
+              if (mt.emissiveMap) { mt.emissiveMap.anisotropy = 16; mt.emissiveMap.colorSpace = THREE.SRGBColorSpace; }
               // vloer: glanzender, zodat het neonlicht en de lucht erin weerkaatsen
               if (mt.name?.startsWith('baked_floor')) { mt.roughness = 0.18; mt.metalness = 0.12; mt.envMapIntensity = 1.15; }
               if (!lightmapped.includes(mt)) lightmapped.push(mt);
@@ -141,14 +141,14 @@ const lmCache = new Map<string, Promise<THREE.Texture>>();
 function loadLm(res: LmRes): Promise<THREE.Texture> {
   if (!lmCache.has(res)) {
     lmCache.set(res, new Promise((ok, bad) => new THREE.TextureLoader().load(LM[res], (t) => {
-      t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; ok(t);
+      t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; ok(t);
     }, undefined, bad)));
   }
   return lmCache.get(res)!;
 }
 
-export function BakedOffice({ model, screens, dash, lit, alert }: {
-  model: OfficeModel; screens: THREE.Texture[]; dash: Dashboards | null; lit: (room: string) => boolean; alert: (room: string) => boolean;
+export function BakedOffice({ model, screens, dash, lit }: {
+  model: OfficeModel; screens: THREE.Texture[]; dash: Dashboards | null; lit: (room: string) => boolean;
 }) {
   const quality = useWorld((s) => s.quality);
   // scherpe lightmap: probeer de gewenste resolutie, anders een kleinere
@@ -187,8 +187,8 @@ export function BakedOffice({ model, screens, dash, lit, alert }: {
       // neon kleurt heel licht mee in de tijd; bij het feestthema draait hij door de regenboog
       const shift = sky.feest ? (t * 0.09 + i * 0.13) % 1 : Math.sin(t * 0.22 + i * 1.7) * 0.022;
       for (const m of mats) { const c = m.userData.hsl as { h: number; s: number; l: number } | undefined; if (c) m.emissive.setHSL((c.h + shift + 1) % 1, sky.feest ? 1 : c.s, c.l); }
-      if (room === 'hub') continue;
-      const k = (alert(room) ? 1.0 + Math.max(0, Math.sin(t * 5)) * 0.9 : 1) * (lit(room) ? 1.45 : 1);
+      // minder overheersend licht (niels 2026-11-06): neon op ~60%, het midden (coach) nog wat zachter
+      const k = room === 'hub' ? 0.5 : 0.6 * (lit(room) ? 1.4 : 1);
       for (const m of mats) m.emissiveIntensity = (m.userData.base as number) * k;
     }
     // overdag een tikje lichter binnen

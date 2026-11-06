@@ -34,7 +34,7 @@ function deptInfo(r: RoomDef, d: Live, log: { kind: string; text: string; at: st
   switch (r.id) {
     case 'ceo': return [yt?.subscribers != null ? `${yt.subscribers} abonnees · ${yt.views?.toLocaleString('nl-NL') ?? '—'} weergaven` : 'Nog geen kanaalcijfers geladen', `${d.videos.filter((v) => v.status === 'Online').length} lange video's online`];
     case 'productie': return [d.blender?.stand ? `Blender: ${d.blender.stand}` : 'Geen Blender-stand bekend', ...inProd.map((v) => `Video ${v.nr}: ${v.status}`)];
-    case 'publicatie': { const shorts = (yt?.videos ?? []).filter((v) => v.type === 'short'); return [`${shorts.length} shorts online`, ...inProd.slice(0, 1).map((v) => `Volgende upload: video ${v.nr} (${v.werktitel})`)]; }
+    case 'publicatie': { const shorts = (yt?.videos ?? []).filter((v) => v.type === 'short' && (v.status ?? 'public') === 'public'); return [`${shorts.length} shorts online`, ...inProd.slice(0, 1).map((v) => `Volgende upload: video ${v.nr} (${v.werktitel})`)]; }
     case 'script': case 'stem': return inProd.map((v) => { const s = v.steps.find((x) => x.label === (r.id === 'script' ? 'Script' : 'Stemmen')); return `Video ${v.nr}: ${r.id === 'script' ? 'script' : 'stemmen'} ${s?.done ? 'klaar' : 'nog niet klaar'}`; });
     case 'crisis': { const bad = log.filter((l) => l.kind !== 'info').slice(0, 3); return bad.length ? bad.map((l) => `${l.kind}: ${l.text}`) : ['Geen fouten of waarschuwingen in het logboek']; }
     case 'onderzoek': return d.ideas ? [`${(d.ideas as unknown[]).length} ideeën in de ideeënlijst`] : [];

@@ -51,9 +51,10 @@ export const useWorld = create<W>((set) => ({
 /** pixeldichtheid van het 3D-kantoor per kwaliteitsstand */
 export function dprFor(q: Quality, auto: number) {
   const dev = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-  if (q === 'snel') return 1;
+  // haarscherp (niels 2026-11-06): nooit onder de resolutie van het scherm zelf; op een gewoon scherm een tikje erboven
+  if (q === 'snel') return Math.min(1.5, Math.max(1, dev));
   if (q === '4k') return Math.min(3, Math.max(dev, 3840 / Math.max(1, window.innerWidth)));
-  return Math.min(auto, Math.max(1, dev));
+  return Math.min(2, Math.max(auto, dev, 1));
 }
 
 export const reducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;

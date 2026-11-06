@@ -22,27 +22,59 @@ const OORDEEL: Record<string, [string, string]> = { goed: ['goed', 'text-green-3
 /* ---------- Kanaal: cursusmeter ---------- */
 export function CursusMeter() {
   const yt = useLive((s) => s.data.youtube);
+  const prod = useLive((s) => s.data.videos);
   const stats = useDb((s) => s.stats);
   const vids = (yt?.videos ?? []).filter((v) => (v.status ?? 'public') === 'public');
-  const longs = vids.filter((v) => v.type === 'long');
+  // lange video's op volgorde van upload: de eerste is video 1 (of het nummer uit de productielijst)
+  const longs = vids.filter((v) => v.type === 'long').sort((a, b) => (a.datum ?? a.date ?? '').localeCompare(b.datum ?? b.date ?? ''));
+  const nrVan = (id?: string, i = 0) => prod.find((p) => id && p.youtube?.includes(id))?.nr ?? i + 1;
+  const shorts = vids.filter((v) => v.type === 'short');
   const subs = yt?.subscribers ?? 0;
   const views = yt?.views ?? 0;
   const perSub = subs ? Math.round(views / subs) : 0;
-  const best = [...vids].sort((a, b) => (b.views ?? 0) - (a.views ?? 0))[0];
   const bestLong = [...longs].sort((a, b) => (b.views ?? 0) - (a.views ?? 0))[0];
+  const bestShort = [...shorts].sort((a, b) => (b.views ?? 0) - (a.views ?? 0))[0];
+  const mmss = (x?: number) => (x == null ? '?' : `${Math.floor(x / 60)}:${String(Math.round(x % 60)).padStart(2, '0')}`);
+  const pctNl = (x: number) => `${Math.round(x)}%`;
+
+  // AVD: de nieuwste lange video met cijfers telt (vidIQ, elke ochtend)
+  const metAvd = longs.map((v, i) => ({ v, nr: nrVan(v.id, i) })).filter((x) => x.v.avp != null).reverse();
+  const laatste = metAvd[0];
+  const avdOordeel: keyof typeof OORDEEL = !laatste ? 'onbekend' : laatste.v.avp! >= 40 ? 'goed' : laatste.v.avp! >= 30 ? 'oké' : 'werk';
+  const avdNu = metAvd.length ? metAvd.slice(0, 2).map((x) => `video ${x.nr}: ${pctNl(x.v.avp!)} (${mmss(x.v.avd)})`).join(' · ').replace(/^v/, 'V') : 'volgt via vidIQ';
+
+  // YPP: alleen kijkuren van lange video's tellen mee
+  const uren = longs.reduce((a, v) => a + (v.minuten ?? 0), 0) / 60;
+  const heeftUren = longs.some((v) => v.minuten != null);
+
+  // videolengte uit de productielijst (status.json)
+  const lengtes = prod.filter((p) => p.lengte).map((p) => `video ${p.nr}: ${p.lengte}`);
+  const volgende = prod.find((p) => p.status !== 'Online' && /\d/.test(p.lengte ?? ''));
+  const minVan = (t?: string) => { const m = /(\d+):(\d{2})/.exec(t ?? ''); return m ? +m[1] + +m[2] / 60 : null; };
+  const lv = minVan(volgende?.lengte);
+  const lengteOordeel: keyof typeof OORDEEL = lv == null ? 'onbekend' : lv >= 10 && lv <= 15 ? 'goed' : lv > 15 && lv <= 18 ? 'oké' : 'werk';
+
   const rows: { naam: string; doel: string; nu: string; oordeel: keyof typeof OORDEEL; tip: string; pct?: number }[] = [
-    { naam: 'Gemiddeld bekeken (AVD)', doel: '40%+ goed, 50%+ geweldig', nu: 'Video 1: 26% (6:40)', oordeel: 'werk', tip: 'Onder 30% = het script moet beter. Bij video 1 zat het lek in de eerste minuut.', pct: 26 / 50 * 100 },
+    { naam: 'Gemiddeld bekeken (AVD)', doel: '40%+ goed, 50%+ geweldig', nu: avdNu, oordeel: avdOordeel,
+      tip: avdOordeel === 'werk' ? `Onder 30% moet het script beter. Bij video 1 en 2 haakten de meeste kijkers al in de eerste minuut af: begin met het spannendste beeld, zonder uitleg vooraf.` : 'Houd de opening strak: spannendste beeld binnen 5 seconden en elke 60-90 seconden een nieuw probleem.',
+      pct: laatste ? (laatste.v.avp! / 50) * 100 : undefined },
     { naam: 'Abonnees per kijker', doel: '1 per 100-200 weergaven', nu: perSub ? `1 per ${perSub.toLocaleString('nl-NL')}` : '?', oordeel: perSub && perSub <= 200 ? 'goed' : perSub && perSub <= 300 ? 'oké' : 'werk', tip: 'Vraag rond 60% van de video om te abonneren, plus een korte outro met één oproep en een eindscherm.', pct: perSub ? (150 / perSub) * 100 : 0 },
-    { naam: 'Een 1K-video in de eerste 5-10', doel: 'minstens één', nu: best ? `${best.type === 'short' ? 'Short' : 'Lang'}: ${(best.views ?? 0).toLocaleString('nl-NL')} (${best.title.slice(0, 32)}…)` : '?', oordeel: (bestLong?.views ?? 0) >= 1000 ? 'goed' : (best?.views ?? 0) >= 1000 ? 'oké' : 'werk', tip: 'Haalt een video 1K+, maak dan 3-5 video\'s over dat onderwerp vanuit een andere hoek. Je beste short gaat over teleporteren.', pct: Math.min(100, ((bestLong?.views ?? 0) / 1000) * 100) },
-    { naam: 'Videolengte', doel: '10-15 min', nu: 'Video 2: 12:56 · video 4: ~12 min', oordeel: 'goed', tip: 'Minstens zo lang als de concurrent, maar 10 min met 70% is beter dan 20 min met 30%.', pct: 100 },
-    { naam: 'YouTube Partner Programma', doel: '1.000 abonnees + 4.000 kijkuren', nu: `${subs} abonnees · kijkuren onbekend`, oordeel: 'onbekend', tip: 'Shorts-weergaven tellen niet mee voor de 4.000 kijkuren: lange video\'s wel. Maak alvast een AdSense-account aan.', pct: (subs / 1000) * 100 },
-    { naam: 'CTR (klikken ÷ vertoningen)', doel: '5%+ (evergreen), 10%+ geweldig', nu: 'niet zichtbaar in het HQ', oordeel: 'onbekend', tip: 'Kijk 48 uur na een upload in Studio. Lage CTR en weinig uit Aanbevolen? Vervang de thumbnail.' },
+    { naam: 'Een 1K-video in de eerste 5-10', doel: 'minstens één', nu: `lang: ${(bestLong?.views ?? 0).toLocaleString('nl-NL')} van 1.000${bestShort ? ` · beste short: ${(bestShort.views ?? 0).toLocaleString('nl-NL')}` : ''}`,
+      oordeel: (bestLong?.views ?? 0) >= 1000 ? 'goed' : (bestShort?.views ?? 0) >= 1000 ? 'oké' : 'werk',
+      tip: (bestLong?.views ?? 0) >= 1000 ? `Je lange video "${bestLong!.title}" haalde 1K: maak 3-5 video's over dat onderwerp vanuit een andere hoek.` : `Nog geen lange video met 1K. Je beste short is "${bestShort?.title ?? '?'}": een lange video over dat onderwerp is een goede kans.`,
+      pct: Math.min(100, ((bestLong?.views ?? 0) / 1000) * 100) },
+    { naam: 'Videolengte', doel: '10-15 min', nu: lengtes.join(' · ').replace(/^v/, 'V') || '?', oordeel: lengteOordeel,
+      tip: volgende && lengteOordeel !== 'goed' ? `Video ${volgende.nr} wordt ${volgende.lengte}: dat werkt alleen als de kijkduur hoog blijft. 10 min met 70% is beter dan 20 min met 30%.` : 'Minstens zo lang als de concurrent, maar 10 min met 70% is beter dan 20 min met 30%.',
+      pct: lv == null ? undefined : lv <= 15 ? 100 : Math.max(10, 100 - (lv - 15) * 15) },
+    { naam: 'YouTube Partner Programma', doel: '1.000 abonnees + 4.000 kijkuren', nu: `${subs} abonnees · ${heeftUren ? `${uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} kijkuren` : 'kijkuren volgen'}`, oordeel: heeftUren ? 'werk' : 'onbekend',
+      tip: 'Alleen kijkuren van lange video\'s tellen mee, shorts niet. Maak alvast een AdSense-account aan.', pct: Math.min(subs / 1000, heeftUren ? uren / 4000 : 1) * 100 },
+    { naam: 'CTR (klikken ÷ vertoningen)', doel: '5%+ (evergreen), 10%+ geweldig', nu: 'niet via vidIQ: stuur na 48 uur een screenshot uit Studio (tab Bereik)', oordeel: 'onbekend', tip: 'Lage CTR en weinig uit Aanbevolen? Vervang de thumbnail.' },
     { naam: 'Testfase', doel: '5 video\'s, dan beslissen', nu: `${longs.length} van 5 lange video's online`, oordeel: longs.length >= 5 ? 'goed' : 'oké', tip: 'Na 5 video\'s: goed = 3-5 nieuwe in die richting; matig = eerst CTR en AVD omhoog; slecht = niche, thumbnail, hook en doelgroep herzien.', pct: (longs.length / 5) * 100 },
   ];
   return (
     <section className="panel mb-4 p-4">
       <div className="mb-1 flex items-center gap-2 font-display text-[18px] font-bold text-white"><GraduationCap size={18} className="text-orange-300" />Cursusmeter</div>
-      <div className="mb-3 text-[13px] text-slate-400">De richtwaarden uit je cursus naast je echte cijfers{stats.length ? '' : ''}. Alleen wat er staat is gemeten; de rest zie jij in YouTube Studio.</div>
+      <div className="mb-3 text-[13px] text-slate-400">De richtwaarden uit je cursus naast je echte cijfers{stats.length ? '' : ''}: kijkduur en kijkuren elke ochtend via vidIQ{yt?.vidiqAt ? ` (laatst ${new Date(yt.vidiqAt).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })})` : ''}, weergaven elk uur. CTR zie jij alleen in YouTube Studio.</div>
       <div className="grid gap-2 md:grid-cols-2">
         {rows.map((r) => (
           <div key={r.naam} className="rounded-xl bg-white/[.04] p-3">

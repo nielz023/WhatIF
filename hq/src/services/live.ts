@@ -19,7 +19,20 @@ export interface Output { name: string; path: string; kind?: 'image' | 'video' |
 export interface Cost { datum: string; wat: string; bedrag?: number | null; credits?: string; notitie?: string }
 export interface Reply { at: string; opdracht: string; antwoord: string; thread?: string }
 export interface Blender { stand: string; wachtrij: { naam: string; status: string }[] | string; bijgewerkt: string }
-export interface YT { subscribers?: number; views?: number; videoCount?: number; videos?: { id?: string; title: string; views?: number; date?: string; datum?: string; status?: string; url?: string; type?: 'long' | 'short' }[]; bron?: string; datum?: string }
+/** Eén video of short zoals hij op YouTube staat (automation/videos.py): weergaven en likes elk uur uit de
+ *  openbare YouTube-feed, de rest elke ochtend uit vidIQ (YouTube Analytics, loopt 1 à 2 dagen achter). */
+export interface YTVideo {
+  id?: string; title: string; type?: 'long' | 'short'; status?: string; url?: string;
+  date?: string; datum?: string; tijd?: string;
+  views?: number; likes?: number; comments?: number; shares?: number;
+  /** nieuwe abonnees door deze video */ subs?: number;
+  /** gemiddelde kijkduur in seconden */ avd?: number;
+  /** gemiddeld percentage bekeken */ avp?: number;
+  /** weergaven waarbij echt gekeken is */ engaged?: number;
+  /** totale kijktijd in minuten */ minuten?: number;
+  viewsAt?: string; statsAt?: string;
+}
+export interface YT { subscribers?: number; views?: number; videoCount?: number; videos?: YTVideo[]; bron?: string; datum?: string; feedAt?: string; vidiqAt?: string; vidiqTot?: string }
 export interface Live {
   updated: string; channel: typeof B.CHANNEL; videos: B.RealVideo[]; shorts: B.ShortGroup[]; next: string[];
   ideas: typeof B.IDEAS; links: typeof B.LINKS; activity: Activity[];

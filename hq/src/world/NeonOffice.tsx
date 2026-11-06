@@ -9,7 +9,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Billboard, Environment, Html, Lightformer, MeshReflectorMaterial, OrbitControls, PerformanceMonitor, PerspectiveCamera, Sparkles } from '@react-three/drei';
+import { Billboard, Environment, Lightformer, MeshReflectorMaterial, OrbitControls, PerformanceMonitor, PerspectiveCamera, Sparkles } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type { OrbitControls as OC } from 'three-stdlib';
@@ -18,7 +18,7 @@ import { useGame } from '../store/useGame';
 import { useLive } from '../services/live';
 import { Box, Chair, Bookshelf, MicStand, Easel, Sofa, MeetingTable, ServerRack } from '../components/office/Furniture';
 import { Mascot } from '../components/office/DriftmarkDecor';
-import { ROOMS, threadsPerRoom, statusOf, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, roomById, type RoomDef, type RoomId } from './rooms';
+import { ROOMS, STATUS, threadsPerRoom, statusOf, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, roomById, type RoomDef, type RoomId } from './rooms';
 import { useWorld, reducedMotion, dprFor, dayPhase, dayAmount, isPhone } from './useWorld';
 import { useOffice, BakedOffice, type OfficeModel } from './BakedOffice';
 import { useOfficeLoad } from './loadState';
@@ -28,7 +28,7 @@ import { Pipeline, handoffsFor } from './pipeline';
 import { Dashboards } from './dashboards';
 import { alarmsFrom } from './alarms';
 import { mergePunten } from '../data/verbeter';
-import { Sky, Drone, GodRays, Confetti, Beacon, Snow, Disco, VoiceProps, PostIts } from './extras';
+import { Sky, Drone, Confetti, Beacon, Snow, Disco, VoiceProps, PostIts } from './extras';
 import { setAmbience } from './sound';
 
 type V3 = [number, number, number];
@@ -43,7 +43,7 @@ const atRoom = (r: RoomDef, u: number, v: number, y = 0): V3 => { const a = slot
 function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   draw(c.getContext('2d')!);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16; return t;
 }
 const rr = (g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
 
@@ -91,6 +91,38 @@ function signTex(r: RoomDef) {
     g.font = `900 ${name.length > 14 ? 74 : 92}px Inter, "Arial Black", sans-serif`; g.fillText(name, 284, 124);
     g.shadowBlur = 0; g.fillStyle = '#cbd5f5'; g.font = '600 52px Inter, Arial, sans-serif'; g.fillText(sub, 288, 214);
   });
+}
+
+/* Lichtbolletje met ! in de hoek van het afdelingsbord (niels 2026-11-06: in plaats van het label "wacht op jou"). */
+const badgeTexs = new Map<string, THREE.Texture>();
+function badgeTex(color: string, ink: string) {
+  const key = color + ink;
+  let t = badgeTexs.get(key);
+  if (!t) {
+    t = canvasTex(256, 256, (g) => {
+      g.clearRect(0, 0, 256, 256);
+      const glow = g.createRadialGradient(128, 128, 48, 128, 128, 128);
+      glow.addColorStop(0, color + 'aa'); glow.addColorStop(0.5, color + '40'); glow.addColorStop(1, color + '00');
+      g.fillStyle = glow; g.fillRect(0, 0, 256, 256);
+      g.beginPath(); g.arc(128, 128, 62, 0, Math.PI * 2); g.fillStyle = color; g.fill();
+      g.lineWidth = 7; g.strokeStyle = 'rgba(255,255,255,0.92)'; g.stroke();
+      g.fillStyle = ink; g.font = '900 92px Inter, "Arial Black", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('!', 128, 133);
+    });
+    badgeTexs.set(key, t);
+  }
+  return t;
+}
+function AlertBadge({ kind, size, pos, top }: { kind: 'wacht' | 'probleem'; size: number; pos: V3; top?: boolean }) {
+  const tex = useMemo(() => badgeTex(STATUS[kind].kleur, kind === 'probleem' ? '#ffffff' : '#1a1030'), [kind]);
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(({ clock }) => { if (ref.current && !reducedMotion()) ref.current.scale.setScalar(1 + Math.sin(clock.elapsedTime * 3.2) * 0.08); });
+  return (
+    <mesh ref={ref} position={pos} renderOrder={top ? 12 : 1}>
+      <planeGeometry args={[size, size]} />
+      <meshBasicMaterial map={tex} transparent toneMapped={false} depthWrite={false} depthTest={!top} />
+    </mesh>
+  );
 }
 
 /* ================= camera ================= */
@@ -328,7 +360,7 @@ function Rocket({ p, color }: { p: V3; color: string }) {
     </group></group>);
 }
 
-function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: RoomDef; lit: boolean; alert: boolean; busy: boolean; onSelect: () => void; onHover: (h: boolean) => void; screens: THREE.Texture[]; baked?: OfficeModel | null }) {
+function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: RoomDef; lit: boolean; alert: 'wacht' | 'probleem' | null; busy: boolean; onSelect: () => void; onHover: (h: boolean) => void; screens: THREE.Texture[]; baked?: OfficeModel | null }) {
   const a = slotAngle(r.slot);
   const a0 = a - SPAN / 2 + GAPA, a1 = a + SPAN / 2 - GAPA;
   const c = r.color;
@@ -339,9 +371,8 @@ function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: R
   const at = (u: number, v: number, y = 0): V3 => { const rad = rm + v; const ang = a + u / rad; return polar(rad, ang, y); };
   const sign = useMemo(() => signTex(r), [r]);
   const edge = useRef<THREE.MeshStandardMaterial[]>([]);
-  useFrame(({ clock }) => {
-    const pulse = alert ? 1.2 + Math.sin(clock.elapsedTime * 5) * 1 : 0;
-    edge.current.forEach((m) => { if (m) m.emissiveIntensity = (lit ? 4 : 2.4) + pulse; });
+  useFrame(() => {
+    edge.current.forEach((m) => { if (m) m.emissiveIntensity = lit ? 2.4 : 1.4; });
   });
   const tallR = front ? R_IN + 0.08 : R_OUT - 0.08;
   const glassR = front ? R_OUT - 0.05 : R_IN + 0.05;
@@ -356,18 +387,16 @@ function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: R
     onPointerOver: (e: { stopPropagation: () => void }) => { e.stopPropagation(); onHover(true); document.body.style.cursor = 'pointer'; },
     onPointerOut: () => { onHover(false); document.body.style.cursor = 'auto'; },
   };
+  const [sw, sh] = baked ? [5.4, 1.58] : [7.2, 2.1];
   const signEl = (
     <Billboard position={polar(tallR, a, H + (baked ? (r.props === 'ceo' ? 0.55 : 1.15) : 1.4))}>
       <mesh renderOrder={r.props === 'ceo' ? 11 : 0} onClick={(e) => { e.stopPropagation(); onSelect(); }}>
-        <planeGeometry args={baked ? [5.4, 1.58] : [7.2, 2.1]} />
+        <planeGeometry args={[sw, sh]} />
         <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!(baked && r.props === 'ceo')} opacity={lit ? 1 : 0.95} />
       </mesh>
+      {/* rechtsboven op de hoek van het bord, zoals een melding op een app-icoon */}
+      {alert && <AlertBadge kind={alert} size={sh * 0.46} pos={[sw / 2 - sh * 0.1, sh / 2 - sh * 0.1, 0.02]} top={!!baked && r.props === 'ceo'} />}
     </Billboard>
-  );
-  const alertEl = alert && (
-    <Html position={polar(tallR, a, H + 2.0)} center zIndexRange={[20, 10]} style={{ pointerEvents: 'none' }}>
-      <span className="rounded-full bg-[#FF9F1C] px-2 py-0.5 text-[11px] font-bold text-black shadow-[0_0_12px_#FF9F1C]">wacht op jou</span>
-    </Html>
   );
   if (baked) {
     return (
@@ -380,7 +409,7 @@ function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: R
         </mesh>
         {r.props === 'research' && <Globe p={at(1.4, 2.4, 0.45)} color={c} />}
         {r.props === 'publishing' && <Rocket p={at(1.2, 2.6, 0.3)} color={c} />}
-        {signEl}{alertEl}
+        {signEl}
       </group>
     );
   }
@@ -424,7 +453,7 @@ function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: R
         <Neon pts={[polar(R_IN + 0.05, ang, 0), polar(R_IN + 0.05, ang, front ? H : HG)]} color={c} r={0.05} i={2.4} />
       </group>))}
       {/* warm binnenlicht */}
-      <pointLight position={polar(rm, a, 2.6)} color={warm} intensity={lit ? 30 : 20} distance={10} decay={1.6} />
+      <pointLight position={polar(rm, a, 2.6)} color={warm} intensity={lit ? 20 : 13} distance={10} decay={1.6} />
       {/* groot scherm op de hoge wand */}
       <mesh position={polar(front ? R_IN + 0.2 : R_OUT - 0.2, a, 1.75)} rotation={[0, front ? a : a + Math.PI, 0]}>
         <planeGeometry args={[3.0, 1.35]} />
@@ -440,7 +469,7 @@ function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: R
       {/* planten in de hoeken */}
       <Palm p={at(-3.1, 3.2)} s={0.95} />
       <Palm p={at(3.1, 3.2)} s={0.8} />
-      {signEl}{alertEl}
+      {signEl}
     </group>
   );
 }
@@ -470,9 +499,9 @@ function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]
   const sign = useMemo(hqSignTex, []); const pt = useMemo(playTex, []);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    if (holo.current) holo.current.opacity = 0.2 + Math.sin(t * 2) * 0.05;
-    if (ring1.current) { const k = (t * 0.5) % 1; ring1.current.position.y = 1.3 + k * 6; (ring1.current.material as THREE.MeshBasicMaterial).opacity = 1 - k; }
-    if (ring2.current) { const k = ((t * 0.5) + 0.5) % 1; ring2.current.position.y = 1.3 + k * 6; (ring2.current.material as THREE.MeshBasicMaterial).opacity = 1 - k; }
+    if (holo.current) holo.current.opacity = 0.05 + Math.sin(t * 2) * 0.015;
+    if (ring1.current) { const k = (t * 0.5) % 1; ring1.current.position.y = 1.3 + k * 6; (ring1.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
+    if (ring2.current) { const k = ((t * 0.5) + 0.5) % 1; ring2.current.position.y = 1.3 + k * 6; (ring2.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
     if (play.current) play.current.position.y = 4.4 + Math.sin(t * 1.4) * 0.15;
   });
   return (
@@ -498,7 +527,7 @@ function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]
       {/* het hoofdpersonage achter de balie */}
       <Mascot p={[0, 0.5, -0.4]} rot={0} s={1.05} />
       {/* glazen hologramzuil */}
-      <mesh position={[0, 5.0, 0]}><cylinderGeometry args={[2.3, 2.3, 7, 64, 1, true]} /><meshStandardMaterial ref={holo} color="#7fe8ff" emissive="#20D9FF" emissiveIntensity={0.9} transparent opacity={0.2} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} /></mesh>
+      <mesh position={[0, 5.0, 0]}><cylinderGeometry args={[2.3, 2.3, 7, 64, 1, true]} /><meshStandardMaterial ref={holo} color="#7fe8ff" emissive="#20D9FF" emissiveIntensity={0.2} transparent opacity={0.05} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} /></mesh>
       <mesh ref={ring1} position={[0, 1.3, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
       <mesh ref={ring2} position={[0, 1.3, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
       {!baked && (<>
@@ -515,8 +544,8 @@ function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]
         </mesh>
       ))}
       <Billboard position={[0, baked ? 7.7 : 10.2, 0]}><mesh renderOrder={10}><planeGeometry args={baked ? [6.0, 3.0] : [7.4, 3.7]} /><meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!baked} /></mesh></Billboard>
-      <pointLight position={[0, 4, 0]} color="#20D9FF" intensity={lit ? 60 : 40} distance={16} decay={1.5} />
-      <pointLight position={[0, 2.2, 2.5]} color="#FFB070" intensity={22} distance={8} decay={1.6} />
+      <pointLight position={[0, 4, 0]} color="#20D9FF" intensity={lit ? 22 : 14} distance={16} decay={1.5} />
+      <pointLight position={[0, 2.2, 2.5]} color="#FFE2C4" intensity={18} distance={8} decay={1.6} />
       {!baked && (<>
       {/* planten op het podium */}
       <Palm p={[-3.9, 0.5, -3.1]} s={1.0} />
@@ -571,7 +600,7 @@ function City() {
     return g;
   }, [items]);
   const mat = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uDay: { value: 0 }, uFog: { value: new THREE.Color('#0a0f2a') }, uNear: { value: 70 }, uFar: { value: 175 } },
+    uniforms: { uTime: { value: 0 }, uDay: { value: 0 }, uFog: { value: new THREE.Color('#0a0f2a') }, uNear: { value: 170 }, uFar: { value: 460 } },
     vertexShader: `attribute vec3 aSize; attribute float aSeed; varying vec2 vUv; varying vec3 vN; varying float vSeed; varying vec3 vSize; varying float vDist;
       void main(){ vUv = uv; vN = normal; vSeed = aSeed; vSize = aSize; vec4 mv = viewMatrix * modelMatrix * instanceMatrix * vec4(position, 1.0); vDist = -mv.z; gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform float uTime; uniform float uDay; uniform vec3 uFog; uniform float uNear; uniform float uFar;
@@ -664,19 +693,19 @@ function Scene({ mode }: { mode: WorldMode }) {
   return (
     <>
       <color attach="background" args={['#060a1c']} />
-      <fog attach="fog" args={['#0a0f2a', 70, 170]} />
+      <fog attach="fog" args={['#0a0f2a', 180, 480]} />
       <PerspectiveCamera makeDefault fov={FOV} near={0.5} far={400} position={[0, 60, 45]} />
       <CameraRig mode={mode} />
       <FpsProbe />
       <Environment resolution={128} frames={1}>
-        <Lightformer form="ring" intensity={3} color="#FF7A24" scale={14} position={[-18, 8, -10]} />
-        <Lightformer form="ring" intensity={3} color="#20D9FF" scale={14} position={[18, 8, -10]} />
+        <Lightformer form="ring" intensity={2} color="#FF7A24" scale={14} position={[-18, 8, -10]} />
+        <Lightformer form="ring" intensity={2} color="#20D9FF" scale={14} position={[18, 8, -10]} />
         <Lightformer form="rect" intensity={1.5} color="#A855F7" scale={[30, 6, 1]} position={[0, 12, -30]} />
         <Lightformer form="rect" intensity={1} color="#ffffff" scale={[20, 20, 1]} position={[0, 30, 0]} rotation-x={Math.PI / 2} />
       </Environment>
       <Sky baked={!!office} />
-      <pointLight position={[-30, 12, 6]} color="#FF7A24" intensity={90} distance={80} decay={1.4} />
-      <pointLight position={[30, 12, 6]} color="#398CFF" intensity={90} distance={80} decay={1.4} />
+      <pointLight position={[-30, 12, 6]} color="#FF7A24" intensity={55} distance={80} decay={1.4} />
+      <pointLight position={[30, 12, 6]} color="#398CFF" intensity={55} distance={80} decay={1.4} />
 
       {!office && (<>
       {/* grondplaat: spiegelende vloer met oranje rand */}
@@ -691,14 +720,14 @@ function Scene({ mode }: { mode: WorldMode }) {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}><ringGeometry args={[R_IN - 0.42, R_IN - 0.34, 96]} /><meshBasicMaterial color="#398CFF" toneMapped={false} /></mesh>
 
       </>)}
-      {office && <BakedOffice model={office} screens={screens} dash={dash} lit={(id) => focus === id || hover === id} alert={(id) => { const rr = ROOMS.find((x) => x.id === id); if (!rr || mode === 'studio') return false; const st = statusOf(per[rr.id]); return st === 'wacht' || st === 'probleem'; }} />}
+      {office && <BakedOffice model={office} screens={screens} dash={dash} lit={(id) => focus === id || hover === id} />}
       {office && <PostIts screens={office.screens} />}
       <Reception screens={screens} baked={!!office} lit={focus === 'coach' || hover === 'coach'} onSelect={() => select(coach)} />
       {!office && <Entrance />}
       {ROOMS.filter((r) => r.slot >= 0).map((r) => {
         const st = statusOf(per[r.id]);
         return (
-          <Wing key={r.id} r={r} baked={office} screens={screens} busy={busyRoom(r.id)} lit={focus === r.id || hover === r.id} alert={mode !== 'studio' && (st === 'wacht' || st === 'probleem')}
+          <Wing key={r.id} r={r} baked={office} screens={screens} busy={busyRoom(r.id)} lit={focus === r.id || hover === r.id} alert={mode !== 'studio' && (st === 'wacht' || st === 'probleem') ? st : null}
             onHover={(h) => setHover(h ? r.id : null)} onSelect={() => select(r)} />
         );
       })}
@@ -707,15 +736,14 @@ function Scene({ mode }: { mode: WorldMode }) {
       {mode !== 'studio' && <Pipeline videos={live.videos ?? []} onPick={(id) => select(roomById(id)!)} />}
       <City />
       <Drone />
-      {quality !== 'snel' && !phone && <GodRays />}
       {mode !== 'studio' && <VoiceProps />}
       <Confetti />
       {mode !== 'studio' && <Beacon alarms={alarms} />}
       <Snow />
       <Disco />
-      <EffectComposer multisampling={0}>
-        <Bloom intensity={office ? 0.9 : 1.05} luminanceThreshold={office ? 0.8 : 0.62} luminanceSmoothing={0.25} mipmapBlur />
-        <Vignette eskil={false} offset={0.3} darkness={0.55} />
+      <EffectComposer multisampling={quality === 'snel' ? 0 : 4}>
+        <Bloom intensity={office ? 0.32 : 0.45} luminanceThreshold={office ? 1.1 : 0.9} luminanceSmoothing={0.15} radius={0.45} mipmapBlur />
+        <Vignette eskil={false} offset={0.4} darkness={0.28} />
       </EffectComposer>
     </>
   );
@@ -726,9 +754,9 @@ export default function NeonOffice({ mode }: { mode: WorldMode }) {
   const quality = useWorld((s) => s.quality);
   const setFocus = useWorld((s) => s.setFocus);
   return (
-    <Canvas shadows dpr={mode === 'panel' && quality !== '4k' ? 1 : dprFor(quality, dpr)} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.25 }}
+    <Canvas shadows dpr={dprFor(quality, dpr)} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
       onPointerMissed={(e) => { if (mode === 'home' && (e.target as HTMLElement)?.tagName === 'CANVAS') setFocus(null); }}>
-      <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.6)} />
+      <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.75)} />
       <Scene mode={mode} />
     </Canvas>
   );

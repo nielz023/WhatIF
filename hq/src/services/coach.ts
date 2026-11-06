@@ -81,7 +81,10 @@ export const fragmentTekst = (fs: Fragment[]) => fs.length ? fs.map((f, i) => `[
 export function bedrijf(d: Live, stats: StatRow[], g: Geheugen, doelen: Doel[]): string {
   const v = d.videos.map((x) => `- Video ${x.nr} "${x.title}": ${x.status}; stap nu: ${x.steps.find((s) => s.active)?.label ?? (x.steps.every((s) => s.done) ? 'alles klaar' : '?')}${x.notes?.length ? ` (${x.notes.slice(-2).join('; ').slice(0, 160)})` : ''}`).join('\n');
   const a = d.activity.map((x) => `- [${x.state}] ${x.title}: ${x.doing ?? ''} (laatst ${x.last})`).join('\n');
-  const yt = (d.youtube?.videos ?? []).slice(0, 18).map((x) => `- ${x.type === 'long' ? 'LANG' : 'short'} "${x.title}" ${x.datum ?? x.date ?? ''}${x.status ? ' ' + x.status : ''}: ${x.views ?? 0} views`).join('\n');
+  const mmss = (x?: number) => (x == null ? '' : `${Math.floor(x / 60)}:${String(Math.round(x % 60)).padStart(2, '0')}`);
+  const yt = (d.youtube?.videos ?? []).slice(0, 24).map((x) => `- ${x.type === 'long' ? 'LANG' : 'short'} "${x.title}" ${x.datum ?? x.date ?? ''}${x.status && x.status !== 'public' ? ' ' + x.status : ''}: ${x.views ?? 0} views, ${x.likes ?? '?'} likes${x.comments != null ? `, ${x.comments} reacties` : ''}${x.avd != null ? `, gem. kijkduur ${mmss(x.avd)} (${x.avp}% bekeken)` : ''}${x.subs != null ? `, +${x.subs} abonnees` : ''}`).join('\n');
+  const longs = (d.youtube?.videos ?? []).filter((x) => x.type === 'long' && x.avd != null);
+  const ret = longs.length ? `Kijkduur lange video's (vidIQ, ververst ${d.youtube?.vidiqAt?.slice(0, 16) ?? '?'}): ${longs.map((x) => `"${x.title.slice(0, 40)}" ${mmss(x.avd)} (${x.avp}%)`).join('; ')}. Video 1: 2/3 van de kijkers weg in de eerste minuut (Studio-screenshot 1 nov).` : 'Kijkduur per video: nog niet opgehaald.';
   const st = stats.length > 1 ? `Abonnees ${stats[0].subscribers} → ${stats[stats.length - 1].subscribers}, weergaven ${stats[0].views} → ${stats[stats.length - 1].views} (meting ${stats[0].at.slice(0, 16)} tot ${stats[stats.length - 1].at.slice(0, 16)}).` : 'Nog geen cijfergeschiedenis.';
   const kosten = (d.costs ?? []).slice(0, 10).map((c) => `- ${c.datum} ${c.wat}: ${c.bedrag != null ? '€' + c.bedrag : c.credits ?? '?'}${c.notitie ? ' (' + c.notitie + ')' : ''}`).join('\n') || '- (geen kosten geregistreerd)';
   const mem = (Object.keys(VAK) as (keyof typeof VAK)[]).map((k) => `${VAK[k]}:\n${(g[k] ?? []).map((x) => '- ' + x).join('\n') || '- (leeg)'}`).join('\n');
@@ -89,7 +92,7 @@ export function bedrijf(d: Live, stats: StatRow[], g: Geheugen, doelen: Doel[]):
   const bl = d.blender ? `Blender op pc: ${d.blender.stand} (bijgewerkt ${d.blender.bijgewerkt})` : '';
   return `=== ECHTE BEDRIJFSGEGEVENS (stand ${d.updated}) ===
 KANAAL: Driftmark, ${d.youtube?.subscribers ?? '?'} abonnees, ${d.youtube?.views ?? '?'} weergaven, ${d.youtube?.videoCount ?? '?'} video's. ${st}
-Retentie video 1: gem. kijkduur 6:40 (26%), 2/3 weg in eerste minuut. CTR, impressies en RPM zijn NIET beschikbaar in het HQ.
+${ret} CTR, impressies en RPM zijn NIET beschikbaar in het HQ (alleen in YouTube Studio).
 VIDEO'S IN PRODUCTIE:\n${v}
 AGENTS (Claude-threads):\n${a}
 ${bl}

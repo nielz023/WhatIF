@@ -105,11 +105,21 @@ export const CAST = {
   vast: ['Beste vriend', 'Pestkop', 'Zusje pestkop', 'Wetenschapper', 'Nieuwslezeres', 'Agent/officier', 'Gymleraar'],
 };
 
-export const VOICES = [
-  ['Verteller', 'zfc8CJQpe8Kqyl0vvCzo'], ['Broertje', 'MeDfWn0QGAwSljXBLc2G'], ['Mama', 'ogwqBH5bbF03DSbNiRNN'],
-  ['Papa', 'cCYjmrGZaI86GUJ7F2Nn'], ['Vriend', '3XOBzXhnDY98yeWQ3GdM'], ['Pestkop', 'rHWSYoq8UlV0YIBKMryp'],
-  ['Opa', 'HAvvFKatz0uu0Fv55Riy'], ['Oma', 'kkPJzQOWz2Oz9cUaEaQd'], ['Wetenschapper (man)', 'YXpFCvM1S3JbWEJhoskW'],
-  ['Agent', '9B2Vd5yQ7rKaqNmzGdy1'], ['Nieuwslezer', 'JJCR1UICgHnHljtvu5uF'],
+/** stemmen per video (ElevenLabs v4). Video 3: videos/no-rules (keuze niels 4-5 nov), video 4: videos/nooit-dood/stemmen.tsv */
+export const VOICE_SETS: { video: string; stemmen: [string, string][] }[] = [
+  { video: 'Video 4 · Never Die', stemmen: [
+    ['Verteller', 'zfc8CJQpe8Kqyl0vvCzo'], ['Jongen', 'nzFihrBIvB34imQBuxub'], ['Broertje', 'MeDfWn0QGAwSljXBLc2G'], ['Broertje (oud)', 'S9V0fuqWOqX0i8Kb8ctu'],
+    ['Mama', 'ogwqBH5bbF03DSbNiRNN'], ['Opa', 'HAvvFKatz0uu0Fv55Riy'], ['Oma', 'kkPJzQOWz2Oz9cUaEaQd'], ['Vriend', '3XOBzXhnDY98yeWQ3GdM'],
+    ['Pestkop', 'rHWSYoq8UlV0YIBKMryp'], ['Pestkop (oud)', 'mSOmKHC6GZcZbSTGlqHO'], ['Wetenschapper', 'YXpFCvM1S3JbWEJhoskW'], ['Nieuwslezeres', '99Hm6N8psCBzc1JwEVR2'],
+    ['Agent', '9B2Vd5yQ7rKaqNmzGdy1'], ['Vuilnisman', 'yE92kjHV7JLsMwRaRjeg'], ['Portier', 'DMyrgzQFny3JI1Y1paM5'], ['Tante', 'Nhs7eitvQWFTQBsf0yiT'],
+    ['Brandweerman', '0hh7H4ZVAtaGpm1VZyEN'], ['Moeder', 'iOI1VnXusP7XCIaXVIgU'], ['Directeur', '5AYcH1Cr8nW0XgDTtRI4'], ['Kind', 'loY1uopAz31XyhAEhNSa'], ['Toekomstvrouw', '4BAlflaQyhIcCfHiEI7x'],
+  ] },
+  { video: 'Video 3 · No Rules', stemmen: [
+    ['Verteller', 'zfc8CJQpe8Kqyl0vvCzo'], ['Broertje', 'MeDfWn0QGAwSljXBLc2G'], ['Mama', 'ogwqBH5bbF03DSbNiRNN'], ['Papa', 'cCYjmrGZaI86GUJ7F2Nn'],
+    ['Vriend', '3XOBzXhnDY98yeWQ3GdM'], ['Pestkop', 'rHWSYoq8UlV0YIBKMryp'], ['Opa', 'HAvvFKatz0uu0Fv55Riy'], ['Oma', 'kkPJzQOWz2Oz9cUaEaQd'],
+    ['Jongen', 'nzFihrBIvB34imQBuxub'], ['Wetenschapper (man)', 'YXpFCvM1S3JbWEJhoskW'], ['Agent', '9B2Vd5yQ7rKaqNmzGdy1'], ['Buurman', 'DMyrgzQFny3JI1Y1paM5'],
+    ['Nieuwslezeres', '99Hm6N8psCBzc1JwEVR2'], ['Kassière', 'Nhs7eitvQWFTQBsf0yiT'],
+  ] },
 ];
 
 export const TOOLS = [

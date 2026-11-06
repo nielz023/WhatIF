@@ -34,6 +34,14 @@ else:
     checks.append({'naam': 'Kanaalcijfers', 'ok': False, 'notitie': 'vidIQ niet bereikbaar'})
     logs.append(('fout', 'Kanaalcijfers ophalen via vidIQ mislukt.'))
 
+# 1b. video's: weergaven en likes per video en short uit de openbare YouTube-feed (gratis, elk uur) + thumbnails
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import videos as V
+ok, note = V.feed_update(d)
+checks.append({'naam': "Video's", 'ok': ok, 'notitie': note})
+if not ok:
+    logs.append(('info', note))
+
 # 2. taken controleren
 stale = []
 for a in d.get('activity', []):
@@ -117,6 +125,14 @@ for v in (d.get('youtube') or {}).get('videos', []):
             nieuw.append({'soort': 'herinnering', 'tekst': f'"{v["title"]}" staat 2,5 dag online en de automatische 48-uurcheck is er niet. Cursus: bekijk in YouTube Studio de CTR (doel 5%+), AVD (doel 40%+) en verkeersbronnen, en stuur een screenshot. Lage CTR en weinig uit Aanbevolen = thumbnail vervangen.', 'key': key})
             logs.append(('info', f'Cursus-herinnering: CTR/AVD van "{v["title"]}" zelf bekijken (geen automatische 48-uurcheck).'))
 
+# 7. elke ochtend (eerste ronde na 07:00 Amsterdam) 1x vidIQ-cijfers per video: kijkduur, reacties, gedeeld
+# (5 credits per dag, akkoord niels 2026-11-06 12:14 "Vanaf nu elke dag"). Maximaal één poging per dag:
+# de dag wordt hier al afgestreept, zodat een mislukte aanroep niet elk uur opnieuw credits kost.
+dag = now.astimezone(ZoneInfo('Europe/Amsterdam'))
+vidiq_dag = dag.hour >= 7 and es.get('vidiq_dag') != dag.strftime('%Y-%m-%d')
+if vidiq_dag:
+    es['vidiq_dag'] = dag.strftime('%Y-%m-%d')
+
 # nieuwe fouten/waarschuwingen (voor de melding aan niels), elk maar één keer
 for k, t in logs:
     if k in ('fout', 'waarschuwing'):
@@ -138,4 +154,4 @@ if not logs:
     logs.append(('info', 'Ronde klaar, alles in orde.'))
 for i, (k, t) in enumerate(logs):
     json.dump({'at': iso, 'kind': k, 'text': t}, open(f'{OUT}/log{i}.json', 'w'), ensure_ascii=False)
-print(json.dumps({'nieuw': nieuw, 'stat_id': stat_id, 'log_ids': [f'{now.strftime("%Y%m%d%H%M")}-{i}' for i in range(len(logs))], 'checks': checks, 'logs': logs}, ensure_ascii=False))
+print(json.dumps({'nieuw': nieuw, 'vidiq_dag': vidiq_dag, 'stat_id': stat_id, 'log_ids': [f'{now.strftime("%Y%m%d%H%M")}-{i}' for i in range(len(logs))], 'checks': checks, 'logs': logs}, ensure_ascii=False))

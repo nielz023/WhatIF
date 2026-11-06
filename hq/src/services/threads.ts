@@ -17,7 +17,7 @@ export interface SessionLive {
   id: string; title: string; bucket: Bucket; updatedAt?: string; createdAt?: string; tags?: string[];
   needs?: string; detail?: string; recent?: string; checklist?: string; parent?: string; at: number;
 }
-type Src = 'laden' | 'live' | 'geen' | 'fout';
+type Src = 'laden' | 'live' | 'geen' | 'fout' | 'uit';
 interface S {
   sessions: Record<string, SessionLive>; src: Src; err?: string; checkedAt?: number;
   coordinators: string[]; // projectchat: alle coördinator-sessies, nieuwste eerst
@@ -70,10 +70,20 @@ function retract(code?: string) {
   if (raw) { merged = null; useLive.setState((st) => ({ data: { ...st.data, activity: raw! } })); }
 }
 let started = false;
-export async function startThreads() {
+const CCR = `mcp:${SERVER}`;
+async function perms(): Promise<Any | null> { try { const c = (window as Any).claude; return c?.use ? await c.use('permissions') : null; } catch { return null; } }
+export async function startThreads(klik = false) {
   if (started) return; started = true;
   const m = await mcp();
   if (!m) { useThreads.setState({ src: 'geen' }); return; }
+  // niels 6 nov: bij het openen kwam steeds "Kan deze connector niet laden". Daarom alleen vanzelf live als de
+  // koppeling al is toegestaan; anders pas na een klik op "Live aanzetten" (Meer > Alle taken), dus geen venster bij elke start.
+  if (!klik) {
+    const p = await perms();
+    const st: string = p ? await p.state(CCR).catch(() => 'unavailable') : 'prompt';
+    if (st === 'denied' || st === 'unavailable') { started = false; useThreads.setState({ src: 'geen', err: st }); return; }
+    if (st !== 'granted') { started = false; useThreads.setState({ src: 'uit' }); return; }
+  }
   const onList = (ev: Any) => {
     if (ev.type === 'error') {
       const code = ev.error?.code;
@@ -105,6 +115,21 @@ export async function startThreads() {
     unsub.push(m.watchTool(SERVER, 'list_sessions', { limit: 100 }, onList, { refetchInterval: 30000, cache: { staleTime: 20000 } }));
   }
 }
+
+/** knop "Live aanzetten": vraagt toestemming voor Claude Code Remote (één venster) en start dan de live stand */
+export async function zetLiveAan(): Promise<string> {
+  const p = await perms();
+  if (p) {
+    const r: Record<string, string> = await p.request([CCR]).catch(() => ({}));
+    const st = r[CCR] ?? 'unavailable';
+    if (st === 'denied' || st === 'unavailable') { useThreads.setState({ src: 'geen', err: st }); return st; }
+  }
+  started = false;
+  await startThreads(true);
+  return useThreads.getState().src;
+}
+/** het menu Rechten van claude.ai openen (uitweg als de koppeling geweigerd is) */
+export async function openRechten(): Promise<boolean> { try { const p = await perms(); if (!p) return false; await p.manage(); return true; } catch { return false; } }
 
 /** van de threads die open zijn (bezig, wacht op jou) ook de checklist en de "wacht op jou"-regel bijhouden */
 const watching = new Map<string, () => void>();
