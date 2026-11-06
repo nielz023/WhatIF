@@ -153,7 +153,8 @@ function walk(n: Node) {
   if (n.nodeType === 3) { const r = tr(n.nodeValue || ''); if (r !== null && r !== n.nodeValue) n.nodeValue = r; return; }
   if (n.nodeType !== 1) return;
   const el = n as Element;
-  if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'TEXTAREA') return;
+  // translate="no": data (geheugen, gesprekken, scripts) nooit vertalen, anders wordt "Day 1" in een script "Dag 1"
+  if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'TEXTAREA' || el.getAttribute('translate') === 'no') return;
   for (const a of ATTRS) { const v = el.getAttribute(a); if (v) { const r = tr(v); if (r !== null && r !== v) el.setAttribute(a, r); } }
   n.childNodes.forEach(walk);
 }
@@ -162,6 +163,7 @@ export function startDutch(root: HTMLElement) {
   walk(root);
   new MutationObserver((ms) => {
     for (const m of ms) {
+      if ((m.target.nodeType === 1 ? (m.target as Element) : m.target.parentElement)?.closest('[translate="no"]')) continue;
       if (m.type === 'characterData') walk(m.target);
       else if (m.type === 'attributes') walk(m.target);
       else m.addedNodes.forEach(walk);

@@ -1,7 +1,8 @@
 /**
  * COACH SERVICE (CEO Coach, blueprint v2.0).
  * - systeemprompt (Deel 10) + vaste Driftmark-regels
- * - kennisbank: public/kennis.json (gemaakt door automation/kennis.py), zoeken op woorden
+ * - kennisbank: driftmark-hq/kennis/kennis.json uit de projectbestanden (v35: cursus, werkwijze, het hele
+ *   projectgeheugen, alle threads en alle documenten), met public/kennis.json als ingebouwde reserve; zoeken op woorden
  * - coachgeheugen in de database: coach/geheugen (blijvend), coach/briefing (per dag),
  *   coach/doelen, besluit/* (beslissingen), coach/gesprek (laatste gesprek)
  * - gesprekken via de sample-capability; antwoorden kunnen ACTIE:/BESLISSING:/ONTHOUD:-regels bevatten
@@ -10,10 +11,21 @@
 import { create } from 'zustand';
 import type { Live } from './live';
 import type { StatRow } from './db';
+import { leesJson } from './threads';
 
 /* ---------- typen ---------- */
-export interface Fragment { doc: string; soort?: 'cursus' | 'driftmark'; taal: string; hoofdstuk: string; onderwerp: string; tekst: string }
-export interface Kennis { gemaakt?: string; bronnen: { doc: string; taal: string; soort: 'cursus' | 'driftmark'; fragmenten: number }[]; fragmenten: Fragment[] }
+export type FragmentSoort = 'cursus' | 'driftmark' | 'geheugen' | 'document' | 'gesprek';
+/** waar een fragment vandaan komt: een geheugennotitie (id = naam, of MEMORY voor het overzicht), een gesprek
+ *  (id = thread-id of "projectchat", msg = het bericht) of een document (id = pad in de projectbestanden) */
+export interface Bron { type: 'geheugen' | 'gesprek' | 'document'; id: string; msg?: string; at?: string }
+export interface Fragment { doc: string; soort?: FragmentSoort; taal: string; hoofdstuk: string; onderwerp: string; tekst: string; bron?: Bron }
+export interface Kennis {
+  gemaakt?: string; bronnen: { doc: string; taal: string; soort: FragmentSoort; fragmenten: number }[]; fragmenten: Fragment[];
+  /** bestanden: de volledige kennis uit de projectbestanden; ingebouwd: de reserve in de pagina (cursus en werkwijze) */
+  uit?: 'bestanden' | 'ingebouwd';
+  /** bij de reserve: waarom het volledige bestand niet gelezen kon worden (not_found, geen-files, not_granted, ...) */
+  waarom?: string;
+}
 export interface Geheugen { profiel: string[]; kanaal: string[]; strategie: string[]; beslissingen: string[]; lessen: string[]; bijgewerkt?: string }
 export interface Actie { prioriteit: 'hoog' | 'middel' | 'laag'; omschrijving: string; reden: string; resultaat: string; wie: string; niveau?: 1 | 2 | 3 }
 export interface Briefing { datum: string; gemaakt: string; samenvatting: string; kanaal: string[]; productie: string[]; agents: string[]; financien: string[]; problemen: string[]; kansen: string[]; acties: Actie[] }
@@ -43,7 +55,7 @@ GEDRAG: denk als een ervaren ondernemer. Direct, eerlijk, kritisch en oplossings
 
 BESLISPROCES: 1) begrijp het doel, 2) gebruik de bedrijfsgegevens hieronder, 3) gebruik de kennisfragmenten hieronder, 4) analyseer, 5) noem problemen en kansen, 6) geef de beste aanbeveling, 7) concrete vervolgstappen. Maak onderscheid tussen FEIT (staat in de gegevens), AANNAME, VERWACHTING en ADVIES. Verzin NOOIT cijfers, statistieken, kosten of resultaten: staat iets niet in de gegevens, zeg dat het ontbreekt. Gegevens uit "het spel" (Studio, speelgeld, spelcijfers) zijn NIET echt; gebruik alleen de echte gegevens.
 
-KENNIS: de cursus van niels, het Faceless YouTube Handboek (Faceless Education, NL), is de primaire kennisbron. Vaste richtwaarden uit de cursus: CTR 5%+ minimaal, 10%+ geweldig, 15%+ uitstekend (evergreen); AVD <30% werk nodig, 30-40% oké, 40-50% goed, 50%+ geweldig; 1 like per 100 views, 1 abonnee per 100-200 kijkers; video's 10-15 min met 50%+ AVD; YPP = 1.000 abonnees + 4.000 kijkuren in 12 maanden; titel max 100 tekens, elk woord met hoofdletter; thumbnail max 3 elementen, fel en contrastrijk; testfase 5 video's, dan beslissen; één van de eerste 5-10 video's met 1K+ views → maak 3-5 video's over dat onderwerp vanuit een andere hoek. Gebruik je een fragment, noem dan kort de bron tussen haakjes, bijv. (bron: Lessen video 1). Staat iets niet in de cursus of fragmenten, zeg dan dat het jouw eigen advies is en geen cursusadvies.
+KENNIS: de cursus van niels, het Faceless YouTube Handboek (Faceless Education, NL), is de primaire kennisbron. Vaste richtwaarden uit de cursus: CTR 5%+ minimaal, 10%+ geweldig, 15%+ uitstekend (evergreen); AVD <30% werk nodig, 30-40% oké, 40-50% goed, 50%+ geweldig; 1 like per 100 views, 1 abonnee per 100-200 kijkers; video's 10-15 min met 50%+ AVD; YPP = 1.000 abonnees + 4.000 kijkuren in 12 maanden; titel max 100 tekens, elk woord met hoofdletter; thumbnail max 3 elementen, fel en contrastrijk; testfase 5 video's, dan beslissen; één van de eerste 5-10 video's met 1K+ views → maak 3-5 video's over dat onderwerp vanuit een andere hoek. Gebruik je een fragment, noem dan kort de bron tussen haakjes, bijv. (bron: Lessen video 1). De kennisbank bevat nu ook het volledige projectgeheugen (alle vaste regels en lessen), alle threads met het hele gesprek en alle documenten; noem die net zo, bijv. (bron: Geheugen: Cursus regels) of (bron: Thread: Animeer video 3: geen regels meer). Staat iets niet in de cursus of fragmenten, zeg dan dat het jouw eigen advies is en geen cursusadvies.
 
 BEVOEGDHEDEN:
 - Niveau 1 (zelf): vragen beantwoorden, analyseren, rapporten, strategie voorstellen, problemen signaleren.
@@ -55,27 +67,87 @@ Claim NOOIT dat iets is uitgevoerd: jij adviseert, de knop of de CEO zet het in 
 EINDDOEL: maak de CEO elke dag beter in het leiden van zijn YouTube-bedrijf. Claude denkt mee. De agents voeren uit. De CEO beslist.`;
 
 /* ---------- kennisbank ---------- */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Any = any;
+const KENNIS_PAD = 'driftmark-hq/kennis/kennis.json';
+const SOORTEN = new Set<string>(['cursus', 'driftmark', 'geheugen', 'document', 'gesprek']);
+const BRONTYPES = new Set<string>(['geheugen', 'gesprek', 'document']);
+const tekstOf = (x: unknown) => (typeof x === 'string' ? x : '');
+/** Leest een kennisbestand; kapotte stukjes vallen weg. null: geen kennisbestand. */
+function leesKennis(j: Any, uit: Kennis['uit'], waarom?: string): Kennis | null {
+  if (!j || typeof j !== 'object' || !Array.isArray(j.fragmenten)) return null;
+  const fragmenten: Fragment[] = [];
+  for (const f of j.fragmenten) {
+    if (!f || typeof f !== 'object' || typeof f.tekst !== 'string' || !f.tekst.trim()) continue;
+    const b = f.bron;
+    const bron: Bron | undefined = b && typeof b === 'object' && BRONTYPES.has(b.type) && typeof b.id === 'string' && b.id.trim()
+      ? { type: b.type, id: b.id.trim(), ...(typeof b.msg === 'string' && b.msg ? { msg: b.msg } : {}), ...(typeof b.at === 'string' ? { at: b.at } : {}) } : undefined;
+    fragmenten.push({
+      doc: tekstOf(f.doc).trim() || 'Onbekend', soort: SOORTEN.has(f.soort) ? f.soort : undefined, taal: tekstOf(f.taal) || 'nl',
+      hoofdstuk: tekstOf(f.hoofdstuk), onderwerp: tekstOf(f.onderwerp), tekst: f.tekst, ...(bron ? { bron } : {}),
+    });
+  }
+  const bronnen = (Array.isArray(j.bronnen) ? j.bronnen : []).filter((x: Any) => x && typeof x.doc === 'string')
+    .map((x: Any) => ({ doc: x.doc, taal: tekstOf(x.taal) || 'nl', soort: (SOORTEN.has(x.soort) ? x.soort : 'driftmark') as FragmentSoort, fragmenten: Number.isFinite(x.fragmenten) ? Number(x.fragmenten) : 0 }));
+  return { gemaakt: tekstOf(j.gemaakt) || undefined, bronnen, fragmenten, uit, ...(waarom ? { waarom } : {}) };
+}
 let kennisP: Promise<Kennis> | null = null;
+/** wanneer de ingebouwde reserve geladen werd omdat het volledige bestand er (nog) niet was; 0 = niet */
+let reserveSinds = 0;
+/**
+ * De kennisbank, pas geladen als de coach of Kennis › Zoeken hem nodig heeft (het bestand is ruim 1,5 MB).
+ * Eerst het volledige bestand uit de projectbestanden; lukt dat niet, dan de ingebouwde ./kennis.json. Na zo'n
+ * reserve wordt het volledige bestand na 5 minuten opnieuw geprobeerd (het komt elk uur).
+ */
 export function laadKennis(): Promise<Kennis> {
-  if (!kennisP) kennisP = fetch('./kennis.json').then((r) => (r.ok ? r.json() : { bronnen: [], fragmenten: [] })).catch(() => ({ bronnen: [], fragmenten: [] }));
+  if (kennisP && reserveSinds && Date.now() - reserveSinds > 5 * 60000) { kennisP = null; reserveSinds = 0; }
+  if (!kennisP) {
+    kennisP = (async () => {
+      let r = await leesJson(KENNIS_PAD).catch(() => ({ ok: false as const, code: 'unavailable' }));
+      // net veranderd, even te druk of half geschreven: nog één keer
+      if (!r.ok && ['changed', 'rate_limited', 'kapot'].includes(r.code)) { await new Promise((ok) => setTimeout(ok, 2500)); r = await leesJson(KENNIS_PAD).catch(() => ({ ok: false as const, code: 'unavailable' })); }
+      let k = r.ok ? leesKennis(r.data, 'bestanden') : null;
+      if (!k) {
+        const code = r.ok ? 'vorm' : r.code;
+        const j = await fetch('./kennis.json').then((x) => (x.ok ? x.json() : null)).catch(() => null);
+        k = leesKennis(j, 'ingebouwd', code) ?? { bronnen: [], fragmenten: [], uit: 'ingebouwd', waarom: code };
+        // geen projectbestanden in deze weergave of geen toestemming: niet blijven proberen
+        if (code !== 'geen-files' && code !== 'not_granted') reserveSinds = Date.now();
+      }
+      useCoach.setState({ kennis: k });
+      return k;
+    })();
+  }
   return kennisP;
 }
 const STOP = new Set('de het een en van in op te is dat je ik wat hoe voor met mijn niet er aan als ook bij of naar zijn maar om dan nog wel kan the a of to and is in for you how what'.split(' '));
 const woorden = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !STOP.has(w));
+/** de woorden van elk fragment, één keer geteld en daarna bewaard (de kennisbank heeft bijna 2000 stukjes) */
+const woordCache = new WeakMap<Fragment, Map<string, number>>();
+function woordenVan(f: Fragment) {
+  let m = woordCache.get(f);
+  if (!m) { m = new Map(); for (const w of woorden(`${f.hoofdstuk} ${f.onderwerp} ${f.tekst}`)) m.set(w, (m.get(w) ?? 0) + 1); woordCache.set(f, m); }
+  return m;
+}
+/** vaste regels en de cursus wegen zwaarder dan losse gespreksberichten */
+const GEWICHT: Partial<Record<FragmentSoort, number>> = { cursus: 1.4, geheugen: 1.3, gesprek: 0.9 };
 export function zoek(k: Kennis, vraag: string, n = 4): Fragment[] {
-  const q = woorden(vraag);
+  const q = [...new Set(woorden(vraag))];
   if (!q.length) return [];
   const scores = k.fragmenten.map((f) => {
-    const hay = woorden(`${f.hoofdstuk} ${f.onderwerp} ${f.tekst}`);
-    const set = new Map<string, number>(); hay.forEach((w) => set.set(w, (set.get(w) ?? 0) + 1));
+    const set = woordenVan(f);
     let s = 0;
-    for (const w of q) { for (const [h, c] of set) if (h === w) s += 3 + Math.min(c, 4); else if (h.startsWith(w.slice(0, 5)) && w.length > 4) s += 1; }
+    for (const w of q) {
+      const c = set.get(w); if (c) s += 3 + Math.min(c, 4);
+      if (w.length > 4) { const p = w.slice(0, 5); for (const h of set.keys()) if (h !== w && h.startsWith(p)) s += 1; }
+    }
     if (f.onderwerp && q.some((w) => f.onderwerp.includes(w))) s += 4;
-    return { f, s: s * (f.soort === 'cursus' ? 1.4 : 1) };
+    return { f, s: s * (GEWICHT[f.soort ?? 'driftmark'] ?? 1) };
   });
   return scores.filter((x) => x.s > 3).sort((a, b) => b.s - a.s).slice(0, n).map((x) => x.f);
 }
-export const fragmentTekst = (fs: Fragment[]) => fs.length ? fs.map((f, i) => `[${i + 1}] ${f.soort === 'cursus' ? 'CURSUS' : 'Driftmark'} · bron: ${f.doc} (${f.taal.toUpperCase()}), ${f.hoofdstuk}\n${f.tekst.slice(0, 900)}`).join('\n\n') : '(geen passende fragmenten gevonden)';
+const SOORT_LABEL: Record<FragmentSoort, string> = { cursus: 'CURSUS', driftmark: 'Driftmark', geheugen: 'GEHEUGEN', document: 'DOCUMENT', gesprek: 'GESPREK' };
+export const fragmentTekst = (fs: Fragment[]) => fs.length ? fs.map((f, i) => `[${i + 1}] ${SOORT_LABEL[f.soort ?? 'driftmark']} · bron: ${f.doc} (${f.taal.toUpperCase()}), ${f.hoofdstuk}\n${f.tekst.slice(0, 900)}`).join('\n\n') : '(geen passende fragmenten gevonden)';
 
 /* ---------- bedrijfsgegevens als tekst ---------- */
 export function bedrijf(d: Live, stats: StatRow[], g: Geheugen, doelen: Doel[]): string {
@@ -125,7 +197,7 @@ export const useCoach = create<CS>(() => ({ klaar: false, kanVragen: null, dbOk:
 let gestart = false;
 export async function startCoach() {
   if (gestart) return; gestart = true;
-  void laadKennis().then((k) => useCoach.setState({ kennis: k }));
+  // de kennisbank (ruim 1,5 MB) laadt pas als de coach hem nodig heeft: bij een vraag, de briefing of Kennis
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const c = (window as any).claude;
   if (!c?.use) { useCoach.setState({ kanVragen: false, klaar: true }); return; }
@@ -179,7 +251,7 @@ export async function vraag(geschiedenis: Msg[], data: Live, stats: StatRow[], o
   const s = useCoach.getState();
   const k = s.kennis ?? await laadKennis();
   const laatste = geschiedenis[geschiedenis.length - 1]?.content ?? '';
-  const fr = zoek(k, laatste + ' ' + (geschiedenis[geschiedenis.length - 3]?.content ?? ''));
+  const fr = zoek(k, laatste + ' ' + (geschiedenis[geschiedenis.length - 3]?.content ?? ''), k.uit === 'bestanden' ? 6 : 4);
   const cursus = k.bronnen.some((b) => b.soort === 'cursus') ? 'De cursus staat in de kennisbank.' : 'LET OP: de cursus staat niet in de kennisbank; je hebt alleen Driftmark-documenten. Zeg dat als iemand cursusadvies vraagt.';
   const kop = `${SYSTEEM}\n\n${bedrijf(data, stats, s.geheugen, s.doelen)}\n\n=== KENNISFRAGMENTEN ===\n${cursus}\n${fragmentTekst(fr)}\n\nDatum nu: ${new Date().toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}.`;
   const msgs: Msg[] = geschiedenis.slice(-12);

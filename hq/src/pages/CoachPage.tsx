@@ -10,9 +10,10 @@ import { order } from '../services/real';
 import { useGame } from '../store/useGame';
 import { threadUrl } from '../data/driftmark';
 import { AfkeurKnop } from '../components/shared/Afkeuren';
+import { Md } from '../components/shared/Md';
 import {
   useCoach, startCoach, vraag, parse, maakBriefing, maakRapport, onthoud, bewaarGeheugen, bewaarDoelen, nieuwBesluit, zetBesluit, bewaarGesprek,
-  VAK, type Msg, type Fragment, type Doel, type Besluit, type Actie,
+  laadKennis, VAK, type Msg, type Fragment, type Doel, type Besluit, type Actie, type FragmentSoort,
 } from '../services/coach';
 
 type Tab = 'praat' | 'briefing' | 'doelen' | 'besluiten' | 'agents' | 'rapporten' | 'kennis' | 'geheugen';
@@ -27,20 +28,8 @@ const TABS: { id: Tab; label: string; icon: typeof Send; uitleg: string }[] = [
   { id: 'geheugen', label: 'Geheugen', icon: Brain, uitleg: 'Wat de coach blijvend over jou en Driftmark weet' },
 ];
 
-/** heel kleine markdown: ## kop, - lijst, **vet** */
-export function Md({ text }: { text: string }) {
-  const vet = (t: string) => t.split(/(\*\*[^*]+\*\*)/g).map((p, i) => (p.startsWith('**') ? <strong key={i} className="text-white">{p.slice(2, -2)}</strong> : p));
-  return (
-    <div className="space-y-1.5">
-      {text.split('\n').map((l, i) => {
-        if (/^#{1,4}\s/.test(l)) return <div key={i} className="pt-2 font-display text-[16px] font-bold text-orange-200">{l.replace(/^#+\s/, '')}</div>;
-        if (/^\s*[-*•]\s/.test(l)) return <div key={i} className="flex gap-2 pl-1"><span className="text-orange-400">•</span><span>{vet(l.replace(/^\s*[-*•]\s/, ''))}</span></div>;
-        if (/^\s*\d+[.)]\s/.test(l)) return <div key={i} className="pl-1">{vet(l)}</div>;
-        return l.trim() ? <p key={i}>{vet(l)}</p> : null;
-      })}
-    </div>
-  );
-}
+/** markdown: staat sinds v35 in components/shared/Md.tsx (ook links, tabellen, code), hier doorgegeven */
+export { Md };
 
 const NIVEAU = { 1: 'advies', 2: 'Claude doet het na jouw klik', 3: 'jouw besluit nodig' } as const;
 const PRIO: Record<string, string> = { hoog: 'bg-red-500/20 text-red-300', middel: 'bg-orange-500/20 text-orange-300', laag: 'bg-sky-500/20 text-sky-300' };
@@ -389,14 +378,36 @@ function Rapporten() {
 }
 
 /* ---------- 7. Kennis ---------- */
+const SOORT_NAAM: { id: FragmentSoort; naam: string }[] = [
+  { id: 'geheugen', naam: 'geheugen' }, { id: 'gesprek', naam: 'uit gesprekken' }, { id: 'document', naam: 'uit documenten' },
+  { id: 'cursus', naam: 'uit de cursus' }, { id: 'driftmark', naam: 'werkwijze' },
+];
 function KennisTab() {
   const k = useCoach((s) => s.kennis);
+  const setPage = useGame((s) => s.setPage);
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<Fragment[] | null>(null);
+  // de kennisbank laadt pas als iemand hem nodig heeft (hier: om te tellen en te zoeken)
+  useEffect(() => { void laadKennis(); }, []);
   const cursus = k?.bronnen.filter((b) => b.soort === 'cursus') ?? [];
+  const tel = (s: FragmentSoort) => k?.fragmenten.filter((f) => (f.soort ?? 'driftmark') === s).length ?? 0;
   const zoekNu = async () => { const { zoek } = await import('../services/coach'); if (k) setHits(zoek(k, q, 8)); };
   return (
     <div className="space-y-3">
+      <div className="panel p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-display text-lg font-bold text-white">Wat de coach weet</div>
+            <div className="text-[14px] text-slate-300">{k ? `${k.fragmenten.length.toLocaleString('nl-NL')} stukjes kennis` : 'Kennis laden…'}{k?.uit === 'ingebouwd' ? ' (alleen de ingebouwde cursus en werkwijze: de volledige kennis is nog niet opgehaald)' : k?.uit === 'bestanden' ? ': het hele projectgeheugen, alle threads en alle documenten' : ''}</div>
+          </div>
+          <button className="btn-primary shrink-0 text-[13px]" onClick={() => setPage('kennis')}><BookOpen size={15} />Alles bekijken in Kennis</button>
+        </div>
+        {k && (
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {SOORT_NAAM.map((s) => <div key={s.id} className="rounded-xl bg-white/[.04] px-3 py-2"><div className="font-display text-xl font-bold text-white">{tel(s.id).toLocaleString('nl-NL')}</div><div className="text-[12px] text-slate-400">{s.naam}</div></div>)}
+          </div>
+        )}
+      </div>
       <div className={`panel p-4 ${cursus.length ? '' : 'border-orange-400/50'}`}>
         <div className="font-display text-lg font-bold text-white">Je cursus (Faceless Education)</div>
         {cursus.length ? <div className="text-[14px] text-slate-300">{cursus.map((c) => `${c.doc} (${c.taal.toUpperCase()}, ${c.fragmenten} stukjes)`).join(' · ')}</div>

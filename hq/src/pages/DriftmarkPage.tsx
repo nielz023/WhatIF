@@ -14,6 +14,7 @@ import { useReal, order } from '../services/real';
 import { useDb } from '../services/db';
 import { UploadCalendar, MetroLine } from './DriftmarkVideos';
 import YouTubeStats from './YouTubeStats';
+import { Library } from 'lucide-react';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
@@ -295,6 +296,13 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
           <h1 className="font-display text-[28px] font-bold text-white">{title}</h1>
           <p className="text-[15px] text-slate-400">{sub}</p>
         </div>
+      )}
+      {mode === 'meer' && (
+        <button onClick={() => setPage('kennis')} className="panel glow-blue mb-4 flex w-full items-center gap-3 p-4 text-left transition hover:-translate-y-0.5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-300"><Library size={22} /></span>
+          <span className="min-w-0 flex-1"><span className="block font-display text-[18px] font-bold text-white">Kennis: alles wat is opgeslagen</span><span className="block text-[13px] text-slate-400">Het hele geheugen met alle regels, elke thread met het hele gesprek, de projectchat, documenten en beelden. Alles op één plek doorzoeken.</span></span>
+          <span className="shrink-0 text-sky-300" aria-hidden>→</span>
+        </button>
       )}
 
       {views.length > 1 && (

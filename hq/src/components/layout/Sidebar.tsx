@@ -2,6 +2,7 @@ import { Sparkles, Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderK
 import type { PageId } from '../../types';
 import { useGame } from '../../store/useGame';
 import { useLive } from '../../services/live';
+import { Library } from 'lucide-react';
 
 /** De 5 vaste knoppen. De eerste drie zijn echt, Studio is het spel, Meer is naslag. */
 export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: string }[] = [
@@ -12,6 +13,8 @@ export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: strin
   { id: 'hq', label: 'Studio', icon: Building2, uitleg: 'Het 3D-kantoor en het spel' },
   { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
 ];
+// Kennis (v35) staat direct na Coach; op een eigen regel zodat andere wijzigingen in de lijst er los van staan
+MAIN.splice(MAIN.findIndex((x) => x.id === 'coach') + 1, 0, { id: 'kennis', label: 'Kennis', icon: Library, uitleg: 'Alles wat is opgeslagen: geheugen, threads, documenten' });
 /** Alles onder Studio (het spel). */
 export const STUDIO: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: 'hq', label: '3D-kantoor', icon: Building2 },
@@ -77,11 +80,12 @@ export default function Sidebar() {
 export function MobileNav() {
   const page = useGame((s) => s.page);
   const setPage = useGame((s) => s.setPage);
-  const cur = mainOf(page);
+  // Kennis past niet meer in de balk (360-390 px): op de telefoon staat hij bovenaan Meer
+  const cur = mainOf(page) === 'kennis' ? 'meer' : mainOf(page);
   const waiting = useWaiting();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-hq-line bg-[#080d22]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
-      {MAIN.map(({ id, label, icon: Icon }) => {
+      {MAIN.filter((x) => x.id !== 'kennis').map(({ id, label, icon: Icon }) => {
         const active = cur === id;
         return (
           <button key={id} onClick={() => setPage(id)} className={`relative flex flex-col items-center gap-0.5 py-2.5 text-[12px] font-semibold ${active ? 'text-orange-300' : 'text-slate-400'}`}>
