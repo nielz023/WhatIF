@@ -395,7 +395,7 @@ function Wing({ r, lit, alert, busy, onSelect, onHover, screens, baked }: { r: R
         <meshBasicMaterial map={sign} transparent toneMapped={false} depthWrite={false} depthTest={!(baked && r.props === 'ceo')} opacity={lit ? 1 : 0.95} />
       </mesh>
       {/* rechtsboven op de hoek van het bord, zoals een melding op een app-icoon */}
-      {alert && <AlertBadge kind={alert} size={sh * 0.46} pos={[sw / 2 - sh * 0.1, sh / 2 - sh * 0.1, 0.02]} top={!!baked && r.props === 'ceo'} />}
+      {alert && <AlertBadge kind={alert} size={sh * 0.6} pos={[sw / 2 - sh * 0.12, sh / 2 - sh * 0.12, 0.02]} top={!!baked && r.props === 'ceo'} />}
     </Billboard>
   );
   if (baked) {
@@ -502,7 +502,7 @@ function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]
     if (holo.current) holo.current.opacity = 0.05 + Math.sin(t * 2) * 0.015;
     if (ring1.current) { const k = (t * 0.5) % 1; ring1.current.position.y = 1.3 + k * 6; (ring1.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
     if (ring2.current) { const k = ((t * 0.5) + 0.5) % 1; ring2.current.position.y = 1.3 + k * 6; (ring2.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
-    if (play.current) play.current.position.y = 4.4 + Math.sin(t * 1.4) * 0.15;
+    if (play.current) play.current.position.y = 5.9 + Math.sin(t * 1.4) * 0.15;
   });
   return (
     <group onClick={(e) => { e.stopPropagation(); onSelect(); }} onPointerOver={() => { document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = 'auto'; }}>
@@ -534,8 +534,8 @@ function Reception({ screens, onSelect, lit, baked }: { screens: THREE.Texture[]
       <mesh position={[0, 8.5, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.35, 0.09, 8, 80]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3.2} toneMapped={false} /></mesh>
       <mesh position={[0, 8.55, 0]}><cylinderGeometry args={[2.4, 2.4, 0.12, 64]} /><meshStandardMaterial color="#1a1530" metalness={0.6} roughness={0.3} /></mesh>
       </>)}
-      <group ref={play} position={[0, 4.4, 0]}>
-        <Billboard><mesh><planeGeometry args={[2.4, 2.4]} /><meshBasicMaterial map={pt} transparent toneMapped={false} depthWrite={false} /></mesh></Billboard>
+      <group ref={play} position={[0, 5.9, 0]}>
+        <Billboard><mesh><planeGeometry args={[2.1, 2.1]} /><meshBasicMaterial map={pt} transparent toneMapped={false} depthWrite={false} /></mesh></Billboard>
       </group>
       {/* zwevende schermpjes rond de zuil */}
       {[-1, 1].map((sd) => (
