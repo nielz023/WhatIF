@@ -24,8 +24,6 @@ import HQPage from './pages/HQPage';
 import ProjectsPage from './pages/ProjectsPage';
 import AgentsPage from './pages/AgentsPage';
 import ChannelsPage from './pages/ChannelsPage';
-import ThreadsPage from './pages/ThreadsPage';
-import AchievementsPage from './pages/AchievementsPage';
 import SettingsPage from './pages/SettingsPage';
 import WarRoomPage from './pages/WarRoomPage';
 import DriftmarkPage, { VideosPage, MeerPage } from './pages/DriftmarkPage';
@@ -36,7 +34,7 @@ import { realTick } from './lib/util';
 import { startLive } from './services/live';
 import { startTools } from './services/tools';
 
-/** Schermen die weg zijn (speelgeld, upgrades, spelcijfers): een oude link gaat terug naar het kantoor. */
+/** Schermen die weg zijn (speelgeld, upgrades, spelcijfers, prestaties, berichten): een oude link gaat terug naar het kantoor. */
 function NaarKantoor() {
   useEffect(() => { useGame.getState().setPage('hq'); }, []);
   return null;
@@ -44,7 +42,7 @@ function NaarKantoor() {
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
   driftmark: () => null, overzicht: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: NaarKantoor,
-  threads: ThreadsPage, finances: NaarKantoor, upgrades: NaarKantoor, achievements: AchievementsPage,
+  threads: NaarKantoor, finances: NaarKantoor, upgrades: NaarKantoor, achievements: NaarKantoor,
   settings: SettingsPage, warroom: WarRoomPage,
 };
 

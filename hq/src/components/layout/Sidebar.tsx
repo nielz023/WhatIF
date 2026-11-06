@@ -1,4 +1,4 @@
-import { Sparkles, Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderKanban, Users, Tv, MessagesSquare, Trophy, ShieldAlert } from 'lucide-react';
+import { Sparkles, Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderKanban, Users, Tv, ShieldAlert } from 'lucide-react';
 import type { PageId } from '../../types';
 import { useGame } from '../../store/useGame';
 import { useLive } from '../../services/live';
@@ -12,15 +12,13 @@ export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: strin
   { id: 'hq', label: 'Studio', icon: Building2, uitleg: 'Het 3D-kantoor' },
   { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
 ];
-/** Alles onder Studio (het 3D-kantoor). Speelgeld, spelcijfers en upgrades zijn weg (niels 2026-11-06). */
+/** Alles onder Studio (het 3D-kantoor). Speelgeld, spelcijfers, upgrades, prestaties en nepberichten zijn weg (niels 2026-11-06). */
 export const STUDIO: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: 'hq', label: '3D-kantoor', icon: Building2 },
   { id: 'projects', label: 'Projecten', icon: FolderKanban },
   { id: 'agents', label: 'Teamleden', icon: Users },
   { id: 'channels', label: 'Kanalen', icon: Tv },
-  { id: 'threads', label: 'Berichten', icon: MessagesSquare },
   { id: 'warroom', label: 'Crisiskamer', icon: ShieldAlert },
-  { id: 'achievements', label: 'Prestaties', icon: Trophy },
 ];
 /** oude naam, nog gebruikt door andere schermen */
 export const NAV = [...MAIN, ...STUDIO.slice(1)];

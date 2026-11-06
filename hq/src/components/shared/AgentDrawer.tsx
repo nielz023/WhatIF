@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Sparkles, ClipboardList, Share2 } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import { useGame } from '../../store/useGame';
 import { Avatar, Drawer, Progress, StateDot, StatusBadge } from '../ui';
 import { roleById } from '../../modules/agents/roles';
 import { deptById } from '../../modules/departments/departments';
-import { getLLM } from '../../services/adapters';
 
 /** Vaardigheden in het Nederlands (de namen in de rollen zijn Engels). */
 const SKILL_NL: Record<string, string> = {
@@ -22,28 +21,13 @@ export default function AgentDrawer() {
   const s = useGame();
   const a = s.agents.find((x) => x.id === s.selectedAgentId);
   const [instr, setInstr] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [out, setOut] = useState('');
-  const [busy, setBusy] = useState(false);
-  useEffect(() => { if (a) { setInstr(a.instructions); setOut(''); setPrompt(''); } }, [a?.id]); // eslint-disable-line
+  useEffect(() => { if (a) setInstr(a.instructions); }, [a?.id]); // eslint-disable-line
   if (!a) return <Drawer open={false} onClose={() => s.selectAgent(null)}>{null}</Drawer>;
 
   const role = roleById(a.role);
   const dept = deptById(a.department);
   const current = s.tasks.find((t) => t.id === a.currentTaskId);
   const history = a.taskHistory.map((id) => s.tasks.find((t) => t.id === id)).filter(Boolean).reverse().slice(0, 12);
-  const llm = getLLM(s.settings);
-
-  const generate = async () => {
-    setBusy(true); setOut('');
-    try {
-      const sys = `${a.instructions}\nPersonality: ${a.personality}\nCompany: Driftmark Studio (3D What If YouTube channel). Channels: ${s.channels.map((c) => `${c.name} (${c.niche})`).join(', ')}.`;
-      setOut(await llm.generate(sys, prompt || `Geef me je beste oplevering als ${role.title.toLowerCase()} voor onze volgende video.`));
-    } catch (e) {
-      setOut(`⚠️ ${(e as Error).message}`);
-    } finally { setBusy(false); }
-  };
-
   // Geen salaris, niveau, XP, upgrades, training of ontslaan meer: het kantoor is geen spel (niels 2026-11-06).
   return (
     <Drawer open onClose={() => s.selectAgent(null)} title="Teamlid" width={540}>
@@ -97,16 +81,7 @@ export default function AgentDrawer() {
         </div>
       </Section>
 
-      <Section title={<span className="flex items-center gap-2"><Sparkles size={13} />Werksessie · {llm.name}</span>}>
-        <textarea className="input min-h-[60px] text-[13px]" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={`Vraag ${a.name.split(' ')[0]} om iets, bv. "10 titelideeën voor de video over teleporteren"`} />
-        <div className="mt-2 flex gap-2">
-          <button className="btn-primary text-[13px]" onClick={generate} disabled={busy}>{busy ? 'Bezig…' : 'Maken'}</button>
-          {out && !out.startsWith('⚠️') && <button className="btn-ghost text-[13px]" onClick={() => { s.createPost(`Verslag van ${a.name}:`, { title: `${role.title}: oplevering`, body: out.slice(0, 1200) }); s.toast('Gedeeld in Berichten.', 'success'); }}><Share2 size={13} />Delen in Berichten</button>}
-        </div>
-        {llm.status() !== 'connected' && <p className="mt-2 text-[13px] text-slate-500">Geen AI-model gekoppeld, de uitvoer is gesimuleerd. Echte opdrachten lopen via Driftmark HQ.</p>}
-        {out && <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-black/40 p-3 text-[13px] text-slate-200">{out}</pre>}
-      </Section>
-
+      {/* geen werksessie meer: die gaf gesimuleerde uitvoer (niels 2026-11-06) */}
       <Section title="Current task">
         {current ? <div className="flex items-center justify-between gap-2 text-sm"><span className="text-white">{current.title}</span><StatusBadge status={current.status} /></div> : <div className="text-sm text-slate-500">{a.state === 'training' ? 'In training.' : 'Idle — waiting for work.'}</div>}
       </Section>

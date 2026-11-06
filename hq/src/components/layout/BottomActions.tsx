@@ -1,4 +1,4 @@
-import { Clapperboard, ClipboardList, BarChart3, Trophy } from 'lucide-react';
+import { Clapperboard, ClipboardList, BarChart3 } from 'lucide-react';
 import { useGame } from '../../store/useGame';
 
 /** Snelle knoppen onderin. Aannemen en kantoor upgraden zijn weg: dat hoorde bij het spel met speelgeld. */
@@ -9,7 +9,6 @@ export default function BottomActions() {
     { label: 'Nieuwe video', icon: Clapperboard, onClick: () => openModal('newVideo'), primary: true },
     { label: 'Taak geven', icon: ClipboardList, onClick: () => openModal('assignTask') },
     { label: 'Statistieken', icon: BarChart3, onClick: () => setPage('kanaal') },
-    { label: 'Prestaties', icon: Trophy, onClick: () => setPage('achievements') },
   ];
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-3 z-40 flex justify-center px-3">

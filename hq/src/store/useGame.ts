@@ -105,17 +105,30 @@ const uiDefaults: UIState = {
   confirm: null, paused: false, speed: 1, toasts: [], notifOpen: false,
 };
 
-/** Schermen die weg zijn (speelgeld, upgrades, spelcijfers): een oude link gaat naar het 3D-kantoor (niels 2026-11-06). */
-export const WEG_PAGINAS: ReadonlySet<PageId> = new Set<PageId>(['finances', 'upgrades', 'analytics']);
+/** Schermen die weg zijn (speelgeld, upgrades, spelcijfers, prestaties, nepberichten): een oude link gaat naar het 3D-kantoor (niels 2026-11-06). */
+export const WEG_PAGINAS: ReadonlySet<PageId> = new Set<PageId>(['finances', 'upgrades', 'analytics', 'achievements', 'threads']);
 
 /** Meldingen uit het oude spel (geld, niveaus, upgrades, aannemen) horen niet meer in het kantoor. */
-const SPELMELDING = /bereikt niveau|naar niveau|geüpgraded|klaar met de training|is begonnen als|heeft het bedrijf verlaten|verdient nu geld|saldo|spelgeld|speelgeld|€|het kantoor is een simulatie|Prestatie behaald: (Monetized|Growing Team|Full House|Interior Designer|Rising Company|Elite Employee)/i;
+const SPELMELDING = /Prestatie behaald|bereikt niveau|naar niveau|geüpgraded|klaar met de training|is begonnen als|heeft het bedrijf verlaten|verdient nu geld|saldo|spelgeld|speelgeld|€|het kantoor is een simulatie|Prestatie behaald: (Monetized|Growing Team|Full House|Interior Designer|Rising Company|Elite Employee)/i;
+
+const SPELKANAAL = 'ch_science';
 
 /** Ruimt een bewaarde stand op bij het laden, zonder nieuwe versie: spelmeldingen gaan weg. */
 function opruimen(bewaard: unknown): Partial<GameStore> {
   const b = (bewaard ?? {}) as Partial<GameStore>;
-  if (!Array.isArray(b.notifications)) return b;
-  return { ...b, notifications: b.notifications.filter((n) => !SPELMELDING.test(n?.text ?? '')) };
+  const uit: Partial<GameStore> = { ...b };
+  if (Array.isArray(b.notifications)) uit.notifications = b.notifications.filter((n) => !SPELMELDING.test(n?.text ?? ''));
+  // het spelkanaal "Driftmark Shorts" bestaat niet: shorts staan op het echte kanaal Driftmark
+  if (Array.isArray(b.channels) && b.channels.some((c) => c?.id === SPELKANAAL)) {
+    const naar = <T extends { channelId?: string | null }>(x: T): T => (x?.channelId === SPELKANAAL ? { ...x, channelId: 'ch_history' } : x);
+    uit.channels = b.channels.filter((c) => c?.id !== SPELKANAAL);
+    if (Array.isArray(b.projects)) uit.projects = b.projects.map(naar);
+    if (Array.isArray(b.videos)) uit.videos = b.videos.map(naar);
+    if (Array.isArray(b.stats)) uit.stats = b.stats.filter((x) => x?.channelId !== SPELKANAAL);
+    if (Array.isArray(b.agents)) uit.agents = b.agents.map((a) => ({ ...a, channelIds: (a.channelIds ?? []).filter((id) => id !== SPELKANAAL) }));
+    if (Array.isArray(b.warCases)) uit.warCases = b.warCases.map(naar);
+  }
+  return uit;
 }
 
 export const useGame = create<GameStore>()(

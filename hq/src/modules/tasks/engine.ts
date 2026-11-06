@@ -346,7 +346,7 @@ export function dailyRollover(d: GameData, closedDay: number) {
   d.company.reputation = clamp(d.company.reputation + (d.videos.length ? 0.2 : -0.1), 0, 100);
   // expire war-room boosts gradually
   d.channels.forEach((c) => { c.ctrBoost *= 0.97; c.retentionBoost *= 0.97; });
-  if (closedDay % 3 === 0) detectIssues(d);
+  // geen crisismeldingen meer uit gesimuleerde cijfers: de crisiskamer toont alleen echte alarmen (niels 2026-11-06)
 }
 
 export function detectIssues(d: GameData) {
@@ -379,8 +379,7 @@ export function checkAchievements(d: GameData) {
   d.achievements.forEach((a) => {
     if (!a.unlockedTick && checks[a.id]) {
       a.unlockedTick = d.tick;
-      addCompanyXp(d, a.xp);
-      notify(d, `🏅 Prestatie behaald: ${a.title}`, 'achievement', 'achievements');
+      // geen melding meer: prestaties horen bij het oude spel (niels 2026-11-06)
     }
   });
 }
