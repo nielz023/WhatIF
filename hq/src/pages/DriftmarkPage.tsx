@@ -6,7 +6,8 @@ import { RULES, CAST, VOICE_SETS, TOOLS, threadUrl, type RealVideo } from '../da
 import { CursusCheck, TitelTester, CursusStappen, CursusTip } from './Cursus';
 import { useLive, startLive } from '../services/live';
 import { openGesprek } from '../components/shared/Gesprek';
-import { useThreads, zetLiveAan, openRechten } from '../services/threads';
+import { AfkeurKnop } from '../components/shared/Afkeuren';
+import { useThreads, wanneerNl } from '../services/threads';
 import { ToolsPanel, CostsPanel, RepliesPanel, Outputs, AutomationPanel } from './DriftmarkExtra';
 import gallery from '../data/gallery.json';
 import { useReal, order } from '../services/real';
@@ -25,36 +26,18 @@ const AVAIL: Record<string, [string, string]> = {
   geen: ['Alleen op de gepubliceerde pagina in claude.ai', '#f43f5e'],
 };
 
-/** stand van de koppeling Claude Code Remote (live stand van elke thread) met een knop om hem aan te zetten */
-function LiveKoppeling() {
-  const src = useThreads((s) => s.src); const err = useThreads((s) => s.err);
-  const toast = useGame((s) => s.toast);
-  const [bezig, setBezig] = useState(false);
-  if (src === 'live' || src === 'laden') return null;
-  const aan = async () => {
-    setBezig(true);
-    const r = await zetLiveAan().catch(() => 'fout');
-    setBezig(false);
-    if (r === 'live') toast('Live stand van je threads staat aan.', 'success');
-    else toast('claude.ai kon de koppeling Claude Code Remote niet laden. De takenlijst gebruikt de stand van de uurronde.', 'warning');
-  };
-  const geweigerd = err === 'denied';
-  const uur = 'De stand komt nu uit de uurronde (elk uur).';
-  const tekst = geweigerd ? `De koppeling Claude Code Remote is geweigerd. ${uur}`
-    : err === 'unavailable' || (src === 'geen' && !err) ? `Live stand kan in deze weergave niet. ${uur}`
-    : err === 'needs_reauth' ? `Log opnieuw in bij Claude Code Remote (claude.ai, Instellingen › Connectors). ${uur}`
-    : err === 'server_not_connected' ? `Claude Code Remote is niet gekoppeld in claude.ai. ${uur}`
-    : src === 'uit' ? `Live stand van je threads staat uit. ${uur}`
-    : `Claude Code Remote gaf een fout${err ? ` (${err})` : ''}. ${uur}`;
-  const knop = geweigerd ? 'rechten' : err === 'unavailable' || (src === 'geen' && !err) ? null : src === 'uit' ? 'Live aanzetten' : 'Opnieuw proberen';
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/[.04] px-3 py-2 text-[13px] text-slate-300">
-      <span className="h-2 w-2 shrink-0 rounded-full bg-slate-400" />
-      <span className="min-w-0 flex-1">{tekst}</span>
-      {knop === 'rechten' ? <button className="btn-ghost !py-1 text-[13px]" onClick={() => void openRechten().then((ok) => { if (!ok) toast('Open het menu Rechten van dit artifact in claude.ai.', 'info'); })}>Rechten openen</button>
-        : knop ? <button className="btn-primary !py-1 text-[13px]" disabled={bezig} onClick={() => void aan()}>{bezig ? 'Bezig…' : knop}</button> : null}
-    </div>
-  );
+/** tooltip bij het stipje op een taakkaart */
+const UIT_THREADS = 'De stand komt uit de threads en wordt ongeveer elk uur bijgewerkt.';
+
+/** waar de stand van de taken vandaan komt (Meer › Alle taken) */
+function ThreadsStand() {
+  const at = useThreads((s) => s.at); const src = useThreads((s) => s.src);
+  const tekst = src === 'ok' ? `Stand van de threads: bijgewerkt ${wanneerNl(at) || 'onlangs'}. Die wordt ongeveer elk uur ververst.`
+    : src === 'laden' ? 'Stand van de threads laden…'
+    : src === 'ontbreekt' ? 'De stand van de threads is nog niet opgehaald. Je ziet nu de stand van de uurronde.'
+    : src === 'geen-toegang' ? 'Deze pagina kan de projectbestanden hier niet lezen. Je ziet de laatst bekende stand.'
+    : 'De stand van de threads kon nu niet gelezen worden. Je ziet de stand van de uurronde.';
+  return <div className="flex items-center gap-2 text-[12px] text-slate-500"><span className={`h-2 w-2 shrink-0 rounded-full ${src === 'ok' ? 'bg-sky-400/80' : 'bg-slate-500'}`} />{tekst}</div>;
 }
 
 function OrdersPanel({ quick = [] }: { quick?: string[] }) {
@@ -177,7 +160,7 @@ const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'ideeen', label: 'Ideeën & links', uitleg: 'Onderwerpen voor de volgende video en alle documenten' },
 ];
 const STATE: Record<string, [string, string]> = {
-  working: ['Claude is bezig', '#3db8ff'], blocked: ['wacht op jou', '#ff8a3d'], review_ready: ['klaar om te bekijken', '#ff8a3d'], done: ['klaar', '#3ddc97'], failed: ['mislukt', '#ff4d6d'],
+  working: ['Claude is bezig', '#3db8ff'], blocked: ['wacht op jou', '#ff8a3d'], review_ready: ['klaar om te bekijken', '#ff8a3d'], done: ['klaar', '#3ddc97'], failed: ['mislukt', '#ff4d6d'], stopped: ['gestopt', '#94a3b8'],
 };
 
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
@@ -265,9 +248,12 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         {a.needs && a.needs !== a.doing && (a.state === 'blocked' || a.state === 'review_ready') && <div className="mt-1.5 rounded-lg bg-orange-500/10 px-2.5 py-1.5 text-[13px] text-orange-100"><b className="text-orange-300">Jij: </b>{a.needs}</div>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {a.id ? <a href={threadUrl(a.id)} target="_blank" rel="noreferrer" className={big ? 'btn-primary text-[13px]' : 'btn-ghost text-[13px]'}>Bekijk</a> : null}
-          {a.session && <button className="btn-ghost text-[13px]" onClick={() => openGesprek({ kind: 'thread', session: a.session, title: a.title, thread: a.id || undefined })}><MessageSquare size={13} />Gesprek</button>}
-          {big && a.state === 'review_ready' && <button className="btn-success text-[13px]" onClick={() => order(`Goedgekeurd: taak "${a.title}"${a.id ? ` (thread ${a.id})` : ''}.`, toast)}>Goedkeuren</button>}
-          <span className="text-[12px] text-slate-500">{a.live ? <span className="mr-1 text-[#3ddc97]" title="Live uit Claude Code Remote">●</span> : null}laatst actief {a.last}</span>
+          {a.id && <button className="btn-ghost text-[13px]" onClick={() => openGesprek({ kind: 'thread', thread: a.id, title: a.title })}><MessageSquare size={13} />Gesprek</button>}
+          {big && a.state === 'review_ready' && (<>
+            <button className="btn-success text-[13px]" onClick={() => order(`Goedgekeurd: taak "${a.title}"${a.id ? ` (thread ${a.id})` : ''}.`, toast)}>Goedkeuren</button>
+            <AfkeurKnop title={a.title} id={a.id || undefined} className="text-[13px]" />
+          </>)}
+          <span className="text-[12px] text-slate-500">{a.live ? <span className="mr-1 cursor-help text-sky-400/80" title={UIT_THREADS} aria-label={UIT_THREADS}>●</span> : null}laatst actief {a.last}</span>
         </div>
       </div>
     );
@@ -383,7 +369,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
             <span className="text-slate-500">● {activity.filter((a) => a.state === 'done').length} klaar</span>
             <button className="ml-auto btn-ghost !py-1 text-[13px]" onClick={() => openGesprek({ kind: 'project', title: 'Projectchat' })}><MessageSquare size={13} />Projectchat lezen</button>
           </div>
-          <LiveKoppeling />
+          <ThreadsStand />
           {[...new Set([...VIDEOS.map((v) => v.nr).sort((a, b) => b - a), 0])].map((nr) => {
             const list = activity.filter((a) => (a.video ?? 0) === nr);
             if (!list.length) return null;

@@ -1,27 +1,37 @@
 /**
- * HET HELE GESPREK van een thread of van de projectchat (niels 2026-11-06: "voeg allle 2 de kanttekeningen toe").
- * Leest via de connector "Claude Code Remote" alles wat niels schreef en wat Claude antwoordde, met de
- * nieuwste berichten onderaan. "Ouder laden" bladert terug tot het allereerste bericht; terwijl het paneel
- * open is komen nieuwe berichten er elke 20 seconden vanzelf bij. Bij de projectchat lopen we na de huidige
- * coördinator door naar de vorige (de projectchat wisselt af en toe van sessie).
+ * HET HELE GESPREK van een thread of van de projectchat (v35: uit de projectbestanden, niet meer uit een connector).
+ * Claude zet elk gesprek ongeveer elk uur als bestand in driftmark-hq/gesprekken/ (zie services/threads.ts). Het
+ * paneel leest dat bestand zodra het opengaat en daarna elke minuut, zolang het open blijft. Oudste berichten
+ * bovenaan, nieuwste onderaan. Staat niet alles in het bestand, dan staat bovenaan waar de rest te lezen is.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ExternalLink, MessageSquare, RefreshCw, X } from 'lucide-react';
+import { ChevronDown, ExternalLink, ListChecks, MessageSquare, RefreshCw, X } from 'lucide-react';
 import { create } from 'zustand';
-import { loadPage, loadSession, useThreads, type Msg } from '../../services/threads';
+import { loadGesprek, stateOf, useThreads, wanneerNl, type GesprekBestand, type Msg } from '../../services/threads';
 import { threadUrl } from '../../data/driftmark';
 import { useLive } from '../../services/live';
+import { order } from '../../services/real';
+import { useGame } from '../../store/useGame';
+import { useAfkeuren } from './Afkeuren';
 
-interface G { open: { kind: 'thread' | 'project'; session?: string; title: string; thread?: string } | null; show: (o: G['open']) => void }
+interface G {
+  /** kind 'thread': thread is de thread-id (cmsg_...). session is van vroeger en wordt niet meer gebruikt. */
+  open: { kind: 'thread' | 'project'; title: string; thread?: string; session?: string } | null;
+  show: (o: G['open']) => void;
+}
 export const useGesprek = create<G>((set) => ({ open: null, show: (open) => set({ open }) }));
 export const openGesprek = (o: NonNullable<G['open']>) => useGesprek.getState().show(o);
 
-// alle tijden in de tijd van niels (Nederland), ook de indeling per dag; de connector geeft UTC
+// alle tijden in de tijd van niels (Nederland), ook de indeling per dag; de bestanden geven UTC
 const TZ = 'Europe/Amsterdam';
 const fmt = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleString('nl-NL', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
 const dayKey = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleDateString('sv-SE', { timeZone: TZ }); };
 const dayLabel = (iso: string) => { const d = new Date(iso); return isNaN(+d) ? '' : d.toLocaleDateString('nl-NL', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }); };
+const PROJECT_URL = threadUrl('').replace(/\?.*$/, '');
+const STAND: Record<string, string> = { working: 'bezig', blocked: 'wacht op jou', review_ready: 'klaar voor jou', done: 'klaar', failed: 'mislukt', stopped: 'gestopt' };
+/** al om gevraagd in deze sessie (knop "Nu ophalen"), zodat niels niet twee keer dezelfde opdracht stuurt */
+const gevraagdOp = new Set<string>();
 
 /** tekst met klikbare links ([tekst](url) en losse https-adressen) en **vet** */
 function Rich({ text }: { text: string }) {
@@ -42,17 +52,40 @@ function Rich({ text }: { text: string }) {
   return <>{parts.map((p, i) => typeof p === 'string' ? <span key={i}>{p}</span> : p.href ? <a key={i} href={p.href} target="_blank" rel="noreferrer" className="text-sky-300 underline hover:text-white">{p.t}</a> : p.b ? <b key={i} className="text-white">{p.t}</b> : <span key={i} className="text-sky-200">{p.t}</span>)}</>;
 }
 
-function Bubble({ m }: { m: Msg }) {
-  if (m.who === 'systeem') return <div className="mx-auto max-w-[90%] text-center text-[11px] italic text-slate-500">{m.text}</div>;
-  const me = m.who === 'niels';
+const KLEUR: Record<string, string> = { '✓': '#21D6A0', '✱': '#398CFF', '○': '#64748B' };
+/** Checklist zoals Claude hem bijhoudt (✓ klaar, ✱ bezig, ○ nog niet), als klein blok; alleen de nieuwste staat open. */
+function Checklist({ m, open }: { m: Msg; open: boolean }) {
+  const [head, ...rest] = m.text.split('\n').map((l) => l.trim()).filter(Boolean);
+  const items = rest.map((l) => { const c = l[0]; return KLEUR[c] ? { c, t: l.slice(1).trim() } : { c: '', t: l }; });
+  const tel = items.filter((x) => x.c).length; const klaar = items.filter((x) => x.c === '✓').length;
+  return (
+    <details open={open} className="group mx-auto w-full max-w-[92%] rounded-xl border border-white/10 bg-white/[.03] px-3 py-2 text-[12px]">
+      <summary className="flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+        <ListChecks size={13} className="shrink-0 text-sky-300" />
+        <span className="min-w-0 flex-1 truncate font-semibold text-white">{head || 'Checklist'}</span>
+        {tel > 0 && <span className="shrink-0 text-[11px] text-slate-400">{klaar}/{tel} klaar</span>}
+        <span className="shrink-0 text-[10px] text-slate-500">{fmt(m.at)}</span>
+        <ChevronDown size={13} className="shrink-0 text-slate-500 transition group-open:rotate-180" />
+      </summary>
+      <div className="mt-1.5 space-y-0.5 border-t border-white/[.06] pt-1.5">
+        {items.map((x, i) => <div key={i} className="flex gap-1.5 text-slate-300">{x.c && <span style={{ color: KLEUR[x.c] }}>{x.c}</span>}<span className="min-w-0">{x.t}</span></div>)}
+      </div>
+    </details>
+  );
+}
+
+function Bubble({ m, open }: { m: Msg; open: boolean }) {
+  if (m.who === 'systeem') return <div className="mx-auto max-w-[90%] text-center text-[11px] italic leading-snug text-slate-500" title={fmt(m.at)}><Rich text={m.text} /></div>;
+  if (m.who === 'checklist') return <Checklist m={m} open={open} />;
   if (m.who === 'keuze') return (
     <div className="mx-auto w-full max-w-[92%] rounded-xl border border-amber-400/30 bg-amber-400/[.07] p-3 text-[13px] text-slate-200">
       <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-amber-300">{m.options ? 'Keuze voor jou' : 'Gekozen'}</div>
-      <div className="whitespace-pre-wrap"><Rich text={m.text} /></div>
-      {m.options && <ul className="mt-1.5 space-y-0.5 text-[12px] text-slate-300">{m.options.map((o, i) => <li key={i}>• {o}</li>)}</ul>}
-      <div className="mt-1 text-right text-[10px] text-slate-500">{fmt(m.at)}</div>
+      <div className="whitespace-pre-wrap break-words"><Rich text={m.text} /></div>
+      {m.options && <ul className="mt-2 space-y-1">{m.options.map((o, i) => <li key={i} className="rounded-lg border border-amber-400/20 bg-black/20 px-2.5 py-1 text-[12px] text-slate-200"><Rich text={o} /></li>)}</ul>}
+      <div className="mt-1 text-right text-[10px] text-slate-500">{m.author ? `${m.author} · ` : ''}{fmt(m.at)}</div>
     </div>
   );
+  const me = m.who === 'niels';
   return (
     <div className={`flex ${me ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[86%] rounded-2xl px-3.5 py-2 text-[13.5px] leading-relaxed shadow ${me ? 'rounded-br-md bg-orange-500/90 text-white' : 'rounded-bl-md border border-white/10 bg-[#121a36] text-slate-100'}`}>
@@ -63,136 +96,115 @@ function Bubble({ m }: { m: Msg }) {
   );
 }
 
-/** Checklist van de thread zoals Claude hem bijhoudt (✓ klaar, ✱ bezig, ○ nog niet). */
-function Checklist({ text }: { text: string }) {
-  const lines = text.split('\n').filter((l) => l.trim());
-  const [head, ...rest] = lines;
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-[12.5px]">
-      <div className="mb-1 font-semibold text-white">{head}</div>
-      {rest.map((l, i) => { const c = l.trim()[0]; const col = c === '✓' ? '#21D6A0' : c === '✱' ? '#398CFF' : '#64748B'; return <div key={i} className="flex gap-1.5 text-slate-300"><span style={{ color: col }}>{c}</span><span className="min-w-0">{l.trim().slice(1).trim()}</span></div>; })}
-    </div>
-  );
-}
+const Uitleg = ({ children }: { children: React.ReactNode }) => <div className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-[13px] leading-relaxed text-slate-300">{children}</div>;
+
+type Fase = { fase: 'laden' } | { fase: 'ok'; g: GesprekBestand } | { fase: 'ontbreekt' } | { fase: 'geen-toegang' } | { fase: 'fout'; code: string } | { fase: 'geen-id' };
 
 export default function GesprekDrawer() {
   const open = useGesprek((s) => s.open); const close = () => useGesprek.getState().show(null);
-  const sessions = useThreads((s) => s.sessions); const coordsLive = useThreads((s) => s.coordinators); const src = useThreads((s) => s.src);
-  const coordsFile = useLive((s) => s.data.coordinator);
-  const coords = useMemo(() => [...new Set([...(coordsLive ?? []), ...(coordsFile ?? [])])], [coordsLive, coordsFile]);
-  const chain = useMemo(() => (open?.kind === 'project' ? coords : open?.session ? [open.session] : []), [open, coords]);
-  const [msgs, setMsgs] = useState<Msg[]>([]);
-  const [state, setState] = useState<{ busy: boolean; err?: string; more: boolean; idx: number; first?: string; last?: string; scanned: number }>({ busy: false, more: false, idx: 0, scanned: 0 });
-  const box = useRef<HTMLDivElement>(null); const stick = useRef(true); const st = useRef(state); st.current = state;
-  const key = open ? `${open.kind}:${open.session ?? ''}` : '';
-  const chainKey = chain.join(',');
-  const chainRef = useRef(chain); chainRef.current = chain;
-  // elke keer dat het paneel een ander gesprek toont gaat dit omhoog; een lading van het vorige gesprek die
-  // nog onderweg is, ziet dan dat hij te laat is en schrijft niets meer weg
-  const gen = useRef(0);
+  const toast = useGame((s) => s.toast);
+  const project = open?.kind === 'project';
+  const id = !open ? '' : project ? 'projectchat' : open.thread ?? '';
+  const info = useThreads((s) => (id ? s.threads[id] : undefined));
+  const rij = useLive((s) => (!project && id ? s.data.activity.find((a) => a.id === id) : undefined));
+  const [st, setSt] = useState<Fase>({ fase: 'laden' });
+  const [poging, setPoging] = useState(0);
+  const [, setGevraagd] = useState(0);
+  const box = useRef<HTMLDivElement>(null); const stick = useRef(true);
 
-  const sess = open?.session ? sessions[open.session] : undefined;
-  useEffect(() => { if (open?.session) void loadSession(open.session); }, [open?.session]);
-
-  // laden: nieuwste bladzijde; als er weinig berichten op staan, meteen verder terug
-  const older = async (fresh = false) => {
-    const s0 = fresh ? { busy: false, more: true, idx: 0, scanned: 0 } as typeof state : st.current;
-    const chain = chainRef.current; const my = gen.current;
-    if (!chain.length || s0.busy) return;
-    setState({ ...s0, busy: true, err: undefined });
-    let { idx, first, more, scanned } = s0; let last = fresh ? undefined : s0.last;
-    const got: Msg[] = []; let pages = 0;
-    try {
-      while (pages < 6 && got.length < 12 && idx < chain.length) {
-        const p = await loadPage(chain[idx], first ? { before: first } : undefined); pages++; scanned++;
-        if (my !== gen.current) return; // intussen een ander gesprek geopend
-        if (!first && idx === 0) last = p.lastId;
-        got.unshift(...p.msgs); first = p.firstId;
-        more = p.hasMore;
-        if (!p.hasMore) { idx++; first = undefined; more = idx < chain.length; }
-      }
-      const prevH = box.current?.scrollHeight ?? 0;
-      setMsgs((m) => (fresh ? got : [...got, ...m]));
-      setState({ busy: false, more, idx, first, last, scanned });
-      if (!fresh) requestAnimationFrame(() => { if (box.current) box.current.scrollTop = box.current.scrollHeight - prevH; });
-    } catch (e) {
-      if (my !== gen.current) return;
-      const code = (e as { code?: string })?.code;
-      setState({ ...s0, busy: false, err: code === 'geen' || code === 'server_not_connected' ? 'geen' : code === 'needs_reauth' ? 'reauth' : code === 'not_in_manifest' ? 'nietToegestaan' : 'fout' });
-    }
-  };
-  useEffect(() => { gen.current++; setMsgs([]); stick.current = true; if (open) void older(true); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [key, chainKey]);
-
-  // nieuwe berichten: elke 20 s de nieuwste gebeurtenissen erbij (bij een drukke beurt meerdere bladzijden)
+  // lezen bij openen en daarna elke minuut zolang het paneel open is (en de pagina zichtbaar);
+  // een lading van een vorig gesprek die nog onderweg is, schrijft niets meer weg
   useEffect(() => {
-    if (!open || !chainKey) return;
-    let polling = false;
-    const t = setInterval(async () => {
-      const s = st.current; if (polling || s.busy || !s.last) return;
-      const my = gen.current; const session = chainRef.current[0]; if (!session) return;
-      polling = true;
-      try {
-        let last = s.last; const got: Msg[] = [];
-        for (let i = 0; i < 5; i++) {
-          const p = await loadPage(session, { after: last });
-          if (my !== gen.current) return;
-          got.push(...p.msgs); if (p.lastId) last = p.lastId;
-          if (!p.hasMore || !p.lastId) break;
-        }
-        if (last !== s.last) setState((x) => ({ ...x, last }));
-        if (got.length) setMsgs((m) => { const ids = new Set(m.map((x) => x.id)); return [...m, ...got.filter((x) => !ids.has(x.id))]; });
-      } catch { /* volgende keer */ } finally { polling = false; }
-    }, 20000);
-    return () => clearInterval(t);
-  }, [open, chainKey]);
+    if (!open) return;
+    stick.current = true;
+    if (!id) { setSt({ fase: 'geen-id' }); return; }
+    setSt({ fase: 'laden' });
+    let weg = false; let loopt = false;
+    const lees = async () => {
+      if (loopt) return; loopt = true;
+      const r = await loadGesprek(id).catch((e) => ({ kind: 'fout' as const, code: String(e?.code ?? 'fout') }));
+      loopt = false; if (weg) return;
+      setSt((prev) => {
+        if (r.kind === 'ok') return prev.fase === 'ok' && JSON.stringify(prev.g) === JSON.stringify(r.g) ? prev : { fase: 'ok', g: r.g };
+        if (prev.fase === 'ok' && r.kind === 'fout') return prev; // even niet gelukt: het gesprek dat er stond blijft staan
+        return r.kind === 'fout' ? { fase: 'fout', code: r.code } : { fase: r.kind };
+      });
+    };
+    void lees();
+    const t = setInterval(() => { if (document.visibilityState === 'visible') void lees(); }, 60000);
+    return () => { weg = true; clearInterval(t); };
+  }, [open, id, poging]);
 
-  // onderaan blijven als je onderaan was
-  useEffect(() => { const b = box.current; if (b && stick.current) b.scrollTop = b.scrollHeight; }, [msgs.length]);
-  // Esc sluit alleen het gesprek (en niet ook nog het paneel of de afdeling eronder): vangen vóór de app-brede Esc
+  // onderaan blijven als je onderaan was (zo zie je meteen de nieuwste berichten)
+  const n = st.fase === 'ok' ? st.g.msgs.length : -1;
+  useEffect(() => { const b = box.current; if (b && stick.current) b.scrollTop = b.scrollHeight; }, [n, st.fase]);
+  // Esc sluit alleen het gesprek (en niet ook nog het paneel of de afdeling eronder): vangen vóór de app-brede Esc.
+  // Staat het Afkeuren-venster open, dan is die Esc voor dat venster.
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape' && useGesprek.getState().open) { e.stopPropagation(); close(); } };
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape' && useGesprek.getState().open && !useAfkeuren.getState().open) { e.stopPropagation(); close(); } };
     window.addEventListener('keydown', k, true); return () => window.removeEventListener('keydown', k, true);
   }, []);
 
-  const shown = msgs.filter((m) => m.who !== 'checklist');
-  const lastChecklist = sess?.checklist ?? [...msgs].reverse().find((m) => m.who === 'checklist')?.text;
+  const g = st.fase === 'ok' ? st.g : null;
+  const laatsteChecklist = useMemo(() => (g ? g.msgs.map((m) => m.who).lastIndexOf('checklist') : -1), [g]);
+  const stand = info ? STAND[stateOf(info)] : rij ? STAND[rij.state] : undefined;
+  const link = project ? PROJECT_URL : id ? threadUrl(id) : '';
+  const waar = project ? 'projectchat' : 'thread';
+  const gevraagd = gevraagdOp.has(id);
+  const haalOp = () => {
+    order(project ? 'Gesprek ophalen: projectchat.' : `Gesprek ophalen: thread ${id}.`, toast);
+    gevraagdOp.add(id); setGevraagd((x) => x + 1);
+  };
+  // achtergrond /[.97]: Tailwind 3 kent /97 niet, dan kwam er geen achtergrond en scheen de pagina erdoorheen
   return (
     <AnimatePresence>
       {open && (
         <motion.div className="fixed inset-0 z-[70] flex justify-end bg-black/40 backdrop-blur-[2px]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={close}>
-          <motion.aside className="flex h-full w-full max-w-[560px] flex-col border-l border-white/10 bg-[#0a1024]/97 shadow-2xl" initial={{ x: 60, opacity: 0.6 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} onClick={(e) => e.stopPropagation()}>
+          <motion.aside id="dm-gesprek" aria-label={project ? 'Projectchat' : `Gesprek: ${open.title}`} className="flex h-full w-full max-w-[560px] flex-col border-l border-white/10 bg-[#0a1024]/[.97] shadow-2xl" initial={{ x: 60, opacity: 0.6 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 60, opacity: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} onClick={(e) => e.stopPropagation()}>
             <header className="flex items-start gap-3 border-b border-white/10 px-4 py-3">
               <MessageSquare size={18} className="mt-1 shrink-0 text-orange-300" />
               <div className="min-w-0 flex-1">
-                <div className="truncate font-display text-[17px] font-bold text-white">{open.kind === 'project' ? 'Projectchat' : open.title}</div>
-                <div className="flex flex-wrap items-center gap-x-2 text-[12px] text-slate-400">
-                  {src === 'live' ? <span className="text-[#3ddc97]">● live</span> : <span>stand uit het uurbestand</span>}
-                  {sess?.bucket && <span>· {({ working: 'bezig', blocked: 'wacht op jou', review_ready: 'klaar voor jou', done: 'klaar', failed: 'mislukt', idle: 'rust' } as const)[sess.bucket]}</span>}
-                  {open.kind === 'project' && <span>· {coords.length} {coords.length === 1 ? 'sessie' : 'sessies'}</span>}
+                <div className="truncate font-display text-[17px] font-bold text-white">{project ? 'Projectchat' : open.title}</div>
+                <div className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-slate-400">
+                  {stand && <span className={stand === 'wacht op jou' || stand === 'klaar voor jou' ? 'text-orange-300' : ''}>{stand}</span>}
+                  {g?.at ? <span>{stand && '· '}bijgewerkt {wanneerNl(g.at)}</span> : st.fase === 'ontbreekt' ? <span>{stand && '· '}nog niet opgehaald</span> : null}
+                  {g && <span>· {g.msgs.length} {g.msgs.length === 1 ? 'bericht' : 'berichten'}</span>}
                 </div>
               </div>
-              {open.thread && <a href={threadUrl(open.thread)} target="_blank" rel="noreferrer" className="btn-ghost !px-2 !py-1 text-[12px]" title="Open de thread in Claude"><ExternalLink size={13} />Open</a>}
+              {link && <a href={link} target="_blank" rel="noreferrer" className="btn-ghost !px-2 !py-1 text-[12px]" title={`Open de ${waar} in Claude`}><ExternalLink size={13} />Open</a>}
               <button onClick={close} className="rounded-lg border border-white/10 p-1.5 text-slate-300 hover:text-white" aria-label="Sluiten"><X size={16} /></button>
             </header>
-            {(sess?.needs || lastChecklist) && (
-              <div className="space-y-2 border-b border-white/[.06] px-4 py-3">
-                {sess?.needs && <div className="rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-[13px] text-orange-100"><b className="text-orange-300">Wacht op jou: </b>{sess.needs}</div>}
-                {lastChecklist && <Checklist text={lastChecklist} />}
+            {rij?.needs && (rij.state === 'blocked' || rij.state === 'review_ready') && (
+              <div className="border-b border-white/[.06] px-4 py-3">
+                <div className="rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-[13px] text-orange-100"><b className="text-orange-300">Wacht op jou: </b>{rij.needs}</div>
               </div>
             )}
             <div ref={box} className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-4 py-3" onScroll={(e) => { const b = e.currentTarget; stick.current = b.scrollHeight - b.scrollTop - b.clientHeight < 60; }}>
-              {state.more && <div className="text-center"><button className="btn-ghost text-[12px]" disabled={state.busy} onClick={() => void older()}>{state.busy ? <><RefreshCw size={12} className="animate-spin" />Laden…</> : 'Oudere berichten laden'}</button></div>}
-              {!state.more && shown.length > 0 && <div className="text-center text-[11px] text-slate-500">Begin van het gesprek</div>}
-              {state.err === 'geen' && <div className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-[13px] text-slate-300">Het gesprek is hier alleen te lezen als de connector <b>Claude Code Remote</b> aan staat voor deze pagina (claude.ai → Instellingen → Connectors). {open.thread && <a className="text-sky-300 underline" href={threadUrl(open.thread)} target="_blank" rel="noreferrer">Open de thread in Claude</a>}</div>}
-              {state.err === 'reauth' && <div className="rounded-xl border border-orange-400/40 bg-orange-500/10 p-3 text-[13px] text-orange-100">Log opnieuw in bij Claude Code Remote (claude.ai → Instellingen → Connectors), dan verschijnt het gesprek hier.</div>}
-              {state.err === 'nietToegestaan' && <div className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-[13px] text-slate-300">Je hebt Claude Code Remote voor deze pagina uitgezet. Zet hem aan via het menu Rechten van deze pagina om de gesprekken te lezen.</div>}
-              {state.err === 'fout' && <div className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-[13px] text-slate-300">Het gesprek kon nu niet geladen worden. <button className="text-sky-300 underline" onClick={() => void older(true)}>Opnieuw proberen</button></div>}
-              {state.busy && !shown.length && <div className="py-10 text-center text-[13px] text-slate-400"><RefreshCw size={16} className="mx-auto mb-2 animate-spin" />Gesprek laden…</div>}
-              {!state.busy && !state.err && !shown.length && !state.more && <div className="py-10 text-center text-[13px] text-slate-500">Nog geen berichten.</div>}
-              {shown.map((m, i) => (
-                <div key={m.id + i}>
-                  {(i === 0 || dayKey(shown[i - 1].at) !== dayKey(m.at)) && <div className="my-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">{dayLabel(m.at)}</div>}
-                  <Bubble m={m} />
+              {st.fase === 'laden' && <div className="py-10 text-center text-[13px] text-slate-400"><RefreshCw size={16} className="mx-auto mb-2 animate-spin" />Gesprek laden…</div>}
+              {st.fase === 'geen-id' && <Uitleg>Bij deze taak hoort geen thread, dus er is hier geen gesprek om te lezen.</Uitleg>}
+              {st.fase === 'geen-toegang' && (
+                <Uitleg>
+                  Het gesprek staat in de projectbestanden, en die kan deze pagina hier niet lezen. Open de HQ in claude.ai en geef de pagina toegang tot de bestanden.
+                  {link && <> <a className="text-sky-300 underline hover:text-white" href={link} target="_blank" rel="noreferrer">Of lees het in de {waar} zelf.</a></>}
+                </Uitleg>
+              )}
+              {st.fase === 'ontbreekt' && (
+                <div className="mx-auto mt-6 max-w-[400px] rounded-2xl border border-white/10 bg-white/[.03] p-5 text-center">
+                  <MessageSquare size={22} className="mx-auto mb-2 text-slate-500" />
+                  <div className="text-[14px] leading-relaxed text-slate-200">Dit gesprek is nog niet opgehaald. Het wordt elk uur bijgewerkt.</div>
+                  <button className="btn-primary mt-3 text-[13px]" disabled={gevraagd} onClick={haalOp}>{gevraagd ? 'Gevraagd ✓' : 'Nu ophalen'}</button>
+                  {gevraagd && <div className="mt-2 text-[12px] text-slate-400">Claude haalt het op. Het gesprek verschijnt hier vanzelf; dit paneel kijkt elke minuut.</div>}
+                </div>
+              )}
+              {st.fase === 'fout' && <Uitleg>Het gesprek kon nu niet geladen worden. <button className="text-sky-300 underline hover:text-white" onClick={() => setPoging((p) => p + 1)}>Opnieuw proberen</button></Uitleg>}
+              {g && (g.hasMore
+                ? <div className="rounded-xl border border-sky-400/25 bg-sky-500/[.06] px-3 py-2 text-center text-[12px] text-slate-300">Oudere berichten staan in de {waar} zelf. {link && <a className="text-sky-300 underline hover:text-white" href={link} target="_blank" rel="noreferrer">Open de {waar}</a>}</div>
+                : g.msgs.length > 0 && <div className="text-center text-[11px] text-slate-500">Begin van het gesprek</div>)}
+              {g && !g.msgs.length && <div className="py-10 text-center text-[13px] text-slate-500">Nog geen berichten.</div>}
+              {g?.msgs.map((m, i) => (
+                <div key={`${m.id}:${i}`}>
+                  {dayKey(m.at) && (i === 0 || dayKey(g.msgs[i - 1].at) !== dayKey(m.at)) && <div className="my-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">{dayLabel(m.at)}</div>}
+                  <Bubble m={m} open={i === laatsteChecklist} />
                 </div>
               ))}
             </div>

@@ -17,6 +17,7 @@ import { ConfirmDialog, Toasts } from './components/layout/Overlays';
 import { AllModals } from './components/modals/Modals';
 import AgentDrawer from './components/shared/AgentDrawer';
 import GesprekDrawer from './components/shared/Gesprek';
+import AfkeurenVenster from './components/shared/Afkeuren';
 import { startThreads } from './services/threads';
 import ProjectDrawer from './components/shared/ProjectDrawer';
 import DepartmentDrawer from './components/shared/DepartmentDrawer';
@@ -159,6 +160,7 @@ export default function App() {
         <ProjectDrawer />
         <AgentDrawer />
         <GesprekDrawer />
+        <AfkeurenVenster />
         <AllModals />
         <ConfirmDialog />
         <Toasts />

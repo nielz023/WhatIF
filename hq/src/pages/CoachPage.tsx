@@ -9,6 +9,7 @@ import { useDb } from '../services/db';
 import { order } from '../services/real';
 import { useGame } from '../store/useGame';
 import { threadUrl } from '../data/driftmark';
+import { AfkeurKnop } from '../components/shared/Afkeuren';
 import {
   useCoach, startCoach, vraag, parse, maakBriefing, maakRapport, onthoud, bewaarGeheugen, bewaarDoelen, nieuwBesluit, zetBesluit, bewaarGesprek,
   VAK, type Msg, type Fragment, type Doel, type Besluit, type Actie,
@@ -296,6 +297,8 @@ function Besluiten() {
         <div key={a.id || a.session} className="panel flex flex-wrap items-center gap-3 border-orange-400/40 p-4">
           <div className="min-w-0 flex-1"><div className="text-[12px] font-bold uppercase text-orange-300">Taak wacht op jou</div><div className="font-semibold text-white">{a.title}</div><div className="text-[13px] text-slate-300">{a.doing}</div></div>
           <button className="btn-primary" onClick={() => order(`Goedgekeurd: taak "${a.title}"${a.id ? ` (thread ${a.id})` : ''}. Ga door.`, toast)}>Goedkeuren</button>
+          {/* btn-primary heeft geen rand: 1px minder ruimte boven en onder houdt Afkeuren even hoog */}
+          <AfkeurKnop title={a.title} id={a.id || undefined} className="py-[7px]" />
           {a.id && <a className="btn-ghost" href={threadUrl(a.id)} target="_blank" rel="noreferrer">Bekijk</a>}
         </div>
       ))}
@@ -320,7 +323,7 @@ const VRAAG_AGENT = [
   { wie: 'Thumbnail', v: 'Onderzoek hoe de thumbnails van mijn lange video\'s presteren en maak drie alternatieven voor de volgende video.' },
   { wie: 'Productie', v: 'Onderzoek waarom de productie van de laatste video zo lang duurde en waar het sneller kan.' },
 ];
-const STATE: Record<string, [string, string]> = { working: ['bezig', 'text-sky-300'], blocked: ['wacht op jou', 'text-orange-300'], review_ready: ['klaar om te bekijken', 'text-orange-300'], done: ['klaar', 'text-green-300'], failed: ['mislukt', 'text-rose-300'] };
+const STATE: Record<string, [string, string]> = { working: ['bezig', 'text-sky-300'], blocked: ['wacht op jou', 'text-orange-300'], review_ready: ['klaar om te bekijken', 'text-orange-300'], done: ['klaar', 'text-green-300'], failed: ['mislukt', 'text-rose-300'], stopped: ['gestopt', 'text-slate-400'] };
 function Agents() {
   const d = useLive((s) => s.data);
   const toast = useGame((s) => s.toast);
