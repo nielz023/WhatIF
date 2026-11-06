@@ -1,4 +1,3 @@
-import SpotifyBar from './SpotifyBar';
 import { useWorld } from '../../world/useWorld';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -38,7 +37,6 @@ export default function TopBar() {
 
       <div className="ml-auto flex items-center gap-2">
         {/* echte klok */}
-        <SpotifyBar />
         <span className="hidden sm:inline"><RealClock /></span>
         <QualityBtn />
         <SoundBtn />
