@@ -11,6 +11,8 @@ const STATE_COLOR: Record<Agent['state'], string> = {
   idle: '#94a3b8',
   training: '#a855f7',
 };
+/** wat het teamlid doet (geen niveau meer: het kantoor is geen spel) */
+const STATE_NL: Record<Agent['state'], string> = { working: 'aan het werk', meeting: 'in overleg', idle: 'vrij', training: 'in training' };
 
 interface Props {
   agent: Agent;
@@ -119,7 +121,7 @@ export function Employee({ agent, seat, meet, meetCenter, idleSpot, onSelect }: 
         <Html position={[0, 2.25, 0]} center distanceFactor={undefined} zIndexRange={[40, 0]}>
           <div className="pointer-events-none whitespace-nowrap rounded-lg border border-white/10 bg-slate-950/90 px-2 py-1 text-[13px] text-white shadow-xl">
             <div className="font-semibold">{agent.name}</div>
-            <div className="text-slate-400">Lv {agent.level} · {agent.state}</div>
+            <div className="text-slate-400">{STATE_NL[agent.state]}</div>
           </div>
         </Html>
       )}

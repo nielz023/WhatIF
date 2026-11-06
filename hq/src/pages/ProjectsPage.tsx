@@ -7,7 +7,7 @@ import TaskCard from '../components/shared/TaskCard';
 import { PIPELINE, stageProgress } from '../modules/workflows/pipeline';
 import { deptById } from '../modules/departments/departments';
 import { projectQuality } from '../modules/tasks/engine';
-import { eur, fmtTick } from '../lib/util';
+import { fmtTick } from '../lib/util';
 import type { TaskStatus } from '../types';
 
 const STATUSES: TaskStatus[] = ['Pending', 'Assigned', 'In Progress', 'Review', 'Approved', 'Rejected', 'Completed'];
@@ -90,7 +90,7 @@ export default function ProjectsPage() {
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-slate-400"><span>{ch?.name}</span><StatusBadge status={p.status} /><PriorityBadge p={p.priority} /></div>
                 </div>
                 <div className="hidden md:block"><PipelineStepper project={p} small /></div>
-                <div className="w-24 text-[13px] text-slate-400">Q {projectQuality(p) || '—'} · {eur(p.cost)}</div>
+                <div className="w-24 text-[13px] text-slate-400">Q {projectQuality(p) || '—'}</div>
                 <div className="w-28"><Progress value={p.status === 'Published' ? 100 : stageProgress(p.stage)} h={5} /></div>
               </button>
             );

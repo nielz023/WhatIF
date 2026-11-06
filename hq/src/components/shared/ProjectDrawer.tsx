@@ -6,7 +6,7 @@ import PipelineStepper from './Pipeline';
 import TaskCard from './TaskCard';
 import { PIPELINE, stageById } from '../../modules/workflows/pipeline';
 import { projectQuality } from '../../modules/tasks/engine';
-import { eur, fmtTick } from '../../lib/util';
+import { fmtTick } from '../../lib/util';
 import type { StageId } from '../../types';
 
 export default function ProjectDrawer() {
@@ -23,7 +23,7 @@ export default function ProjectDrawer() {
   const confirmPublish = () =>
     s.askConfirm({
       title: 'Publish this video?',
-      body: `"${p.title}" wordt gepubliceerd op ${ch?.name}.\n\nClaude krijgt de opdracht om titel, beschrijving, tags en thumbnail klaar te maken. Het uploaden naar YouTube doe je zelf in Studio.\n\nDit kan in de game niet ongedaan worden.`,
+      body: `"${p.title}" wordt gepubliceerd op ${ch?.name}.\n\nClaude krijgt de opdracht om titel, beschrijving, tags en thumbnail klaar te maken. Het uploaden naar YouTube doe je zelf in Studio.\n\nDit kun je daarna niet meer terugdraaien.`,
       confirmLabel: 'Publish (simulation)',
       onConfirm: () => s.publishProject(p.id),
     });
@@ -41,9 +41,9 @@ export default function ProjectDrawer() {
         </div>
       </div>
       <div className="mt-4"><PipelineStepper project={p} /></div>
-      <div className="mt-3 grid grid-cols-4 gap-2 text-center text-[13px]">
+      {/* geen kosten of inkomsten meer: geld speelt in het kantoor geen rol (niels 2026-11-06) */}
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[13px]">
         <div className="rounded-xl bg-white/[.03] p-2"><div className="text-slate-500">Quality</div><div className="font-bold text-white">{q || '—'}</div></div>
-        <div className="rounded-xl bg-white/[.03] p-2"><div className="text-slate-500">Cost</div><div className="font-bold text-white">{eur(p.cost)}</div></div>
         <div className="rounded-xl bg-white/[.03] p-2"><div className="text-slate-500">Rejections</div><div className="font-bold text-white">{p.rejections}</div></div>
         <div className="rounded-xl bg-white/[.03] p-2"><div className="text-slate-500">Tasks</div><div className="font-bold text-white">{p.taskIds.length}</div></div>
       </div>
@@ -72,11 +72,10 @@ export default function ProjectDrawer() {
         </div>
       )}
       {video && (
-        <div className="mt-4 grid grid-cols-4 gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/5 p-3 text-center text-[13px]">
+        <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/5 p-3 text-center text-[13px]">
           <div><div className="text-slate-500">Views</div><div className="font-bold text-white">{video.views.toLocaleString()}</div></div>
           <div><div className="text-slate-500">CTR</div><div className="font-bold text-white">{video.ctr}%</div></div>
           <div><div className="text-slate-500">AVD</div><div className="font-bold text-white">{video.avd}%</div></div>
-          <div><div className="text-slate-500">Revenue</div><div className="font-bold text-white">{eur(video.revenue, 2)}</div></div>
         </div>
       )}
 

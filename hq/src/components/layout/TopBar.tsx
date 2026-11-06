@@ -1,7 +1,7 @@
 import { useWorld } from '../../world/useWorld';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Users, Wallet, Eye, Tv, HelpCircle, Volume2, VolumeX } from 'lucide-react';
+import { Bell, Users, MonitorPlay, Eye, Tv, HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import { soundOn, setSound, onSoundChange, officeVolume, setOfficeVolume, onOfficeVolume } from '../../world/sound';
 import { useGame } from '../../store/useGame';
 import { compact, relTime } from '../../lib/util';
@@ -38,7 +38,7 @@ export default function TopBar() {
       <Stat icon={<Users size={16} />} label="Claude bezig" value={live.activity.filter((a) => a.state === 'working').length} color="#3db8ff" />
       <Stat icon={<Tv size={16} />} label="Abonnees" value={live.youtube?.subscribers ?? '—'} color="#ff8a3d" />
       <Stat icon={<Eye size={16} />} label="Weergaven" value={live.youtube?.views != null ? compact(live.youtube.views) : (live.channel.stats[0]?.value ?? '—')} color="#3db8ff" />
-      <Stat icon={<Wallet size={16} />} label="Video's online" value={live.videos.filter((v) => v.status === 'Online').length} color="#3ddc97" />
+      <Stat icon={<MonitorPlay size={16} />} label="Video's online" value={live.videos.filter((v) => v.status === 'Online').length} color="#3ddc97" />
       {s.demoMode && <span className="hidden xl:inline"><DemoBadge /></span>}
 
       <div className="ml-auto flex items-center gap-2">
@@ -89,7 +89,7 @@ function RealClock() {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => { const id = setInterval(() => setNow(new Date()), 15000); return () => clearInterval(id); }, []);
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-hq-line/60 bg-hq-panel/60 px-3 py-1.5" title="De game loopt gelijk met de echte tijd">
+    <div className="flex items-center gap-2 rounded-xl border border-hq-line/60 bg-hq-panel/60 px-3 py-1.5" title="Het HQ loopt gelijk met de echte tijd">
       <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
       <span className="text-[13px] font-semibold text-slate-200">{now.toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Amsterdam' })}</span>
       <span className="hidden text-[12px] uppercase tracking-wider text-slate-500 sm:inline">echte tijd</span>

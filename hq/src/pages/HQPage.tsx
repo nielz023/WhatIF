@@ -66,7 +66,7 @@ export default function HQPage() {
           <div className="panel p-3">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-[13px] font-bold uppercase tracking-wider text-slate-300">Live on Threads</span>
-              <button className="text-[13px] text-sky-300 hover:text-white" onClick={() => s.setPage('threads')}>Open →</button>
+              <button className="text-[13px] text-sky-300 hover:text-white" onClick={() => { try { localStorage.setItem('driftmark-view-meer', 'threads'); } catch { /* */ } s.setPage('meer'); }}>Open →</button>
             </div>
             <div className="space-y-2.5">
               {feed.map((p) => {

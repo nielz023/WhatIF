@@ -1,11 +1,12 @@
-import { UserPlus, ClipboardList, ShieldAlert } from 'lucide-react';
+import { ClipboardList, ShieldAlert } from 'lucide-react';
 import { useGame } from '../../store/useGame';
 import { Avatar, Drawer, Empty, Progress, StateDot } from '../ui';
 import TaskCard from './TaskCard';
 import { DEPARTMENTS } from '../../modules/departments/departments';
 import { PIPELINE } from '../../modules/workflows/pipeline';
 import { roleById } from '../../modules/agents/roles';
-import { ISSUE_META } from '../../modules/warroom/warroom';
+import { alarmsFrom } from '../../world/alarms';
+import { useLive } from '../../services/live';
 
 export default function DepartmentDrawer() {
   const s = useGame();
@@ -13,20 +14,18 @@ export default function DepartmentDrawer() {
   if (!id || s.page !== 'hq') return <Drawer open={false} onClose={() => s.selectDept(null)}>{null}</Drawer>;
 
   if (id === 'warroom') {
-    const active = s.warCases.filter((w) => w.status === 'Investigating' || w.status === 'Ready');
+    // alleen echte alarmen, geen verzonnen zaken (niels 2026-11-06)
+    const alarms = alarmsFrom(useLive.getState().data);
     return (
-      <Drawer open onClose={() => s.selectDept(null)} title={<span className="flex items-center gap-2 text-rose-300"><ShieldAlert size={18} />War Room</span>}>
-        <p className="text-sm text-slate-400">The executive crisis room. Management agents investigate declining metrics and bring recommendations for your approval.</p>
+      <Drawer open onClose={() => s.selectDept(null)} title={<span className="flex items-center gap-2 text-rose-300"><ShieldAlert size={18} />Crisiskamer</span>}>
+        <p className="text-sm text-slate-400">Hier zie je wat er echt mis is in je project: mislukte of lang wachtende taken, de renderstatus, de schijf en fouten in de automatische ronde.</p>
         <div className="mt-4 space-y-2">
-          {active.length === 0 && <Empty>No active cases. Convene the War Room to investigate a problem.</Empty>}
-          {active.map((w) => (
-            <div key={w.id} className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-3 text-sm">
-              <div className="font-semibold text-white">{ISSUE_META[w.type].icon} {w.title}</div>
-              <div className="text-[13px] text-slate-400">{w.status} · {w.evidence}</div>
-            </div>
+          {alarms.length === 0 && <Empty>Alles in orde. Er is nu niets mislukt of vastgelopen.</Empty>}
+          {alarms.map((a) => (
+            <div key={a.key} className={`rounded-xl border p-3 text-sm text-white ${a.level === 'rood' ? 'border-rose-500/40 bg-rose-500/5' : 'border-amber-500/40 bg-amber-500/5'}`}>{a.text}</div>
           ))}
         </div>
-        <button className="btn-primary mt-4" onClick={() => s.setPage('warroom')}>Open War Room dashboard</button>
+        <button className="btn-primary mt-4" onClick={() => s.setPage('warroom')}>Crisiskamer openen</button>
       </Drawer>
     );
   }
@@ -49,7 +48,6 @@ export default function DepartmentDrawer() {
         ))}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button className="btn-ghost text-[13px]" onClick={() => s.openModal('hireAgent', { dept: id })}><UserPlus size={14} />Hire for {dept.short}</button>
         <button className="btn-ghost text-[13px]" onClick={() => s.openModal('assignTask', { agentId: agents[0]?.id })} disabled={!agents.length}><ClipboardList size={14} />Assign task</button>
         <select className="input !w-auto !py-1.5 text-[13px]" defaultValue="" onChange={(e) => { s.assignDeptToChannel(id, e.target.value || null); s.toast(`${dept.short} werkt nu voor ${e.target.value ? s.channels.find((c) => c.id === e.target.value)?.name : 'alle kanalen'}.`, 'success'); }}>
           <option value="" disabled>Assign department to channel…</option>
@@ -103,7 +101,7 @@ export default function DepartmentDrawer() {
         {agents.map((a) => (
           <button key={a.id} onClick={() => s.selectAgent(a.id)} className="flex w-full items-center gap-3 rounded-xl bg-white/[.03] p-2.5 text-left hover:bg-white/[.06]">
             <Avatar agent={a} size={34} />
-            <div className="min-w-0 flex-1"><div className="text-sm font-semibold text-white">{a.name}</div><div className="text-[13px] text-slate-400">{roleById(a.role).title} · Lv {a.level}</div></div>
+            <div className="min-w-0 flex-1"><div className="text-sm font-semibold text-white">{a.name}</div><div className="text-[13px] text-slate-400">{roleById(a.role).title}</div></div>
             <div className="w-24"><Progress value={a.performance} h={4} color={dept.color} /></div>
             <StateDot state={a.state} />
           </button>

@@ -45,7 +45,6 @@ export function createSeed(): GameData {
 
   const channels: Channel[] = [
     { id: 'ch_history', name: 'Driftmark', logo: { emoji: '🌀', color: '#f97316' }, niche: '3D What If animations', audience: '13–34 global, curious about superpowers & science', subscribers: 13, views: 0, revenue: 0, rpm: 4.5, uploadSchedule: '1x / week', uploadsPerWeek: 1, monetized: false, ctrBoost: 0, retentionBoost: 0, createdTick: 0, isDemo: true },
-    { id: 'ch_science', name: 'Driftmark Shorts', logo: { emoji: '⚡', color: '#8b5cf6' }, niche: '3D What If shorts', audience: 'Shorts feed, 13–24', subscribers: 0, views: 0, revenue: 0, rpm: 0.1, uploadSchedule: '7x / week', uploadsPerWeek: 7, monetized: false, ctrBoost: 0, retentionBoost: 0, createdTick: 0, isDemo: true },
   ];
 
   // Demo published videos & stats history
@@ -54,12 +53,12 @@ export function createSeed(): GameData {
   const ledger: LedgerEntry[] = [];
   const demoTitles: [string, string, number][] = [
     // dag 0 = 14 okt 2026
-    ['ch_science', 'Teaser-short SH1: 10x sneller per dag', 13],
-    ['ch_science', 'Teaser-short SH2: tijd stopt', 13],
+    ['ch_history', 'Teaser-short SH1: 10x sneller per dag', 13],
+    ['ch_history', 'Teaser-short SH2: tijd stopt', 13],
     ['ch_history', 'What IF You Got 2x STRONGER Every Day for 40 Days?', 14],
-    ['ch_science', 'Short uit video 1: Titan', 15],
-    ['ch_science', 'Short uit video 1: Sneeze', 16],
-    ['ch_science', 'Teaser-short SH4: word wat je aanraakt', 17],
+    ['ch_history', 'Short uit video 1: Titan', 15],
+    ['ch_history', 'Short uit video 1: Sneeze', 16],
+    ['ch_history', 'Teaser-short SH4: word wat je aanraakt', 17],
   ];
   demoTitles.forEach(([ch, title, day]) => {
     videos.push({ id: uid('vid'), projectId: 'demo', channelId: ch, title, publishedTick: day * TICKS_PER_DAY + 15, quality: randInt(55, 78), ctr: +rand(3.6, 6.2).toFixed(1), avd: +rand(34, 48).toFixed(1), views: 0, revenue: 0, likes: 0 });
@@ -115,7 +114,7 @@ export function createSeed(): GameData {
     return p;
   };
   mkProject('ch_history', 'What IF There Were NO RULES?', 6);
-  mkProject('ch_science', 'Shorts uit video 3 (No Rules)', 3);
+  mkProject('ch_history', 'Shorts uit video 3 (No Rules)', 3);
   mkProject('ch_history', 'Video 4: kies uit de ideeënlijst', 1);
 
   const by = (role: RoleId) => agents.find((a) => a.role === role)!.id;
@@ -132,7 +131,7 @@ export function createSeed(): GameData {
     tick: now,
     company: { name: 'Driftmark Studio', level: 2, xp: 120, balance: 6000, reputation: 32, baseSlots: 18 },
     agents, tasks, projects, videos, channels, stats, ledger, posts,
-    notifications: [{ id: uid('n'), tick: now, text: 'Welkom in Driftmark HQ! Het hoofdscherm toont de echte stand; het kantoor is een simulatie die met jouw kanaal speelt.', kind: 'info', read: false }],
+    notifications: [{ id: uid('n'), tick: now, text: "Welkom in Driftmark HQ! Home toont je echte stand. Studio is je 3D-kantoor met je echte video's en taken.", kind: 'info', read: false }],
     achievements: ACHIEVEMENTS.map((a) => ({ ...a })),
     missions: generateMissions(),
     missionDay: SEED_DAYS,
