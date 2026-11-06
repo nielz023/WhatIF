@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import * as B from '../data/driftmark';
 import { useDb, startDb } from './db';
+import { nieuwsteEerst, toonTijd } from '../lib/tijd';
 
 export interface Activity {
   title: string; id: string; state: string; last: string; doing?: string; video?: number; lastIso?: string;
@@ -47,6 +48,32 @@ export interface Live {
 }
 const builtIn: Live = { updated: B.UPDATED, channel: B.CHANNEL, videos: B.VIDEOS, shorts: B.SHORTS, next: B.NEXT, ideas: B.IDEAS, links: B.LINKS, activity: B.ACTIVITY, youtube: B.YOUTUBE };
 
+/** Opschonen vóór gebruik (verbeterpunt 6 nov): één onvolledige regel in status.json of de
+ *  database mag de HQ nooit leeg maken. Kapotte regels vallen weg, ontbrekende lijsten worden leeg,
+ *  antwoorden staan met de nieuwste bovenaan en met overal dezelfde tijdnotatie. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const lijst = (x: any, reserve: any[] = []) => (Array.isArray(x) ? x : reserve);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const obj = (x: any) => x && typeof x === 'object' && !Array.isArray(x);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function schoon(j: any): Live {
+  const d = { ...builtIn, ...(obj(j) ? j : {}) } as Live;
+  d.activity = lijst(d.activity, builtIn.activity).filter((a: Activity) => obj(a) && typeof a.title === 'string' && typeof a.state === 'string')
+    .map((a: Activity) => ({ ...a, id: typeof a.id === 'string' ? a.id : '', last: typeof a.last === 'string' ? a.last : '' }));
+  d.videos = lijst(d.videos, builtIn.videos).filter((v: B.RealVideo) => obj(v) && typeof v.title === 'string')
+    .map((v: B.RealVideo) => ({ ...v, steps: lijst(v.steps).filter(obj), notes: lijst(v.notes).filter((n: unknown) => typeof n === 'string') }));
+  d.shorts = lijst(d.shorts, builtIn.shorts).filter(obj);
+  d.next = lijst(d.next).filter((n: unknown) => typeof n === 'string');
+  d.ideas = lijst(d.ideas, builtIn.ideas) as Live['ideas'];
+  d.links = lijst(d.links, builtIn.links) as Live['links'];
+  if (d.costs) d.costs = lijst(d.costs).filter(obj);
+  if (d.replies) d.replies = nieuwsteEerst(lijst(d.replies).filter((r: Reply) => obj(r) && typeof r.antwoord === 'string')
+    .map((r: Reply) => ({ ...r, opdracht: typeof r.opdracht === 'string' ? r.opdracht : '' }))).map((r) => ({ ...r, at: toonTijd(r.at) }));
+  if (d.youtube && !obj(d.youtube)) d.youtube = builtIn.youtube;
+  if (d.youtube?.videos) d.youtube = { ...d.youtube, videos: lijst(d.youtube.videos).filter((v: YTVideo) => obj(v) && typeof v.title === 'string') };
+  return d;
+}
+
 type Src = 'ingebouwd' | 'live' | 'database' | 'geen-toegang' | 'fout';
 interface S { data: Live; source: Src; checkedAt: number | null; refresh: () => Promise<void> }
 
@@ -69,7 +96,7 @@ export const useLive = create<S>((set) => ({
         try {
           const r = await fs.read(p);
           const j = JSON.parse(new TextDecoder().decode(r.bytes));
-          const data = { ...builtIn, ...j };
+          const data = schoon(j);
           set({ data, source: 'live', checkedAt: Date.now() });
           try { (await import('./sync')).applyReal(data); } catch (e) { console.warn('sync', e); }
           return;
@@ -87,7 +114,7 @@ export const useLive = create<S>((set) => ({
 function fromDb(): boolean {
   const st = useDb.getState().state as Partial<Live> | null;
   if (!st || !st.activity) return false;
-  const data = { ...builtIn, ...st } as Live;
+  const data = schoon(st);
   useLive.setState({ data, source: 'database', checkedAt: Date.now() });
   void import('./sync').then((m) => m.applyReal(data)).catch(() => {});
   return true;
@@ -117,7 +144,7 @@ export async function filesApi(): Promise<any | null> {
 export function startLive() {
   if (started) return; started = true;
   void startDb();
-  void import('./sync').then((m) => m.applyReal(builtIn));
+  void import('./sync').then((m) => m.applyReal(builtIn, false));
   setTimeout(() => void useLive.getState().refresh(), 1500);
   setInterval(() => void useLive.getState().refresh(), 60000);
 }

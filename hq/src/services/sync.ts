@@ -33,7 +33,10 @@ const STEP_STAGE: Record<string, StageId> = {
 };
 const ORDER: StageId[] = ['research', 'topic', 'titles', 'script', 'factcheck', 'voice', 'editing', 'thumbnail', 'qc', 'approval', 'publishing'];
 
-let lastSig = '';
+// Vorige echte stand, bewaard in deze browser: meldingen gaan alleen over wat er echt veranderd is
+// sinds de vorige keer, nooit over de ingebouwde reservestand (verbeterpunt 6 nov).
+const SIG_KEY = 'dm-lastsig';
+let lastSig = (() => { try { return localStorage.getItem(SIG_KEY) ?? ''; } catch { return ''; } })();
 let audioCtx: AudioContext | null = null;
 function beep() {
   try {
@@ -46,7 +49,7 @@ function beep() {
 }
 if (typeof window !== 'undefined') window.addEventListener('pointerdown', () => { try { audioCtx = audioCtx ?? new AudioContext(); void audioCtx.resume(); } catch { /* */ } }, { once: true });
 
-export function applyReal(live: Live) {
+export function applyReal(live: Live, echt = true) {
   const st = useGame.getState();
   const now = realTick();
 
@@ -54,7 +57,7 @@ export function applyReal(live: Live) {
   const sig = JSON.stringify(live.activity.map((a) => [a.id, a.state, a.doing]));
   const prev = lastSig ? (JSON.parse(lastSig) as [string, string, string][]) : null;
   const news: string[] = [];
-  if (prev) {
+  if (prev && echt) {
     for (const a of live.activity) {
       const p = prev.find((x) => x[0] === a.id);
       if (!p) news.push(`🆕 Nieuw aan het werk: ${a.title}`);
@@ -62,7 +65,7 @@ export function applyReal(live: Live) {
       else if (p[2] !== a.doing && a.doing) news.push(`📌 ${a.title}: ${a.doing}`);
     }
   }
-  lastSig = sig;
+  if (echt) { lastSig = sig; try { localStorage.setItem(SIG_KEY, sig); } catch { /* geen opslag */ } }
 
   // ── medewerkers = threads ────────────────────
   const agents: Agent[] = live.activity.map((a: Activity) => {

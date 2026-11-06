@@ -11,6 +11,14 @@ Gebruik: python3 ronde.py <abonnees> <weergaven> <video's>
 """
 import json, sys, os, datetime as dt
 
+def _schrijf(pad, data):
+    """In één keer wegschrijven (eerst een tijdelijk bestand), zodat de HQ nooit een half bestand leest."""
+    tmp = pad + '.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, pad)
+
+
 STATUS = '/mnt/project-files/driftmark-hq/status.json'
 OUT = '/tmp/hq-ronde'
 os.makedirs(OUT, exist_ok=True)
@@ -140,10 +148,10 @@ for k, t in logs:
         if key not in gemeld:
             nieuw.append({'soort': k, 'tekst': t, 'key': key})
 es['gemeld'] = sorted(gemeld | {n['key'] for n in nieuw})[-500:]
-json.dump(es, open(ENGINE_STATE, 'w'), ensure_ascii=False, indent=1)
+_schrijf(ENGINE_STATE, es)
 
 d['updated'] = ams.isoformat()
-json.dump(d, open(STATUS, 'w'), ensure_ascii=False, indent=1)
+_schrijf(STATUS, d)
 
 json.dump(d, open(f'{OUT}/state.json', 'w'), ensure_ascii=False)
 nxt = (now + dt.timedelta(hours=1)).isoformat().replace('+00:00', 'Z')

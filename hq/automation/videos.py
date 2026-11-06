@@ -17,6 +17,14 @@ import json, os, subprocess, sys, datetime as dt
 import xml.etree.ElementTree as ET
 from zoneinfo import ZoneInfo
 
+def _schrijf(pad, data):
+    """In één keer wegschrijven (eerst een tijdelijk bestand), zodat de HQ nooit een half bestand leest."""
+    tmp = pad + '.tmp'
+    with open(tmp, 'w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, pad)
+
+
 STATUS = '/mnt/project-files/driftmark-hq/status.json'
 THUMBS = '/mnt/project-files/driftmark-hq/thumbs'
 REPO_THUMBS = '/home/user/WhatIF/hq/public/thumbs'
@@ -44,9 +52,31 @@ def _curl(url, out=None, timeout=20):
     return r.stdout
 
 
+# De kanaalfeed geeft alleen de 15 nieuwste uploads. Daarom ook de gratis afspeellijst-feeds van het
+# kanaal: UULF = lange video's, UUSH = shorts, UUPS = populaire shorts (bevat juist de oudste).
+# Samen dekken ze alle openbare video's (verbeterpunt 6 nov: video 1 en oude shorts stonden stil).
+PLAYLISTS = {'UULF': 'long', 'UUSH': 'short', 'UUPS': 'short'}
+
+
 def read_feed():
-    """[{id, title, type, published (UTC datetime), views, likes, url}] voor de nieuwste uploads."""
-    root = ET.fromstring(_curl(FEED))
+    """[{id, title, type, published (UTC datetime), views, likes, url}] voor alle uploads die in een feed staan."""
+    seen = {}
+    for item in _read_one(FEED):
+        seen[item['id']] = item
+    for pre, soort in PLAYLISTS.items():
+        try:
+            items = _read_one(f'https://www.youtube.com/feeds/videos.xml?playlist_id={pre}{CHANNEL[2:]}', soort)
+        except Exception as e:  # een extra feed die faalt mag de ronde niet stoppen
+            print(f'feed {pre}: {e}', file=sys.stderr)
+            continue
+        for item in items:
+            if item['id'] not in seen:
+                seen[item['id']] = item
+    return list(seen.values())
+
+
+def _read_one(url, soort=None):
+    root = ET.fromstring(_curl(url))
     out = []
     for e in root.findall('a:entry', NS):
         vid = e.findtext('yt:videoId', namespaces=NS)
@@ -57,7 +87,7 @@ def read_feed():
         pub = dt.datetime.fromisoformat(e.findtext('a:published', namespaces=NS))
         out.append({
             'id': vid, 'title': e.findtext('a:title', namespaces=NS) or vid,
-            'type': 'short' if '/shorts/' in link else 'long', 'published': pub.astimezone(dt.timezone.utc),
+            'type': 'short' if '/shorts/' in link else (soort or 'long'), 'published': pub.astimezone(dt.timezone.utc),
             'views': int(st.get('views')) if st is not None else None,
             'likes': int(rt.get('count')) if rt is not None else None,
             'url': f'https://youtu.be/{vid}',
@@ -165,7 +195,7 @@ if __name__ == '__main__':
         print(f'{apply_vidiq(d, res)} video\'s met vidIQ-cijfers bijgewerkt')
     else:
         sys.exit(__doc__)
-    json.dump(d, open(STATUS, 'w'), ensure_ascii=False, indent=1)
+    _schrijf(STATUS, d)
     # na ronde.py: ook de kopie voor de database bijwerken, zodat de batch van deze ronde de nieuwe cijfers meeneemt
     if cmd == 'vidiq' and os.path.isdir('/tmp/hq-ronde'):
         json.dump(d, open('/tmp/hq-ronde/state.json', 'w'), ensure_ascii=False)
