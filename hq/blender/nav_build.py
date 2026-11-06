@@ -2,7 +2,7 @@
 Looproutekaart voor de medewerkers in Driftmark HQ.
 Leest office_nav_raw.json (gemaakt door office_build.py) en tekent alle vlakken die in de
 weg staan (tussen 10 cm en 1,75 m hoog) op een raster van 5 cm. Daarna worden obstakels
-20 cm dikker gemaakt (de breedte van een medewerker). Wit = vrij, zwart = geblokkeerd.
+17,5 cm dikker gemaakt (de halve breedte van een medewerker). Wit = vrij, zwart = geblokkeerd.
 
 Draaien:  python3 hq/blender/nav_build.py <office_nav_raw.json> <uitmap>
 Maakt:    office_nav.png (720x720) en office_nav.json (maten, deuren, koffiehoeken, stoelen)
@@ -39,7 +39,18 @@ ImageDraw.Draw(allow).polygon(oct_, fill=255)
 
 free = ImageChops.subtract(allow, blk)  # 255 = vrij
 free = free.point(lambda v: 255 if v > 127 else 0)
-free = free.filter(ImageFilter.MinFilter(9))  # obstakels 4 px (20 cm) dikker
+# obstakels rond (niet vierkant) 3,5 px = 17,5 cm dikker maken: een vierkant filter sloot de
+# schuine stukken van de gang rond de receptie helemaal af
+import numpy as np
+fa = np.array(free) > 0; bl = ~fa; dil = bl.copy(); RR = 3.5
+for dy in range(-4, 5):
+    for dx in range(-4, 5):
+        if dx * dx + dy * dy <= RR * RR and (dx or dy):
+            sh = np.zeros_like(bl)
+            ys0, ys1 = max(0, dy), N + min(0, dy); xs0, xs1 = max(0, dx), N + min(0, dx)
+            sh[ys0:ys1, xs0:xs1] = bl[ys0 - dy:ys1 - dy, xs0 - dx:xs1 - dx]
+            dil |= sh
+free = Image.fromarray(np.where(dil, 0, 255).astype(np.uint8))
 free.save(os.path.join(out, 'office_nav.png'), optimize=True)
 
 meta = {
@@ -48,5 +59,5 @@ meta = {
     'coffee': {r: {'p': [st[0], st[2]], 'l': [lk[0], lk[2]]} for r, st, lk in d['coffee']},
 }
 json.dump(meta, open(os.path.join(out, 'office_nav.json'), 'w'), separators=(',', ':'))
-fr = sum(1 for v in free.getdata() if v)
+fr = int((~dil).sum())
 print('nav', N, 'x', N, 'vrij', round(100 * fr / (N * N), 1), '%', 'deuren', len(meta['doors']), 'koffie', len(meta['coffee']))

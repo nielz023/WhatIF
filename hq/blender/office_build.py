@@ -37,7 +37,7 @@ ROOMS = [  # id, slot, kleur, props
     ('stem', 9, '#21D6C4', 'voice'), ('productie', 1, '#FF4DB8', 'production'), ('crisis', 3, '#FF3B4E', 'crisis'),
 ]
 # bureaus per afdeling (u = langs de ring, v = naar buiten), gelijk aan NeonOffice.tsx
-DESKS = [(-1.25, -2.5), (1.25, -2.5), (-1.25, -0.2), (1.25, -0.2)]
+DESKS = [(-1.5, -2.5), (1.5, -2.5), (-1.5, -0.2), (1.5, -0.2)]  # 1,4 m gangpad in het midden
 
 def hexc(h, a=1.0):
     h = h.lstrip('#'); c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
@@ -254,37 +254,38 @@ def chair(layer, c, ry=0.0):
 def desk(layer, c, n=2, room=None, seat_ry=0.0):
     layer = 'props'
     """bureau met n schermen naar +z; stoel aan de camerakant"""
-    box(layer, (c[0], 0.75, c[2]), (1.9, 0.06, 0.8), M['desktop'])
-    for sx in (-0.86, 0.86):
+    box(layer, (c[0], 0.75, c[2]), (1.6, 0.06, 0.8), M['desktop'])
+    for sx in (-0.72, 0.72):
         box(layer, (c[0] + sx, 0.37, c[2]), (0.06, 0.72, 0.72), M['leg'])
-    box(layer, (c[0], 0.5, c[2] - 0.36), (1.7, 0.42, 0.03), M['leg'])
-    xs = [-0.62, 0, 0.62] if n == 3 else [-0.34, 0.34]
+    box(layer, (c[0], 0.5, c[2] - 0.36), (1.45, 0.42, 0.03), M['leg'])
+    xs = [-0.5, 0, 0.5] if n == 3 else [-0.3, 0.3]
+    mw = 0.49 if n == 3 else 0.56
     for x in xs:
         ry = -x * (0.35 if n == 3 else 0.3)
         mc = tf((c[0], 0, c[2]), 0, (x, 0, -0.2))
         box(layer, (mc[0], 0.86, mc[2] - 0.02), (0.07, 0.2, 0.07), M['mon'])
         box(layer, (mc[0], 0.79, mc[2] - 0.02), (0.24, 0.02, 0.16), M['mon'])
-        box(layer, (mc[0], 1.1, mc[2] - 0.035), (0.62, 0.38, 0.03), M['mon'], ry)
-        screen(tf((mc[0], 1.1, mc[2] - 0.035), ry, (0, 0, 0.017)), 0.57, 0.33, ry)
+        box(layer, (mc[0], 1.1, mc[2] - 0.035), (mw, 0.34, 0.03), M['mon'], ry)
+        screen(tf((mc[0], 1.1, mc[2] - 0.035), ry, (0, 0, 0.017)), mw - 0.05, 0.29, ry)
     box(layer, (c[0], 0.79, c[2] + 0.12), (0.55, 0.02, 0.17), M['kbd'])
     box(layer, (c[0] + 0.4, 0.79, c[2] + 0.14), (0.07, 0.02, 0.11), M['kbd'])
     # koffiebeker
-    cyl(layer, (c[0] - 0.62, 0.78, c[2] + 0.12), 0.045, 0.11, M['white'], 10)
+    cyl(layer, (c[0] - 0.58, 0.78, c[2] + 0.14), 0.045, 0.11, M['white'], 10)
     # kabels van de schermen naar de vloer
     for x in xs[:2]:
         tube(layer, [(c[0] + x, 0.95, c[2] - 0.27), (c[0] + x * 0.7, 0.7, c[2] - 0.33), (c[0] + x * 0.4, 0.3, c[2] - 0.3), (c[0] + x * 0.3, 0.03, c[2] - 0.2)], 0.012, M['cable'], 4)
     r = random.random()
     if r < 0.45:  # koptelefoon op het bureau
-        hc = (c[0] + 0.62, 0.8, c[2] + 0.1)
+        hc = (c[0] + 0.56, 0.8, c[2] + 0.12)
         tube(layer, [(hc[0] + math.cos(t) * 0.09, hc[1] + 0.02 + math.sin(t) * 0.09 * 0.25, hc[2] + math.sin(t) * 0.02) for t in (math.pi * k / 8 for k in range(9))], 0.012, M['mon'], 5)
         for sx in (-0.09, 0.09): cyl(layer, (hc[0] + sx, 0.79, hc[2]), 0.045, 0.035, M['earcup'], 10)
     elif r < 0.75:  # bureaulamp
-        lc = (c[0] + 0.78, 0.78, c[2] - 0.2)
+        lc = (c[0] + 0.66, 0.78, c[2] - 0.22)
         cyl(layer, lc, 0.07, 0.015, M['metal'], 10)
         tube(layer, [lc, (lc[0] - 0.02, 1.05, lc[2] + 0.02), (lc[0] - 0.15, 1.18, lc[2] + 0.1)], 0.01, M['metal'], 4)
         cyl(layer, (lc[0] - 0.17, 1.12, lc[2] + 0.12), 0.06, 0.07, M['white'], 10, r2=0.03)
     else:  # waterfles en notitieblok
-        cyl(layer, (c[0] + 0.75, 0.78, c[2] + 0.05), 0.035, 0.2, M['bottle'], 10)
+        cyl(layer, (c[0] + 0.64, 0.78, c[2] + 0.08), 0.035, 0.2, M['bottle'], 10)
         box(layer, (c[0] - 0.35, 0.785, c[2] + 0.2), (0.16, 0.01, 0.22), M['white'], 0.2)
     ch = (c[0], 0, c[2] + 0.72)
     idx = sum(1 for s in SEATS if s[0] == room) if room else 0
@@ -310,9 +311,10 @@ def _leaf(layer, base, d, side, ln, wd, m, droop=0.35, segs=6):
 def plant(layer, c, s=1.0, kind=0):
     layer = 'props'
     box_pot = kind == 2
-    if box_pot: box(layer, (c[0], 0.3 * s, c[2]), (0.62 * s, 0.6 * s, 0.62 * s), M['pot'])
-    else: cyl(layer, (c[0], 0, c[2]), 0.33 * s, 0.55 * s, M['pot'], 16, r2=0.25 * s)
-    top_soil = 0.5 * s if not box_pot else 0.56 * s
+    y0 = c[1]
+    if box_pot: box(layer, (c[0], y0 + 0.3 * s, c[2]), (0.62 * s, 0.6 * s, 0.62 * s), M['pot'])
+    else: cyl(layer, (c[0], y0, c[2]), 0.33 * s, 0.55 * s, M['pot'], 16, r2=0.25 * s)
+    top_soil = y0 + (0.5 * s if not box_pot else 0.56 * s)
     cyl(layer, (c[0], top_soil, c[2]), 0.28 * s, 0.03, M['soil'], 12)
     greens = [M['leaf'], M['leaf2'], M['leaf3']]
     if kind == 1:  # vijgenboompje: stam, takjes en veel kleine ovale blaadjes
@@ -493,28 +495,51 @@ for rid, slot, col, props in ROOMS:
     pts = [(-1.6, -2.4), (1.6, -2.4)] if props == 'crisis' else DESKS
     for i, (u, v) in enumerate(pts[:nd]):
         desk(lay, at(u, v), 3 if i == 0 else 2, rid)
-    # planten
-    plant(lay, at(-2.55, 3.4), 1.05, 0); plant(lay, at(2.55, 3.4), 0.9, 1)
-    plant(lay, at(-2.6, -3.5), 0.8, 2); plant(lay, at(2.6, -3.5), 0.85, 0)
-    # koffiehoek bij de deur (de medewerkers halen hier koffie als het rustig is)
+    # bezette plekken: bureaus (met stoel), deur
     occ = []
     for (u, v) in pts[:nd]:
-        dc = at(u, v); occ.append((dc[0] - 1.2, dc[2] - 0.65, dc[0] + 1.2, dc[2] + 1.35))
-    for (u, v) in ((-2.55, 3.4), (2.55, 3.4), (-2.6, -3.5), (2.6, -3.5)):
-        pc = at(u, v); occ.append((pc[0] - 0.55, pc[2] - 0.55, pc[0] + 0.55, pc[2] + 0.55))
+        dc = at(u, v); occ.append((dc[0] - 1.05, dc[2] - 0.65, dc[0] + 1.05, dc[2] + 1.35))
     dpt = polar(R_IN + 0.6, da); occ.append((dpt[0] - 0.75, dpt[2] - 0.75, dpt[0] + 0.75, dpt[2] + 0.75))
-    # kandidaten: raster in de kamer, dichtst bij de deur eerst; middenachter is voor de eigen inrichting
-    du = ud
-    cands = [(u / 10, v / 10) for u in range(-21, 22, 3) for v in range(-37, 37, 3) if not (v / 10 > 1.0 and abs(u / 10) < 1.8)]
-    cands.sort(key=lambda q: (q[0] - du) ** 2 + (q[1] + 4.0) ** 2)
+    # planten: vrije plek zoeken bij elk doel, zodat bladeren niet door glas, wanden of bureaus steken
+    def free_spot(clr, tu, tv, maxd=1.6):
+        best = None
+        for ui in range(-45, 46, 2):
+            for vi in range(-41, 42, 2):
+                u, v = ui / 10, vi / 10
+                d2 = (u - tu) ** 2 + (v - tv) ** 2
+                if d2 > maxd * maxd or (best and d2 >= best[0]): continue
+                rad = RM + v
+                if not (R_IN + clr + 0.12 < rad < R_OUT - clr - 0.12): continue
+                if abs(u) > (SPAN / 2 - GAPA) * rad - clr - 0.08: continue
+                if v + clr > (0.15 if props == 'crisis' else 0.9) and abs(u) - clr < 2.4: continue  # eigen inrichting
+                cc = at(u, v); bb = (cc[0] - clr, cc[2] - clr, cc[0] + clr, cc[2] + clr)
+                if any(not (bb[2] < o[0] or bb[0] > o[2] or bb[3] < o[1] or bb[1] > o[3]) for o in occ): continue
+                best = (d2, u, v)
+        return best
+    # koffiehoek tegen de buitenwand, naast de eigen inrichting (de medewerkers halen hier koffie als het rustig is)
+    side = -1 if slot % 2 == 0 else 1
+    cands = [(sd * u / 10, v / 10) for sd in (side, -side) for u in range(30, 40, 1) for v in range(36, 27, -1)]
     placed = False
     for (u, v) in cands:
-        cc = at(u, v); bb = (cc[0] - 0.45, cc[2] - 0.45, cc[0] + 0.45, cc[2] + 0.45)
+        rad = RM + v
+        if abs(u) > (SPAN / 2 - GAPA) * rad - 0.55 or rad > R_OUT - 0.42: continue
+        cc = at(u, v); bb = (cc[0] - 0.5, cc[2] - 0.5, cc[0] + 0.5, cc[2] + 0.5)
         if any(not (bb[2] < o[0] or bb[0] > o[2] or bb[3] < o[1] or bb[1] > o[3]) for o in occ): continue
-        rr2 = math.hypot(cc[0], cc[2]); ang2 = math.atan2(cc[0], cc[2]); dd = (ang2 - a + math.pi) % math.tau - math.pi
-        if not (R_IN + 0.5 < rr2 < R_OUT - 0.5 and abs(dd) * rr2 < (SPAN / 2 - GAPA) * rr2 - 0.45): continue
-        coffee(cc, rid, a if v < 0 else a + math.pi, N); placed = True; print('KOFFIE', rid, round(u, 1), round(v, 1)); break
+        coffee(cc, rid, a + math.pi, N); placed = True; print('KOFFIE', rid, round(u, 1), round(v, 1))
+        st = COFFEE[-1][1]
+        occ.append(bb); occ.append((st[0] - 0.4, st[2] - 0.4, st[0] + 0.4, st[2] + 0.4))
+        break
     if not placed: print('GEEN KOFFIEHOEK', rid)
+    npl = 0
+    for (sgu, sgv, s, kind) in ((-1, 1, 0.9, 1), (1, 1, 0.85, 2), (-1, -1, 0.85, 2), (1, -1, 0.9, 1), (-1, 0, 0.8, 2), (1, 0, 0.8, 1)):
+        clr = (0.62 if kind == 1 else 0.7) * s + 0.08
+        tv = sgv * (4.15 - clr - 0.15) + (0.6 if sgv == 0 else 0.0)
+        tu = sgu * ((SPAN / 2 - GAPA) * (RM + tv) - clr - 0.1)
+        sp = free_spot(clr, tu, tv)
+        if not sp: continue
+        pc = at(sp[1], sp[2]); plant(lay, pc, s, kind); npl += 1
+        occ.append((pc[0] - clr, pc[2] - clr, pc[0] + clr, pc[2] + clr))
+    print('PLANTEN', rid, npl)
     # eigen inrichting
     face = a + math.pi  # naar het midden
     if props == 'research':
@@ -591,9 +616,9 @@ tube(NH, arc(2.52, 0, math.tau, 8.45, 80), 0.09, neon('#FF7A24', 8))
 tube(NH, arc(2.52, 0, math.tau, 8.67, 80), 0.05, neon('#FF7A24', 6))
 # banken en planten op het podium
 sofa(b, (-4.2, 0.5, 1.4), math.pi / 2 + 0.5); sofa(b, (4.2, 0.5, 1.4), -math.pi / 2 - 0.5)
-for sx in (-1, 1):
-    for (px, pz, s, k) in ((3.9, -3.2, 1.15, 0), (4.6, -1.0, 0.8, 1), (3.0, 3.9, 0.75, 2)):
-        plant(b, (sx * px, 0.5, pz), s, k)
+# (niet over de rand van het podium en niet in de trap aan de linkerkant)
+for (px, pz, s, k) in ((3.4, -2.6, 0.85, 0), (-2.0, -3.9, 0.9, 1), (4.6, -1.0, 0.8, 1), (-4.6, -1.0, 0.8, 1), (3.0, 3.9, 0.75, 2), (-3.0, 3.9, 0.75, 2)):
+    plant(b, (px, 0.5, pz), s, k)
 # tweede trap aan de linkerkant naar achteren (zoals op de foto)
 for i in range(9):
     x, z = -3.4 - i * 0.05, -1.0 - i * 0.55; y = 0.5 + i * 0.32
@@ -612,7 +637,7 @@ for sd in (-1, 1):
     tube(NH, [(sd * 1.9, 1.3, R_HUB + 0.2), (sd * 2.7, 0.8, R_OUT)], 0.04, neon('#20D9FF', 6))
     for k in range(5):
         t = k / 4; box(b, (sd * (1.9 + 0.8 * t), (1.3 - 0.5 * t) / 2 + 0.1 * (1 - t), R_HUB + 0.2 + t * (R_OUT - R_HUB - 0.2)), (0.05, (1.3 - 0.5 * t) - 0.1, 0.05), M['metal'])
-    plant(b, (sd * 3.1, 0, R_OUT - 0.6), 1.15, 0)
+    plant(b, (sd * 3.1, 0, R_OUT - 0.6), 1.0, 0)
 # zeshoekig platform vooraan
 hexr = 1.6
 pts = [(math.sin(math.tau * k / 6 + math.pi / 6) * hexr, 0.05, R_OUT + 0.9 + math.cos(math.tau * k / 6 + math.pi / 6) * hexr) for k in range(7)]
