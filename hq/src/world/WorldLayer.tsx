@@ -2,6 +2,7 @@ import { Component, lazy, Suspense, useEffect, useMemo, useState, type ReactNode
 import { hasWebGL, reducedMotion } from './useWorld';
 import { useOfficeLoad } from './loadState';
 import type { WorldMode } from './NeonOffice';
+import WalkHud from './WalkHud';
 
 const NeonOffice = lazy(() => import('./NeonOffice'));
 
@@ -35,6 +36,8 @@ export default function WorldLayer({ mode }: { mode: WorldMode }) {
       {/* lichte waas als er een paneel open is, zodat de tekst leesbaar blijft */}
       <div className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${mode === 'panel' ? 'opacity-100' : 'opacity-0'}`}
         style={{ background: 'radial-gradient(ellipse at center, rgba(5,8,22,.5) 0%, rgba(5,8,22,.25) 75%)' }} />
+      {/* rondlopen: vizier, hint, vraag bij een afdeling en joystick */}
+      <WalkHud />
     </div>
   );
 }

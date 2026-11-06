@@ -7,6 +7,7 @@ import { useGame } from '../../store/useGame';
 import { compact, relTime } from '../../lib/util';
 import { DemoBadge } from '../ui';
 import { useLive } from '../../services/live';
+import { WalkButton } from '../../world/WalkHud';
 
 /** meldingen over threads openen de echte takenlijst (Meer → Alle taken), ook als Meer al open staat */
 function openTaken() {
@@ -42,6 +43,7 @@ export default function TopBar() {
       {s.demoMode && <span className="hidden xl:inline"><DemoBadge /></span>}
 
       <div className="ml-auto flex items-center gap-2">
+        <WalkButton />
         {/* echte klok */}
         <span className="hidden sm:inline"><RealClock /></span>
         <QualityBtn />

@@ -109,11 +109,13 @@ export default function App() {
   useEffect(() => { bump(); if (mode === 'panel') play('open'); else if (prevMode.current === 'panel') play('close'); prevMode.current = mode; }, [page, bump, mode]);
   const focus = useWorld((s) => s.focus); const worker = useWorld((s) => s.worker);
   useEffect(() => { if (focus || worker) play('zoom'); }, [focus, worker]);
+  const walk = useWorld((s) => s.walk); // rondlopen: panelen, kaartjes en knoppen die het beeld bedekken gaan weg
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.closest('input,textarea,select')) return;
       if (e.key === 'Escape') {
+        if (useWorld.getState().walk) return useWorld.getState().setWalk(false); // rondlopen: Esc stopt alleen het rondlopen
         const st = useGame.getState(); const w = useWorld.getState();
         if (st.selectedAgentId || st.selectedProjectId || st.selectedDept || st.notifOpen) { st.selectAgent(null); st.selectProject(null); st.selectDept(null); st.setNotifOpen(false); return; }
         if (w.worker) return w.openWorker(null);
@@ -130,10 +132,10 @@ export default function App() {
       <WorldLayer mode={mode} />
       <div className="pointer-events-none relative z-10 flex h-full w-full flex-col">
         <div className="pointer-events-auto"><TopBar /></div>
-        <GlassNav />
+        {!walk && <GlassNav />}
         <main className="relative min-h-0 flex-1 pb-[64px] md:pb-0">
-          {mode === 'home' && <GlassSide />}
-          {mode === 'home' && <HomeHud />}
+          {mode === 'home' && !walk && <GlassSide />}
+          {mode === 'home' && <div hidden={walk}><HomeHud /></div>}
           {mode === 'studio' && (
             <div className="pointer-events-none absolute inset-0 flex flex-col">
               <div className="pointer-events-auto"><StudioTabs /></div>
@@ -150,12 +152,12 @@ export default function App() {
               </motion.div>
             )}
           </AnimatePresence>
-          {(mode === 'home' || studio) && <div className="pointer-events-auto"><BottomActions /></div>}
+          {(mode === 'home' || studio) && !walk && <div className="pointer-events-auto"><BottomActions /></div>}
         </main>
       </div>
-      <div className="relative z-20"><MobileNav /></div>
+      <div className="relative z-20">{!walk && <MobileNav />}</div>
       <div className="relative z-30">
-        <Coach />
+        <div hidden={walk}><Coach /></div>
         <Tour />
         <DepartmentDrawer />
         <ProjectDrawer />
