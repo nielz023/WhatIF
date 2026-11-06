@@ -27,6 +27,7 @@ for k, y in enumerate((-7.6, -6.7, -5.8, -4.9, -4.0)):
 # schuifelt een stapje op (de rij beweegt)
 S.walk(queue[0], 0.3, 1.2, [V(-10.55, -7.6, 0), V(-10.55, -8.2, 0)], stride=0.3)
 S.obj("Bord_PLEASE_QUEUE_HERE").rotation_euler.z = 0          # tekst naar de camera, de rij erachter
+S.obj("Bord_PLEASE_QUEUE_HERE").location += V(0.5, -0.4, 0)   # opzij, niet voor het gezicht van de voorste in de rij
 S.cam(sh[0][0], ((-13.9, -11.3, 1.55), (-10.6, -7.2, 1.3), 34), ((-13.7, -11.0, 1.53), (-10.6, -7.2, 1.3), 37), dof=4.2)
 
 # ---------------------------------------------------------------- 2: de schoolbel (aan de achterwand)
