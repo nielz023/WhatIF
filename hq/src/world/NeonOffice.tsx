@@ -9,7 +9,7 @@
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Billboard, Environment, Lightformer, MeshReflectorMaterial, OrbitControls, PerformanceMonitor, PerspectiveCamera, Sparkles } from '@react-three/drei';
+import { Billboard, Environment, Lightformer, MeshReflectorMaterial, OrbitControls, PerformanceMonitor, PerspectiveCamera } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type { OrbitControls as OC } from 'three-stdlib';
@@ -19,7 +19,7 @@ import { useLive } from '../services/live';
 import { Box, Chair, Bookshelf, MicStand, Easel, Sofa, MeetingTable, ServerRack } from '../components/office/Furniture';
 import { Mascot } from '../components/office/DriftmarkDecor';
 import { ROOMS, STATUS, threadsPerRoom, statusOf, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, roomById, type RoomDef, type RoomId } from './rooms';
-import { useWorld, reducedMotion, dprFor, dayPhase, dayAmount, isPhone } from './useWorld';
+import { useWorld, reducedMotion, dprFor, isPhone } from './useWorld';
 import { useOffice, BakedOffice, type OfficeModel } from './BakedOffice';
 import { useOfficeLoad } from './loadState';
 import { Crew } from './crew';
@@ -32,6 +32,7 @@ import { Sky, Drone, Confetti, Beacon, Snow, Disco, VoiceProps, PostIts } from '
 import { setAmbience } from './sound';
 import { WalkController, lookAngles } from './Walk';
 import { selectRoom } from './select';
+import { City } from './city';
 
 type V3 = [number, number, number];
 export type WorldMode = 'home' | 'studio' | 'panel';
@@ -613,71 +614,6 @@ function Entrance() {
       <mesh position={[0, 0.04, R_OUT + 0.6]} rotation={[-Math.PI / 2, 0, Math.PI / 6]}><circleGeometry args={[1.5, 6]} /><meshBasicMaterial color="#123a66" transparent opacity={0.6} toneMapped={false} /></mesh>
       <Palm p={[-3.0, 0, R_OUT - 0.4]} s={1.1} />
       <Palm p={[3.0, 0, R_OUT - 0.4]} s={1.1} />
-    </group>
-  );
-}
-
-/**
- * Stad rondom (verbeterpunt "stad met gebouwen en ramen die aan en uit gaan"): één InstancedMesh met een
- * shader die de ramen tekent; elk raam gaat op zijn eigen moment aan of uit. Overdag zijn de gebouwen lichter
- * en de ramen grotendeels uit (uDay volgt de tijd van de dag).
- */
-function City() {
-  const N = 120;
-  const ref = useRef<THREE.InstancedMesh>(null);
-  const items = useMemo(() => Array.from({ length: N }, (_, i) => {
-    const a = (i / N) * Math.PI * 2 + (Math.random() - 0.5) * 0.04; const r = 62 + Math.random() * 46;
-    // achter de maan (rechtsachter) lagere gebouwen, zodat maan en sterren boven de stad zichtbaar blijven
-    const moonA = Math.atan2(0.59, -0.76); const dA = Math.abs(Math.atan2(Math.sin(a - moonA), Math.cos(a - moonA)));
-    const w = 5 + Math.random() * 8; return { a, r, h: (12 + Math.random() * 38) * (dA < 0.3 ? 0.45 : 1), w, d: w * (0.7 + Math.random() * 0.6), seed: Math.random() };
-  }), []);
-  const geo = useMemo(() => {
-    const g = new THREE.BoxGeometry(1, 1, 1); g.translate(0, 0.5, 0);
-    g.setAttribute('aSize', new THREE.InstancedBufferAttribute(new Float32Array(items.flatMap((b) => [b.w, b.h, b.d])), 3));
-    g.setAttribute('aSeed', new THREE.InstancedBufferAttribute(new Float32Array(items.map((b) => b.seed)), 1));
-    return g;
-  }, [items]);
-  const mat = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uDay: { value: 0 }, uFog: { value: new THREE.Color('#0a0f2a') }, uNear: { value: 170 }, uFar: { value: 460 } },
-    vertexShader: `attribute vec3 aSize; attribute float aSeed; varying vec2 vUv; varying vec3 vN; varying float vSeed; varying vec3 vSize; varying float vDist;
-      void main(){ vUv = uv; vN = normal; vSeed = aSeed; vSize = aSize; vec4 mv = viewMatrix * modelMatrix * instanceMatrix * vec4(position, 1.0); vDist = -mv.z; gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float uTime; uniform float uDay; uniform vec3 uFog; uniform float uNear; uniform float uFar;
-      varying vec2 vUv; varying vec3 vN; varying float vSeed; varying vec3 vSize; varying float vDist;
-      float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      void main(){
-        vec3 night = vec3(0.028, 0.043, 0.11); vec3 day = vec3(0.42, 0.5, 0.64);
-        vec3 col = mix(night, day, uDay);
-        if (abs(vN.y) < 0.5) {
-          float fw = abs(vN.x) > 0.5 ? vSize.z : vSize.x;
-          vec2 cell = vec2(vUv.x * fw / 1.5, vUv.y * vSize.y / 2.1); vec2 id = floor(cell); vec2 f = fract(cell);
-          float win = step(0.22, f.x) * step(f.x, 0.78) * step(0.28, f.y) * step(f.y, 0.82);
-          float k = h(id + vSeed * 17.0);
-          float slot = floor(uTime / 22.0 + k * 50.0);
-          float on = step(mix(0.6, 0.93, uDay), h(id * 1.31 + vec2(vSeed * 29.0, slot * 0.37)));
-          vec3 warm = mix(vec3(1.0, 0.68, 0.38), vec3(0.5, 0.78, 1.0), step(0.62, h(id + 3.7)));
-          col += win * on * warm * (0.45 + 0.55 * h(id + 9.1)) * (1.0 - uDay * 0.6);
-          col += win * (1.0 - on) * uDay * vec3(0.12, 0.16, 0.22);
-        }
-        gl_FragColor = vec4(mix(col, uFog, smoothstep(uNear, uFar, vDist)), 1.0);
-      }`,
-  }), []);
-  useEffect(() => {
-    const m = ref.current; if (!m) return; const o = new THREE.Object3D();
-    items.forEach((b, i) => { o.position.set(Math.sin(b.a) * b.r, -40, Math.cos(b.a) * b.r); o.rotation.set(0, b.a, 0); o.scale.set(b.w, b.h, b.d); o.updateMatrix(); m.setMatrixAt(i, o.matrix); });
-    m.instanceMatrix.needsUpdate = true; m.computeBoundingSphere();
-  }, [items]);
-  const theme = useWorld((s) => s.theme);
-  const fog = useThree((s) => s.scene.fog) as THREE.Fog | null;
-  useFrame(({ clock }) => {
-    mat.uniforms.uTime.value = clock.elapsedTime;
-    const ph = dayPhase(theme); mat.uniforms.uDay.value = dayAmount(ph);
-    if (fog) mat.uniforms.uFog.value.copy(fog.color);
-  });
-  return (
-    <group>
-      <instancedMesh ref={ref} args={[geo, mat, N]} raycast={() => null} />
-      <Sparkles count={60} scale={[140, 30, 60]} position={[0, 14, -55]} size={26} speed={0.15} opacity={0.5} color="#FFB070" />
-      <Sparkles count={40} scale={[140, 30, 60]} position={[0, 18, -60]} size={22} speed={0.1} opacity={0.45} color="#7fc8ff" />
     </group>
   );
 }
