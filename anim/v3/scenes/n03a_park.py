@@ -72,7 +72,7 @@ S.face(held, t_b + 1.4, "lach", 0.9, look=(0.6, -0.1))
 S.face(vriend, t_b, "lach", 0.9, look=(0.5, -0.1))
 # vriend: laat zijn stuur met één hand los (de arm aan onze kant) en zwaait naar het hondje
 S.reach(vriend, t_b + 0.9, "L", inf=1.0)
-S.reach(vriend, t_b + 1.05, "L", inf=0.0)
+S.reach(vriend, t_b + 1.3, "L", inf=0.0)
 S.reach(vriend, END, "L", inf=0.0)
 for k, t in enumerate(frange(t_b + 1.15, END - 0.2, 0.28)):
     S.beat(vriend, t, "zwaaien_a" if k % 2 else "zwaaien_b", face="lach", face_amt=0.9, at=V(3.2, -3.8, 0.4),

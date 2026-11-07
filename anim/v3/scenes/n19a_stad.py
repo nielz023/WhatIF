@@ -76,10 +76,9 @@ B_SIGN = V(0.0, 18.0, 0)
 for k, (n, x, col) in enumerate((("figurant_b", -1.3, (0.2, 0.6, 0.6)), ("kind_b", 1.2, (0.9, 0.4, 0.6)))):
     ch = S.actor(n, V(x, 8.0, 0), 180, label=f"fietser_b{k}")
     _, crank = bike(S, ch, color=col, name=f"Fiets_bord_{k}")
-    ride_path(S, ch, crank, t_b - 0.6 + 0.5 * k, t_c + 0.2, [V(x, 6.0 - 2 * k, 0), V(x, 24.0, 0)], cadence=1.3, lean=8)
-    if k:                                           # het kind staat op de trappers: anders haalt hij het stuur niet
-        for f in range(F(t_b - 0.1), F(t_c + 0.2) + 1):
-            A.crouch(ch, f, -0.12, 18)
+    # het kind (k=1) staat op de trappers: anders haalt hij het stuur niet (binnen ride, geen dubbele sleutels)
+    ride_path(S, ch, crank, t_b - 0.6 + 0.5 * k, t_c + 0.2, [V(x, 6.0 - 2 * k, 0), V(x, 24.0, 0)], cadence=1.3, lean=8,
+              crouch_fn=(lambda t: (-0.12, 18)) if k else None)
     S.face(ch, t_b, "lach", 0.6)
 
 # ---------------------------------------------------------------- 19b: het bord en de auto die omkeert

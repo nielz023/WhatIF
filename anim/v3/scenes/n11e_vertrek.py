@@ -85,14 +85,13 @@ visible(park, t_3, False)
 vr = S.actor("beste_vriend", (-0.6, 5.2, 0), 90)
 _, crank_v = bike(S, vr, color=(0.85, 0.12, 0.10), name="Fiets_vriend")
 T_GO_V = t_3 + 2.1
-ride_path(S, vr, crank_v, 0.0, T_GO_V, [V(-0.6, 5.2, 0), V(-0.58, 5.2, 0)], cadence=0.02, lean=4)
-ride_path(S, vr, crank_v, T_GO_V, END, [V(-0.58, 5.2, 0), V(3.5, 3.3, 0), V(47.0, 3.3, 0)], cadence=1.6, lean=14, sway=2)
+no_phone(vr)                                                          # geen telefoon in zijn hand op de fiets
+ride_path(S, vr, crank_v, 0.0, T_GO_V, [V(-0.6, 5.2, 0), V(-0.58, 5.2, 0)], cadence=0.02, lean=4, plant=("L", (0.3, 0.05, -0.02)))
+ride_path(S, vr, crank_v, T_GO_V, END + 0.7, [V(-0.58, 5.2, 0), V(3.5, 1.7, 0), V(47.0, 1.7, 0)], cadence=1.6, lean=14, sway=2)
 # ongeduldig wiebelen, linkervoet aan de grond
 frames = list(range(F(0.0), F(T_GO_V)))
-bake(vr.rig, "rotation_euler", frames, [(math.radians(4.0 * math.sin(2 * math.pi * 1.4 * (f - 1) / FPS)), 0.0, math.radians(90))
+bake(vr.rig, "rotation_euler", frames, [(math.radians(4.0 * min(1.0, (T_GO_V - (f - 1) / FPS) / 0.6) * math.sin(2 * math.pi * 1.4 * (f - 1) / FPS)), 0.0, math.radians(90))
                                          for f in frames], interp="BEZIER")
-for f in range(F(0.0), F(T_GO_V) - 2, 2):
-    A.foot(vr, f, "L", (0.3, 0.05, -0.02))
 S.face(vr, 0.0, "grijns", 0.4, look=(-0.6, 0.2))                    # (op de fiets: alleen gezicht en ogen, geen beat)
 S.face(vr, t_2, "twijfel", 0.7, look=(-0.5, 0.15))
 S.face(vr, t_2 + 1.4, "grijns", 0.5, look=(-0.4, 0.1))
@@ -100,17 +99,24 @@ S.face(vr, t_3, "grijns", 0.6, look=(-0.6, 0.0))
 S.say("N11-03", who=vr, at=0.6)
 
 # ---------------------------------------------------------------- 11e-3: hij zit op zijn fiets (eigen fiets aan zijn wortel)
+# tot de cut blijft hij op het tuinpad staan (anders schuift de wortel in 4 frames naar de fiets, zichtbaar in 11e-2)
+bpy.context.scene.frame_set(F(t_3) - 1)
+for prop in ("location", "rotation_euler"):
+    held.rig.keyframe_insert(prop, frame=F(t_3) - 1)
+for fc in A._fcurves(held.rig):
+    if fc.data_path in ("location", "rotation_euler"):
+        for kp in fc.keyframe_points:
+            if int(round(kp.co.x)) == F(t_3) - 1:
+                kp.interpolation = "CONSTANT"
 hb, crank_h = bike(S, held, color=(0.15, 0.35, 0.75), name="Fiets_jongen")
 visible(hb, 0.0, False)
 visible(hb, t_3, True)
 T_GO_H = t_3 + 2.2
-ride_path(S, held, crank_h, t_3, T_GO_H, [V(-2.8, 5.2, 0), V(-2.78, 5.2, 0)], cadence=0.02, lean=4)
-ride_path(S, held, crank_h, T_GO_H, END, [V(-2.78, 5.2, 0), V(2.0, 2.2, 0), V(45.0, 2.2, 0)], cadence=1.8, lean=16, sway=2)
+ride_path(S, held, crank_h, t_3, T_GO_H, [V(-2.8, 5.2, 0), V(-2.78, 5.2, 0)], cadence=0.02, lean=4, plant=("R", (-0.3, 0.05, -0.02)))
+ride_path(S, held, crank_h, T_GO_H, END + 0.7, [V(-2.78, 5.2, 0), V(2.0, 0.6, 0), V(45.0, 0.6, 0)], cadence=1.8, lean=16, sway=2)
 S.face(held, t_3, "vastberaden", 0.8, look=(0.3, 0.0))
 S.face(held, t_3 + 1.2, "vastberaden", 0.9, look=(0.0, 0.1))
 S.say("N11-04", who=held, at=t_3 + 0.25)
-for f in range(F(t_3), F(T_GO_H) - 2, 2):
-    A.foot(held, f, "R", (-0.3, 0.05, -0.02))
 
 # ---------------------------------------------------------------- camera's
 # 11e-1 MEDIUM push-in vanaf de stoep: het tuinpad, de jongen komt eraan

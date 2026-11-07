@@ -441,16 +441,28 @@ def bike(S, ch, color=(0.15, 0.35, 0.75), name=None, lamp=False, jerrycan=False)
     return b, crank
 
 
-def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway=0.0):
+def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway=0.0, plant=None, crouch_fn=None, ease=0.0,
+              accel=None, decel=False):
     """Fietsen langs punten: wortel beweegt mee (zonder loopcyclus), trappers draaien, lichte stuurzwaai."""
     pts = [Vector(p) for p in pts]
+    prev = getattr(ch, "_ride_prev", None)
+    joined = bool(prev and abs(prev[0] - t0) <= 1.5 / FPS)
+    acc = (0.9 if joined and prev[3] else 0.0) if accel is None else accel     # na stilstaan (voet aan de grond) rustig optrekken
     segs = [(pts[i + 1] - pts[i]).length for i in range(len(pts) - 1)]
     total = sum(segs) or 1e-6
     frames = list(range(F(t0), F(t1) + 1))
     locs, rots = [], []
     for f in frames:
         t = (f - 1) / FPS
-        u = (t - t0) / max(1e-3, t1 - t0)
+        u = max(0.0, min(1.0, (t - t0) / max(1e-3, t1 - t0)))
+        if acc > 0:                                      # optrekken vanuit stilstand: snelheid loopt lineair op
+            T = max(1e-3, t1 - t0)
+            tt = min(T, t - t0)
+            u = (tt * tt / (2 * acc) if tt < acc else tt - acc / 2) / (T - acc / 2)
+        elif decel:                                      # remmen tot stilstand: snelheid loopt lineair af naar 0
+            u = 1 - (1 - u) ** 2
+        elif ease > 0:                                     # zacht wegrijden/afremmen
+            u = (1 - ease) * u + ease * (u * u * (3 - 2 * u))
         d = total * u
         for i, L in enumerate(segs):
             if d <= L or i == len(segs) - 1:
@@ -460,14 +472,35 @@ def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway
                 break
             d -= L
         locs.append(tuple(p))
-        r = math.atan2(dv.x, -dv.y)
-        rots.append((math.radians(sway * math.sin(t * cadence * 2 * math.pi)), 0.0, r))
+        rots.append([math.radians(sway * math.sin(t * cadence * 2 * math.pi)), 0.0, math.atan2(dv.x, -dv.y)])
+    # stuurrichting zonder sprongen: hoek doorlopend maken en over ~0,4 s uitsmeren (geen ruk in bochten)
+    for i in range(1, len(rots)):
+        while rots[i][2] - rots[i - 1][2] > math.pi:
+            rots[i][2] -= 2 * math.pi
+        while rots[i][2] - rots[i - 1][2] < -math.pi:
+            rots[i][2] += 2 * math.pi
+    yaw = [r[2] for r in rots]
+    W = 6
+    for i in range(len(rots)):
+        lo, hi = max(0, i - W), min(len(rots), i + W + 1)
+        rots[i][2] = sum(yaw[lo:hi]) / (hi - lo)
+    y_prev = getattr(ch, "_ride_yaw", None)
+    if joined and y_prev is not None and rots:      # sluit aan op de stuurhoek van het vorige stuk, verschil wegwerken in ~0,6 s
+        d0 = y_prev - rots[0][2]
+        d0 = (d0 + math.pi) % (2 * math.pi) - math.pi
+        for i, r in enumerate(rots):
+            u = min(1.0, i / (0.6 * FPS))
+            r[2] += d0 * (1 - u * u * (3 - 2 * u))
+    ch._ride_yaw = rots[-1][2] if rots else None
+    # bochten afronden: knik in de lijn gaf een ruk in snelheid (zelfde venster als de stuurhoek, begin/eind vast)
+    raw = [Vector(p) for p in locs]
+    n = len(raw)
+    for i in range(n):
+        k = min(W, i, n - 1 - i)
+        locs[i] = tuple(sum(raw[i - k:i + k + 1], Vector()) / (2 * k + 1))
     bake(ch.rig, "location", frames, locs, interp="BEZIER")
-    bake(ch.rig, "rotation_euler", frames, rots, interp="BEZIER")
-    ride(S, ch, crank, t0, t1, cadence=cadence, lean=lean)
-    if stand:
-        for f in range(F(t0), F(t1) + 1, 2):
-            A.crouch(ch, f, -0.12, lean + 10)
+    bake(ch.rig, "rotation_euler", frames, [tuple(r) for r in rots], interp="BEZIER")
+    ride(S, ch, crank, t0, t1, cadence=cadence, lean=lean, stand=stand, plant=plant, crouch_fn=crouch_fn)
     ch.last = None
 
 

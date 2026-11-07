@@ -103,6 +103,7 @@ S.beat(dief, t_e + 2.2, "staan", arms=arms(arm("R", (0.3, 0.3, -0.3), (0.0, 0.5,
        at=S.head(kas, 0.0), feet="keep")
 S.hold(dief, t_h)
 visible(dief.body, t_h, False)                     # hij is de winkel uit: niet meer in de weg bij de uitgang
+visible(reep, t_h, False)                          # de reep gaat met hem mee (niet los zweven bij de deur)
 
 # ---- 7f: de kassière kijkt naar de agent
 S.beat(kas, t_e + 0.7, "staan", face="verbaasd", face_amt=0.8, at=S.head(dief, t_e + 0.7))
@@ -154,6 +155,7 @@ for k, e in enumerate(shoppers):
     path = [V(x0, y0, 0), V(lx, -9.0, 0), V(lx, -14.2, 0), V(-3.0 + 1.2 * k, -17.4, 0), V((-8.5, -3.6, 3.0, 6.6, 9.5, 12.0)[k], -22.0, 0)]   # uitgang gespreid, eindplek tussen de karbanen buiten
     t0 = T_GO + 0.12 * k
     S.run(e, t0, t0 + 5.2, path, stride=1.0, lean=12, arms=0.0 if k % 2 == 0 else 1.0)
+    c = None
     if k % 2 == 0:
         c = new_cart(f"Kar_{k}", path[0] + V(0, -0.8, 0))
         push_cart(e, c, t0, t0 + 5.2)
@@ -161,6 +163,8 @@ for k, e in enumerate(shoppers):
     S.hold(e, END)
     if k >= 4:                                     # buiten (7j/7k) niet meer in beeld: geen botsingen met de karren
         visible(e.body, t_j - 0.05, False)
+        if c:
+            visible(c, t_j - 0.05, False)          # zijn kar verdwijnt mee (geen kar die zonder iemand doorrijdt)
 
 # ---------------------------------------------------------------- 7i: mama grijpt de jongen bij zijn pols
 S.beat(mama, t_h + 0.6, "staan", face="bang", face_amt=0.7, at=S.head(shoppers[0], 0.0))
@@ -185,6 +189,20 @@ S.beat(held, t_i + 0.5, "schrik", amount=0.5, face="geschrokken", face_amt=0.8, 
 S.beat(held, t_i + 1.6, "staan", face="bang", face_amt=0.8, look=(0.4, 0.0), feet="keep")
 S.hold(mama, END)
 S.hold(held, END)
+# het mandje: mama laat het los als ze hem pakt; het valt naast haar op de grond (niet terug naar het midden van de winkel)
+T_REL = t_i - 0.05
+bpy.context.scene.frame_set(F(T_REL) - 1)
+mw = mandje.matrix_world.copy()
+p_rel = mw.translation.copy()
+mandje.location = p_rel
+mandje.rotation_euler = mw.to_euler()
+for fr in (F(T_REL), ):
+    mandje.keyframe_insert("location", frame=fr)
+    mandje.keyframe_insert("rotation_euler", frame=fr)
+mandje.location = V(p_rel.x + 0.1, p_rel.y - 0.15, 0.11)
+mandje.rotation_euler = (0, 0, mw.to_euler().z + 0.4)
+mandje.keyframe_insert("location", frame=F(T_REL + 0.3))
+mandje.keyframe_insert("rotation_euler", frame=F(T_REL + 0.3))
 S.beat(agent, t_h + 2.8, "staan", face="verdrietig", face_amt=0.6, at=S.head(shoppers[0], t_h + 3.0))
 S.hold(agent, END)
 S.beat(kas, t_h + 2.8, "handen_hoofd", amount=0.8, face="geschrokken", face_amt=0.9, at=S.head(shoppers[2], t_h + 3.0))

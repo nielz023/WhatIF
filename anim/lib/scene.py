@@ -787,7 +787,93 @@ class Scene:
     def post_cams(self):
         """Haak voor subklassen: na het bouwen van de camera's (self.shots bestaat dan)."""
 
+    def _probe(self):
+        """Print per figuur de grootste 'schokken' (2e afgeleide van botposities, m/s^2) en wanneer."""
+        sc = self.sc
+        names = ("hips", "foot.L", "foot.R", "hand.L", "hand.R", "head")
+        want = [c.strip() for c in os.environ.get("WHATIF_PROBE", "").split(",") if c.strip() and c.strip() != "1"]
+        f1 = F(self.length)
+        cars = {}
+        for o in bpy.data.objects:
+            if o.parent is None and o.name.startswith(("Auto_", "Bus", "Vrachtwagen")):
+                inv = o.matrix_world.inverted()
+                vs = []
+                for c in [o] + list(o.children_recursive):
+                    if c.type == "MESH" and not c.hide_render:
+                        vs += [inv @ (c.matrix_world @ Vector(b)) for b in c.bound_box]
+                if vs:
+                    cars[o] = (Vector([min(v[k] for v in vs) for k in range(3)]), Vector([max(v[k] for v in vs) for k in range(3)]))
+        for ch in self.cast:
+            if want and not any(w in ch.name for w in want):
+                continue
+            pts = {n: [] for n in names}
+            for f in range(1, f1 + 1):
+                sc.frame_set(f)
+                mw = ch.rig.matrix_world
+                for n in names:
+                    pb = ch.rig.pose.bones.get(n)
+                    pts[n].append((mw @ pb.head) if pb else Vector((0, 0, 0)))
+            tr = os.environ.get("WHATIF_TRACE")          # bv. "7.5:8.0": heup- en wortelposities per frame
+            if tr:
+                a, b = (float(x) for x in tr.split(":"))
+                for f in range(F(a), F(b) + 1):
+                    sc.frame_set(f)
+                    print("TRACE", ch.name, f"{(f - 1) / FPS:.2f}", tuple(round(v, 3) for v in pts["hips"][f - 1]),
+                          tuple(round(v, 3) for v in ch.rig.matrix_world.translation), round(math.degrees(ch.rig.matrix_world.to_euler().z), 1))
+            spikes = []
+            cutf = {F(c[0]) for c in getattr(self, "_cutlist", [])}     # sprongen precies op een cut zie je niet
+            for n in names:
+                P = pts[n]
+                for i in range(1, len(P) - 1):
+                    if (i + 1) in cutf or (i + 2) in cutf or i + 2 >= len(P):
+                        continue
+                    a = (P[i + 1] - 2 * P[i] + P[i - 1]).length * FPS * FPS
+                    spikes.append((a, n, (i + 1 - 1) / FPS))
+            spikes.sort(reverse=True)
+            print("PROBE", ch.name, " ".join(f"{n}@{t:.2f}={a:.0f}" for a, n, t in spikes[:12]))
+            # botsing: heupen of voeten binnen de (lokale) bbox van een zichtbare auto/bus/winkelwagen
+            hits = {}
+            for f in range(1, f1 + 1, 3):
+                sc.frame_set(f)
+                for o in cars:
+                    if o.hide_render:
+                        continue
+                    inv = o.matrix_world.inverted()
+                    for n in ("hips", "foot.L", "foot.R"):
+                        q = inv @ pts[n][f - 1]
+                        lo, hi = cars[o]
+                        if all(lo[k] + 0.05 < q[k] < hi[k] - 0.05 for k in range(3)):
+                            hits.setdefault(o.name, []).append(round((f - 1) / FPS, 1))
+            for nm, ts in hits.items():
+                o = bpy.data.objects[nm]
+                print("BOTSING", ch.name, nm, f"{ts[0]}-{ts[-1]}s", len(ts), "auto op", tuple(round(v, 1) for v in o.matrix_world.translation))
+
+    def _smooth_rides(self, W=4):
+        """Wortel van fietsers over aaneengesloten fietsstukken samen gladstrijken (ook over de naad tussen twee
+        ride_path-stukken: daar zat een sprong in snelheid/richting). Alleen binnen de fietsintervallen."""
+        for ch in self.cast:
+            iv = sorted(getattr(ch, "riding", None) or [])
+            if not iv or not ch.rig.animation_data or not ch.rig.animation_data.action:
+                continue
+            merged = [list(iv[0])]
+            for a, b in iv[1:]:
+                if a <= merged[-1][1] + 1.5 / FPS:
+                    merged[-1][1] = max(merged[-1][1], b)
+                else:
+                    merged.append([a, b])
+            fcs = [fc for fc in A._fcurves(ch.rig) if fc.data_path in ("location", "rotation_euler")]
+            for a, b in merged:
+                fa, fb = F(a), F(b)
+                for fc in fcs:
+                    vals = {f: fc.evaluate(f) for f in range(fa, fb + 1)}
+                    for f in range(fa, fb + 1):
+                        k = min(W, f - fa, fb - f)
+                        v = sum(vals[g] for g in range(f - k, f + k + 1)) / (2 * k + 1)
+                        fc.keyframe_points.insert(f, v, options={"REPLACE", "FAST"})
+                    fc.update()
+
     def finish(self, length=None, tail=0.8, picture_end=None, title=None):
+        self._smooth_rides()
         self.length = length or (self.t + tail)
         vo_end = getattr(self, "vo_end", 0.0)
         if vo_end + 0.6 > self.length:   # stem mag nooit afgekapt worden: laatste shot loopt door
@@ -795,6 +881,9 @@ class Scene:
             self.length = vo_end + 0.6
         if os.environ.get("WHATIF_VOCHECK"):
             print("VOCHECK", self.code, round(self.length, 2), round(vo_end, 2))
+            raise SystemExit(0)
+        if os.environ.get("WHATIF_PROBE"):          # schokdetectie: versnellingspieken van botten per figuur
+            self._probe()
             raise SystemExit(0)
         sc = self.sc
         sc.frame_start, sc.frame_end = 1, F(self.length)
@@ -1144,15 +1233,16 @@ def prop_bike(S, ch, name="Fiets", color=(0.85, 0.15, 0.15)):
                                       T.box(f"{name}_pedaal1", (0.09, 0, -0.13), (0.12, 0.07, 0.022), blk, base=False, bevel=0, ol=0),
                                       T.box(f"{name}_pedaal2", (-0.09, 0, 0.13), (0.12, 0.07, 0.022), blk, base=False, bevel=0, ol=0),
                                       T.cyl(f"{name}_tandwiel", (0.04, 0, 0), 0.08, 0.01, met, rot=(0, 90, 0), seg=20, ol=0)], ol=0.004)
-    for o in (bike, crank):
-        o.parent = ch.rig
-        o.matrix_parent_inverse = Matrix.Identity(4)
+    bike.parent = ch.rig
+    bike.matrix_parent_inverse = Matrix.Identity(4)
     bike.location = (0, 0, 0)
+    crank.parent = bike                                  # kind van de fiets: visible(fiets) verbergt ook de trappers
+    crank.matrix_parent_inverse = Matrix.Identity(4)
     crank.location = (0, 0, 0.25)
     return bike, crank
 
 
-def ride(S, ch, crank, t0, t1, cadence=2.2, lean=24, phase=0.0):
+def ride(S, ch, crank, t0, t1, cadence=2.2, lean=24, phase=0.0, stand=False, plant=None, crouch_fn=None):
     """Fietsen: zit op het zadel, handen aan het stuur, voeten OP de trappers die rondgaan (knieën gebogen).
     De enkels volgen exact de trappers van prop_bike (trapas (0, 0, 0.25), crank 0.13); de heupen zakken tot op
     het zadel, zodat de benen altijd gebogen zijn. beat() laat de benen met rust zolang hij fietst."""
@@ -1163,10 +1253,31 @@ def ride(S, ch, crank, t0, t1, cadence=2.2, lean=24, phase=0.0):
     if not hasattr(ch, "riding") or ch.riding is None:
         ch.riding = []
     ch.riding.append((t0, t1))
+    # aansluiting op het vorige fietsstuk: houding en geplante voet zacht overvloeien (~0,4 s) i.p.v. springen
+    prev = getattr(ch, "_ride_prev", None)
+    if prev and abs(prev[0] - t0) > 1.5 / FPS:
+        prev = None
+    BL = 0.4
+    last = None
+    if prev and len(prev) > 4 and phase == 0.0:          # trappers draaien door waar ze waren (geen sprong in de crank)
+        phase = prev[4]
     for f in range(F(t0), F(t1) + 1):
         t = (f - 1) / FPS
         ph = phase + (t - t0) * cadence * 2 * math.pi
-        A.crouch(ch, f, depth, lean, shift=(0, -0.05))
+        # ALLES per frame op één plek (geen losse sleutels om de 2 frames erbovenop: dat gaf schokken)
+        dz, ln = (-0.12, lean + 10) if stand else (depth, lean)
+        if crouch_fn:
+            o = crouch_fn(t)
+            if o:
+                dz, ln = o
+        w = 1.0
+        if prev:
+            u = min(1.0, (t - t0) / BL)
+            w = u * u * (3 - 2 * u)
+            dz = prev[1] + (dz - prev[1]) * w
+            ln = prev[2] + (ln - prev[2]) * w
+        A.crouch(ch, f, dz, ln, shift=(0, -0.05))
+        last = (t, dz, ln, plant, ph)
         # trapper 1 (+x, links) en trapper 2 (-x, rechts), zoals de crank-mesh draait (rotatie om x = ph)
         for sd, sgn in (("L", 1.0), ("R", -1.0)):
             r = rest[sd]
@@ -1174,9 +1285,25 @@ def ride(S, ch, crank, t0, t1, cadence=2.2, lean=24, phase=0.0):
             pz = 0.25 - sgn * 0.13 * math.cos(ph)
             tgt = Vector((r.x, py, pz + 0.01 + r.z))
             d = tgt - r
-            A.foot(ch, f, sd, (d.x, -d.y, d.z), (-12 * sgn * math.sin(ph), 0, 0))
+            d = Vector((d.x, -d.y, d.z))
+            frot = (-12 * sgn * math.sin(ph), 0, 0)
+            lift = Vector((0, 0, 0.08 * math.sin(math.pi * w)))
+            if plant and plant[0] == sd:                 # deze voet staat aan de grond (stilstaan)
+                pd = Vector(plant[1])
+                if prev and not (prev[3] and prev[3][0] == sd) and w < 1.0:
+                    pd = d.lerp(pd, w) + lift            # van de trapper naar de grond, niet in één frame
+                    frot = tuple(a * (1 - w) for a in frot)
+                else:
+                    frot = (0, 0, 0)
+                A.foot(ch, f, sd, tuple(pd), frot)
+                continue
+            if prev and prev[3] and prev[3][0] == sd and w < 1.0:     # voet van de grond naar de trapper
+                d = Vector(prev[3][1]).lerp(d, w) + lift
+                frot = tuple(a * w for a in frot)
+            A.foot(ch, f, sd, tuple(d), frot)
         crank.rotation_euler = (ph, 0, 0)
         crank.keyframe_insert("rotation_euler", frame=f)
+    ch._ride_prev = (t1,) + last[1:] if last else None
     for side, x in (("L", 0.2), ("R", -0.2)):
         for t in (t0, t1):
             M = S._root_matrix(ch, t)
