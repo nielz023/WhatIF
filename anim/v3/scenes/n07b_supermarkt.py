@@ -214,12 +214,15 @@ for k in range(5):
     nm = ["figurant_a", "figurant_d", "figurant_e", "figurant_f", "figurant_b"][k]
     e = S.actor(nm, (-5.0 + 2.5 * k, -19.6, 0), 0, label=f"buiten_{k}")
     p0 = V(-5.0 + 2.5 * k, -19.6 - 0.9 * (k % 2), 0)     # verder van de deur, ruim uit elkaar
-    lane = (-13.5, -7.5, 2.2, 5.2, 10.5)[k]                                   # tussen de geparkeerde auto's door, op volgorde: niemand kruist
+    lane = (-13.5, -7.5, -1.5, 4.5, 10.5)[k]                                  # midden tussen de geparkeerde auto's (x -10.5, -4.5, 1.5, 7.5)                                   # tussen de geparkeerde auto's door, op volgorde: niemand kruist
     p1 = V(lane, -33.0 - 1.5 * (k % 2), 0)
     t0 = t_j - 0.3 + 0.35 * k
-    S.teleport(e, t0 - 0.05, p0, 0)
+    S.teleport(e, t_j - 0.15, p0, 0)               # vóór hij zichtbaar wordt (geen sprong in beeld)
     pm = V(lane, -23.0, 0)
-    S.run(e, t0, END, [p0, pm, p1], stride=1.0, lean=12, arms=0.0)
+    # bocht afgerond (scherpe knik gaf een ruk in de kar en de handen)
+    pa, pb = p0.lerp(pm, 0.6), pm.lerp(p1, 0.18)
+    path_b = [p0, pa, pa.lerp(pm, 0.5).lerp(pm.lerp(pb, 0.5), 0.5), pb, p1]
+    S.run(e, t0, END, path_b, stride=1.0, lean=12, arms=0.0)
     c = new_cart(f"Kar_buiten_{k}", p0 + V(0, -0.8, 0))
     push_cart(e, c, t0, END)
     S.beat(e, t0 + 0.2, "staan", face="inspanning", face_amt=0.8, feet="keep")
