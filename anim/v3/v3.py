@@ -500,6 +500,8 @@ def _subjects(S, t0, t1, cam, maxd=7.0):
 def _cine_light(self):
     """Per shot een zacht key-licht van de camerakant op de onderwerpen (light linking: alleen op het figuur),
     plus oranje/blauwe randlichten (zoals bij het hoofdpersonage) voor iedereen die ergens onderwerp is."""
+    if not getattr(self, "cine_light", True):      # bv. het totale donker (video 4, scène 20e-22)
+        return
     night = getattr(self, "night", False)
     keys = {}
     order = []

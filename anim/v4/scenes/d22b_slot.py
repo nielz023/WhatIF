@@ -18,11 +18,12 @@ S = Scene4("d22b", "ruimte_nd", "donker", exposure=0.1)
 sh = S.cuts([5.6, 5.0, 3.2, 2.0])
 END = sh[-1][1]
 t_c, t_c2, t_d = (s[0] for s in sh[1:])
+S.cine_light = False                              # geen key-/randlicht: alleen het licht uit de scène zelf
 S.hide("Personage_marker", "Character_marker", "Zakhorloge", "Horloge_gloed")
 S.no_hud.append((0.0, END))
 
 for o in [o for o in bpy.data.objects if o.type == "LIGHT"]:
-    e = 3.5 if o.name == "Blauwe_rand" else 0.0
+    e = 25.0 if o.name == "Blauwe_rand" else 0.0
     for t, v in ((0.0, e), (t_d, e), (t_d + 0.01, 0.0)):
         o.data.energy = v
         o.data.keyframe_insert("energy", frame=F(t))
@@ -35,18 +36,19 @@ for n in ([n for n in wd.node_tree.nodes if n.type == "BACKGROUND"] if wd and wd
 LP = V(110.0, 28.0, 14.0)
 lp = bpy.data.objects.get("Lichtpuntje")
 if lp:
-    key(lp, 0.0, loc=tuple(LP), scale=(4, 4, 4))
-emission_key("Lichtpuntje_gloed", 0.0, 6.0)
+    key(lp, 0.0, loc=tuple(LP), scale=(8, 8, 8))
+emission_key("Lichtpuntje_gloed", 0.0, 30.0)
 emission_key("Lichtpuntje_gloed", t_d, 0.0)
 
 DL = LP.normalized()
 ROT = math.degrees(math.atan2(DL.x, -DL.y))              # gezicht naar het lichtpuntje
 HIP0 = V(0.0, 0.0, 0.0)
-held = S.actor("hoofdpersonage_rafels", HIP0, ROT)
+held = S.actor("hoofdpersonage_rafels", HIP0, ROT, rim=False)
 FW = V(math.sin(math.radians(ROT)), -math.cos(math.radians(ROT)), 0)
 SD = V(FW.y, -FW.x, 0)
 S.beat(held, 0.0, "staan", face="blij", face_amt=0.5, at=LP)
 S.beat(held, t_c2, "staan", face="blij", face_amt=0.4, look=(0.0, -0.8), body={"head": (16, 0, 0)})
+dim_flat(held, [(0.0, 0.12), (t_d, 0.0)])
 S.hold(held, END)
 # hij drijft langzaam naar het licht
 S.place(held, 0.0, HIP0, ROT)
@@ -54,8 +56,8 @@ S.place(held, t_c2, HIP0 + DL * 1.6, ROT)
 S.place(held, END, HIP0 + DL * 1.9, ROT)
 
 hw = S.watch(held, 0.0, side="R", name="Opa_horloge", open_=1.0, loc=(0, 0.058, 0.0), rot=(180, 0, 0), scale=1.3,
-             lume=3.0, gravure_gloed=0.0)
-gl = T.point_light("Opa_horloge_gloed", (0, 0, 0), color=(0.75, 1.0, 0.6), energy=0.35, radius=0.02, shadow=False)
+             lume=8.0, gravure_gloed=0.0)
+gl = T.point_light("Opa_horloge_gloed", (0, 0, 0), color=(0.75, 1.0, 0.6), energy=2.5, radius=0.02, shadow=False)
 gl.parent = hw
 gl.location = (0, 0, 0.04)
 S.watch_hands("Opa_horloge", 0.0, t_d, every=1.0, start=(10, 10, 40))
@@ -73,7 +75,7 @@ S.beat(held, t_c2, "staan", arms=LOOKH, face="blij", face_amt=0.4, look=(0.0, -0
 for t, v in ((0.0, 0.0), (t_c2 + 0.6, 0.0), (t_c2 + 1.3, 3.0), (t_c2 + 2.6, 3.0), (t_d, 0.0)):
     emission_key("Opa_horloge_gravure", t, v, interp="LINEAR")
 emission_key("Opa_horloge_lume", t_d, 0.0)
-for t, e in ((0.0, 0.35), (t_d - 0.04, 0.35), (t_d, 0.0)):
+for t, e in ((0.0, 2.5), (t_d - 0.04, 2.5), (t_d, 0.0)):
     gl.data.energy = e
     gl.data.keyframe_insert("energy", frame=F(t))
 

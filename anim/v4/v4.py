@@ -259,3 +259,27 @@ def skin_tint(ch, keys, color=(0.42, 0.10, 0.62)):
         for t, v in keys:
             mix.inputs[0].default_value = v
             mix.inputs[0].keyframe_insert("default_value", frame=F(t))
+
+
+def dim_flat(ch, keys):
+    """Ongeschaduwde (emissie-)materialen van een figuur (ogen, mondje, wangen) dimmen: in het totale donker
+    zouden ze anders los in het zwart zweven. keys = [(t, factor), ...] (1 = normaal)."""
+    objs = [ch.body] + [o for o in ch.rig.children_recursive if o.type == "MESH" and o != ch.body]
+    done = set()
+    for o in objs:
+        for slot in o.material_slots:
+            m = slot.material
+            if m is None or m.name in done or not m.node_tree:
+                continue
+            ems = [n for n in m.node_tree.nodes if n.type == "EMISSION"]
+            if not ems or any(n.type == "BSDF_PRINCIPLED" for n in m.node_tree.nodes):
+                continue
+            done.add(m.name)
+            for n in ems:
+                s0 = n.inputs["Strength"].default_value
+                for t, f in keys:
+                    n.inputs["Strength"].default_value = s0 * f
+                    n.inputs["Strength"].keyframe_insert("default_value", frame=F(t))
+                n.inputs["Strength"].default_value = s0
+    return done
+

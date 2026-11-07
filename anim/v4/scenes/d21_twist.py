@@ -23,12 +23,13 @@ S = Scene4("d21", "ruimte_nd", "donker", exposure=0.1)
 sh = S.cuts([4.0, 3.0, 3.0, 3.0, 2.5, 4.9, 2.9, 4.0, 4.0, 4.0, 4.4])
 END = sh[-1][1]
 t_b, t_c, t_d, t_e, t_f, t_g, t_h, t_i, t_i2, t_j = (s[0] for s in sh[1:])
+S.cine_light = False                              # geen key-/randlicht: alleen het licht uit de scène zelf
 S.hide("Personage_marker", "Character_marker", "Zakhorloge", "Horloge_gloed")
 S.no_hud.append((0.0, END))
 
 # ---------------------------------------------------------------- donker: alleen de blauwe rand, het horloge en het lichtpuntje
 for o in [o for o in bpy.data.objects if o.type == "LIGHT"]:
-    e = 3.5 if o.name == "Blauwe_rand" else 0.0
+    e = 25.0 if o.name == "Blauwe_rand" else 0.0
     o.data.energy = e
     o.data.keyframe_insert("energy", frame=F(0.0))
 wd = bpy.context.scene.world
@@ -37,12 +38,12 @@ for n in ([n for n in wd.node_tree.nodes if n.type == "BACKGROUND"] if wd and wd
     n.inputs["Strength"].keyframe_insert("default_value", frame=F(0.0))
 
 # het lichtpuntje: links van hem, heel ver weg
-LP = V(240.0, 60.0, 30.0)
+LP = V(160.0, -210.0, 30.0)                         # links voor hem (hij kijkt naar -Y; links = +X)
 lp = bpy.data.objects.get("Lichtpuntje")
 if lp:
-    key(lp, 0.0, loc=tuple(LP), scale=(4, 4, 4))
-    key(lp, t_i2, loc=tuple(LP), scale=(4, 4, 4))
-BASE, FLASH = 5.0, 70.0
+    key(lp, 0.0, loc=tuple(LP), scale=(10, 10, 10))
+    key(lp, t_i2, loc=tuple(LP), scale=(10, 10, 10))
+BASE, FLASH = 30.0, 220.0
 emission_key("Lichtpuntje_gloed", 0.0, 0.0)
 emission_key("Lichtpuntje_gloed", t_g, BASE)
 
@@ -55,7 +56,8 @@ def far(t, vol=0.14, pan=-0.75):
 
 
 # ---------------------------------------------------------------- hij, zwevend, horloge voor zijn borst
-held = S.actor("hoofdpersonage_rafels", (0.0, 0.0, 0.0), 0)
+held = S.actor("hoofdpersonage_rafels", (0.0, 0.0, 0.0), 0, rim=False)
+dim_flat(held, [(0.0, 0.12)])
 FW, SD = V(0, -1, 0), V(-1, 0, 0)                       # gezicht naar -Y; rechts = -X, links = +X
 
 
@@ -69,7 +71,7 @@ hw = S.watch(held, 0.0, side="R", name="Opa_horloge", open_=1.0, loc=(0, 0.058, 
 gl = T.point_light("Opa_horloge_gloed", (0, 0, 0), color=(0.75, 1.0, 0.6), energy=0.0, radius=0.02, shadow=False)
 gl.parent = hw
 gl.location = (0, 0, 0.04)
-for t, v, e in ((0.0, 0.2, 0.02), (0.6, 0.2, 0.02), (2.8, 3.0, 0.35)):
+for t, v, e in ((0.0, 0.4, 0.1), (0.6, 0.4, 0.1), (2.8, 8.0, 2.5)):
     emission_key("Opa_horloge_lume", t, v, interp="LINEAR")
     gl.data.energy = e
     gl.data.keyframe_insert("energy", frame=F(t))
@@ -143,7 +145,7 @@ far(t_i + 3.0, 0.17)
 # 21i2: het lichtpuntje komt dichterbij
 NEAR = HD + (LP - HD) * 0.45
 if lp:
-    key(lp, END, loc=tuple(NEAR), scale=(4, 4, 4))
+    key(lp, END, loc=tuple(NEAR), scale=(10, 10, 10))
 for k, t in enumerate(frange(t_i2 + 0.5, END - 0.3, 1.0)):
     far(t, min(0.26, 0.18 + 0.02 * k), -0.6)
 
@@ -165,7 +167,7 @@ WE = wpos(t_e + 1.0)
 S.cam(t_e, (WE + V(0.2, -0.75, 0.18), WE, 40))
 S.cam(t_f, (HD + V(0.2, -1.2, -0.1), HD + V(0, 0, -0.05), 40), (HD + V(0.18, -1.1, -0.1), HD + V(0, 0, -0.05), 40))
 S.cam(t_g, (HD + V(0.55, -1.15, -0.05), HD + V(0.05, 0, -0.05), 38))
-CW = HD - DL * 2.2 + V(0, -0.7, 0.35)
+CW = HD + V(-0.75, 1.3, 0.35)                      # schuin achter hem: zijn silhouet, het lichtpuntje ver weg
 S.cam(t_h, (CW, LP, 30))
 S.cam(t_i, (HD + V(0.95, -1.15, -0.05), (HD + RAISE) * 0.5, 34), (HD + V(0.85, -1.0, -0.05), (HD + RAISE) * 0.5, 34))
 CW2 = HD - DL * 5.0 + V(0, -1.6, 0.9)

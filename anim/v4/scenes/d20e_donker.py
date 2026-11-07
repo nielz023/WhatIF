@@ -16,11 +16,13 @@ S = Scene4("d20e", "ruimte_nd", "donker", exposure=0.1)
 sh = S.cuts([5.2, 4.9, 4.5])
 END = sh[-1][1]
 t_f, t_g = (s[0] for s in sh[1:])
+S.cine_light = False                              # geen key-/randlicht: alleen het licht uit de scène zelf
 S.hide("Personage_marker", "Character_marker", "Zakhorloge", "Horloge_gloed", "Lichtpuntje")
 
 # alles uit, behalve de blauwe rand in 20f
 for o in [o for o in bpy.data.objects if o.type == "LIGHT"]:
     e = o.data.energy
+    e = 45.0
     ks = ((0.0, 0.0), (t_f, 0.0), (t_f + 0.8, e), (t_g - 0.3, e), (t_g, 0.0)) if o.name == "Blauwe_rand" else ((0.0, 0.0),)
     for t, v in ks:
         o.data.energy = v
@@ -30,8 +32,9 @@ for n in ([n for n in wd.node_tree.nodes if n.type == "BACKGROUND"] if wd and wd
     n.inputs["Strength"].default_value = 0.0
     n.inputs["Strength"].keyframe_insert("default_value", frame=F(0.0))
 
-held = S.actor("hoofdpersonage_rafels", (0.0, 0.0, 0.0), 0)
-S.qc_skip.add(held.name)                         # bewust (bijna) onzichtbaar
+held = S.actor("hoofdpersonage_rafels", (0.0, 0.0, 0.0), 0, rim=False)
+S.qc_skip.add(held.name)
+dim_flat(held, [(0.0, 0.0), (t_f, 0.0), (t_f + 0.8, 0.06), (t_g - 0.3, 0.06), (t_g, 0.0)])                         # bewust (bijna) onzichtbaar
 S.beat(held, 0.0, "staan", face="verdrietig", face_amt=0.4, look=(0.0, -0.3))
 S.beat(held, t_f + 1.0, "staan", face="verdrietig", face_amt=0.6, look=(0.2, -0.4), body={"head": (8, 0, -4)})
 A.blink_at(held, F(t_f + 2.6))
