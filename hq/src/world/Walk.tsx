@@ -13,11 +13,19 @@
  * zijwaarts tot ~0,28 m van wanden waar dat past, en in smalle doorgangen naar het midden. Lukt een stap niet,
  * dan glijd je langs de wand. Zonder kaart loop je zonder botsen, binnen de rand van het kantoor.
  * Zolang je loopt staan de orbit-besturing en CameraRig stil; de terugvlucht doet CameraRig (NeonOffice.tsx).
+ *
+ * Verdiepingen (niels 2026-11-07, floors.ts): het podium en de trap vooraan geven hoogte (de camera gaat mee
+ * omhoog). De zijtrap op het podium is een smalle looplijn die je alleen aan de uiteinden op- en afloopt: onder
+ * vanaf het podium, boven vanaf de bovenverdieping (eigen looproutekaart, buildNav1). Halverwege de trap wisselt
+ * het beeld naar de bovenverdieping. Het knopje rechts in het midden brengt je in één vloeiende beweging naar de
+ * andere verdieping.
  */
 import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { loadNav, isFree, nearestFree, type Nav } from './nav';
+import { Y1, groundY, stairUV, stairRampY, STAIR_HALF, ARRIVE_UP, ARRIVE_DOWN, useFloor, type Floor } from './floors';
+import { buildNav1 } from './upstairs';
 import { roomAt } from './BakedOffice';
 import { ROOMS, R_IN, R_OUT, SPAN, type RoomId } from './rooms';
 import { useWorld, reducedMotion } from './useWorld';
@@ -50,6 +58,9 @@ const edgeDist = (x: number, z: number) => {
   const a = Math.atan2(x, z); const slot = Math.round((((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)) / SPAN) % 10;
   return Math.hypot(x, z) * Math.sin(Math.max(0, SPAN / 2 - Math.abs(angDiff(slot * SPAN, a))));
 };
+/** op de looplijn van de trap (stairUV) */
+const inStair = ([u, d]: [number, number]) => u >= -0.03 && u <= 1.04 && Math.abs(d) < STAIR_HALF;
+const STAIR_END = 0.15; // zo ver (u) van een uiteinde mag je de trap op- of aflopen
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const coarse = () => typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse)').matches;
 
@@ -86,7 +97,9 @@ export function WalkController({ mode }: { mode: WorldMode }) {
   const walk = useWorld((s) => s.walk);
   const setWalk = useWorld((s) => s.setWalk);
   const nav = useRef<Nav | null>(null);
+  const nav1 = useRef<Nav | null>(null);
   const field = useRef<Float32Array | null>(null);
+  const field1 = useRef<Float32Array | null>(null);
   const keys = useRef(new Set<string>());
   const look = useRef({ x: 0, y: 0 });
   const st = useRef({
@@ -94,12 +107,19 @@ export function WalkController({ mode }: { mode: WorldMode }) {
     x: START[0], z: START[1], yaw: 0, pitch: 0, vx: 0, vz: 0, side: 1, bob: 0, bobAmt: 0,
     from: { p: new THREE.Vector3(), yaw: 0, pitch: 0, fov: 40, near: 0.5 },
     room: null as RoomId | null, roomT: 0,
+    fl: 0 as Floor, stair: false, y: 0, // verdieping, op de trap, vloerhoogte onder je voeten (vloeiend)
+    lift: null as null | { t: number; to: Floor; p0: THREE.Vector3; yaw0: number; pitch0: number; x: number; z: number; yaw: number },
   });
   const eul = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
   const stepRef = useRef<(dt: number) => void>(() => {});
 
   // looproutekaart (al geladen voor de medewerkers); de afstandskaart pas bij het eerste rondje
   useEffect(() => { let on = true; loadNav().then((n) => { if (on) nav.current = n; }); return () => { on = false; }; }, []);
+  const navOf = (fl: Floor) => { if (fl === 1 && !nav1.current) nav1.current = buildNav1(); return fl === 1 ? nav1.current : nav.current; };
+  const fieldOf = (fl: Floor) => {
+    const n = navOf(fl); if (!n) return null;
+    const f = fl === 1 ? field1 : field; if (!f.current) f.current = distField(n); return f.current;
+  };
   // de knop mag zichtbaar zijn zolang het 3D-kantoor er staat; valt het weg, dan stopt het rondlopen
   useEffect(() => { useWalk.setState({ ready: true }); return () => { useWalk.setState({ ready: false }); useWorld.getState().setWalk(false); }; }, []);
   // een andere pagina openen stopt het rondlopen
@@ -109,11 +129,11 @@ export function WalkController({ mode }: { mode: WorldMode }) {
   useEffect(() => {
     if (window.location?.hostname !== 'localhost') return;
     (window as unknown as { __dmWalk: unknown }).__dmWalk = {
-      state: () => { const s = st.current; const n = nav.current; return { phase: s.phase, x: s.x, z: s.z, yaw: s.yaw, pitch: s.pitch, vx: s.vx, vz: s.vz, room: s.room, nav: !!n, free: n ? isFree(n, s.x, s.z) : null }; },
-      teleport: (x: number, z: number, yaw?: number) => { const s = st.current; s.x = x; s.z = z; if (yaw != null) s.yaw = yaw; s.vx = s.vz = 0; },
+      state: () => { const s = st.current; const n = navOf(s.fl); return { phase: s.phase, x: s.x, z: s.z, y: s.y, fl: s.fl, stair: s.stair, yaw: s.yaw, pitch: s.pitch, vx: s.vx, vz: s.vz, room: s.room, nav: !!n, free: n ? isFree(n, s.x, s.z) : null }; },
+      teleport: (x: number, z: number, yaw?: number, fl?: Floor) => { const s = st.current; s.x = x; s.z = z; if (yaw != null) s.yaw = yaw; if (fl != null) { s.fl = fl; s.stair = false; useFloor.getState().setFloor(fl); } s.vx = s.vz = 0; },
       face: (yaw: number, pitch?: number) => { const s = st.current; s.yaw = yaw; if (pitch != null) s.pitch = pitch; }, // draaien zonder af te remmen
-      isFree: (x: number, z: number) => (nav.current ? isFree(nav.current, x, z) : null),
-      clear: (x: number, z: number) => (nav.current && field.current ? distAt(nav.current, field.current, x, z) : null),
+      isFree: (x: number, z: number, fl: Floor = 0) => { const n = navOf(fl); return n ? isFree(n, x, z) : null; },
+      clear: (x: number, z: number, fl: Floor = 0) => { const n = navOf(fl); const f = fieldOf(fl); return n && f ? distAt(n, f, x, z) : null; },
       // dezelfde stappen als in beeld, zonder te tekenen (de testbrowser tekent maar een paar beelden per minuut)
       sim: (frames: number, dt = 1 / 60, held: string[] = []) => {
         if (st.current.phase !== 'on') return false;
@@ -125,7 +145,34 @@ export function WalkController({ mode }: { mode: WorldMode }) {
     };
   }, []);
 
-  const free = (x: number, z: number) => { const n = nav.current; return n ? isFree(n, x, z) : Math.hypot(x, z) <= BOUND; };
+  // knopje "verdieping hoger/lager" tijdens het rondlopen (WalkHud): Walk.tsx doet de overgang
+  useEffect(() => useFloor.subscribe((f, prev) => {
+    if (f.req === prev.req) return;
+    const s = st.current; if (s.phase !== 'on' || s.lift) return;
+    const to = f.want; if (to === s.fl && !s.stair) return;
+    const a = to === 1 ? ARRIVE_UP : ARRIVE_DOWN; const n = navOf(to); const p = (n && nearestFree(n, a[0], a[1])) || a;
+    const la = lookAngles(cam.getWorldDirection(new THREE.Vector3()));
+    s.lift = { t: 0, to, p0: cam.position.clone(), yaw0: la.yaw, pitch0: la.pitch, x: p[0], z: p[1], yaw: to === 1 ? Math.atan2(p[0], p[1]) : Math.PI };
+    s.vx = s.vz = 0; s.room = null; useWalk.getState().enter(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []);
+
+  const freeOn = (fl: Floor, x: number, z: number) => { const n = navOf(fl); return n ? isFree(n, x, z) : fl === 0 && Math.hypot(x, z) <= BOUND; };
+  /**
+   * Mag je hierheen? Op de trap blijf je op de looplijn en stap je er alleen aan een uiteinde af (op de verdieping
+   * van dat uiteinde); van een verdieping stap je de trap alleen aan jouw uiteinde op. Zet s.stair en s.fl.
+   */
+  const free = (x: number, z: number) => {
+    const s = st.current; const b = stairUV(x, z);
+    if (s.stair) {
+      if (inStair(b)) { s.fl = b[0] > 0.5 ? 1 : 0; return true; }
+      if (b[0] < STAIR_END && freeOn(0, x, z)) { s.stair = false; s.fl = 0; return true; }
+      if (b[0] > 1 - STAIR_END && freeOn(1, x, z)) { s.stair = false; s.fl = 1; return true; }
+      return false;
+    }
+    if (inStair(b) && (s.fl === 0 ? b[0] < STAIR_END : b[0] > 1 - STAIR_END)) { s.stair = true; return true; }
+    return freeOn(s.fl, x, z);
+  };
 
   /** verplaatsen met botsen: in halve cellen; lukt een stap niet, dan draaien we hem steeds verder langs de wand (en korter) */
   const move = (dx: number, dz: number) => {
@@ -147,7 +194,8 @@ export function WalkController({ mode }: { mode: WorldMode }) {
 
   /** zachte afstand tot wanden, alleen dwars op de looprichting (remt dus nooit af, trekt je wel netjes door deuren) */
   const soft = (dt: number) => {
-    const s = st.current; const n = nav.current; const d = field.current; if (!n || !d) return;
+    const s = st.current; if (s.stair) return;
+    const n = navOf(s.fl); const d = fieldOf(s.fl); if (!n || !d) return;
     const sp = Math.hypot(s.vx, s.vz); if (sp < 0.25) return;
     const here = distAt(n, d, s.x, s.z); if (here >= SOFT) return;
     const h = 0.03;
@@ -163,10 +211,13 @@ export function WalkController({ mode }: { mode: WorldMode }) {
   useEffect(() => {
     if (!walk) return;
     const s = st.current; const el = gl.domElement;
-    const n0 = nav.current;
-    if (n0 && !field.current) field.current = distField(n0);
-    const p = (n0 && nearestFree(n0, START[0], START[1])) || START;
+    // begin waar je kijkt: beneden bij de ingang, boven net voorbij de trap
+    const fl0 = useFloor.getState().floor; s.fl = fl0; s.stair = false; s.lift = null;
+    const n0 = navOf(fl0); fieldOf(fl0);
+    const want = fl0 === 1 ? ARRIVE_UP : START;
+    const p = (n0 && nearestFree(n0, want[0], want[1])) || want;
     s.x = p[0]; s.z = p[1]; s.yaw = Math.atan2(s.x, s.z); s.pitch = 0.07; s.vx = s.vz = 0; s.bob = 0; s.bobAmt = 0; s.room = null; s.roomT = 0;
+    s.y = fl0 === 1 ? Y1 : groundY(s.x, s.z) ?? 0;
     const a = lookAngles(cam.getWorldDirection(new THREE.Vector3()));
     s.from = { p: cam.position.clone(), yaw: a.yaw, pitch: a.pitch, fov: cam.fov, near: cam.near };
     s.phase = 'in'; s.t = reducedMotion() ? 1 : 0;
@@ -242,10 +293,10 @@ export function WalkController({ mode }: { mode: WorldMode }) {
 
   /** één stap lopen: kijken, versnellen, botsen, deinen en bijhouden in welke afdeling je staat */
   const step = (dt: number) => {
-    const s = st.current; const n = nav.current;
-    if (n && !field.current) field.current = distField(n);
+    const s = st.current; const n = navOf(s.fl);
+    if (n) fieldOf(s.fl);
     // kaart kwam later binnen, of je staat op een geblokkeerde plek: naar de dichtstbijzijnde vrije plek
-    if (n && !isFree(n, s.x, s.z)) { const q = nearestFree(n, s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } }
+    if (n && !s.stair && !isFree(n, s.x, s.z)) { const q = nearestFree(n, s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } }
     // ---- kijken ----
     s.yaw = angDiff(0, s.yaw - look.current.x); s.pitch = THREE.MathUtils.clamp(s.pitch - look.current.y, -MAXPITCH, MAXPITCH); look.current.x = look.current.y = 0;
     // ---- lopen (vooruit = waar je naartoe kijkt) ----
@@ -264,7 +315,13 @@ export function WalkController({ mode }: { mode: WorldMode }) {
     const ox = s.x, oz = s.z;
     move(s.vx * dt, s.vz * dt);
     soft(dt);
-    if (!n) { const r = Math.hypot(s.x, s.z); if (r > BOUND) { s.x *= BOUND / r; s.z *= BOUND / r; } }
+    if (!n && !s.stair) { const r = Math.hypot(s.x, s.z); if (r > BOUND) { s.x *= BOUND / r; s.z *= BOUND / r; } }
+    // ---- hoogte: podium, trap vooraan, zijtrap of bovenverdieping; halverwege de trap wisselt het beeld ----
+    const fy = s.stair ? stairRampY(s.z) : s.fl === 1 ? Y1 : groundY(s.x, s.z) ?? 0;
+    s.y += (fy - s.y) * Math.min(1, dt * (s.stair ? 14 : 9));
+    const F = useFloor.getState(); const u = s.stair ? stairUV(s.x, s.z)[0] : s.fl;
+    const view: Floor = s.stair ? (u > 0.36 ? 1 : u < 0.28 ? 0 : F.floor) : s.fl;
+    if (view !== F.floor) F.setFloor(view);
     // ---- hoofd deint een beetje mee ----
     const moved = Math.hypot(s.x - ox, s.z - oz);
     s.bobAmt += (Math.min(1, moved / dt / SPEED) - s.bobAmt) * Math.min(1, dt * 6);
@@ -275,8 +332,9 @@ export function WalkController({ mode }: { mode: WorldMode }) {
       s.roomT = 0.1;
       const id = roomAt(s.x, s.z); const r = Math.hypot(s.x, s.z); const e = edgeDist(s.x, s.z);
       let cur = s.room;
-      if (cur && (id !== cur || r < R_IN + 0.05 || r > R_OUT || e < EDGE_OUT)) cur = null; // de afdeling uit gelopen
-      if (!cur && ROOM_IDS.has(id) && r > R_IN + 0.3 && r < R_OUT - 0.1 && e > EDGE_IN) cur = id as RoomId; // binnen (voorbij de deur)
+      if (s.fl === 1 || s.stair) cur = null; // boven en op de trap zijn geen afdelingen
+      else if (cur && (id !== cur || r < R_IN + 0.05 || r > R_OUT || e < EDGE_OUT)) cur = null; // de afdeling uit gelopen
+      if (!cur && s.fl === 0 && !s.stair && ROOM_IDS.has(id) && r > R_IN + 0.3 && r < R_OUT - 0.1 && e > EDGE_IN) cur = id as RoomId; // binnen (voorbij de deur)
       if (cur !== s.room) { s.room = cur; useWalk.getState().enter(cur); }
     }
   };
@@ -291,11 +349,23 @@ export function WalkController({ mode }: { mode: WorldMode }) {
       // vlucht van het overzicht naar de ingang, met een boogje over het kantoor heen
       s.t = Math.min(1, s.t + dt / 1.5);
       const k = easeInOut(s.t); const f = s.from;
-      cam.position.set(f.p.x + (s.x - f.p.x) * k, f.p.y + (EYE - f.p.y) * k + Math.sin(Math.PI * k) * 6, f.p.z + (s.z - f.p.z) * k);
+      cam.position.set(f.p.x + (s.x - f.p.x) * k, f.p.y + (s.y + EYE - f.p.y) * k + Math.sin(Math.PI * k) * 6, f.p.z + (s.z - f.p.z) * k);
       eul.current.set(f.pitch + (s.pitch - f.pitch) * k, f.yaw + angDiff(f.yaw, s.yaw) * k, 0, 'YXZ'); cam.quaternion.setFromEuler(eul.current);
       cam.fov = f.fov + (fov - f.fov) * k; cam.near = f.near + (WALK_NEAR - f.near) * k; cam.updateProjectionMatrix();
       look.current.x = look.current.y = 0;
       if (s.t >= 1) s.phase = 'on';
+      return;
+    }
+    // ---- knopje "verdieping hoger/lager": in één beweging naar de andere verdieping ----
+    const lf = s.lift;
+    if (lf) {
+      lf.t = Math.min(1, lf.t + dt / (reducedMotion() ? 0.01 : 1.25));
+      const k = easeInOut(lf.t); const ty = (lf.to === 1 ? Y1 : groundY(lf.x, lf.z) ?? 0) + EYE;
+      cam.position.set(lf.p0.x + (lf.x - lf.p0.x) * k, lf.p0.y + (ty - lf.p0.y) * k + Math.sin(Math.PI * k) * 1.2, lf.p0.z + (lf.z - lf.p0.z) * k);
+      eul.current.set(lf.pitch0 + (0.04 - lf.pitch0) * k, lf.yaw0 + angDiff(lf.yaw0, lf.yaw) * k, 0, 'YXZ'); cam.quaternion.setFromEuler(eul.current);
+      if (k > 0.5 && useFloor.getState().floor !== lf.to) useFloor.getState().setFloor(lf.to);
+      look.current.x = look.current.y = 0;
+      if (lf.t >= 1) { s.x = lf.x; s.z = lf.z; s.yaw = lf.yaw; s.pitch = 0.04; s.fl = lf.to; s.stair = false; s.y = ty - EYE; s.vx = s.vz = 0; s.lift = null; }
       return;
     }
     step(dt);
@@ -303,7 +373,7 @@ export function WalkController({ mode }: { mode: WorldMode }) {
     const rm = reducedMotion(); const sn = Math.sin(s.yaw), cs = Math.cos(s.yaw);
     const by = rm ? 0 : Math.sin(s.bob * 2) * 0.026 * s.bobAmt;
     const bx = rm ? 0 : Math.sin(s.bob) * 0.012 * s.bobAmt;
-    cam.position.set(s.x + cs * bx, EYE + by, s.z - sn * bx);
+    cam.position.set(s.x + cs * bx, s.y + EYE + by, s.z - sn * bx);
     eul.current.set(s.pitch, s.yaw, 0, 'YXZ'); cam.quaternion.setFromEuler(eul.current);
     if (Math.abs(cam.fov - fov) > 0.01 || cam.near !== WALK_NEAR) { cam.fov = fov; cam.near = WALK_NEAR; cam.updateProjectionMatrix(); }
   });

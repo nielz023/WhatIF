@@ -5,13 +5,14 @@
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Footprints, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Footprints, X } from 'lucide-react';
 import { useGame } from '../store/useGame';
 import { useWorld, reducedMotion } from './useWorld';
 import { useOfficeLoad } from './loadState';
 import { useWalk, walkInput } from './walkState';
 import { roomById, type RoomId } from './rooms';
 import { selectRoom } from './select';
+import { useFloor } from './floors';
 
 /** "Openen": rondlopen stoppen (muis weer los) en het menu van de afdeling openen, precies zoals een klik in Home. */
 function openRoom(id: RoomId) {
@@ -70,7 +71,7 @@ function Hint() {
     <div className="absolute inset-x-0 bottom-5 flex flex-col items-center gap-2 px-3">
       {!locked && !noLock && <div className="holo-mini px-3 py-1 text-[12px] font-semibold text-[#FFD2AE]">Klik in het kantoor om met de muis rond te kijken</div>}
       <div className="holo-mini flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 px-4 py-2 text-[13px] text-slate-200">
-        <Key>WASD</Key> of <Key>pijltjes</Key>: lopen <span className="text-slate-500">·</span> <Key>Shift</Key>: sneller <span className="text-slate-500">·</span> {noLock ? 'slepen met de muis' : 'muis'}: rondkijken <span className="text-slate-500">·</span> <Key>Esc</Key>: stoppen
+        <Key>WASD</Key> of <Key>pijltjes</Key>: lopen <span className="text-slate-500">·</span> <Key>Shift</Key>: sneller <span className="text-slate-500">·</span> <Key>Q</Key>: verdieping <span className="text-slate-500">·</span> {noLock ? 'slepen met de muis' : 'muis'}: rondkijken <span className="text-slate-500">·</span> <Key>Esc</Key>: stoppen
       </div>
     </div>
   );
@@ -141,6 +142,52 @@ function Stick() {
       onPointerUp={end} onPointerCancel={end}>
       <div className="absolute left-1/2 top-1/2 h-[56px] w-[56px] rounded-full border border-white/50 bg-white/25 shadow-[0_0_18px_rgba(32,217,255,.4)]"
         style={{ transform: `translate(calc(-50% + ${k[0]}px), calc(-50% + ${k[1]}px))` }} />
+    </div>
+  );
+}
+
+/** naar de andere verdieping: tijdens het rondlopen loopt Walk.tsx de overgang, anders wisselt het beeld meteen */
+function toggleFloor() {
+  const f = useFloor.getState(); const to = f.floor === 0 ? 1 : 0;
+  if (useWorld.getState().walk) f.request(to); else f.setFloor(to);
+}
+
+/**
+ * Knopje rechts in het midden (niels 2026-11-07: "dat je rechts in het midden van het beeld een klein knopje hebt
+ * om een verdieping hoger te gaan"). Boven: kantine en gamekamer. Tijdens het rondlopen ook met Q.
+ */
+export function FloorButton() {
+  const page = useGame((s) => s.page);
+  const loaded = useOfficeLoad((s) => s.done);
+  const ready = useWalk((s) => s.ready);
+  const touch = useWalk((s) => s.touch);
+  const floor = useFloor((s) => s.floor);
+  const focus = useWorld((s) => s.focus);
+  const walk = useWorld((s) => s.walk);
+  const show = page === 'driftmark' && loaded && ready && (walk || !focus);
+  useEffect(() => {
+    if (!show || !walk) return;
+    const k = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || (e.target as HTMLElement | null)?.closest?.('input,textarea,select,[contenteditable="true"]')) return;
+      if (e.code === 'KeyQ' || e.code === 'PageUp' || e.code === 'PageDown') { e.preventDefault(); toggleFloor(); }
+    };
+    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
+  }, [show, walk]);
+  if (!show) return null;
+  const up = floor === 0;
+  return (
+    <div className="pointer-events-none absolute right-2 top-1/2 z-20 -translate-y-1/2 md:right-4">
+      <button id="dm-floor" onClick={(e) => { e.currentTarget.blur(); toggleFloor(); }}
+        aria-label={up ? 'Een verdieping hoger: kantine en gamekamer' : 'Terug naar de begane grond'} title={up ? 'Naar boven: kantine en gamekamer' : 'Naar de begane grond'}
+        className="pointer-events-auto flex w-[58px] flex-col items-center gap-0.5 rounded-2xl border border-[#FF7A24]/60 bg-[#0b1130]/80 px-1.5 py-2 text-[11px] font-bold leading-tight text-white shadow-[0_0_18px_rgba(255,122,36,.28)] backdrop-blur transition hover:bg-[#FF7A24]/25">
+        {up ? <ChevronUp size={20} className="text-[#FFB070]" /> : <ChevronDown size={20} className="text-[#7FD8FF]" />}
+        <span>{up ? 'Boven' : 'Beneden'}</span>
+        <span className="mt-0.5 flex flex-col gap-0.5" aria-hidden>
+          <span className={`h-1.5 w-1.5 rounded-full ${floor === 1 ? 'bg-[#FF7A24]' : 'bg-white/25'}`} />
+          <span className={`h-1.5 w-1.5 rounded-full ${floor === 0 ? 'bg-[#FF7A24]' : 'bg-white/25'}`} />
+        </span>
+        {walk && !touch && <span className="mt-1"><Key>Q</Key></span>}
+      </button>
     </div>
   );
 }

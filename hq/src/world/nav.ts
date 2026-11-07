@@ -3,11 +3,13 @@
  * De kaart komt uit Blender (hq/blender/nav_build.py): een raster van 5 cm waarin bureaus, wanden,
  * planten en glas zwart zijn. Hier zoeken we met A* een route en maken die daarna recht waar het kan.
  */
+import { patchGround } from './floors';
+
 export interface NavMeta { half: number; res: number; n: number; doors: Record<string, { o: [number, number]; i: [number, number] }>; coffee: Record<string, { p: [number, number]; l: [number, number] }> }
 export interface Nav { meta: NavMeta; free: Uint8Array; n: number }
 
 /** Alleen het grootste aaneengesloten loopgebied telt (kleine ingesloten hoekjes niet), zodat elke route lukt. */
-function mainArea(free: Uint8Array, n: number, seeds: [number, number][], half: number, res: number) {
+export function mainArea(free: Uint8Array, n: number, seeds: [number, number][], half: number, res: number) {
   const reach = new Uint8Array(n * n); const q = new Int32Array(n * n);
   let best: Uint8Array | null = null; let bestN = 0;
   for (const [x, z] of seeds) {
@@ -37,6 +39,7 @@ export function loadNav(): Promise<Nav | null> {
         const d = g.getImageData(0, 0, meta.n, meta.n).data;
         const free = new Uint8Array(meta.n * meta.n);
         for (let i = 0; i < free.length; i++) free[i] = d[i * 4] > 127 ? 1 : 0;
+        patchGround(free, meta.n, meta.half, meta.res); // podium en trap vooraan beloopbaar (floors.ts)
         const seeds = Object.values(meta.doors).map((x) => x.o);
         return { meta, free: mainArea(free, meta.n, seeds, meta.half, meta.res), n: meta.n };
       } catch (e) { console.warn('[HQ] looproutekaart niet geladen', e); return null; }

@@ -33,6 +33,9 @@ import { setAmbience } from './sound';
 import { WalkController, lookAngles } from './Walk';
 import { selectRoom } from './select';
 import { City } from './city';
+import { Upstairs } from './Upstairs';
+import { CastProps } from './castProps';
+import { useFloor, Y1 } from './floors';
 
 type V3 = [number, number, number];
 export type WorldMode = 'home' | 'studio' | 'panel';
@@ -148,6 +151,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
   // alleen bij lokaal testen: camera en besturing bereikbaar voor testscripts
   useEffect(() => { if (window.location?.hostname === 'localhost') (window as unknown as { __dmCam: unknown }).__dmCam = { camera, controls, scene }; }, [camera, scene]);
   const focus = useWorld((s) => s.focus);
+  const floor = useFloor((s) => s.floor);
   const introKey = useWorld((s) => s.introKey);
   const setIntro = useWorld((s) => s.setIntro);
   // met de vaste FOV (niet cam.fov): bij het wisselen naar onze eigen camera mag de afstand niet veranderen,
@@ -170,8 +174,10 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     const wide = size.width >= 900;
     const right = new THREE.Vector3(Math.cos(keepAz), 0, -Math.sin(keepAz)); const back = new THREE.Vector3(Math.sin(keepAz), 0, Math.cos(keepAz));
     if (mode === 'home' && r) { const p = roomCenter(r); return { t: new THREE.Vector3(p[0], 0.6, p[2]).addScaledVector(right, wide ? 3 : 0).addScaledVector(back, 0.6), d: fit * 0.5 }; }
-    if (mode === 'panel') return { t: new THREE.Vector3(0, 0.5, 1.5), d: fit * 1.04 };
-    return { t: new THREE.Vector3(0, 0.5, 0).addScaledVector(back, wide ? 0.6 : 0), d: fit };
+    // bovenverdieping: zelfde beeld, maar op de vloer van boven (en iets dichterbij: hij is kleiner)
+    const up = floor === 1 && mode !== 'studio' ? Y1 : 0;
+    if (mode === 'panel') return { t: new THREE.Vector3(0, 0.5 + up, 1.5), d: fit * 1.04 };
+    return { t: new THREE.Vector3(0, 0.5 + up, 0).addScaledVector(back, wide ? 0.6 : 0), d: fit * (up ? 0.92 : 1) };
   };
   const start = (dur: number, g: { t: THREE.Vector3; d: number }, tAz: number, tEl = ELEV) => {
     const c = controls.current; const fAz = az();
@@ -213,7 +219,7 @@ function CameraRig({ mode }: { mode: WorldMode }) {
     if (useWorld.getState().walk || back.current) return; // rondlopen of de terugvlucht stuurt de camera al
     start(0.85, goal(az()), az(), mode === 'panel' ? ELEV : Math.min(Math.max(el(), 0.52), 1.1));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focus, mode, fit]);
+  }, [focus, mode, fit, floor]);
 
   const lastKey = useRef(introKey);
   useEffect(() => {
@@ -648,9 +654,9 @@ function Scene({ mode }: { mode: WorldMode }) {
   const open = (room: RoomId) => { if (mode === 'panel') setPage('driftmark'); openWorker(room); };
   const members = useMemo(() => mode === 'studio'
     ? gameStaff(agents, (id) => selectAgent(id))
-    : staffFor({ per, all: activity, punten, seats, at: (room, u, v) => { const p = atRoom(roomById(room)!, u, v); return [p[0], p[2]]; }, onOpen: open }),
+    : staffFor({ per, all: activity, punten, seats, videos: live.videos ?? [], at: (room, u, v) => { const p = atRoom(roomById(room)!, u, v); return [p[0], p[2]]; }, onOpen: open }),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [mode, agents, per, activity, punten, seats]);
+  [mode, agents, per, activity, punten, seats, live.videos]);
   const handoffs = useMemo(() => handoffsFor(live.videos ?? []), [live.videos]);
   // kantoorgeluid: harder geroezemoes en meer toetsenborden als er meer agents werken
   useEffect(() => { const n = members.filter((m) => m.status === 'werkt' || m.status === 'bezig').length; setAmbience(Math.min(8, n), Math.min(1, n / 14)); }, [members]);
@@ -660,6 +666,11 @@ function Scene({ mode }: { mode: WorldMode }) {
   const select = (r: RoomDef) => selectRoom(r, mode);
   const coach = ROOMS.find((x) => x.id === 'coach')!;
   const busyRoom = (id: RoomId) => members.some((m) => m.room === id && (m.status === 'werkt' || m.status === 'bezig'));
+  // boven (kantine en gamekamer): de borden, de pijplijn en de alarmlichten van beneden zijn weg
+  const floor = useFloor((s) => s.floor);
+  const ground = floor === 0;
+  // een afdeling openen (bv. via de knoppen) brengt je terug naar beneden
+  useEffect(() => { if (focus && useFloor.getState().floor === 1 && !useWorld.getState().walk) useFloor.getState().setFloor(0); }, [focus]);
 
   return (
     <>
@@ -696,7 +707,7 @@ function Scene({ mode }: { mode: WorldMode }) {
       {office && <PostIts screens={office.screens} />}
       <Reception screens={screens} baked={!!office} walk={walk} lit={focus === 'coach' || hover === 'coach'} onSelect={() => select(coach)} />
       {!office && <Entrance />}
-      {ROOMS.filter((r) => r.slot >= 0).map((r) => {
+      {ground && ROOMS.filter((r) => r.slot >= 0).map((r) => {
         const st = statusOf(per[r.id]);
         return (
           <Wing key={r.id} r={r} baked={office} walk={walk} screens={screens} busy={busyRoom(r.id)} lit={focus === r.id || hover === r.id} alert={mode !== 'studio' && (st === 'wacht' || st === 'probleem') ? st : null}
@@ -705,12 +716,14 @@ function Scene({ mode }: { mode: WorldMode }) {
       })}
       <Crew members={members} seats={seats} chairs={office?.chairs} handoffs={mode === 'studio' ? [] : handoffs} roomName={roomName}
         onHoverRoom={(id) => setHover((id as RoomId) ?? null)} />
-      {mode !== 'studio' && <Pipeline videos={live.videos ?? []} onPick={(id) => select(roomById(id)!)} />}
+      {mode !== 'studio' && ground && <Pipeline videos={live.videos ?? []} onPick={(id) => select(roomById(id)!)} />}
+      {mode !== 'studio' && <Upstairs />}
+      {mode !== 'studio' && <CastProps members={members} />}
       <City />
       <Drone />
-      {mode !== 'studio' && <VoiceProps />}
+      {mode !== 'studio' && ground && <VoiceProps />}
       <Confetti />
-      {mode !== 'studio' && <Beacon alarms={alarms} />}
+      {mode !== 'studio' && ground && <Beacon alarms={alarms} />}
       <Snow />
       <Disco />
       <EffectComposer multisampling={quality === 'snel' ? 0 : 4}>

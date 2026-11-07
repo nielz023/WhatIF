@@ -2,7 +2,7 @@ import { Component, lazy, Suspense, useEffect, useMemo, useState, type ReactNode
 import { hasWebGL, reducedMotion } from './useWorld';
 import { useOfficeLoad } from './loadState';
 import type { WorldMode } from './NeonOffice';
-import WalkHud from './WalkHud';
+import WalkHud, { FloorButton } from './WalkHud';
 
 const NeonOffice = lazy(() => import('./NeonOffice'));
 
@@ -38,6 +38,8 @@ export default function WorldLayer({ mode }: { mode: WorldMode }) {
         style={{ background: 'radial-gradient(ellipse at center, rgba(5,8,22,.5) 0%, rgba(5,8,22,.25) 75%)' }} />
       {/* rondlopen: vizier, hint, vraag bij een afdeling en joystick */}
       <WalkHud />
+      {/* knopje rechts in het midden: naar de bovenverdieping en terug */}
+      <FloorButton />
     </div>
   );
 }
