@@ -97,6 +97,7 @@ hw = S.watch(held, t_e - 0.1, side="R", name="Zakhorloge_zout", open_=1.0, loc=(
 for o in [hw] + list(hw.children_recursive):
     show(o, t_e - 0.1)
 S.watch_hands("Zakhorloge_zout", t_e, END, every=1.0)
+S.reach(held, t_e - 0.4, "R", None, 0.0)
 S.reach(held, t_e, "R", EAR)
 S.reach(held, END, "R", EAR)
 S.eyes_closed(held, t_e + 0.7, END)

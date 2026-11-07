@@ -134,6 +134,7 @@ T_OPEN = t_c + 0.9
 for t, v in ((0.0, 0.0), (T_OPEN, 0.0), (T_OPEN + 0.35, 1.0)):
     dek.rotation_euler.x = -math.radians(105) * v
     dek.keyframe_insert("rotation_euler", index=0, frame=F(t))
+S.reach(held, t_c - 0.4, "R", None, 0.0)
 S.reach(held, t_c, "R", BOX1 + V(0.04, -0.07, 0.06))
 S.reach(held, T_OPEN + 0.3, "R", BOX1 + V(0.04, -0.08, 0.10))
 S.reach(held, t_c + 2.4, "R", None, 0.0)

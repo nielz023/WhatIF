@@ -135,6 +135,7 @@ WH = S.bone_world(held, "hand.R", t_f + 0.5)
 doorn = T.cyl("Doorn", (0, 0, 0), 0.004, 0.07, S.mat("doorn_bruin", (0.35, 0.24, 0.12)), r2=0.0005, seg=6, ol=0)
 grab(S, doorn, held, t_f - 0.1, "hand.L", loc=(0, 0.06, 0.0), rot=(0, 0, 0))
 show(doorn, t_f - 0.1)
+S.reach(held, t_f - 0.1, "L", None, 0.0)
 for k, t in enumerate(frange(t_f + 0.3, t_g + 0.8, 0.3)):                   # peutert in het horloge
     S.reach(held, t, "L", WH + V(-0.05 if k % 2 else -0.03, -0.02, 0.06 if k % 2 else 0.04))
 S.reach(held, t_g + 1.0, "L", None, 0.0)

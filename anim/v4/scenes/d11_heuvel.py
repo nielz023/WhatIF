@@ -111,6 +111,7 @@ S.reach(broer, t_d, "R", PH + V(-0.32 + 0.12, 0.05, 0.0))
 S.reach(broer, t_d + 1.2, "R", PH + V(0.12 - 0.05, 0.0, 0.0))
 S.reach(broer, t_d + 1.8, "R", None, 0.0)
 S.reach(held, t_d + 0.9, "L", PH + V(-0.12, 0, 0))
+S.reach(held, t_d + 0.5, "R", None, 0.0)
 S.reach(held, t_d + 0.9, "R", PH + V(0.12, 0, 0))
 S.reach(held, t_e + 1.2, "R", PH + V(0.12, 0, 0))
 S.reach(held, t_e + 2.2, "R", PH + V(0.02, 0.0, 0.02))          # duim over mama's gezicht
@@ -161,7 +162,7 @@ S.cam(t_b, (MID + V(0.1, 2.5, -0.55), MID + V(0, 0, -0.25), 32), (MID + V(0.08, 
 S.cam(t_c, (MID + V(0.15, 1.8, -0.35), MID + V(0, 0, -0.12), 32), (MID + V(0.13, 1.7, -0.35), MID + V(0, 0, -0.12), 32))
 S.cam(t_c2, CAMH)
 HPd = S.headpos(held, t_d + 1.5)
-CF = PH + V(0.25, 0.08, 0.62)
+CF = PH + V(0.45, 0.25, 0.55)
 if (CF - HPd).length < 0.55:
     CF = HPd + (CF - HPd).normalized() * 0.55
 print("DBG11", tuple(round(x, 2) for x in HH), tuple(round(x, 2) for x in HPd), tuple(round(x, 2) for x in PH), tuple(round(x, 2) for x in CF))

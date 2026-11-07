@@ -112,6 +112,7 @@ WH = S.bone_world(held, "hand.R", t_d + 0.8)
 # 15e: schudden en bij zijn oor houden
 S.beat(held, t_e, "staan", arms=arms(arm("L", (0.30, 0.45, -0.80), (-0.60, 0.70, 0.10)), LOOKH), face="twijfel", face_amt=0.7,
        look=(0.0, -0.8), body={"head": (14, 0, 0)})
+S.reach(held, t_e - 0.3, "R", None, 0.0)
 for k, t in enumerate(frange(t_e + 0.1, t_e + 1.0, 0.12)):
     S.reach(held, t, "R", WH + V(0.05 if k % 2 else -0.05, 0, 0.02 if k % 2 else -0.02))
 EAR = HD + SD * 0.36 + V(0, 0, -0.04)
@@ -139,6 +140,7 @@ key(foto, t_h + 1.9, loc=tuple(CHEST), rot=(90, 0, 20), scale=0.001)
 show(foto, t_f)
 S.reach(held, t_f + 0.3, "R", CHEST + SD * 0.10)
 S.reach(held, t_f + 1.4, "R", PH + SD * 0.12)
+S.reach(held, t_f + 1.0, "L", None, 0.0)
 S.reach(held, t_f + 1.4, "L", PH - SD * 0.12)
 S.reach(held, t_h + 0.6, "R", PH + SD * 0.12)
 S.reach(held, t_h + 0.6, "L", PH - SD * 0.12)
@@ -162,14 +164,14 @@ S.cam(t_d, (WH + FW * 0.42 + SD * 0.1 + V(0, 0, 0.42), WH, 45), (WH + FW * 0.38 
 S.cam(t_e, (HD + FW * 1.5 + SD * 0.6 + V(0, 0, -0.05), HD + V(0, 0, -0.12), 36),
       (HD + FW * 1.4 + SD * 0.55 + V(0, 0, -0.05), HD + V(0, 0, -0.12), 36))
 HF = S.headpos(held, t_f + 2.0)
-CF = HF - FW * 0.1 - SD * 0.62 + V(0, 0, 0.22)          # over zijn linkerschouder, op ooghoogte: hij ziet de foto
+CF = PH + FW * 0.15 + V(0, 0, 0.42)          # over zijn linkerschouder, op ooghoogte: hij ziet de foto
 S.cam(t_f, (CF, PH, 35), (CF + (PH - CF) * 0.08, PH, 35))
 HG = S.headpos(held, t_g + 1.5)
-S.cam(t_g, (HG + FW * 1.75 - SD * 0.5 + V(0, 0, 0.02), HG + V(0, 0, -0.15), 32),
-      (HG + FW * 1.55 - SD * 0.45 + V(0, 0, 0.02), HG + V(0, 0, -0.15), 32))
+S.cam(t_g, (HG + FW * 1.6 - SD * 0.45 + V(0, 0, -0.45), HG + V(0, 0, -0.2), 32),
+      (HG + FW * 1.45 - SD * 0.4 + V(0, 0, -0.42), HG + V(0, 0, -0.2), 32))
 HG1 = S.headpos(held, t_g1 + 1.5)
-S.cam(t_g1, (HG1 + FW * 1.45 - SD * 0.35 + V(0, 0, 0.02), HG1 + V(0, 0, -0.1), 35),
-      (HG1 + FW * 1.3 - SD * 0.3 + V(0, 0, 0.02), HG1 + V(0, 0, -0.1), 35))
+S.cam(t_g1, (HG1 + FW * 1.35 - SD * 0.3 + V(0, 0, -0.42), HG1 + V(0, 0, -0.15), 35),
+      (HG1 + FW * 1.22 - SD * 0.27 + V(0, 0, -0.4), HG1 + V(0, 0, -0.15), 35))
 HH_ = S.headpos(held, t_h + 1.2)
 S.cam(t_h, (HH_ + FW * 1.8 + SD * 0.4 + V(0, 0, -0.1), HH_ + V(0, 0, -0.3), 30),
       (HH_ + FW * 1.7 + SD * 0.38 + V(0, 0, -0.1), HH_ + V(0, 0, -0.3), 30))

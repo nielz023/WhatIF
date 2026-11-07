@@ -47,6 +47,8 @@ S.beat(pest, 0.0, "armen_over", face="zelfverzekerd", face_amt=0.9, at=H_HEAD)
 S.beat(pest, t_a2 + 0.2, "armen_over", face="grijns", face_amt=1.0, at=H_HEAD + V(0, 0, -0.1))
 T_PUSH = t_b + 0.35
 BACK = V(0.0, 5.42, PZ + 1.0)
+S.reach(pest, T_PUSH - 0.75, "L", None, 0.0)
+S.reach(pest, T_PUSH - 0.75, "R", None, 0.0)
 S.reach(pest, T_PUSH - 0.35, "L", BACK + V(0.12, 0.10, 0.0))
 S.reach(pest, T_PUSH - 0.35, "R", BACK + V(-0.12, 0.10, 0.0))
 S.reach(pest, T_PUSH, "L", BACK + V(0.12, -0.10, 0.0))

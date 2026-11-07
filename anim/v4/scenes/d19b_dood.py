@@ -31,6 +31,8 @@ S.beat(held, t_d, "staan", arms=arms(REST_L, LOOKH), face="bang", face_amt=0.6, 
 S.beat(held, t_d + 1.6, "staan", arms=arms(REST_L, LOOKH), face="bang", face_amt=0.8, at=SUN + V(0, -2200, -250))
 CHEST = S.headpos(held, t_e) + V(0, 0.18, -0.62)
 S.beat(held, t_e, "staan", face="verdrietig", face_amt=0.3, at=SUN, body={"head": (6, 0, 0)})
+S.reach(held, t_e - 0.3, "R", None, 0.0)
+S.reach(held, t_e - 0.3, "L", None, 0.0)
 S.reach(held, t_e + 0.1, "R", CHEST + V(-0.05, 0, 0))
 S.reach(held, t_e + 0.1, "L", CHEST + V(0.08, 0, 0.02))
 S.reach(held, END, "R", CHEST + V(-0.05, 0, 0))

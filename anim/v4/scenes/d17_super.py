@@ -58,6 +58,7 @@ REST = arms(arm("L", (0.35, 0.15, -0.92), (0.20, 0.75, -0.62)), arm("R", (0.35, 
 S.beat(held, t_d, **hs, arms=REST, face="neutraal", face_amt=0.5, body={"spine": (4, 0, 0)}, look=(0.0, -0.3))
 FOOT = S.bone_world(held, "foot.R", t_d + 0.1) if "foot.R" in held.rig.pose.bones else V(ROTS.x, ROTS.y, ROTS.z + 0.1)
 S.beat(held, t_d + 1.4, **hs, arms=REST, face="twijfel", face_amt=0.5, body={"spine": (22, 0, 0), "head": (14, 0, 0)}, mouth=0.3)
+S.reach(held, t_d + 1.1, "R", None, 0.0)
 S.reach(held, t_d + 1.5, "R", FOOT + V(0, 0, 0.12))
 for k, t in enumerate(frange(t_d + 1.8, t_d + 3.0, 0.15)):
     S.reach(held, t, "R", FOOT + V(0.03 if k % 2 else -0.03, 0, 0.14))

@@ -73,11 +73,21 @@ for t, v, e in ((0.0, 0.2, 0.02), (0.6, 0.2, 0.02), (2.8, 3.0, 0.35)):
     emission_key("Opa_horloge_lume", t, v, interp="LINEAR")
     gl.data.energy = e
     gl.data.keyframe_insert("energy", frame=F(t))
-WP = S.bone_world(held, "hand.R", 1.0)
+S.beat(held, 2.4, "staan", arms=LOOKH, face="verdrietig", face_amt=0.4, look=(0.0, -0.8), body={"head": (16, 0, 0)})
+
+
+def wpos(t):
+    bpy.context.scene.frame_set(F(t))
+    bpy.context.view_layer.update()
+    return hw.matrix_world.translation.copy()
+
+
+WP = wpos(1.0)
 # 21a: linkerhand windt het kroontje op (klein heen-en-weer)
-CROWN = WP + V(0.07, -0.05, 0.05)
-S.reach(held, 0.3, "L", CROWN)
-for k, t in enumerate(frange(0.6, t_b - 0.4, 0.3)):
+CROWN = WP + V(0.04, -0.05, 0.03)
+S.reach(held, 0.0, "L", None, 0.0)
+S.reach(held, 0.6, "L", CROWN)
+for k, t in enumerate(frange(0.9, t_b - 0.4, 0.3)):
     S.reach(held, t, "L", CROWN + V(0.0, 0.0, 0.012 if k % 2 else -0.004))
 S.reach(held, t_b - 0.1, "L", None, 0.0)
 S.sfx("sfx_horloge_opwinden", 0.5, 0.35, loop_to=t_b - 0.4)
@@ -88,6 +98,7 @@ n_sec = int((t_c + 0.4 - 0.5) // 1.0) + 1
 S.beat(held, t_b, "staan", face="neutraal", face_amt=0.4, look=(-0.4, -0.1), body={"head": (0, 0, -8)})
 HD = S.headpos(held, t_b + 0.6)
 EAR = HD + SD * 0.36 + V(0, 0, -0.04)
+S.reach(held, t_b - 0.4, "R", None, 0.0)
 S.reach(held, t_b, "R", EAR)
 S.reach(held, t_c - 0.1, "R", EAR)
 S.tick(t_b + 0.8, 0.4)
@@ -145,13 +156,13 @@ HJ = S.headpos(held, t_j + 1.0)
 DL = (LP - HD).normalized()
 
 # ---------------------------------------------------------------- camera's
-WA = S.bone_world(held, "hand.R", 1.5)
-S.cam(0.0, (WA + V(0.3, -0.62, 0.08), WA, 45), (WA + V(0.26, -0.54, 0.07), WA, 45))
+WA = wpos(1.5)
+S.cam(0.0, (WA + V(0.25, -0.9, 0.12), WA + V(0.05, 0, 0), 35), (WA + V(0.21, -0.76, 0.1), WA + V(0.05, 0, 0), 35))
 S.cam(t_b, (HD + V(0.3, -1.25, -0.12), HD + V(-0.05, 0, -0.05), 40), (HD + V(0.27, -1.15, -0.12), HD + V(-0.05, 0, -0.05), 40))
 S.cam(t_c, (HD + V(0.15, -1.3, -0.15), HD + V(0, 0, -0.12), 38))
 S.cam(t_d, (HD + V(0.12, -1.25, -0.1), HD + V(0, 0, -0.05), 40), (HD + V(0.1, -1.05, -0.08), HD + V(0, 0, -0.05), 40))
-WE = S.bone_world(held, "hand.R", t_e + 1.0)
-S.cam(t_e, (WE + V(0.25, -0.58, 0.1), WE, 50))
+WE = wpos(t_e + 1.0)
+S.cam(t_e, (WE + V(0.2, -0.75, 0.18), WE, 40))
 S.cam(t_f, (HD + V(0.2, -1.2, -0.1), HD + V(0, 0, -0.05), 40), (HD + V(0.18, -1.1, -0.1), HD + V(0, 0, -0.05), 40))
 S.cam(t_g, (HD + V(0.55, -1.15, -0.05), HD + V(0.05, 0, -0.05), 38))
 CW = HD - DL * 2.2 + V(0, -0.7, 0.35)

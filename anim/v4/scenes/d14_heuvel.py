@@ -277,7 +277,7 @@ S.cam(t_b, (V(1.6, -3.4, 1.1), V(0.6, 6.0, 4.0), 20), (V(1.5, -3.25, 1.1), V(0.8
 IN = HD + UP * 0.75 + AX * 0.25                            # in de kier, boven zijn gezicht
 S.cam(t_c, (IN + UP * 0.25, HD, 35), (IN, HD, 35))
 S.cam(t_d, (HD + UP * 0.68 + AX * 0.22 - SIDE * 0.1, HD + UP * 0.05, 20), (HD + UP * 0.62 + AX * 0.2 - SIDE * 0.1, HD + UP * 0.05, 20))
-S.cam(t_e, (WATCH + UP * 0.24 + SIDE * 0.22 - AX * 0.04, WATCH, 40), (WATCH + UP * 0.21 + SIDE * 0.2 - AX * 0.03, WATCH, 40))
+S.cam(t_e, (WATCH + UP * 0.32 + SIDE * 0.1 + AX * 0.12, WATCH, 50), (WATCH + UP * 0.28 + SIDE * 0.08 + AX * 0.1, WATCH, 50))
 S.cam(t_e2, (HD + UP * 0.68 + AX * 0.25 + SIDE * 0.12, HD + UP * 0.05, 20), (HD + UP * 0.62 + AX * 0.22 + SIDE * 0.1, HD + UP * 0.05, 20))
 S.cam(t_e3, (HD + UP * 0.7 + AX * 0.3 + SIDE * 0.05, HD, 20), (HD + UP * 0.64 + AX * 0.27 + SIDE * 0.05, HD, 20))
 S.cam(t_f, (IN + UP * 0.1, HD, 30))

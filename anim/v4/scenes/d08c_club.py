@@ -98,6 +98,7 @@ agent = S.actor("agent", AG, 0)
 show(agent.rig, t_p)
 S.beat(agent, t_p, "staan", face="neutraal", face_amt=0.7, at=SEAT + V(0, 0, 1.3), crouch=(0.04, 14))
 KNOCK = CAR + V(0.2, 0.92, 0.82)
+S.reach(agent, t_p, "R", None, 0.0)
 for k, t in enumerate((t_p + 0.3, t_p + 0.45, t_p + 0.6, t_p + 0.75)):
     S.reach(agent, t, "R", KNOCK + V(0, 0.08 if k % 2 == 0 else 0.0, 0.0))
 S.reach(agent, t_p + 1.1, "R", None, 0.0)
