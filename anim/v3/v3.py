@@ -204,6 +204,19 @@ class Scene3(_v2.Scene2):
         super().post_cams()
         if os.environ.get("WHATIF_LIGHT", "1") != "0":
             self._cine_post()
+        if os.environ.get("WHATIF_LIGHTDUMP"):          # bv. "0.3,1.0": welke lampen staan dicht bij welk hoofd
+            for tt in (float(x) for x in os.environ["WHATIF_LIGHTDUMP"].split(",")):
+                self.sc.frame_set(F(tt))
+                for ch in self.cast[:3]:
+                    hp = self.headpos(ch, tt)
+                    rows = []
+                    for o in bpy.data.objects:
+                        if o.type == "LIGHT" and not o.hide_render and o.data.type != "SUN":
+                            d = (o.matrix_world.translation - hp).length
+                            if o.data.energy > 0 and d < 6:
+                                rows.append((round(o.data.energy / max(0.05, d * d), 1), o.name, round(d, 2), round(o.data.energy, 1)))
+                    rows.sort(reverse=True)
+                    print("LAMPEN", tt, ch.name, ch.rig.users_collection[0].name, rows[:3])
         sc = self.sc
         sc.view_settings.exposure = self.exposure + (0.15 if _v2.ENGINE == "EEVEE" else 0.0)
         try:                                   # grote sets: anders 'Shadow buffer full' en ontbrekende schaduwen
@@ -530,12 +543,20 @@ def _subjects(S, t0, t1, cam, maxd=7.0):
     return out[:2]
 
 
+def S_head(S, ch, t):
+    try:
+        return S.headpos(ch, t)
+    except Exception:
+        return S.bone_world(ch, "head", t)
+
+
 def _cine_light(self):
     """Per shot een zacht key-licht van de camerakant op de onderwerpen (light linking: alleen op het figuur),
     plus oranje/blauwe randlichten (zoals bij het hoofdpersonage) voor iedereen die ergens onderwerp is."""
     night = getattr(self, "night", False)
     keys = {}
     order = []
+    moving_keys = {}
     for t0, t1, camobj in getattr(self, "shots_plan", []) or []:
         pass
     cams = sorted(self.cams, key=lambda c: c["t0"])
@@ -566,21 +587,34 @@ def _cine_light(self):
             side = Vector((-d.y, d.x, 0))
             sc_ = ch.rig.scale.z
             dist = 1.7 * sc_
-            lo.location = h + (d * math.cos(0.6) + side * math.sin(0.6)) * dist + Vector((0, 0, 0.75 * sc_))
-            lo.rotation_euler = (h - lo.location).to_track_quat("-Z", "Y").to_euler()
+            off = (d * math.cos(0.6) + side * math.sin(0.6)) * dist + Vector((0, 0, 0.75 * sc_))
             e = (15.0 if rank == 0 else 9.0) * sc_ * sc_ * (1.0 if night else 0.6)
-            for f, en in ((F(t0), e), (max(F(t0), F(t1) - 1), e)):
-                lo.data.energy = en
-                lo.data.keyframe_insert("energy", frame=f)
+            fa, fb = F(t0), max(F(t0), F(t1) - 1)
+            # het licht reist mee met het hoofd (een fietser/renner reed anders dóór het stilstaande licht: witte flits)
+            moving = (S_head(self, ch, t0) - S_head(self, ch, (t1 - 1.0 / FPS))).length > 0.3
+            frames = sorted(set(list(range(fa, fb + 1, 3)) + [fb])) if moving else [fa, fb]
+            lo.data.energy = e
+            lo.data.keyframe_insert("energy", frame=fa)
+            for f in frames:
+                hh = S_head(self, ch, (f - 1) / FPS) if moving else h
+                lo.location = hh + off
+                lo.rotation_euler = (hh - lo.location).to_track_quat("-Z", "Y").to_euler()
                 lo.keyframe_insert("location", frame=f)
                 lo.keyframe_insert("rotation_euler", frame=f)
             lo.data.energy = 0.0
             lo.data.keyframe_insert("energy", frame=F(t1))
+            moving_keys.setdefault(lo, set()).update(frames if moving else [])
+            if os.environ.get("WHATIF_LIGHTDBG"):
+                print("KEYLICHT", ch.name, round(t0, 2), round(t1, 2), "bewegend" if moving else "stil", round(e, 1),
+                      "afstand bij start", round((S_head(self, ch, t0) - (h + off)).length, 2))
     for lo in keys.values():
+        mk = moving_keys.get(lo, set())
         for owner in (lo, lo.data):
             for fc in A._fcurves(owner):
                 for kp in fc.keyframe_points:
-                    kp.interpolation = "CONSTANT"
+                    # binnen een bewegend shot: positie lineair tussen de sleutels; bij een cut/energie: hard
+                    lin = owner is lo and int(round(kp.co.x)) in mk and fc.data_path in ("location", "rotation_euler")
+                    kp.interpolation = "LINEAR" if lin else "CONSTANT"
     # randlichten ook voor de belangrijkste bijfiguren (max 4 extra)
     for ch in order[:6]:
         if ch not in self.heroes and len(self.heroes) < 5:
