@@ -61,7 +61,7 @@ for g in [o for o in bpy.data.objects if o.name.startswith("Gebouw_") and o.type
 
 # ---------------------------------------------------------------- fietsers overal
 RIDERS = [("figurant_a", [V(-2.2, -40, 0), V(-2.2, 40, 0)], 0.0, END, (0.85, 0.15, 0.12)),
-          ("figurant_e", [V(4.0, 40, 0), V(4.0, -40, 0)], 0.0, END, (0.15, 0.45, 0.85)),
+          ("figurant_e", [V(4.4, 40, 0), V(4.4, -40, 0)], 0.0, END, (0.15, 0.45, 0.85)),
           ("figurant_f", [V(-40, -2.4, 0), V(40, -2.4, 0)], 0.0, END, (0.95, 0.75, 0.15)),
           ("kind_a", [V(40, 2.2, 0), V(-40, 2.2, 0)], 0.0, END, (0.3, 0.7, 0.35))]
 for k, (n, pts, t0, t1, col) in enumerate(RIDERS):
@@ -73,10 +73,11 @@ for k, (n, pts, t0, t1, col) in enumerate(RIDERS):
     S.face(ch, 0.0, "blij", 0.6)
 # 19b: twee fietsers rijden langs het bord BIKES ONLY
 B_SIGN = V(0.0, 18.0, 0)
-for k, (n, x, col) in enumerate((("figurant_b", -1.3, (0.2, 0.6, 0.6)), ("kind_b", -1.9, (0.9, 0.4, 0.6)))):
+for k, (n, x, col) in enumerate((("figurant_b", -1.3, (0.2, 0.6, 0.6)), ("kind_b", -0.7, (0.9, 0.4, 0.6)))):
     # ze rijden al vanaf het begin (geen stilstaan en dan ineens volle snelheid) en blijven doorrijden tot het einde
-    t0b, t1b, y0 = t_b - 0.6 + 0.5 * k, t_c + 0.2, 6.0 - 2 * k
-    vb = (24.0 - y0) / (t1b - t0b)
+    # zelfde tempo; het kind rijdt 1,5 m vóór de ander en schuin ernaast, zodat ze allebei vóór de kerende auto langs zijn
+    t0b, y0 = t_b - 0.6, 6.0 + 1.5 * k
+    vb = 18.0 / (t_c + 0.2 - t0b)
     ch = S.actor(n, V(x, y0 - vb * t0b, 0), 180, label=f"fietser_b{k}")
     _, crank = bike(S, ch, color=col, name=f"Fiets_bord_{k}")
     # het kind (k=1) staat op de trappers: anders haalt hij het stuur niet (binnen ride, geen dubbele sleutels)

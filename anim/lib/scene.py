@@ -833,7 +833,7 @@ class Scene:
             print("PROBE", ch.name, " ".join(f"{n}@{t:.2f}={a:.0f}" for a, n, t in spikes[:12]))
             # botsing: heupen of voeten binnen de (lokale) bbox van een zichtbare auto/bus/winkelwagen
             hits = {}
-            for f in range(1, f1 + 1, 3):
+            for f in range(1, f1 + 1):
                 sc.frame_set(f)
                 for o in cars:
                     if o.hide_render:
@@ -842,7 +842,8 @@ class Scene:
                     for n in ("hips", "foot.L", "foot.R"):
                         q = inv @ pts[n][f - 1]
                         lo, hi = cars[o]
-                        if all(lo[k] + 0.05 < q[k] < hi[k] - 0.05 for k in range(3)):
+                        mg = (-0.3, -0.3, 0.05)              # x/y: 30 cm speling voor fiets/armen; z: echt binnen de auto
+                        if all(lo[k] + mg[k] < q[k] < hi[k] - mg[k] for k in range(3)):
                             hits.setdefault(o.name, []).append(round((f - 1) / FPS, 1))
             for nm, ts in hits.items():
                 o = bpy.data.objects[nm]

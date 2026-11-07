@@ -125,7 +125,7 @@ S.cam(0.0, ((-2.45, 6.35, 1.5), (-1.3, 10.8, 1.0), 30), ((-2.3, 6.9, 1.45), (-1.
 S.cam(t_2, ((1.5, 3.2, 1.2), (-0.8, 5.7, 1.0), 32), ((1.35, 3.35, 1.2), (-0.8, 5.7, 1.0), 34), handheld=0.2)
 # 11e-3 CLOSE de jongen op zijn fiets
 HH = S.headpos(held, t_3 + 1.0)
-S.cam(t_3, (HH + V(1.2, 0.75, 0.0), HH + V(0, 0, -0.14), 32), (HH + V(1.1, 0.68, 0.0), HH + V(0, 0, -0.14), 34))
+S.cam(t_3, (HH + V(1.9, 1.2, -0.1), HH + V(0, 0, -0.32), 32), (HH + V(1.75, 1.1, -0.1), HH + V(0, 0, -0.3), 34))
 # 11f-1 WIDE track achter de fietsen aan
 S.cam(t_f1, None, fn=S.follow(held, (-5.5, 1.6, 1.9), lens=26, look_offset=(9.0, 0.6, -0.4)), shake=S.shake(0.2))
 # 11f-2 WIDE drone pull-back: de lege straat, twee kleine fietsers
