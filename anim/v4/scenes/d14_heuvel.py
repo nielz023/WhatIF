@@ -276,15 +276,15 @@ S.cam(0.0, CAMH, (V(-3.45, -9.2, 2.3), V(0.8, 8.0, -0.6), 22))
 S.cam(t_b, (V(1.6, -3.4, 1.1), V(0.6, 6.0, 4.0), 20), (V(1.5, -3.25, 1.1), V(0.8, 6.0, 4.6), 20), handheld=0.35)
 IN = HD + UP * 0.75 + AX * 0.25                            # in de kier, boven zijn gezicht
 S.cam(t_c, (IN + UP * 0.25, HD, 35), (IN, HD, 35))
-S.cam(t_d, (HD + UP * 0.68 + AX * 0.22 - SIDE * 0.1, HD + UP * 0.05, 35), (HD + UP * 0.62 + AX * 0.2 - SIDE * 0.1, HD + UP * 0.05, 35))
-S.cam(t_e, (WATCH + UP * 0.32 + SIDE * 0.1 + AX * 0.12, WATCH, 50), (WATCH + UP * 0.28 + SIDE * 0.08 + AX * 0.1, WATCH, 50))
-S.cam(t_e2, (HD + UP * 0.68 + AX * 0.25 + SIDE * 0.12, HD + UP * 0.05, 35), (HD + UP * 0.62 + AX * 0.22 + SIDE * 0.1, HD + UP * 0.05, 35))
-S.cam(t_e3, (HD + UP * 0.7 + AX * 0.3 + SIDE * 0.05, HD, 32), (HD + UP * 0.64 + AX * 0.27 + SIDE * 0.05, HD, 32))
+S.cam(t_d, (HD + UP * 0.68 + AX * 0.22 - SIDE * 0.1, HD + UP * 0.05, 20), (HD + UP * 0.62 + AX * 0.2 - SIDE * 0.1, HD + UP * 0.05, 20))
+S.cam(t_e, (WATCH + UP * 0.24 + SIDE * 0.22 - AX * 0.04, WATCH, 40), (WATCH + UP * 0.21 + SIDE * 0.2 - AX * 0.03, WATCH, 40))
+S.cam(t_e2, (HD + UP * 0.68 + AX * 0.25 + SIDE * 0.12, HD + UP * 0.05, 20), (HD + UP * 0.62 + AX * 0.22 + SIDE * 0.1, HD + UP * 0.05, 20))
+S.cam(t_e3, (HD + UP * 0.7 + AX * 0.3 + SIDE * 0.05, HD, 20), (HD + UP * 0.64 + AX * 0.27 + SIDE * 0.05, HD, 20))
 S.cam(t_f, (IN + UP * 0.1, HD, 30))
 S.cam(t_g, (HIP + SIDE * 4.2 - AX * 1.2 + UP * 2.8, HIP + UP * 0.6, 24), (HIP + SIDE * 3.9 - AX * 1.1 + UP * 2.6, HIP + UP * 0.8, 24))
 S.cam(t_h, (HD + UP * 0.45, KH, 50), (HD + UP * 0.45 + (KH - HD) * 0.06, KH, 50))
-S.cam(t_i, (HD + UP * 0.8 + AX * 0.2 + SIDE * 0.1, HD + UP * 0.05, 32),
-      (HD + UP * 0.7 + AX * 0.18 + SIDE * 0.08, HD + UP * 0.05, 32))
+S.cam(t_i, (HD + UP * 1.7 + AX * 0.9 + SIDE * 0.4, HD + UP * 0.1, 22),
+      (HD + UP * 1.55 + AX * 0.8 + SIDE * 0.35, HD + UP * 0.1, 22))
 
 # ---------------------------------------------------------------- HUD, stem en geluid
 S.year([(0.0, 3026), (t_f + 0.3, 3030), (t_f + 1.4, 3045), (t_f + 2.6, 3066)], t0=0.0, big=True)

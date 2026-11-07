@@ -388,6 +388,8 @@ def build(spec, frames_dir, out, render=True):
             s = new_strip("sound", sed, os.path.basename(snd["file"])[:30], ch, f0 - int(round(src0 * FPS)), filepath=path)
             s.frame_final_start = f0
             s.frame_final_end = f0 + nframes
+            if snd.get("pan") is not None and hasattr(s, "pan"):
+                s.pan = float(snd["pan"])
             pts = {tt, tt + seg}
             if fi:
                 pts |= {t_start, t_start + fi}

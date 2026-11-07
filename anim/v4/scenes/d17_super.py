@@ -70,7 +70,7 @@ HD = S.headpos(held, t_d + 0.5)
 S.cam(0.0, None, fn=lambda t: (S._root_matrix(loop, t).translation + V(1.8, -6.0, 1.6), S._root_matrix(loop, t).translation + V(0, 0, 1.0), 26))
 S.cam(t_c, (KAM + V(-4.5, -4.5, 1.4), KAM + V(20, 20, -1.0), 22), (KAM + V(-4.2, -4.2, 1.5), KAM + V(20, 20, -1.0), 22))
 FW = V(math.sin(math.radians(200)), -math.cos(math.radians(200)), 0)
-S.cam(t_d, (HD + FW * 1.5 + V(0.4, 0, -0.35), HD + V(0, 0, -0.35), 32), (HD + FW * 1.35 + V(0.36, 0, -0.35), HD + V(0, 0, -0.35), 32))
+S.cam(t_d, (HD + FW * 1.9 + V(0.45, 0, -0.25), HD + V(0, 0, -0.4), 30), (HD + FW * 1.75 + V(0.42, 0, -0.25), HD + V(0, 0, -0.4), 30))
 
 # ---------------------------------------------------------------- HUD, stem en geluid
 S.year(250000000, t0=0.0, tick=False)

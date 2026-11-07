@@ -536,9 +536,12 @@ class Scene:
         self.t += s
         return self.t
 
-    def sfx(self, name, t, vol=1.0, cut=None, keys=None, loop_to=None, duck=False):
-        self.sounds.append(dict(file=name if "/" in name else "sfx/" + name, t=t, vol=vol, cut=cut, keys=keys,
-                                loop_to=loop_to, duck=duck))
+    def sfx(self, name, t, vol=1.0, cut=None, keys=None, loop_to=None, duck=False, pan=None):
+        """pan: -1 (links) .. 1 (rechts); werkt alleen op mono-bestanden (bv. sfx_horloge_tik_mono)."""
+        d = dict(file=name if "/" in name else "sfx/" + name, t=t, vol=vol, cut=cut, keys=keys, loop_to=loop_to, duck=duck)
+        if pan is not None:
+            d["pan"] = pan
+        self.sounds.append(d)
 
     def music(self, name, t0, t1, vol=0.35, fade_in=0.8, fade_out=1.2, duck=True, start=0.0):
         """Muziek (loopt door tot t1, met in- en uitfaden en ducking onder de stem)."""

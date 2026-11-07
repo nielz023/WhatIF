@@ -122,7 +122,7 @@ S.eyes_closed(held, t_e + 1.8, t_f - 0.1)
 
 # 15f-15h: de foto, verbleekt en gekreukt
 S.reach(held, t_f, "R", None, 0.0)
-img = os.path.join(REPO_, "assets", "props", "gezinsfoto_14e_verjaardag.png")
+img = os.path.join(REPO, "assets", "props", "gezinsfoto_14e_verjaardag.png")
 foto = ND.oude_foto("Gezinsfoto_ijs", (0, 0, 0), rot=(0, 0, 0), image=img if os.path.exists(img) else None, vergeling=0.7,
                     verbleking=0.85, kreuk=0.7)
 foto.scale = (1.6,) * 3
@@ -158,17 +158,21 @@ S.cam(t_b, (SP + V(-7.0, -16.0, 1.5), SP + V(0, 0, 2.5), 26), (SP + V(-6.8, -15.
 S.cam(t_b1, (SP + V(4.0, -10.0, 0.9), SP + V(0, 0, 3.0), 30), (SP + V(3.6, -9.4, 1.2), SP + V(0, 0, 3.4), 30))
 S.cam(t_b2, (X0 + V(4.0, -70.0, 52.0), X0 + V(4.0, 0, 40.0), 28), (X0 + V(4.0, -62.0, 14.0), X0 + V(4.0, 0, 8.0), 28))
 S.cam(t_c, (V(3.5, -4.5, 1.3), V(0.0, 0.5, 1.0), 35), (V(3.3, -4.2, 1.3), V(0.3, -0.4, 1.0), 35))
-S.cam(t_d, (WH + V(0.25, -0.28, 0.32), WH, 50), (WH + V(0.22, -0.25, 0.28), WH, 50))
-S.cam(t_e, (HD + FW * 1.3 + SD * 0.55 + V(0, 0, -0.1), HD + V(0, 0, -0.1), 40),
-      (HD + FW * 1.2 + SD * 0.5 + V(0, 0, -0.1), HD + V(0, 0, -0.1), 40))
-CF = PH + FW * 0.05 + SD * 0.45 + V(0, 0, 0.30)
-S.cam(t_f, (CF, PH, 32), (CF + (PH - CF) * 0.1, PH, 32))
-S.cam(t_g, (HD + FW * 1.35 - SD * 0.45 + V(0, 0, -0.15), HD + V(0, 0, -0.2), 35),
-      (HD + FW * 1.15 - SD * 0.38 + V(0, 0, -0.15), HD + V(0, 0, -0.2), 35))
-S.cam(t_g1, (HD + FW * 1.0 - SD * 0.3 + V(0, 0, -0.12), HD + V(0, 0, -0.1), 40),
-      (HD + FW * 0.9 - SD * 0.27 + V(0, 0, -0.12), HD + V(0, 0, -0.1), 40))
-S.cam(t_h, (HD + FW * 1.3 + SD * 0.3 + V(0, 0, -0.3), HD + V(0, 0, -0.4), 35),
-      (HD + FW * 1.2 + SD * 0.28 + V(0, 0, -0.3), HD + V(0, 0, -0.4), 35))
+S.cam(t_d, (WH + FW * 0.42 + SD * 0.1 + V(0, 0, 0.42), WH, 45), (WH + FW * 0.38 + SD * 0.09 + V(0, 0, 0.38), WH, 45))
+S.cam(t_e, (HD + FW * 1.5 + SD * 0.6 + V(0, 0, -0.05), HD + V(0, 0, -0.12), 36),
+      (HD + FW * 1.4 + SD * 0.55 + V(0, 0, -0.05), HD + V(0, 0, -0.12), 36))
+HF = S.headpos(held, t_f + 2.0)
+CF = HF - FW * 0.1 - SD * 0.62 + V(0, 0, 0.22)          # over zijn linkerschouder, op ooghoogte: hij ziet de foto
+S.cam(t_f, (CF, PH, 35), (CF + (PH - CF) * 0.08, PH, 35))
+HG = S.headpos(held, t_g + 1.5)
+S.cam(t_g, (HG + FW * 1.75 - SD * 0.5 + V(0, 0, 0.02), HG + V(0, 0, -0.15), 32),
+      (HG + FW * 1.55 - SD * 0.45 + V(0, 0, 0.02), HG + V(0, 0, -0.15), 32))
+HG1 = S.headpos(held, t_g1 + 1.5)
+S.cam(t_g1, (HG1 + FW * 1.45 - SD * 0.35 + V(0, 0, 0.02), HG1 + V(0, 0, -0.1), 35),
+      (HG1 + FW * 1.3 - SD * 0.3 + V(0, 0, 0.02), HG1 + V(0, 0, -0.1), 35))
+HH_ = S.headpos(held, t_h + 1.2)
+S.cam(t_h, (HH_ + FW * 1.8 + SD * 0.4 + V(0, 0, -0.1), HH_ + V(0, 0, -0.3), 30),
+      (HH_ + FW * 1.7 + SD * 0.38 + V(0, 0, -0.1), HH_ + V(0, 0, -0.3), 30))
 
 # ---------------------------------------------------------------- HUD, stem en geluid
 S.year(50000, t0=0.0, big=True)

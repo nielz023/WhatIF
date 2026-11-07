@@ -161,11 +161,11 @@ S.cam(t_b, (MID + V(0.1, 2.5, -0.55), MID + V(0, 0, -0.25), 32), (MID + V(0.08, 
 S.cam(t_c, (MID + V(0.15, 1.8, -0.35), MID + V(0, 0, -0.12), 32), (MID + V(0.13, 1.7, -0.35), MID + V(0, 0, -0.12), 32))
 S.cam(t_c2, CAMH)
 HPd = S.headpos(held, t_d + 1.5)
-CF = PH + V(0.5, 0.05, 0.3)
+CF = PH + V(0.25, 0.08, 0.62)
 if (CF - HPd).length < 0.55:
     CF = HPd + (CF - HPd).normalized() * 0.55
 print("DBG11", tuple(round(x, 2) for x in HH), tuple(round(x, 2) for x in HPd), tuple(round(x, 2) for x in PH), tuple(round(x, 2) for x in CF))
-S.cam(t_d, (CF, PH, 32), (CF + (PH - CF) * 0.08, PH, 32))
+S.cam(t_d, (CF, PH, 38), (CF + (PH - CF) * 0.08, PH, 38))
 S.cam(t_e, (HH + V(0.35, 1.25, -0.30), HH + V(0, 0, -0.15), 35), (HH + V(0.28, 0.95, -0.26), HH + V(0, 0, -0.15), 35))
 S.cam(t_f, (BH + V(0.55, 0.95, -0.15), BH + V(0, 0, -0.12), 35), (BH + V(0.52, 0.88, -0.15), BH + V(0, 0, -0.12), 35))
 S.cam(t_g, (HH + V(-0.5, 0.95, -0.15), HH + V(0, 0, -0.12), 35), (HH + V(-0.47, 0.88, -0.15), HH + V(0, 0, -0.12), 35))

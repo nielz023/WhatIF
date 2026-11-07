@@ -25,7 +25,7 @@ HP = V(0.0, -1.2, 0.0)
 held = S.actor("hoofdpersonage_rafels", HP, 180)
 LOOKH = lambda ch, f: A.aim_arm(ch, f, "R", (0.30, 0.30, -0.90), (-0.25, 0.85, 0.45), None, (0, 160, 0))
 REST_L = arm("L", (0.35, 0.15, -0.92), (0.20, 0.75, -0.62))
-S.beat(held, 0.0, "staan", face="neutraal", face_amt=0.5, at=SUN)
+S.beat(held, 0.0, "staan", face="verdrietig", face_amt=0.5, at=SUN)
 S.beat(held, t_c, "staan", arms=arms(REST_L, LOOKH), face="neutraal", face_amt=0.4, look=(0.0, -0.8), body={"head": (18, 0, 0)})
 S.beat(held, t_d, "staan", arms=arms(REST_L, LOOKH), face="bang", face_amt=0.6, at=SUN + V(0, -1800, -250))
 S.beat(held, t_d + 1.6, "staan", arms=arms(REST_L, LOOKH), face="bang", face_amt=0.8, at=SUN + V(0, -2200, -250))
@@ -57,14 +57,14 @@ if vm:
 # 19f: witte flits (een wit vlak vlak voor de camera)
 CAMF = HD + V(0.0, 1.6, 0.0)
 wit = T.box("Witte_flits", tuple(CAMF + V(0, -0.3, 0)), (3.0, 0.01, 2.0), ND.pbr("witte_flits", (1, 1, 1), emit=(1, 1, 1), strength=40.0),
-            bevel=0, ol=0)
+            bevel=0, ol=0, base=False)
 show(wit, t_f)
 
 # ---------------------------------------------------------------- camera's
 S.cam(0.0, (HD + V(0.25, 1.6, -0.05), HD + V(0, 0, -0.05), 40), (HD + V(0.18, 1.2, -0.05), HD + V(0, 0, -0.05), 40))
-S.cam(t_c, (WH + V(0.18, 0.28, 0.26), WH, 50), (WH + V(0.16, 0.25, 0.23), WH, 50))
+S.cam(t_c, (WH + V(0.1, 0.32, 0.45), WH, 45), (WH + V(0.09, 0.29, 0.41), WH, 45))
 S.cam(t_d, (V(0.8, -6.5, 0.35), V(0, 20, 5), 20), (V(0.8, -6.3, 0.36), V(0, 20, 5), 20), handheld=0.2)
-S.cam(t_e, (HD + V(0.3, 1.45, -0.2), HD + V(0, 0, -0.2), 35), (HD + V(0.25, 1.3, -0.2), HD + V(0, 0, -0.2), 35), handheld=0.08)
+S.cam(t_e, (HD + V(0.3, 1.7, -0.15), HD + V(0, 0, -0.28), 32), (HD + V(0.26, 1.55, -0.15), HD + V(0, 0, -0.28), 32), handheld=0.08)
 S.cam(t_f, (CAMF, HD, 35))
 
 # ---------------------------------------------------------------- HUD, stem en geluid

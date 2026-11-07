@@ -103,6 +103,10 @@ class Scene4(_v3.Scene3):
         """Eén droge tik van opa's horloge (dichtbij)."""
         self.sfx("sfx_horloge_tik", t, vol, cut=(0.0, 0.45))
 
+    def far_tick(self, t, vol=0.12, pan=-0.8):
+        """Een tik van ver weg, links in het stereobeeld (scène 21: het antwoord)."""
+        self.sfx("sfx_horloge_tik_mono", t, vol, cut=(0.0, 0.45), pan=pan)
+
     def ticks(self, t0, t1, every=1.0, vol=0.3):
         t = t0
         while t < t1 - 0.05:

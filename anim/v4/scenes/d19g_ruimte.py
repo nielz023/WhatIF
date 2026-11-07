@@ -28,10 +28,10 @@ FLOAT = arms(arm("L", (0.75, 0.10, -0.35), (0.80, 0.25, -0.20)), arm("R", (0.75,
 LEGS = dict(feet=((0.16, 0.10, 0.12), (-0.14, -0.05, 0.05)))
 S.beat(held, 0.0, "staan", arms=FLOAT, face="neutraal", face_amt=0.5, look=(0.0, 0.0), **LEGS)
 S.beat(held, t_g2, "staan", arms=FLOAT, face="verdrietig", face_amt=0.4, **LEGS)
-S.beat(held, t_h + 0.4, "staan", arms=FLOAT, face="bang", face_amt=0.6, mouth=0.9, **LEGS)          # hapt naar adem
-S.beat(held, t_h + 1.2, "staan", arms=FLOAT, face="bang", face_amt=0.5, mouth=0.2, **LEGS)
-S.beat(held, t_h + 1.8, "staan", arms=FLOAT, face="bang", face_amt=0.6, mouth=0.8, **LEGS)
-S.beat(held, t_h + 2.6, "staan", arms=FLOAT, face="verdrietig", face_amt=0.5, mouth=0.1, **LEGS)
+S.beat(held, t_h + 0.4, "staan", arms=FLOAT, face="geschrokken", face_amt=0.7, mond_O=0.9, **LEGS)          # hapt naar adem
+S.beat(held, t_h + 1.2, "staan", arms=FLOAT, face="bang", face_amt=0.6, mond_O=0.2, **LEGS)
+S.beat(held, t_h + 1.8, "staan", arms=FLOAT, face="geschrokken", face_amt=0.7, mond_O=0.8, **LEGS)
+S.beat(held, t_h + 2.6, "staan", arms=FLOAT, face="verdrietig", face_amt=0.6, mond_O=0.1, **LEGS)
 S.hold(held, END)
 HD = S.headpos(held, t_h + 0.5)
 

@@ -21,7 +21,7 @@ S.beat(held, 0.0, "staan", face="neutraal", face_amt=0.5, at=SUN)
 S.beat(held, 2.5, "staan", face="verdrietig", face_amt=0.3, at=SUN)
 S.hold(held, END)
 for t in frange(0.2, END, 0.6):                            # gloeiende as die opwaait
-    S.puff(V(1.5, 2.0, 0.1), t, n=2, r=(0.2, 0.5), grow=1.8, dur=1.4, color=(0.12, 0.10, 0.10), rise=1.5, spread=2.0)
+    S.puff(V(1.5, 2.0, 0.1), t, n=3, r=(0.03, 0.07), grow=1.3, dur=1.4, color=(0.45, 0.16, 0.06), rise=1.5, spread=3.0)
 
 S.cam(0.0, (V(0.8, -6.5, 0.35), V(0, 20, 5), 20), (V(0.7, -5.6, 0.38), V(0, 20, 5.5), 20))
 

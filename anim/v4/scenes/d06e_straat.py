@@ -37,6 +37,19 @@ for t, x in ((0.0, X_HIT - 9.0 * T_HIT), (T_HIT, X_HIT), (T_HIT + 0.9, X_STOP), 
     key(truck, t, loc=(x, TY_, 0.0))
 for fc in A._fcurves(truck):
     fc.keyframe_points[0].interpolation = "LINEAR"
+# chauffeur in de cabine (rijdt mee via Child Of; stapt "uit" als de vuilnisman in 6f naast de wagen staat)
+drv = S.actor("vuilnisman", (3.45, 0.55, 0.0), 90, label="vuilnisman_cabine")
+ds, dz = sit(drv, seat_top=1.25)
+S.place(drv, 0, V(3.45, 0.55, dz), 90)
+S.beat(drv, 0.0, **ds, face="neutraal", face_amt=0.4, look=(0.0, 0.0))
+S.beat(drv, T_HIT - 0.15, **ds, face="geschrokken", face_amt=0.9, look=(0.0, -0.2))
+S.hold(drv, END)
+_co = drv.rig.constraints.new("CHILD_OF")
+_co.target = truck
+_co.set_inverse_pending = False
+_co.inverse_matrix = Matrix.Identity(4)
+S.qc_skip.add(drv.name)
+show(drv.rig, 0.0, t_f - 0.05)
 # deuk in de vorm van een jongen (vanaf de klap)
 dm = S.mat("deuk_donker", (0.55, 0.56, 0.58))
 deuk = [T.sphere("Deuk_hoofd", (4.29, -1.45, 1.55), 0.24, dm, scale=(0.08, 1, 1), seg=16, ol=0),
