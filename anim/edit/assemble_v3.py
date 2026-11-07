@@ -603,7 +603,7 @@ def main():
         return
     if a.preview:
         p0, p1 = (float(v) for v in a.preview.split("-"))
-        sc.frame_start, sc.frame_end = F(p0), F(p1)
+        sc.frame_start, sc.frame_end = max(sc.frame_start, F(p0)), min(sc.frame_end, F(p1))   # nooit voorbij het einde
         sc.render.resolution_percentage = 50
     bpy.ops.render.render(animation=True)
     print("KLAAR", out)
