@@ -32,10 +32,17 @@ for o in bpy.data.objects:
         o.hide_render = o.hide_viewport = True
 
 
-def ground(x, y):
+def ground(x, y, skip=("Eik", "Sneeuwstorm", "Vlok", "Puin", "Ruinetoren", "Hijsmachine", "Vogel", "Doorsnede")):
     dg = bpy.context.evaluated_depsgraph_get()
-    hit, loc, *_ = bpy.context.scene.ray_cast(dg, Vector((x, y, 300.0)), Vector((0, 0, -1)))
-    return loc.z if hit else 0.0
+    z = 60.0
+    for _ in range(12):
+        hit, loc, nrm, idx, ob, mtx = bpy.context.scene.ray_cast(dg, Vector((x, y, z)), Vector((0, 0, -1)))
+        if not hit:
+            return 0.0
+        if not ob.name.startswith(skip):
+            return loc.z
+        z = loc.z - 0.01
+    return 0.0
 
 
 # de storm waait (de strepen schuiven langzaam door het beeld)

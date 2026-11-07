@@ -16,9 +16,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from v4 import *  # noqa: E402,F401,F403
 
 S = Scene4("d14b", "toekomst", "museum", exposure=0.1)
-sh = S.cuts([4.4, 3.0, 3.6, 4.9])
+sh = S.cuts([4.4, 3.9, 3.9, 3.0, 3.6, 4.9])                # + 2 shots abonneeroproep (~60% van de video)
 END = sh[-1][1]
-t_b, t_c, t_d = (s[0] for s in sh[1:])
+t_s1, t_s2, t_b, t_c, t_d = (s[0] for s in sh[1:])
 for o in bpy.data.objects:
     if o.name.startswith("Personage_marker") or o.name.startswith("Character_marker"):
         o.hide_render = o.hide_viewport = True
@@ -33,6 +33,19 @@ hs, hz_ = sit(held, seat_top=SEAT)
 S.place(held, 0, V(VX, 1.1, hz_), 0)
 REST = arms(arm("L", (0.35, 0.15, -0.92), (0.20, 0.75, -0.62)), arm("R", (0.35, 0.15, -0.92), (0.20, 0.75, -0.62)))
 S.beat(held, 0.0, **hs, arms=REST, face="neutraal", face_amt=0.4, look=(0.0, -0.2))
+# abonneeroproep: hij kijkt recht in de camera, zwaait en wijst naar beneden (de knop)
+CAMS = V(VX, -1.9, 1.35)
+WAVE_A = arms(arm("R", (0.85, 0.20, 0.35), (0.35, 0.10, 0.95)))
+WAVE_B = arms(arm("R", (0.85, 0.20, 0.35), (-0.15, 0.10, 0.98)))
+POINT = arms(arm("R", (0.55, 0.70, -0.30), (0.45, 0.80, -0.40)))
+S.beat(held, t_s1, **hs, arms=REST, face="blij", face_amt=0.5, at=CAMS)
+S.beat(held, t_s1 + 0.9, **hs, arms=WAVE_A, face="blij", face_amt=0.8, at=CAMS)
+S.beat(held, t_s1 + 1.2, **hs, arms=WAVE_B, face="blij", face_amt=0.8, at=CAMS)
+S.beat(held, t_s1 + 1.5, **hs, arms=WAVE_A, face="blij", face_amt=0.8, at=CAMS)
+S.beat(held, t_s1 + 2.1, **hs, arms=REST, face="grijns", face_amt=0.6, at=CAMS)
+S.beat(held, t_s2 + 0.3, **hs, arms=POINT, face="grijns", face_amt=0.7, at=CAMS)
+S.beat(held, t_s2 + 2.4, **hs, arms=POINT, face="zelfverzekerd", face_amt=0.7, at=CAMS, body={"head": (0, 0, 8)})
+S.beat(held, t_b, **hs, arms=REST, face="neutraal", face_amt=0.4, look=(0.0, -0.2))
 S.beat(held, t_c, **hs, arms=REST, face="verbaasd", face_amt=0.5, at=V(VX, -0.6, 1.0))
 S.beat(held, t_c + 0.9, **hs, arms=arms(arm("R", (0.85, 0.20, 0.35), (0.35, 0.10, 0.95))), face="blij", face_amt=0.7,
        at=V(VX - 0.6, -0.6, 1.0))                                                       # zwaait
@@ -90,6 +103,9 @@ for k, (name, p) in enumerate(KIDS):
 
 # ---------------------------------------------------------------- camera's
 S.cam(0.0, (V(-9.5, -6.2, 2.4), V(3.0, 1.5, 1.4), 22), (V(-4.0, -4.0, 2.0), V(3.8, 1.0, 1.4), 24))
+HS = S.headpos(held, t_s1 + 0.5)
+S.cam(t_s1, (V(VX - 0.5, -2.3, 1.3), HS + V(0, 0, -0.35), 32), (V(VX - 0.45, -2.1, 1.3), HS + V(0, 0, -0.35), 32))
+S.cam(t_s2, (V(VX + 0.15, -1.0, HS.z - 0.1), HS + V(0, 0, -0.12), 40), (V(VX + 0.13, -0.85, HS.z - 0.1), HS + V(0, 0, -0.12), 40))
 S.cam(t_b, (V(4.0, -1.6, 0.85), V(4.0, -0.25, 0.65), 45), (V(4.0, -1.35, 0.82), V(4.0, -0.25, 0.65), 45))
 S.cam(t_c, (V(1.2, -3.5, 1.4), V(4.0, 0.2, 1.2), 30), (V(1.3, -3.3, 1.4), V(4.0, 0.2, 1.2), 30))
 S.cam(t_d, (HD + V(0.35, -1.35, 0.0), HD + V(0, -0.15, -0.05), 40), (HD + V(0.3, -1.18, 0.0), HD + V(0, -0.15, -0.05), 40))
@@ -98,6 +114,7 @@ S.cam(t_d, (HD + V(0.35, -1.35, 0.0), HD + V(0, -0.15, -0.05), 40), (HD + V(0.3,
 S.year(10000, t0=0.0, big=True)
 S.jump(0.0)
 S.say("D14b-01", at=0.2)
+S.say("D14b-00", at=t_s1 + 0.3)                           # abonneeroproep
 S.say("D14b-02", at=t_c + 0.4)
 S.say("D14b-03", at=t_d + 0.2)
 for t in frange(t_c + 0.1, t_c + 0.9, 0.18):
