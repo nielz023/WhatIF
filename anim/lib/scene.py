@@ -873,6 +873,28 @@ class Scene:
                         fc.keyframe_points.insert(f, v, options={"REPLACE", "FAST"})
                     fc.update()
 
+    def _probe_people(self):
+        """Figuren die door elkaar lopen: heupen < 0,45 m uit elkaar terwijl beide zichtbaar zijn."""
+        sc = self.sc
+        cast = [ch for ch in self.cast if ch.body is not None]
+        hits = {}
+        for f in range(1, F(self.length) + 1, 2):
+            sc.frame_set(f)
+            pos = []
+            for ch in cast:
+                if ch.body.hide_render:
+                    continue
+                pb = ch.rig.pose.bones.get("hips")
+                if pb:
+                    pos.append((ch, ch.rig.matrix_world @ pb.head))
+            for i in range(len(pos)):
+                for j in range(i + 1, len(pos)):
+                    a, b = pos[i][1], pos[j][1]
+                    if (Vector((a.x, a.y)) - Vector((b.x, b.y))).length < 0.45 * max(pos[i][0].rig.scale.z, 0.5):
+                        hits.setdefault((pos[i][0].name, pos[j][0].name), []).append(round((f - 1) / FPS, 2))
+        for (a, b), ts in hits.items():
+            print("DOOR_ELKAAR", a, b, f"{ts[0]}-{ts[-1]}s", len(ts))
+
     def finish(self, length=None, tail=0.8, picture_end=None, title=None):
         self._smooth_rides()
         self.length = length or (self.t + tail)
@@ -885,6 +907,7 @@ class Scene:
             raise SystemExit(0)
         if os.environ.get("WHATIF_PROBE"):          # schokdetectie: versnellingspieken van botten per figuur
             self._probe()
+            self._probe_people()
             raise SystemExit(0)
         sc = self.sc
         sc.frame_start, sc.frame_end = 1, F(self.length)

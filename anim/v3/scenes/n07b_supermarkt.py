@@ -214,7 +214,7 @@ for k in range(5):
     nm = ["figurant_a", "figurant_d", "figurant_e", "figurant_f", "figurant_b"][k]
     e = S.actor(nm, (-5.0 + 2.5 * k, -19.6, 0), 0, label=f"buiten_{k}")
     p0 = V(-5.0 + 2.5 * k, -19.6 - 0.9 * (k % 2), 0)     # verder van de deur, ruim uit elkaar
-    lane = (-13.5, -7.5, -1.5, 4.5, 10.5)[k]                                  # midden tussen de geparkeerde auto's (x -10.5, -4.5, 1.5, 7.5)                                   # tussen de geparkeerde auto's door, op volgorde: niemand kruist
+    lane = (-13.5, -7.5, 4.5, 10.5, 13.5)[k]                                  # midden tussen de geparkeerde auto's (x -10.5, -4.5, 1.5, 7.5)                                   # tussen de geparkeerde auto's door, op volgorde: niemand kruist
     p1 = V(lane, -33.0 - 1.5 * (k % 2), 0)
     t0 = t_j - 0.3 + 0.35 * k
     S.teleport(e, t_j - 0.15, p0, 0)               # vóór hij zichtbaar wordt (geen sprong in beeld)
@@ -241,7 +241,9 @@ HA = S.headpos(agent, t_g + 1.5)
 S.cam(t_g, (HA + V(0.6, -1.75, 0.05), HA + V(0, 0, 0.02), 38), (HA + V(0.5, -1.4, 0.04), HA + V(0, 0, 0.02), 40))
 S.cam(t_h, ((5.5, -14.5, 3.0), (-3.0, -6.5, 1.0), 22), ((5.4, -14.3, 3.0), (-3.0, -6.5, 1.0), 22), shake=lambda t: 0.0 if t < T_GO else 0.9,
       ease=False)
-S.cam(t_i, None, fn=S.follow(mama, (2.3, -2.8, 1.55), lens=26, look_offset=(-0.4, 0.0, -0.3)), shake=S.shake(0.8))
+_fol_i = S.follow(mama, (2.3, -2.8, 1.55), lens=26, look_offset=(-0.4, 0.0, -0.3))
+# het laatste stukje blijft de camera staan (anders reed hij door de paal bij de kassa: grijs beeld vlak voor de cut)
+S.cam(t_i, None, fn=lambda t: _fol_i(min(t, t_j - 0.65)), shake=S.shake(0.8))
 S.cam(t_j, ((0.0, -44.0, 15.0), (0.0, -20.0, 0.5), 26), ((0.0, -42.0, 13.0), (0.0, -22.0, 0.5), 26))
 S.cam(t_k, ((15.0, -36.5, 0.7), (0.0, -27.0, 1.2), 24), ((14.8, -36.2, 0.7), (-1.0, -28.0, 1.2), 24), handheld=0.6)
 

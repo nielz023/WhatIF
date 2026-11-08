@@ -165,7 +165,7 @@ T.box("Studio_achterwand", ST + V(0, 3.0, 0), (9.0, 0.2, 5.0), S.mat("studio_bla
 T.box("Studio_vloer", ST + V(0, 0, -0.02), (12.0, 12.0, 0.02), S.mat("studio_vloer", (0.1, 0.1, 0.14)), bevel=0, ol=0)
 T.box("Studio_desk", ST + V(0, 0.15, 0), (2.2, 0.8, 0.95), S.mat("studio_desk", (0.85, 0.86, 0.9)), bevel=0.04, ol=0.004)
 T.box("Studio_desk_streep", ST + V(0, -0.26, 0.55), (2.22, 0.02, 0.12), S.mat("tv_band", (0.85, 0.08, 0.06), 2.5), bevel=0, ol=0)
-ST3.label("Studio_logo", "NEWS 24", ST + V(-1.15, 2.88, 2.05), 0.3, col=(1, 1, 1), rot=(90, 0, 0), glow=2.0)
+ST3.label("Studio_logo", "NEWS 24", ST + V(-1.55, 2.88, 1.72), 0.3, col=(1, 1, 1), rot=(90, 0, 0), glow=2.0)
 ST3.label("Studio_band_tekst", "ALERT SYSTEM FAULT  ·  WORLDWIDE", ST + V(0, -0.28, 0.52), 0.075, col=(1, 1, 1), rot=(90, 0, 0), glow=2.0)
 key = bpy.data.lights.new("Studio_key", "AREA")
 key.energy, key.size = 600, 2.0
