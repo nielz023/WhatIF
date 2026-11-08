@@ -528,7 +528,15 @@ def qc_v3lessen(self, warn, shots, people):
                 orc = (min(q.x for q in pts), min(q.y for q in pts), max(q.x for q in pts), max(q.y for q in pts))
                 if orc[2] < 0 or orc[0] > 1 or orc[3] < 0 or orc[1] > 1 or (orc[2] - orc[0]) < 0.02:
                     continue
-                if _overlap(r, orc):
+                th = orc[3] - orc[1]
+                cov = 0.0
+                if _overlap(r, orc, pad=0.0):
+                    ix = min(r[2], orc[2]) - max(r[0], orc[0])
+                    iy = min(r[3], orc[3]) - max(r[1], orc[1])
+                    cov = max(0.0, ix) * max(0.0, iy) / max(1e-6, (orc[2] - orc[0]) * th)
+                if os.environ.get("WHATIF_QC_DEBUG"):
+                    print("TEKSTDBG", o.name, round(th, 3), round(cov, 2), body[:12])
+                if th >= 0.02 and cov > 0:             # leesbare 3D-tekst (>= 2% beeldhoogte) die de overlay raakt
                     warn("TEKST_ONDER_HUD", tm, f"{cam.name}: '{o.data.body[:20]}' ({o.name}) onder overlay '{re.sub(r'[0-9:]+', '#', body)[:24]}'")
         for e in texts[i + 1:]:
             e1 = e["t1"] if e["t1"] is not None else self.length

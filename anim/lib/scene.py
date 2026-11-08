@@ -857,6 +857,8 @@ class Scene:
             for g in groups:
                 if ch.body is not None and all(self._hidden_at(ch.body, t) for t, _a, _n in g[:: max(1, len(g) // 4)]):
                     continue
+                if g[-1][0] - g[0][0] < 0.15 and max(a for _t, a, _n in g) < 450:
+                    continue                           # losse tik van 1-3 frames (grijpen, knip): niet zichtbaar
                 bones = sorted({n for _t, _a, n in g})
                 self.probe_rows.append(("SCHOK", g[0][0], f"{ch.name} {g[0][0]:.2f}-{g[-1][0]:.2f} s ({', '.join(bones)}), "
                                         f"max {max(a for _t, a, _n in g):.0f} m/s2"))
