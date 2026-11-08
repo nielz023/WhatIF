@@ -161,10 +161,12 @@ for k, e in enumerate(shoppers):
         push_cart(e, c, t0, t0 + 5.2)
     S.beat(e, t0 + 0.2, "staan", face="inspanning", face_amt=0.8, look=(0.0, 0.0), feet="keep")
     S.hold(e, END)
-    if k >= 4:                                     # buiten (7j/7k) niet meer in beeld: geen botsingen met de karren
-        visible(e.body, t_j - 0.05, False)
+    if True:                                       # buiten (7j/7k) nemen de buiten-figuren het over: binnenploeg weg (geen dubbelen, niemand door elkaar)
+        visible(e.body, t_j, False)                # precies op de cut (geen 'pop' in het laatste binnenbeeld)
         if c:
-            visible(c, t_j - 0.05, False)          # zijn kar verdwijnt mee (geen kar die zonder iemand doorrijdt)
+            visible(c, t_j, False)          # zijn kar verdwijnt mee (geen kar die zonder iemand doorrijdt)
+
+visible(fles, t_j, False)                          # de fles gaat met de vrouw mee (niet los zweven buiten)
 
 # ---------------------------------------------------------------- 7i: mama grijpt de jongen bij zijn pols
 S.beat(mama, t_h + 0.6, "staan", face="bang", face_amt=0.7, at=S.head(shoppers[0], 0.0))
