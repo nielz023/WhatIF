@@ -361,6 +361,9 @@ class Scene3(_v2.Scene2):
                 b = hud[j]
                 if tuple(a["loc"]) == tuple(b["loc"]) and a["t0"] < b["t1"] - 1e-3 and b["t0"] < a["t1"] - 1e-3:
                     warn("HUD_OVERLAP", max(a["t0"], b["t0"]), f"'{a['body']}' en '{b['body']}'")
+        # 5-10: lessen video 3 (fouten die niels pas in de eindversie zag), zie qc_v3lessen()
+        if os.environ.get("WHATIF_QC_SNEL") != "1":
+            self.qc_v3lessen(warn, shots, people)
         # samenvatten (zelfde soort + shot niet 20 keer herhalen)
         seen, rows = set(), []
         for kind, t, msg in issues:
@@ -379,6 +382,194 @@ class Scene3(_v2.Scene2):
         if rows and self.args.render and os.environ.get("WHATIF_QC_STRICT") == "1":
             raise SystemExit("QC-fouten, render afgebroken (zie qc.txt)")
         sc.frame_set(1)
+
+
+# ---------------------------------------------------------------------------
+# Kwaliteitscheck: lessen uit video 3 (2026-11-08). Fouten die stills niet vangen omdat ze in de BEWEGING zitten.
+NL_WOORDEN = {"opa", "oma", "oom", "tante", "broer", "broertje", "zus", "zusje", "niet", "geen", "regel", "regels",
+              "dag", "dagen", "nieuws", "uitgang", "ingang", "kassa", "gesloten", "politie", "winkel", "supermarkt",
+              "aanbieding", "korting", "welkom", "bedankt", "alstublieft", "straat", "huis", "het", "een", "van",
+              "voor", "met", "wel", "altijd", "nooit", "lief", "luister", "eten", "schoon", "verboden", "pas", "op",
+              "ja", "nee", "jij", "jou", "mij", "wij", "ons", "zijn", "haar", "hij", "zij", "school", "les", "uur"}
+NL_OOK_ENGELS = {"school", "op", "pas", "zij"}       # komen ook in Engelse woorden/afkortingen voor: alleen samen tellen
+FX_PREFIX = ("Brokstuk", "Stof", "Scherf", "Flits", "Ring", "Vonk", "Druppel", "Regen", "Rook", "Confetti", "Snelheid",
+             "Wolk", "Vogel", "Kraai", "Blad", "Sneeuw", "Ster", "Vuur", "Vlam", "Gloed", "Lichtpunt", "Deeltje")
+VOERTUIG_PREFIX = ("Auto_", "Bus", "Vrachtwagen", "Vuilniswagen", "Trein", "Tram", "Boot", "Vliegtuig", "Helikopter")
+
+
+def _tekst_rect(d, t):
+    """Benaderde schermrechthoek (x0, y0, x1, y1 in 0..1, y omhoog) van een 2D-overlay uit self.texts."""
+    body = d["body"](t) if callable(d["body"]) else str(d["body"])
+    w = max(1, len(body)) * d["size"] * 0.58 / 1920.0
+    h = d["size"] * 1.0 / 1080.0
+    x, y = d["loc"]
+    ax, ay = d.get("anchor", ("LEFT", "TOP"))
+    x0 = x if ax == "LEFT" else (x - w if ax == "RIGHT" else x - w / 2)
+    y1 = y if ay == "TOP" else (y + h if ay == "BOTTOM" else y + h / 2)
+    return (x0, y1 - h, x0 + w, y1), body
+
+
+def _overlap(a, b, pad=0.006):
+    return a[0] < b[2] + pad and b[0] < a[2] + pad and a[1] < b[3] + pad and b[1] < a[3] + pad
+
+
+def qc_v3lessen(self, warn, shots, people):
+    """Extra checks na video 3:
+    5. SCHOK / BOTSING / DOOR_ELKAAR: de bewegingsprobe draait nu altijd mee (niet alleen met WHATIF_PROBE).
+    6. CAMERA_DOOR_OBJECT: de camera mag tussen twee frames nergens doorheen gaan (grijze flits door een paal, 2:51).
+    7. PROP_ZONDER_PERSOON: een bewegend voorwerp (kar, product, fiets, voertuig) in beeld zonder iemand erbij.
+    8. TEKST_ONDER_HUD / HUD_BOTSING: 3D-tekst (logo, bord) of twee overlays op dezelfde plek (NEWS 24 over de klok).
+    9. NEDERLANDS_IN_BEELD: Nederlandse woorden in beeldtekst (OPA/OMA op het koelkastbriefje).
+    10. LICHT_IN_HOOFD: een lamp (rand-/keylicht) vlak bij of in een hoofd (witte flits bij fietsshots)."""
+    import re
+    from bpy_extras.object_utils import world_to_camera_view
+    sc = self.sc
+    if not hasattr(self, "probe_rows"):
+        self.probe_rows = []
+    # 5. beweging
+    self._probe()
+    self._probe_people()
+    for kind, t, msg in self.probe_rows:
+        warn(kind, t, msg)
+
+    def cam_at(t):
+        for t0, t1, cam in shots:
+            if t0 <= t < t1:
+                return cam
+        return None
+
+    skip_lens = ("Irradiance", "Randlicht", "Keylicht", "Vullicht", "Volume", "Mist", "Lucht", "Sky")
+    # 6. camera door een object: straal van de vorige naar de huidige camerapositie, elk frame binnen een shot
+    for t0, t1, cam in shots:
+        prev = None
+        for f in range(F(t0), F(t1)):
+            sc.frame_set(f)
+            p = cam.matrix_world.translation.copy()
+            if prev is not None:
+                d = p - prev
+                if d.length > 1e-4:
+                    dg = bpy.context.evaluated_depsgraph_get()
+                    hit, loc, nrm, _i, ob, _m = sc.ray_cast(dg, prev, d.normalized(), distance=d.length + 0.15)
+                    if hit and ob is not None and not ob.name.startswith(skip_lens) and not ob.hide_render:
+                        warn("CAMERA_DOOR_OBJECT", (f - 1) / FPS, f"{cam.name} gaat door {ob.name}")
+            prev = p
+    # 7. bewegende voorwerpen zonder persoon (alleen wat in beeld is)
+    rigs = set()
+    for ch in people:
+        rigs.add(ch.rig)
+        rigs.update(ch.rig.children_recursive)
+    movers = []
+    for o in bpy.data.objects:
+        if o in rigs or o.type not in ("MESH", "EMPTY", "FONT", "CURVE") or o.name.startswith(FX_PREFIX):
+            continue
+        if o.parent is not None and (o.parent in rigs or o.parent.type == "ARMATURE"):
+            continue
+        anim = o.animation_data is not None and o.animation_data.action is not None
+        if not anim or any(c.type == "CHILD_OF" for c in o.constraints):
+            continue                                   # vastgemaakt aan een hand (grab) = er is een persoon
+        if o.parent is not None and o.parent.animation_data and o.parent.animation_data.action:
+            continue                                   # de ouder wordt al bekeken
+        movers.append(o)
+    step = 2
+    for o in movers:
+        veh = o.name.startswith(VOERTUIG_PREFIX)
+        reach = 3.5 if veh else 1.1
+        prev, last_warn = None, -9.0
+        for f in range(1, F(self.length) + 1, step):
+            sc.frame_set(f)
+            t = (f - 1) / FPS
+            p = o.matrix_world.translation.copy()
+            if prev is None or o.hide_render or min(o.matrix_world.to_scale()) < 0.01:
+                prev = p
+                continue
+            v = (p - prev).length * FPS / step
+            prev = p
+            if v < 0.25 or t - last_warn < 1.0:
+                continue
+            cam = cam_at(t)
+            if cam is None:
+                continue
+            q = world_to_camera_view(sc, cam, p)
+            if not (q.z > 0 and -0.05 <= q.x <= 1.05 and -0.05 <= q.y <= 1.05):
+                continue
+            near = False
+            for ch in people:
+                if ch.body is not None and (ch.body.hide_render or min(ch.body.matrix_world.to_scale()) < 0.01):
+                    continue
+                M = ch.rig.matrix_world
+                for bn in ("hand.L", "hand.R", "hips"):
+                    pb = ch.rig.pose.bones.get(bn)
+                    if pb and ((M @ pb.tail) - p).length < reach * max(ch.rig.scale.z, 0.5):
+                        near = True
+                        break
+                if near:
+                    break
+            if not near:
+                warn("PROP_ZONDER_PERSOON", t, f"{o.name} beweegt ({v:.1f} m/s) zonder iemand die hem duwt/draagt/bestuurt")
+                last_warn = t
+    # 8. tekst: 3D-tekst onder een overlay en overlays die elkaar raken
+    fonts = [o for o in bpy.data.objects if o.type == "FONT"]
+    texts = [d for d in self.texts if d["t1"] is None or d["t1"] > d["t0"]]
+    for i, d in enumerate(texts):
+        t1 = d["t1"] if d["t1"] is not None else self.length
+        for t0s, t1s, cam in shots:
+            a, b = max(d["t0"], t0s), min(t1, t1s)
+            if b - a < 0.1:
+                continue
+            tm = (a + b) / 2
+            r, body = _tekst_rect(d, tm)
+            sc.frame_set(F(tm))
+            for o in fonts:
+                if o.hide_render or min(o.matrix_world.to_scale()) < 0.01:
+                    continue
+                pts = [world_to_camera_view(sc, cam, o.matrix_world @ Vector(c)) for c in o.bound_box]
+                if any(q.z <= 0 for q in pts):
+                    continue
+                orc = (min(q.x for q in pts), min(q.y for q in pts), max(q.x for q in pts), max(q.y for q in pts))
+                if orc[2] < 0 or orc[0] > 1 or orc[3] < 0 or orc[1] > 1 or (orc[2] - orc[0]) < 0.02:
+                    continue
+                if _overlap(r, orc):
+                    warn("TEKST_ONDER_HUD", tm, f"{cam.name}: '{o.data.body[:20]}' ({o.name}) onder overlay '{re.sub(r'[0-9:]+', '#', body)[:24]}'")
+        for e in texts[i + 1:]:
+            e1 = e["t1"] if e["t1"] is not None else self.length
+            a, b = max(d["t0"], e["t0"]), min(t1, e1)
+            if b - a < 0.05 or tuple(d["loc"]) == tuple(e["loc"]):
+                continue                               # zelfde plek = HUD_OVERLAP (hierboven)
+            tm = (a + b) / 2
+            r1, b1 = _tekst_rect(d, tm)
+            r2, b2 = _tekst_rect(e, tm)
+            if _overlap(r1, r2, pad=0.0):
+                warn("HUD_BOTSING", tm, f"'{b1[:20]}' raakt '{b2[:20]}'")
+    # 9. Nederlands in beeld (scripts en beeldtekst zijn Engels)
+    bodies = [(o.name, o.data.body) for o in fonts if not o.hide_render]
+    bodies += [("overlay", d["body"]) for d in self.texts if isinstance(d["body"], str)]
+    bodies += [("kaart", c["body"] or "") for c in self.cards] + [("kaart", c.get("sub") or "") for c in self.cards]
+    for nm, body in bodies:
+        words = {w.lower() for w in re.findall(r"[A-Za-zÀ-ÿ]+", body or "")}
+        nl = words & NL_WOORDEN
+        if nl - NL_OOK_ENGELS or len(nl) >= 2:
+            warn("NEDERLANDS_IN_BEELD", 0.0, f"{nm}: '{body[:40]}' ({', '.join(sorted(nl))})")
+    # 10. lamp in/vlak bij een hoofd
+    lamps = [o for o in bpy.data.objects if o.type == "LIGHT" and o.data.type != "SUN"]
+    for f in range(1, F(self.length) + 1, 3):
+        sc.frame_set(f)
+        t = (f - 1) / FPS
+        for ch in people:
+            if ch.body is not None and (ch.body.hide_render or min(ch.body.matrix_world.to_scale()) < 0.01):
+                continue
+            pb = ch.rig.pose.bones.get("head")
+            if pb is None:
+                continue
+            hr = ch.J["head_r"].z * ch.rig.scale.z
+            hc = ch.rig.matrix_world @ pb.head + Vector((0, 0, hr * 0.9))
+            for o in lamps:
+                if o.hide_render or o.data.energy <= 0:
+                    continue
+                if (o.matrix_world.translation - hc).length < hr * 1.4:
+                    warn("LICHT_IN_HOOFD", t, f"{o.name} bij het hoofd van {ch.name}")
+
+
+Scene3.qc_v3lessen = qc_v3lessen
 
 
 # ---------------------------------------------------------------------------

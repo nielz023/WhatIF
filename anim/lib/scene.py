@@ -59,6 +59,11 @@ def F(t):
     return int(round(t * FPS)) + 1
 
 
+# Kwaliteitscheck (lessen video 3): versnelling van een bot (m/s^2, 2e afgeleide per frame) waarboven we van
+# een zichtbare schok spreken. Overschrijfbaar met WHATIF_SCHOK=...
+SCHOK_DREMPEL = float(os.environ.get("WHATIF_SCHOK", "200"))   # n11e: fout 390-500, gerepareerd max 78
+
+
 def smooth(a, b, x):
     if b == a:
         return 1.0 if x >= b else 0.0
@@ -787,9 +792,17 @@ class Scene:
     def post_cams(self):
         """Haak voor subklassen: na het bouwen van de camera's (self.shots bestaat dan)."""
 
+    def _hidden_at(self, obj, t):
+        """Is obj op tijd t onzichtbaar in de render (hide_render-sleutel of schaal ~0)?"""
+        self.sc.frame_set(F(t))
+        return obj.hide_render or min(obj.matrix_world.to_scale()) < 0.01
+
     def _probe(self):
-        """Print per figuur de grootste 'schokken' (2e afgeleide van botposities, m/s^2) en wanneer."""
+        """Print per figuur de grootste 'schokken' (2e afgeleide van botposities, m/s^2) en wanneer.
+        Vult ook self.probe_rows met (soort, t, tekst) voor de kwaliteitscheck: SCHOK, BOTSING."""
         sc = self.sc
+        if not hasattr(self, "probe_rows"):
+            self.probe_rows = []
         names = ("hips", "foot.L", "foot.R", "hand.L", "hand.R", "head")
         want = [c.strip() for c in os.environ.get("WHATIF_PROBE", "").split(",") if c.strip() and c.strip() != "1"]
         f1 = F(self.length)
@@ -822,6 +835,7 @@ class Scene:
                           tuple(round(v, 3) for v in ch.rig.matrix_world.translation), round(math.degrees(ch.rig.matrix_world.to_euler().z), 1))
             spikes = []
             cutf = {F(c[0]) for c in getattr(self, "_cutlist", [])}     # sprongen precies op een cut zie je niet
+            cutf |= {F(c[0]) for c in getattr(self, "shots", [])}
             for n in names:
                 P = pts[n]
                 for i in range(1, len(P) - 1):
@@ -831,6 +845,21 @@ class Scene:
                     spikes.append((a, n, (i + 1 - 1) / FPS))
             spikes.sort(reverse=True)
             print("PROBE", ch.name, " ".join(f"{n}@{t:.2f}={a:.0f}" for a, n, t in spikes[:12]))
+            # SCHOK: pieken boven de drempel terwijl de figuur zichtbaar is (lessen video 3: schokkende fietsers),
+            # samengevoegd tot tijdvakken (gat <= 0,5 s), met de botten die erin schokken
+            rows = sorted((t, a, n) for a, n, t in spikes if a >= SCHOK_DREMPEL)
+            groups = []
+            for t, a, n in rows:
+                if groups and t - groups[-1][-1][0] <= 0.5:
+                    groups[-1].append((t, a, n))
+                else:
+                    groups.append([(t, a, n)])
+            for g in groups:
+                if ch.body is not None and all(self._hidden_at(ch.body, t) for t, _a, _n in g[:: max(1, len(g) // 4)]):
+                    continue
+                bones = sorted({n for _t, _a, n in g})
+                self.probe_rows.append(("SCHOK", g[0][0], f"{ch.name} {g[0][0]:.2f}-{g[-1][0]:.2f} s ({', '.join(bones)}), "
+                                        f"max {max(a for _t, a, _n in g):.0f} m/s2"))
             # botsing: heupen of voeten binnen de (lokale) bbox van een zichtbare auto/bus/winkelwagen
             hits = {}
             for f in range(1, f1 + 1):
@@ -848,6 +877,7 @@ class Scene:
             for nm, ts in hits.items():
                 o = bpy.data.objects[nm]
                 print("BOTSING", ch.name, nm, f"{ts[0]}-{ts[-1]}s", len(ts), "auto op", tuple(round(v, 1) for v in o.matrix_world.translation))
+                self.probe_rows.append(("BOTSING", ts[0], f"{ch.name} door {nm} ({ts[0]}-{ts[-1]} s)"))
 
     def _smooth_rides(self, W=4):
         """Wortel van fietsers over aaneengesloten fietsstukken samen gladstrijken (ook over de naad tussen twee
@@ -876,6 +906,8 @@ class Scene:
     def _probe_people(self):
         """Figuren die door elkaar lopen: heupen < 0,45 m uit elkaar terwijl beide zichtbaar zijn."""
         sc = self.sc
+        if not hasattr(self, "probe_rows"):
+            self.probe_rows = []
         cast = [ch for ch in self.cast if ch.body is not None]
         hits = {}
         for f in range(1, F(self.length) + 1, 2):
@@ -894,6 +926,7 @@ class Scene:
                         hits.setdefault((pos[i][0].name, pos[j][0].name), []).append(round((f - 1) / FPS, 2))
         for (a, b), ts in hits.items():
             print("DOOR_ELKAAR", a, b, f"{ts[0]}-{ts[-1]}s", len(ts))
+            self.probe_rows.append(("DOOR_ELKAAR", ts[0], f"{a} / {b} ({ts[0]}-{ts[-1]} s)"))
 
     def finish(self, length=None, tail=0.8, picture_end=None, title=None):
         self._smooth_rides()
