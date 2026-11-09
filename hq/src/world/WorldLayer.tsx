@@ -47,13 +47,23 @@ function Fallback({ text }: { text: string }) {
   );
 }
 
+/** F2: diagnoseregel van het 3D-kantoor (wordt elke halve seconde gevuld door FpsProbe in NeonOffice) */
+function Diagnose() {
+  const [aan, setAan] = useState(false);
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if (e.key === 'F2') { e.preventDefault(); setAan((v) => !v); } };
+    window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
+  }, []);
+  return <pre id="dm-diag" hidden={!aan} className="pointer-events-none fixed left-2 top-[110px] z-[90] whitespace-pre-wrap rounded-lg bg-black/80 p-2 font-mono text-[12px] leading-snug text-emerald-300">3D nog niet gestart</pre>;
+}
+
 /** De blijvende 3D-wereld achter alle schermen. Wordt één keer geladen en blijft staan bij paginawissels. */
 export default function WorldLayer({ mode }: { mode: WorldMode }) {
   const gl = useMemo(() => hasWebGL(), []);
   const nodig = useOfficeNodig(mode);
   if (!gl) return <Fallback text="Dit apparaat ondersteunt geen 3D (WebGL). Je ziet de HQ zonder kantoor; alle functies werken." />;
   return (
-    <div className="dm-world absolute inset-0 z-0">
+    <div className="absolute inset-0 z-0">
       {/* nachtlucht achter de pagina's; het kantoor tekent eroverheen zodra het geladen is */}
       <div className="dm-world-fallback absolute inset-0" />
       {nodig && (
@@ -67,6 +77,7 @@ export default function WorldLayer({ mode }: { mode: WorldMode }) {
       {/* lichte waas als er een paneel open is, zodat de tekst leesbaar blijft */}
       <div className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${mode === 'panel' ? 'opacity-100' : 'opacity-0'}`}
         style={{ background: 'radial-gradient(ellipse at center, rgba(5,8,22,.5) 0%, rgba(5,8,22,.25) 75%)' }} />
+      <Diagnose />
       {/* rondlopen: vizier, hint, vraag bij een afdeling en joystick */}
       <WalkHud />
       {/* knopje rechts in het midden: naar de bovenverdieping en terug */}

@@ -9,7 +9,7 @@
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Billboard, Environment, Lightformer, MeshReflectorMaterial, OrbitControls, PerformanceMonitor, PerspectiveCamera } from '@react-three/drei';
+import { Billboard, Environment, Lightformer, MeshReflectorMaterial, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import type { OrbitControls as OC } from 'three-stdlib';
@@ -19,7 +19,7 @@ import { useLive } from '../services/live';
 import { Box, Chair, Bookshelf, MicStand, Easel, Sofa, MeetingTable, ServerRack } from '../components/office/Furniture';
 import { Mascot } from '../components/office/DriftmarkDecor';
 import { ROOMS, STATUS, threadsPerRoom, statusOf, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, roomById, type RoomDef, type RoomId } from './rooms';
-import { useWorld, reducedMotion, dprFor, isPhone, PERF_DPR } from './useWorld';
+import { useWorld, reducedMotion, dprFor, isPhone } from './useWorld';
 import { useOffice, BakedOffice, type OfficeModel } from './BakedOffice';
 import { useOfficeLoad } from './loadState';
 import { Crew } from './crew';
@@ -298,10 +298,20 @@ function FpsProbe() {
   const acc = useRef({ n: 0, t: 0, slow: 0, since: performance.now() });
   const quality = useWorld((s) => s.quality); const setQuality = useWorld((s) => s.setQuality);
   useEffect(() => { acc.current.slow = 0; acc.current.since = performance.now(); }, [quality]);
-  useFrame((_, dt) => {
+  useFrame((st, dt) => {
     const a = acc.current; a.n++; a.t += dt;
     if (a.t >= 0.5) {
       const fps = a.n / a.t; const el = document.getElementById('dm-fps'); if (el) el.textContent = `${Math.round(fps)} fps`; a.n = 0; a.t = 0;
+      // diagnose (F2): wat de 3D precies doet, voor als het beeld zwart blijft
+      const dg = document.getElementById('dm-diag');
+      if (dg) {
+        const c = st.camera as THREE.PerspectiveCamera; const cv = st.gl.domElement; const r = cv.getBoundingClientRect(); const f = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : String(v));
+        const ctl = st.controls as unknown as { target?: THREE.Vector3 } | null;
+        dg.textContent = [`${Math.round(fps)} fps · dpr ${st.viewport.dpr.toFixed(2)} · kwaliteit ${quality}`,
+          `canvas ${Math.round(r.width)}x${Math.round(r.height)} op ${Math.round(r.left)},${Math.round(r.top)} · buffer ${cv.width}x${cv.height} · r3f ${Math.round(st.size.width)}x${Math.round(st.size.height)}`,
+          `camera ${f(c.position.x)} ${f(c.position.y)} ${f(c.position.z)} · fov ${f(c.fov)} near ${f(c.near)} far ${f(c.far)}${ctl?.target ? ` · doel ${f(ctl.target.x)} ${f(ctl.target.y)} ${f(ctl.target.z)}` : ''}`,
+          `tekenopdrachten ${st.gl.info.render.calls} · driehoeken ${st.gl.info.render.triangles} · objecten ${st.scene.children.length} · walk ${useWorld.getState().walk ? 'ja' : 'nee'}`].join('\n');
+      }
       // 4K hapert (onder de 24 fps, 6 seconden lang): automatisch terug naar Auto
       if (quality === '4k' && performance.now() - a.since > 8000 && document.visibilityState === 'visible') {
         a.slow = fps < 24 ? a.slow + 0.5 : Math.max(0, a.slow - 1);
@@ -638,35 +648,6 @@ function GlansLicht() {
     </>
   );
 }
-/** Houdt de 3D-tekening even groot als het venster. Soms bleef het kantoor op een oude, smallere maat staan
- *  (bv. als het HQ eerst in een smal paneel opende en daarna groot werd): links beeld, rechts zwart. */
-function PasMaat() {
-  const gl = useThree((s) => s.gl);
-  const setSize = useThree((s) => s.setSize);
-  const get = useThree((s) => s.get);
-  useEffect(() => {
-    const doos = gl.domElement.parentElement;
-    if (!doos) return;
-    const check = () => {
-      const w = doos.clientWidth, h = doos.clientHeight;
-      const st = get();
-      if ( w < 2 || h < 2) return;
-      if (Math.abs(st.size.width - w) > 1 || Math.abs(st.size.height - h) > 1) {
-        const r = doos.getBoundingClientRect();
-        setSize(w, h, undefined, r.top, r.left);
-      }
-    };
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(check) : null;
-    ro?.observe(doos);
-    window.addEventListener('resize', check);
-    document.addEventListener('visibilitychange', check);
-    const t = setInterval(check, 1000);
-    check();
-    return () => { ro?.disconnect(); window.removeEventListener('resize', check); document.removeEventListener('visibilitychange', check); clearInterval(t); };
-  }, [gl, setSize, get]);
-  return null;
-}
-
 /* ================= de scène ================= */
 function Scene({ mode }: { mode: WorldMode }) {
   const live = useLive((s) => s.data);
@@ -675,15 +656,7 @@ function Scene({ mode }: { mode: WorldMode }) {
   const { focus, openWorker, hover, setHover, walk } = useWorld(useShallow((s) => ({ focus: s.focus, openWorker: s.openWorker, hover: s.hover, setHover: s.setHover, walk: s.walk })));
   const per = useMemo(() => threadsPerRoom(activity), [activity]);
   const quality = useWorld((s) => s.quality);
-  const perf = useWorld((s) => s.perf);
   /** 0 = licht t/m 3 = alles: snel is altijd licht, 4K altijd alles, Auto volgt de gemeten beeldsnelheid */
-  const lvl = quality === 'snel' ? 0 : quality === '4k' ? 3 : perf;
-  /* het nabewerkingslaagje past zich alleen aan bij een andere venstergrootte, niet bij een andere pixeldichtheid;
-     zonder dit tekent het na een kwaliteitsstap maar een deel van het scherm (rest zwart) */
-  const fxRef = useRef<any>(null);
-  const { width: fxW, height: fxH } = useThree((s) => s.size);
-  const fxDpr = useThree((s) => s.viewport.dpr);
-  useEffect(() => { fxRef.current?.setSize?.(fxW, fxH); }, [fxW, fxH, fxDpr, lvl]);
   const phone = useMemo(() => isPhone(), []);
   const screens = useScreens();
   const office = useOffice();
@@ -780,7 +753,7 @@ function Scene({ mode }: { mode: WorldMode }) {
       {mode !== 'studio' && ground && <Beacon alarms={alarms} />}
       <Snow />
       <Disco />
-      <EffectComposer ref={fxRef} multisampling={lvl <= 0 ? 0 : lvl === 1 ? 2 : 4}>
+      <EffectComposer multisampling={quality === 'snel' ? 0 : 4}>
         {/* zachtere neon (punt 33): minder gloed, pas boven een hogere drempel */}
         <Bloom intensity={office ? 0.22 : 0.34} luminanceThreshold={office ? 1.25 : 1.0} luminanceSmoothing={0.2} radius={0.4} mipmapBlur />
         <Vignette eskil={false} offset={0.4} darkness={0.22} />
@@ -791,18 +764,10 @@ function Scene({ mode }: { mode: WorldMode }) {
 
 export default function NeonOffice({ mode }: { mode: WorldMode }) {
   const quality = useWorld((s) => s.quality);
-  const perf = useWorld((s) => s.perf); const setPerf = useWorld((s) => s.setPerf);
   const setFocus = useWorld((s) => s.setFocus);
-  const auto = quality === 'auto';
   return (
-    <Canvas shadows dpr={dprFor(quality, PERF_DPR[auto ? perf : 2])} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
+    <Canvas shadows dpr={dprFor(quality, 1)} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
       onPointerMissed={(e) => { if (mode === 'home' && !useWorld.getState().walk && (e.target as HTMLElement)?.tagName === 'CANVAS') setFocus(null); }}>
-      {/* soepel op elke computer (punt 74): de beeldsnelheid wordt gemeten tegen de verversing van het scherm (tot 144 Hz).
-          Zakt hij onder ~55 fps, dan een stap lichter (minder pixels en minder randafvlakking); loopt hij ruim, dan een stap mooier. */}
-      {auto && <PerformanceMonitor ms={400} iterations={8} threshold={0.75} flipflops={4}
-        bounds={(hz) => [Math.min(55, hz * 0.85), Math.min(hz, 144) * 0.95]}
-        onDecline={() => setPerf(useWorld.getState().perf - 1)} onIncline={() => setPerf(useWorld.getState().perf + 1)} />}
-      <PasMaat />
       <Scene mode={mode} />
     </Canvas>
   );

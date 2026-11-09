@@ -305,5 +305,3 @@ textarea.dm-mic { background-position: right 9px top 9px !important; }
 .dm-volume::-moz-range-thumb { height: 16px; width: 16px; border: 0; border-radius: 999px; background: #fff; box-shadow: 0 0 0 3px rgba(255,122,36,.45); }
 .dm-volume:disabled { opacity: .45; }
 
-/* het 3D-kantoor altijd over het hele scherm, ook als de tekenmaat even achterloopt (anders rechts zwart) */
-.dm-world canvas { width: 100% !important; height: 100% !important; }

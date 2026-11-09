@@ -4,11 +4,12 @@
  * Bij een nieuwe versie: VERSIE ophogen en bovenaan NIEUW een blok toevoegen. Het venster
  * "Wat is nieuw" verschijnt dan één keer per browser (onthouden in localStorage).
  */
-export const VERSIE = 'v44';
+export const VERSIE = 'v45';
 
 export interface Nieuw { versie: string; datum?: string; punten: string[] }
 
 export const NIEUW: Nieuw[] = [
+  { versie: 'v45', datum: '10 nov', punten: ['Het 3D-kantoor tekent weer zoals vóór v42: vaste scherpte op Auto, zonder automatisch wisselen. Met F2 zie je wat het 3D-beeld precies doet.'] },
   { versie: 'v44', datum: '9 nov', punten: ['Het 3D-kantoor vult nu echt het hele scherm: de tekening bleef soms op een oude, smallere maat staan, waardoor rechts zwart bleef.'] },
   {
     versie: 'v42',
