@@ -118,7 +118,8 @@ const BIG_SPHERE = new THREE.Sphere(new THREE.Vector3(0, 1, 0), 40); // voor kli
 const SKIN = '#F1C19E'; // huid van het hoofdpersonage
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
-export const hash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; };
+import { hash } from './seed';
+export { hash };
 const angDiff = (a: number, b: number) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 const yawTo = (dx: number, dz: number) => Math.atan2(-dx, -dz); // figuur kijkt naar -z
 

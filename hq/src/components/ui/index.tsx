@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Agent, Priority, TaskStatus } from '../../types';
 import { roleById } from '../../modules/agents/roles';
 
@@ -73,7 +73,7 @@ export function StatCard({ label, value, sub, icon, color = '#6366f1', onClick }
         {label}
         {icon && <span style={{ color }}>{icon}</span>}
       </div>
-      <div className="mt-1.5 font-display text-2xl font-bold text-white">{value}</div>
+      <div className="getal mt-1.5 text-2xl text-white"><Telt value={value} /></div>
       {sub && <div className="mt-0.5 text-[13px] text-slate-400">{sub}</div>}
     </button>
   );
@@ -132,12 +132,14 @@ export const SimBadge = () => (
   <span className="chip bg-cyan-500/10 text-[12px] tracking-wider text-cyan-300 ring-1 ring-cyan-400/30">LOCAL SIMULATION</span>
 );
 
+/** Paginakop in de huisstijl: titel (kop-1), korte uitleg en knoppen rechts. */
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight text-white md:text-3xl">{title}</h1>
-        {subtitle && <div className="mt-1 text-sm text-slate-400">{subtitle}</div>}
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="kop-1 text-2xl md:text-3xl">{title}</h1>
+        <div className="mt-2 h-[3px] w-12 rounded-full bg-gradient-to-r from-[#FF7A24] to-[#398CFF] shadow-[0_0_12px_rgba(255,122,36,.45)]" />
+        {subtitle && <div className="mt-2 max-w-2xl text-sm text-slate-400">{subtitle}</div>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -146,8 +148,62 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 
 export const RoleLabel = ({ agent }: { agent: Agent }) => <span className="text-[13px] text-slate-400">{roleById(agent.role).title}</span>;
 
-export function Empty({ children }: { children: ReactNode }) {
-  return <div className="rounded-xl border border-dashed border-hq-line p-6 text-center text-sm text-slate-500">{children}</div>;
+/**
+ * Lege plek met uitleg (verbeterlijst punt 31): nooit een leeg vak of een nul, maar wat hier komt en wanneer.
+ * `titel` is de korte zin, `children` de uitleg, `actie` een knop om het te vullen.
+ */
+export function Empty({ children, titel, icon, actie }: { children?: ReactNode; titel?: ReactNode; icon?: ReactNode; actie?: ReactNode }) {
+  return (
+    <div className="leeg">
+      {icon && <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-300">{icon}</div>}
+      {titel && <div className="text-sm font-semibold text-slate-200">{titel}</div>}
+      {children && <div className="max-w-md text-[13px] leading-relaxed text-slate-400">{children}</div>}
+      {actie && <div className="mt-2">{actie}</div>}
+    </div>
+  );
+}
+
+/** Getal dat zacht optelt (punt 32). Alleen de eerste keer vanaf nul; bij een nieuwe waarde loopt hij kort
+ *  van de oude naar de nieuwe stand, zodat er bij verversen niets springt. Tekst die geen getal is blijft zoals hij is.
+ *  Bij minder beweging (.dm-rustig) staat het getal er meteen. */
+export function Telt({ value, duur = 700 }: { value: ReactNode; duur?: number }) {
+  const doel = typeof value === 'number' ? value : typeof value === 'string' ? leesGetal(value) : null;
+  const [toon, setToon] = useState<number | null>(() => (doel == null || rustig() ? doel : 0));
+  const vanRef = useRef<number>(0);
+  useEffect(() => {
+    if (doel == null) return;
+    const van = toon ?? 0;
+    if (rustig() || van === doel) { setToon(doel); return; }
+    vanRef.current = van;
+    let raf = 0; let t0 = -1;
+    const stap = (t: number) => {
+      if (t0 < 0) t0 = t; // tijd van het eerste beeld (rAF-tijd kan vóór performance.now() liggen)
+      const k = Math.max(0, Math.min(1, (t - t0) / duur)); const e = 1 - Math.pow(1 - k, 3);
+      setToon(vanRef.current + (doel - vanRef.current) * e);
+      if (k < 1) raf = requestAnimationFrame(stap);
+    };
+    raf = requestAnimationFrame(stap);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doel]);
+  if (doel == null || toon == null || toon === doel) return <>{value}</>;
+  if (typeof value === 'string') return <>{zetTerug(value, toon, doel)}</>;
+  return <>{String(Math.round(toon))}</>;
+}
+const rustig = () => { try { return document.documentElement.classList.contains('dm-rustig'); } catch { return true; } };
+/** "1.234", "+31", "21,9K" of "66,1%": het getal eruit, anders null */
+function leesGetal(s: string): number | null {
+  const m = /^([+-]?)(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?([KkMm%]?)$/.exec(s.trim());
+  if (!m) return null;
+  const n = parseFloat(m[2].replace(/\./g, '') + (m[3] ? '.' + m[3] : ''));
+  return m[1] === '-' ? -n : n;
+}
+function zetTerug(orig: string, n: number, doel: number) {
+  if (n === doel) return orig;
+  const m = /^([+-]?)(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?([KkMm%]?)$/.exec(orig.trim())!;
+  const dec = m[3]?.length ?? 0;
+  const txt = Math.abs(n).toLocaleString('nl-NL', { minimumFractionDigits: dec, maximumFractionDigits: dec, useGrouping: m[2].includes('.') || Math.abs(doel) >= 10000 });
+  return `${m[1] === '+' ? '+' : n < 0 ? '-' : ''}${txt}${m[4]}`;
 }
 
 export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { id: T; label: ReactNode }[] }) {

@@ -1,5 +1,5 @@
 /**
- * LIVE: leest elke minuut de echte stand uit de projectbestanden
+ * LIVE: leest elke minuut (elke 20 s als een eigen opdracht loopt) de echte stand uit de projectbestanden
  * (driftmark-hq/status.json) via de `files`-capability. Claude en de threads
  * werken dat bestand bij zodra er iets verandert. Zonder toegang valt de
  * pagina terug op de ingebouwde stand uit data/driftmark.ts.
@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import * as B from '../data/driftmark';
 import { useDb, startDb } from './db';
 import { nieuwsteEerst, toonTijd } from '../lib/tijd';
+import { useReal } from './real';
 
 export interface Activity {
   title: string; id: string; state: string; last: string; doing?: string; video?: number; lastIso?: string;
@@ -78,6 +79,33 @@ function schoon(j: any): Live {
   return d;
 }
 
+/* ---------- BLIJFT WERKEN ALS IETS UITVALT (verbeterlijst punt 72) ----------
+ * De laatst bekende YouTube-cijfers worden in deze browser bewaard. Mist de YouTube-feed of vidIQ in een
+ * nieuwe stand (of is een lijst leeg), dan blijven de laatst bekende cijfers staan, met hun eigen tijd
+ * (feedAt / vidiqAt), zodat de pagina's "bijgewerkt om …" tonen in plaats van een leeg vak of een nul. */
+const LAATST = 'dm-laatst-yt';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function metLaatst(raw: any, d: Live): Live {
+  let oud: YT | null = null;
+  try { oud = JSON.parse(localStorage.getItem(LAATST) || 'null'); } catch { oud = null; }
+  const nieuw = obj(raw) && obj(raw.youtube) ? (d.youtube as YT) : null;
+  const heeftCijfers = (y?: YT | null) => !!y && (y.subscribers != null || (y.videos?.length ?? 0) > 0);
+  if (heeftCijfers(nieuw)) {
+    const y = { ...nieuw! };
+    if (oud) {
+      // een deel ontbreekt (bv. vidIQ viel uit): dat deel uit de laatst bekende stand
+      if (y.subscribers == null && oud.subscribers != null) { y.subscribers = oud.subscribers; y.vidiqAt = y.vidiqAt ?? oud.vidiqAt; }
+      if (y.views == null && oud.views != null) y.views = oud.views;
+      if (y.videoCount == null && oud.videoCount != null) y.videoCount = oud.videoCount;
+      if (!(y.videos?.length) && oud.videos?.length) { y.videos = oud.videos; y.feedAt = y.feedAt ?? oud.feedAt; }
+    }
+    try { localStorage.setItem(LAATST, JSON.stringify(y)); } catch { /* vol of geblokkeerd: dan alleen zonder reserve */ }
+    return { ...d, youtube: y };
+  }
+  if (heeftCijfers(oud)) return { ...d, youtube: { ...oud!, bron: oud!.bron ? `${oud!.bron} (laatst bekend)` : 'laatst bekend' } };
+  return d;
+}
+
 type Src = 'ingebouwd' | 'live' | 'database' | 'geen-toegang' | 'fout';
 interface S { data: Live; source: Src; checkedAt: number | null; refresh: () => Promise<void> }
 
@@ -100,7 +128,7 @@ export const useLive = create<S>((set) => ({
         try {
           const r = await fs.read(p);
           const j = JSON.parse(new TextDecoder().decode(r.bytes));
-          const data = schoon(j);
+          const data = metLaatst(j, schoon(j));
           set({ data, source: 'live', checkedAt: Date.now() });
           try { (await import('./sync')).applyReal(data); } catch (e) { console.warn('sync', e); }
           return;
@@ -118,7 +146,7 @@ export const useLive = create<S>((set) => ({
 function fromDb(): boolean {
   const st = useDb.getState().state as Partial<Live> | null;
   if (!st || !st.activity) return false;
-  const data = schoon(st);
+  const data = metLaatst(st, schoon(st));
   useLive.setState({ data, source: 'database', checkedAt: Date.now() });
   void import('./sync').then((m) => m.applyReal(data)).catch(() => {});
   return true;
@@ -145,10 +173,41 @@ export async function filesApi(): Promise<any | null> {
   return fs;
 }
 
+/* ---------- BELANGRIJKE DINGEN DIRECT DOORZETTEN (verbeterlijst punt 71) ----------
+ * Normaal: elke minuut. Zolang het tabblad zichtbaar is én een eigen opdracht nog niet klaar is: elke 20 s.
+ * Tabblad op de achtergrond: elke 3 minuten. Terug naar het tabblad: meteen kijken als het langer dan 20 s geleden is.
+ * Zo blijft de belasting op de bestanden-API klein (hooguit 3 keer per minuut, en alleen als er iets loopt). */
+const SNEL = 20_000, NORMAAL = 60_000, ACHTERGROND = 180_000;
+/** opdrachten die als "open" tellen: verstuurd in de laatste 12 uur en nog geen antwoord met stand klaar of fout */
+export function openOpdrachten(): number {
+  const replies = useLive.getState().data.replies ?? [];
+  const nu = Date.now();
+  return useReal.getState().orders.filter((o) => {
+    if (o.status !== 'verstuurd' || !o.ref || nu - o.at > 12 * 3600_000) return false;
+    const r = replies.find((x) => x.ref === o.ref);
+    return !r || (r.stand !== 'klaar' && r.stand !== 'fout' && r.stand !== undefined);
+  }).length;
+}
+export function pollTempo(): number {
+  if (typeof document !== 'undefined' && document.hidden) return ACHTERGROND;
+  return openOpdrachten() > 0 ? SNEL : NORMAAL;
+}
+let timer: ReturnType<typeof setTimeout> | null = null;
+function plan(ms = pollTempo()) {
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(async () => { await useLive.getState().refresh(); plan(); }, ms);
+}
+
 export function startLive() {
   if (started) return; started = true;
   void startDb();
   void import('./sync').then((m) => m.applyReal(builtIn, false));
-  setTimeout(() => void useLive.getState().refresh(), 1500);
-  setInterval(() => void useLive.getState().refresh(), 60000);
+  plan(1500);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    const c = useLive.getState().checkedAt;
+    if (!c || Date.now() - c > SNEL) plan(300); else plan();
+  });
+  // net een opdracht verstuurd: binnen 20 s opnieuw kijken in plaats van pas na een minuut
+  useReal.subscribe((s, p) => { if (s.orders !== p.orders && pollTempo() === SNEL) { const c = useLive.getState().checkedAt ?? 0; plan(Math.max(1000, SNEL - (Date.now() - c))); } });
 }

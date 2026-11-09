@@ -13,7 +13,7 @@
  */
 import type { CastAct, CrewMember, Look } from './crew';
 import type { RealVideo } from '../data/driftmark';
-import { hash } from './crew';
+import { hash } from './seed';
 import { ROOMS, statusOf, type RoomId, type Status } from './rooms';
 import type { Activity } from '../services/live';
 import { puntenVoor, type Punt } from '../data/verbeter';

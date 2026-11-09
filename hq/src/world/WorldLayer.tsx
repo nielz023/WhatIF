@@ -1,11 +1,36 @@
 import { Component, lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { hasWebGL, reducedMotion } from './useWorld';
+import { hasWebGL, reducedMotion, useWorld } from './useWorld';
 import { useOfficeLoad } from './loadState';
 import type { WorldMode } from './NeonOffice';
 import WalkHud, { FloorButton } from './WalkHud';
-import TalkLayer from './TalkPanel';
 
-const NeonOffice = lazy(() => import('./NeonOffice'));
+/* Sneller openen (verbeterlijst punt 68): het 3D-kantoor (three.js, ~1,3 MB code en ~15 MB modellen) laadt pas
+ * als niels het kantoor of de studio opent. Gewone pagina's staan er dan binnen een paar seconden. Daarna blijft het
+ * kantoor staan bij paginawissels. Als de pagina even stil is, halen we alvast de code (niet de modellen) op. */
+const laadOffice = () => import('./NeonOffice');
+/* praten met de figuurtjes en de games horen bij het kantoor: zelfde moment laden */
+const TalkLayer = lazy(() => import('./TalkPanel'));
+const NeonOffice = lazy(laadOffice);
+let voorgeladen = false;
+function voorladen() {
+  if (voorgeladen) return; voorgeladen = true;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ric = (window as any).requestIdleCallback as ((f: () => void, o?: { timeout: number }) => number) | undefined;
+  const go = () => void laadOffice().catch(() => { voorgeladen = false; });
+  if (ric) ric(go, { timeout: 8000 }); else setTimeout(go, 1000);
+}
+/** zodra het kantoor één keer nodig is, blijft het gemount */
+function useOfficeNodig(mode: WorldMode) {
+  const walk = useWorld((s) => s.walk);
+  const [nodig, setNodig] = useState(mode !== 'panel' || walk);
+  useEffect(() => { if (mode !== 'panel' || walk) setNodig(true); }, [mode, walk]);
+  useEffect(() => {
+    if (nodig) return;
+    const t = setTimeout(voorladen, 20000); // na 20 s rust alvast de code ophalen
+    return () => clearTimeout(t);
+  }, [nodig]);
+  return nodig;
+}
 
 class Boundary extends Component<{ children: ReactNode }, { err: boolean }> {
   state = { err: false };
@@ -25,15 +50,20 @@ function Fallback({ text }: { text: string }) {
 /** De blijvende 3D-wereld achter alle schermen. Wordt één keer geladen en blijft staan bij paginawissels. */
 export default function WorldLayer({ mode }: { mode: WorldMode }) {
   const gl = useMemo(() => hasWebGL(), []);
+  const nodig = useOfficeNodig(mode);
   if (!gl) return <Fallback text="Dit apparaat ondersteunt geen 3D (WebGL). Je ziet de HQ zonder kantoor; alle functies werken." />;
   return (
     <div className="absolute inset-0 z-0">
-      <Boundary>
-        <Suspense fallback={<div className="dm-world-fallback absolute inset-0" />}>
-          <NeonOffice mode={mode} />
-        </Suspense>
-      </Boundary>
-      <LoadingScreen />
+      {/* nachtlucht achter de pagina's; het kantoor tekent eroverheen zodra het geladen is */}
+      <div className="dm-world-fallback absolute inset-0" />
+      {nodig && (
+        <Boundary>
+          <Suspense fallback={null}>
+            <NeonOffice mode={mode} />
+          </Suspense>
+        </Boundary>
+      )}
+      {nodig && <LoadingScreen />}
       {/* lichte waas als er een paneel open is, zodat de tekst leesbaar blijft */}
       <div className={`pointer-events-none absolute inset-0 transition-opacity duration-700 ${mode === 'panel' ? 'opacity-100' : 'opacity-0'}`}
         style={{ background: 'radial-gradient(ellipse at center, rgba(5,8,22,.5) 0%, rgba(5,8,22,.25) 75%)' }} />
@@ -42,7 +72,7 @@ export default function WorldLayer({ mode }: { mode: WorldMode }) {
       {/* knopje rechts in het midden: naar de bovenverdieping en terug */}
       <FloorButton />
       {/* praten met de figuurtjes en zelf gamen in de game room */}
-      <TalkLayer />
+      {nodig && <Suspense fallback={null}><TalkLayer /></Suspense>}
     </div>
   );
 }
@@ -59,10 +89,11 @@ function LoadingScreen() {
   if (weg) return null;
   return (
     <div className={`pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_center,#101a4a_0%,#060a1c_70%)] transition-opacity duration-700 ${done ? 'opacity-0' : 'opacity-100'}`} role="status" aria-live="polite">
-      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-400 via-orange-500 to-[#ff5f3d] shadow-[0_0_50px_rgba(255,122,36,.55)]"><svg viewBox="0 0 24 24" className="h-7 w-7 fill-white"><path d="M8 5.5v13l11-6.5z" /></svg></div>
-      <div className="font-display text-[26px] font-bold tracking-wide text-white">DRIFTMARK <span className="text-[#398CFF]">HQ</span></div>
-      <div className="mt-5 h-1.5 w-[min(70vw,320px)] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-[#FF7A24] to-[#398CFF] transition-[width] duration-300" style={{ width: `${Math.round(p * 100)}%` }} /></div>
-      <div className="mt-2 text-[13px] text-slate-400">{stap} {Math.round(p * 100)}%</div>
+      <img src="./merk/logo.webp" alt="" width={72} height={72} className="dm-logo mb-4 h-[72px] w-[72px] rounded-2xl" />
+      <img src="./merk/woordmerk.webp" alt="Driftmark" width={240} height={43} className="dm-woordmerk h-[43px] w-[240px]" />
+      <div className="mt-1 text-[11px] font-bold uppercase tracking-[.4em] text-[#7fb3ff]">3D-kantoor</div>
+      <div className="mt-6 h-2 w-[min(70vw,320px)] overflow-hidden rounded-full bg-white/10 shadow-[inset_0_1px_2px_rgba(0,0,0,.5)]"><div className="h-full rounded-full bg-gradient-to-r from-[#FF7A24] to-[#398CFF] shadow-[0_0_14px_rgba(255,122,36,.55)] transition-[width] duration-300" style={{ width: `${Math.max(3, Math.round(p * 100))}%` }} /></div>
+      <div className="mt-2 text-[13px] text-slate-400">{stap} <span className="tabular-nums">{Math.round(p * 100)}%</span></div>
       <div className="mt-6 max-w-[min(86vw,420px)] text-center text-[12px] text-slate-500">{tip}</div>
     </div>
   );

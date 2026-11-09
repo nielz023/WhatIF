@@ -1,10 +1,9 @@
-import { useEffect, useRef, Component, type ReactNode } from 'react';
+import { useEffect, useRef, Component, lazy, Suspense, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from './store/useGame';
 import { MobileNav, StudioTabs, STUDIO, MAIN } from './components/layout/Sidebar';
 import GlassNav, { GlassSide } from './components/layout/GlassNav';
 import WorldLayer from './world/WorldLayer';
-import HomeHud from './world/HomeHud';
 import { HoloPanel } from './world/HoloPanel';
 import { useWorld } from './world/useWorld';
 import { startSounds, play } from './world/sound';
@@ -20,6 +19,7 @@ import GesprekDrawer from './components/shared/Gesprek';
 import AfkeurenVenster from './components/shared/Afkeuren';
 import Opdrachtbalk, { AntwoordWacht } from './components/shared/Opdrachtbalk';
 import BestandViewer from './components/shared/BestandViewer';
+import Versie from './components/shared/Versie';
 import { startThreads } from './services/threads';
 import ProjectDrawer from './components/shared/ProjectDrawer';
 import DepartmentDrawer from './components/shared/DepartmentDrawer';
@@ -30,8 +30,13 @@ import SettingsPage from './pages/SettingsPage';
 import WarRoomPage from './pages/WarRoomPage';
 import DriftmarkPage, { VideosPage, MeerPage } from './pages/DriftmarkPage';
 import KanaalPage from './pages/KanaalPage';
-import CoachPage from './pages/CoachPage';
-import KennisPage from './pages/KennisPage';
+/* Sneller openen (verbeterlijst punt 68): zware delen laden pas als ze nodig zijn, en daarna in de stilte alvast. */
+const laadHomeHud = () => import('./world/HomeHud');
+const laadCoach = () => import('./pages/CoachPage');
+const laadKennis = () => import('./pages/KennisPage');
+const HomeHud = lazy(laadHomeHud);
+const CoachPage = lazy(laadCoach);
+const KennisPage = lazy(laadKennis);
 import type { PageId } from './types';
 import { realTick } from './lib/util';
 import { startLive } from './services/live';
@@ -45,10 +50,10 @@ function NaarKantoor() {
 }
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
-  driftmark: () => null, overzicht: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: NaarKantoor, analytics: NaarKantoor,
+  driftmark: () => null, overzicht: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: () => <CoachPage />, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: NaarKantoor, analytics: NaarKantoor,
   threads: NaarKantoor, finances: NaarKantoor, upgrades: NaarKantoor, achievements: NaarKantoor,
   settings: SettingsPage, warroom: WarRoomPage,
-  kennis: KennisPage,
+  kennis: () => <KennisPage />,
 };
 
 /** De klok loopt met de echte tijd mee: 1 tick = 1 echt uur. Na afwezigheid wordt bijgewerkt (max 30 dagen). */
@@ -61,8 +66,10 @@ function useSimulationLoop() {
     };
     sync();
     startLive(); startTools(); startSounds(); void startThreads(); startMic();
+    // na het openen, als de pagina stil is: de andere pagina's alvast ophalen (klein, geen 3D)
+    const vooraf = setTimeout(() => { for (const f of [laadKennis, laadCoach, laadHomeHud]) void f().catch(() => {}); }, 6000);
     const id = setInterval(sync, 10000);
-    return () => clearInterval(id);
+    return () => { clearInterval(id); clearTimeout(vooraf); };
   }, []);
 }
 
@@ -72,7 +79,7 @@ class PageBoundary extends Component<{ children: ReactNode }, { err: string | nu
   static getDerivedStateFromError(e: unknown) { return { err: String((e as Error)?.message ?? e) }; }
   componentDidCatch(e: unknown) { console.error('[HQ] scherm-fout', e); }
   render() {
-    if (!this.state.err) return this.props.children;
+    if (!this.state.err) return <Suspense fallback={<PaginaLaden />}>{this.props.children}</Suspense>;
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="panel max-w-md p-6 text-center">
@@ -88,6 +95,17 @@ class PageBoundary extends Component<{ children: ReactNode }, { err: string | nu
       </div>
     );
   }
+}
+
+/** korte wachtstand terwijl een pagina-onderdeel binnenkomt (meestal een fractie van een seconde) */
+function PaginaLaden() {
+  return (
+    <div className="flex h-full min-h-[40vh] items-center justify-center" role="status" aria-live="polite">
+      <div className="flex items-center gap-3 text-sm text-slate-400">
+        <span className="h-2 w-2 animate-pulse rounded-full bg-orange-400 shadow-[0_0_10px_#ff7a24]" />Pagina openen…
+      </div>
+    </div>
+  );
 }
 
 const TITLES: Partial<Record<PageId, { t: string; sub: string; c: string }>> = {
@@ -146,7 +164,7 @@ export default function App() {
         {!walk && <GlassNav />}
         <main className="relative min-h-0 flex-1 pb-[64px] md:pb-0">
           {mode === 'home' && !walk && <GlassSide />}
-          {mode === 'home' && <div hidden={walk}><HomeHud /></div>}
+          {mode === 'home' && <div hidden={walk}><Suspense fallback={null}><HomeHud /></Suspense></div>}
           {mode === 'studio' && (
             <div className="pointer-events-none absolute inset-0 flex flex-col">
               <div className="pointer-events-auto"><StudioTabs /></div>
@@ -181,6 +199,7 @@ export default function App() {
         <AllModals />
         <ConfirmDialog />
         <Toasts />
+        {!walk && <Versie />}
       </div>
     </div>
   );
