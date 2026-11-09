@@ -14,6 +14,7 @@
 import type { CastAct, CrewMember, Look } from './crew';
 import type { RealVideo } from '../data/driftmark';
 import { hash } from './crew';
+import type { CastModel } from './castModels';
 import { ROOMS, statusOf, type RoomId, type Status } from './rooms';
 import type { Activity } from '../services/live';
 import { puntenVoor, type Punt } from '../data/verbeter';
@@ -82,14 +83,15 @@ function topThread(list: Activity[]) {
 }
 
 /* ---------- de vaste cast van de video's ---------- */
-const CAST: { id: string; label: string; look: Look; small?: boolean }[] = [
-  { id: 'moeder', label: 'Moeder', look: { top: 'trui', topColor: '#E8739E', hair: 'lang', hairColor: '#8A5A2B', pants: '#3B4466', shoes: '#F4F1EA' } },
-  { id: 'vader', label: 'Vader', look: { top: 'tee', topColor: '#F2A93B', hair: 'kort', hairColor: '#4A3424', beard: true, glasses: '#1C1F2B', pants: '#2E3B4E', shoes: '#8B5A2B' } },
-  { id: 'broertje', label: 'Broertje', small: true, look: { top: 'hoodie', topColor: '#3FB8F0', hair: 'kuif', hairColor: '#5A3A1E', pants: '#2B3A5C', shoes: '#E23B3B' } },
-  { id: 'opa', label: 'Opa', look: { top: 'jas', topColor: '#6E5A44', innerColor: '#E9E4D8', hair: 'pet', hatColor: '#5B5248', hairColor: '#DADAE0', moustache: true, glasses: '#3A3226', pants: '#4A4F5E', shoes: '#1C1F2B' } },
-  { id: 'oma', label: 'Oma', look: { top: 'trui', topColor: '#9B7BC8', hair: 'krul', hairColor: '#E4E4EA', glasses: '#B0B4C4', pants: '#5B4A6E', shoes: '#F4F1EA' } },
-  { id: 'vriend', label: 'Beste vriend', look: { top: 'hoodie', topColor: '#2FBF71', hair: 'pet', hatColor: '#E23B3B', hairColor: '#17120F', pants: '#1F2433', shoes: '#F4F1EA' } },
-  { id: 'pestkop', label: 'Pestkop', look: { top: 'jas', topColor: '#262A36', innerColor: '#C0392B', hair: 'kuif', hairColor: '#17120F', pants: '#1F2433', shoes: '#1C1F2B' } },
+/** model = het echte figuur uit cast/glb (castModels.tsx), gekleed zoals in video 1 */
+const CAST: { id: string; label: string; look: Look; small?: boolean; model: CastModel }[] = [
+  { id: 'moeder', model: 'mama', label: 'Moeder', look: { top: 'trui', topColor: '#E8739E', hair: 'lang', hairColor: '#8A5A2B', pants: '#3B4466', shoes: '#F4F1EA' } },
+  { id: 'vader', model: 'papa', label: 'Vader', look: { top: 'tee', topColor: '#F2A93B', hair: 'kort', hairColor: '#4A3424', beard: true, glasses: '#1C1F2B', pants: '#2E3B4E', shoes: '#8B5A2B' } },
+  { id: 'broertje', model: 'broertje', label: 'Broertje', small: true, look: { top: 'hoodie', topColor: '#3FB8F0', hair: 'kuif', hairColor: '#5A3A1E', pants: '#2B3A5C', shoes: '#E23B3B' } },
+  { id: 'opa', model: 'opa', label: 'Opa', look: { top: 'jas', topColor: '#6E5A44', innerColor: '#E9E4D8', hair: 'pet', hatColor: '#5B5248', hairColor: '#DADAE0', moustache: true, glasses: '#3A3226', pants: '#4A4F5E', shoes: '#1C1F2B' } },
+  { id: 'oma', model: 'oma', label: 'Oma', look: { top: 'trui', topColor: '#9B7BC8', hair: 'krul', hairColor: '#E4E4EA', glasses: '#B0B4C4', pants: '#5B4A6E', shoes: '#F4F1EA' } },
+  { id: 'vriend', model: 'beste_vriend', label: 'Beste vriend', look: { top: 'hoodie', topColor: '#2FBF71', hair: 'pet', hatColor: '#E23B3B', hairColor: '#17120F', pants: '#1F2433', shoes: '#F4F1EA' } },
+  { id: 'pestkop', model: 'pestkop', label: 'Pestkop', look: { top: 'jas', topColor: '#262A36', innerColor: '#C0392B', hair: 'kuif', hairColor: '#17120F', pants: '#1F2433', shoes: '#1C1F2B' } },
 ];
 type Job = 'crisis' | 'stem' | 'script' | 'thumbnail' | 'productie';
 interface Place { u: number; v: number; fu: number; fv: number; act: CastAct; fixed?: boolean; doing: string }
@@ -151,8 +153,10 @@ export function staffFor(opts: {
       const t = topThread(all);
       // bij de fotoshoot voor een thumbnail staat hij zelf voor de camera
       const shoot = jobs.includes('thumbnail') ? PLACES.thumbnail[0] : null;
-      out.push({ key: 'ceo:main', room: r.id, seat: 0, status: company, label: 'Hoofdpersonage (CEO)', role: 'Driftmark', look: CEO_LOOK, big: true, thread: t ? `${t.title}${t.state === 'blocked' || t.state === 'review_ready' ? ' (wacht op jou)' : ''}` : undefined, onClick: open,
-        ...(shoot ? { standAt: { p: at('thumbnail', shoot.u, shoot.v), face: at('thumbnail', shoot.fu, shoot.fv) }, act: shoot.act, stay: true, doing: shoot.doing } : {}) });
+      // het echte hoofdpersonage-model (punt 34): hij staat in zijn kantoor (een staand model past niet op een bureaustoel)
+      out.push({ key: 'ceo:main', room: r.id, seat: 0, status: company, label: 'Hoofdpersonage (CEO)', role: 'Driftmark', look: CEO_LOOK, big: true, model: 'hoofdpersonage', thread: t ? `${t.title}${t.state === 'blocked' || t.state === 'review_ready' ? ' (wacht op jou)' : ''}` : undefined, onClick: open,
+        ...(shoot ? { standAt: { p: at('thumbnail', shoot.u, shoot.v), face: at('thumbnail', shoot.fu, shoot.fv) }, act: shoot.act, stay: true, doing: shoot.doing }
+          : { standAt: { p: at('ceo', -0.4, 0.2), face: at('ceo', 0, -2.5) }, stay: true, doing: 'leidt Driftmark vanuit zijn kantoor' }) });
       first = 1;
     }
     STYLE[r.id].forEach(([name, look], k) => {
@@ -174,7 +178,7 @@ export function staffFor(opts: {
   // de cast: de klussen af in volgorde van belang, de rest boven
   const free = jobs.flatMap((j) => PLACES[j].map((p, k) => ({ j, p, k }))).filter((x) => !(x.j === 'thumbnail' && x.k === 0));
   CAST.forEach((c, i) => {
-    const slot = free[i]; const base = { key: `cast:${c.id}`, seat: -1, label: c.label, role: "Cast van de video's", small: c.small, onClick: () => onOpen(slot ? (slot.j as RoomId) : 'coach') };
+    const slot = free[i]; const base = { key: `cast:${c.id}`, seat: -1, label: c.label, model: c.model, role: "Cast van de video's", small: c.small, onClick: () => onOpen(slot ? (slot.j as RoomId) : 'coach') };
     if (slot) {
       const { j, p } = slot; const room = j as RoomId;
       out.push({ ...base, room, status: 'werkt', look: j === 'stem' ? { ...c.look, headphones: '#1C1F2B' } : c.look,

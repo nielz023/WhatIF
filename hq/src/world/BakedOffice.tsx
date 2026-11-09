@@ -188,7 +188,8 @@ export function BakedOffice({ model, screens, dash, lit }: {
       const shift = sky.feest ? (t * 0.09 + i * 0.13) % 1 : Math.sin(t * 0.22 + i * 1.7) * 0.022;
       for (const m of mats) { const c = m.userData.hsl as { h: number; s: number; l: number } | undefined; if (c) m.emissive.setHSL((c.h + shift + 1) % 1, sky.feest ? 1 : c.s, c.l); }
       // minder overheersend licht (niels 2026-11-06): neon op ~60%, het midden (coach) nog wat zachter
-      const k = room === 'hub' ? 0.5 : 0.6 * (lit(room) ? 1.4 : 1);
+      // glans-look (punt 33): nog iets minder fel, zodat de figuren en het licht de aandacht krijgen
+      const k = room === 'hub' ? 0.42 : 0.5 * (lit(room) ? 1.4 : 1);
       for (const m of mats) m.emissiveIntensity = (m.userData.base as number) * k;
     }
     // overdag een tikje lichter binnen

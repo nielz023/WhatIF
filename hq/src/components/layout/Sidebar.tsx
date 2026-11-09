@@ -2,6 +2,7 @@ import { Home, Clapperboard, LineChart, Building2, FolderKanban, Users, ShieldAl
 import type { PageId } from '../../types';
 import { useGame } from '../../store/useGame';
 import { useLive } from '../../services/live';
+import { alarmsFrom, ernstig } from '../../world/alarms';
 
 /** De vijf vaste knoppen (verbeterlijst 9 nov, punten 16-18). De Coach zit rechtsonder op elke pagina; Meer is opgegaan in Vandaag, Video's en Kennis. */
 export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: string }[] = [
@@ -11,7 +12,7 @@ export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: strin
   { id: 'kennis', label: 'Kennis', icon: Library, uitleg: 'Geheugen, threads, documenten, werkwijze en gereedschap' },
   { id: 'driftmark', label: '3D-kantoor', icon: Building2, uitleg: 'Je 3D-kantoor: loop rond en zie wie waaraan werkt' },
 ];
-/** Binnen het 3D-kantoor: team, projecten en crisiskamer. Het demokanaal-scherm is weg (punt 38). */
+/** Binnen het 3D-kantoor: team, projecten en crisiskamer (die laatste alleen als er echt iets mis is, punt 60). */
 export const STUDIO: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: 'hq', label: 'Team', icon: Building2 },
   { id: 'projects', label: 'Projecten', icon: FolderKanban },
@@ -91,11 +92,14 @@ export function MobileNav() {
 export function StudioTabs() {
   const page = useGame((s) => s.page);
   const setPage = useGame((s) => s.setPage);
+  // crisiskamer alleen in het menu als er echt iets mis is (verbeterlijst punt 60), of als je er al bent
+  const crisis = useLive((s) => ernstig(alarmsFrom(s.data)));
+  const tabs = STUDIO.filter((x) => x.id !== 'warroom' || crisis || page === 'warroom');
   return (
     <div className="shrink-0 border-b border-hq-line bg-[#080d22]/80 px-3 pt-2 backdrop-blur md:px-6">
       <div className="mb-1.5 text-[12px] text-slate-400"><span className="font-semibold text-sky-300">🏢 Team en projecten</span> in je 3D-kantoor, met je echte video's en taken. Knoppen als "Nieuwe video" en "Goedkeuren" worden echte opdrachten voor Claude.</div>
       <div className="flex gap-1 overflow-x-auto pb-2">
-        {STUDIO.map(({ id, label, icon: Icon }) => (
+        {tabs.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setPage(id)} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition ${page === id ? 'bg-sky-500/20 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>
             <Icon size={14} />{label}
           </button>

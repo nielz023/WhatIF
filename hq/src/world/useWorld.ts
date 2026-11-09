@@ -15,6 +15,8 @@ interface W {
   bump: () => void;
   quality: Quality;
   setQuality: (q: Quality) => void;
+  /** stand Auto (punt 74): hoe zwaar het kantoor nu mag zijn, 0 = licht (laptop) t/m 3 = alles (sterke pc), bijgesteld op de beeldsnelheid */
+  perf: number; setPerf: (n: number) => void;
   /** feestje: telt op bij elke mijlpaal (confetti, applaus, juichende medewerkers) */
   party: number; partyText: string | null; celebrate: (text: string) => void;
   /** thema van het kantoor: automatisch volgens de klok, of vast */
@@ -43,6 +45,8 @@ export const useWorld = create<W>((set) => ({
   bump: () => set((s) => ({ introKey: s.introKey + 1 })),
   quality: q0,
   setQuality: (quality) => { write('dm-kwaliteit', quality); set({ quality }); },
+  perf: (() => { const v = Number(read('dm-perf')); return v >= 0 && v <= 3 && read('dm-perf') !== null ? v : 2; })(),
+  setPerf: (perf) => { const n = Math.max(0, Math.min(3, Math.round(perf))); write('dm-perf', String(n)); set({ perf: n }); },
   party: 0, partyText: null,
   celebrate: (partyText) => set((s) => ({ party: s.party + 1, partyText })),
   theme: t0, setTheme: (theme) => { write('dm-thema', theme); set({ theme }); },
@@ -57,8 +61,11 @@ export function dprFor(q: Quality, auto: number) {
   // haarscherp (niels 2026-11-06): nooit onder de resolutie van het scherm zelf; op een gewoon scherm een tikje erboven
   if (q === 'snel') return Math.min(1.5, Math.max(1, dev));
   if (q === '4k') return Math.min(3, Math.max(dev, 3840 / Math.max(1, window.innerWidth)));
-  return Math.min(2, Math.max(auto, dev, 1));
+  // Auto: op de schermresolutie zolang het soepel loopt; haalt de pc het niet, dan tot 70% daarvan (laptops)
+  return Math.min(2, Math.max(0.75, dev * auto));
 }
+/** pixelfactor (t.o.v. het scherm) per prestatieniveau in de stand Auto */
+export const PERF_DPR = [0.7, 0.85, 1, 1.25] as const;
 
 export const reducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 

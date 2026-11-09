@@ -7,6 +7,7 @@
  *   (ramen, glazen kantoorbanden of neonvinnen), neonranden, hoekstrepen die oplichten en ramen die aan/uit gaan;
  * - bomen in parken en op pleinen (november: een deel in herfstkleuren);
  * - knipperende vliegtuiglichten, lichtreclames met de video's van het kanaal en zoeklichten in de nacht.
+ * - rijdende auto's op de straten (punt 35), met koplampen en achterlichten die 's avonds aangaan.
  * De indeling komt uit een vaste seed, dus de stad ziet er elke keer hetzelfde uit.
  */
 import { useEffect, useMemo, useRef } from 'react';
@@ -397,8 +398,66 @@ export function City() {
       {L.beams.map((p, i) => (
         <mesh key={i} ref={(el) => { beamRefs.current[i] = el; }} position={p} geometry={beamGeo} material={beamMat} raycast={() => null} renderOrder={2} />
       ))}
+      <Traffic theme={theme} />
       <Sparkles count={60} scale={[140, 30, 60]} position={[0, 14, -55]} size={26} speed={0.15} opacity={0.5} color="#FFB070" />
       <Sparkles count={40} scale={[140, 30, 60]} position={[0, 18, -60]} size={22} speed={0.1} opacity={0.45} color="#7fc8ff" />
+    </group>
+  );
+}
+
+/* ---------- rijdend verkeer (punt 35) ---------- */
+const NCAR = 90;
+const CAR_COLS = ['#C8352B', '#E9ECF2', '#2E5BD8', '#F2B33D', '#1D2233', '#2FAE6B', '#E86A2C', '#8A93A6'];
+function Traffic({ theme }: { theme: ReturnType<typeof useWorld.getState>['theme'] }) {
+  const cars = useMemo(() => {
+    const r = rng(20261109);
+    return Array.from({ length: NCAR }, () => {
+      const axis = r() < 0.5 ? 0 : 1; // 0 rijdt langs x, 1 langs z
+      const street = (Math.floor(r() * (HALF * 2)) - HALF + 0.5) * P; // middenlijn van een straat tussen twee blokken
+      const dir = r() < 0.5 ? 1 : -1;
+      return { axis, line: street + dir * 1.5, dir, speed: 7 + r() * 9, phase: r() * R_CITY * 2, col: new THREE.Color(CAR_COLS[Math.floor(r() * CAR_COLS.length)]) };
+    });
+  }, []);
+  const body = useRef<THREE.InstancedMesh>(null); const cabin = useRef<THREE.InstancedMesh>(null); const lamps = useRef<THREE.InstancedMesh>(null);
+  const geo = useMemo(() => {
+    const b = new THREE.BoxGeometry(1.9, 0.7, 4); b.translate(0, 0.55, 0);
+    const c = new THREE.BoxGeometry(1.6, 0.6, 2); c.translate(0, 1.15, -0.2);
+    const l = new THREE.BoxGeometry(1.7, 0.22, 0.08); l.translate(0, 0.62, 0);
+    return { b, c, l };
+  }, []);
+  const mat = useMemo(() => ({
+    b: new THREE.MeshPhysicalMaterial({ roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.1, metalness: 0.2 }),
+    c: new THREE.MeshStandardMaterial({ color: '#0d1426', roughness: 0.1, metalness: 0.6 }),
+    l: new THREE.MeshBasicMaterial({ toneMapped: false }),
+  }), []);
+  useEffect(() => {
+    const b = body.current, l = lamps.current; if (!b || !l) return;
+    cars.forEach((c, i) => { b.setColorAt(i, c.col); l.setColorAt(i * 2, new THREE.Color(3, 2.8, 2.2)); l.setColorAt(i * 2 + 1, new THREE.Color(2.6, 0.15, 0.1)); });
+    if (b.instanceColor) b.instanceColor.needsUpdate = true; if (l.instanceColor) l.instanceColor.needsUpdate = true;
+  }, [cars]);
+  const o = useMemo(() => new THREE.Object3D(), []);
+  useFrame(({ clock }) => {
+    const b = body.current, c = cabin.current, l = lamps.current; if (!b || !c || !l) return;
+    const t = clock.elapsedTime; const night = Math.max(0.12, 1 - dayAmount(dayPhase(theme)) * 0.9);
+    mat.l.color.setScalar(night);
+    cars.forEach((car, i) => {
+      const L2 = R_CITY * 2; let a = ((car.phase + t * car.speed * car.dir) % L2 + L2) % L2 - R_CITY;
+      if (Math.abs(a) < 2) a = 2 * Math.sign(a || 1);
+      const x = car.axis === 0 ? a : car.line, z = car.axis === 0 ? car.line : a;
+      const yaw = car.axis === 0 ? (car.dir > 0 ? Math.PI / 2 : -Math.PI / 2) : (car.dir > 0 ? 0 : Math.PI);
+      o.position.set(x, Y, z); o.rotation.set(0, yaw, 0); o.scale.setScalar(1); o.updateMatrix();
+      b.setMatrixAt(i, o.matrix); c.setMatrixAt(i, o.matrix);
+      // koplamp vooraan (+z van de auto), achterlicht achteraan
+      o.translateZ(2.02); o.updateMatrix(); l.setMatrixAt(i * 2, o.matrix);
+      o.translateZ(-4.04); o.updateMatrix(); l.setMatrixAt(i * 2 + 1, o.matrix);
+    });
+    b.instanceMatrix.needsUpdate = true; c.instanceMatrix.needsUpdate = true; l.instanceMatrix.needsUpdate = true;
+  });
+  return (
+    <group>
+      <instancedMesh ref={body} args={[geo.b, mat.b, NCAR]} frustumCulled={false} raycast={() => null} />
+      <instancedMesh ref={cabin} args={[geo.c, mat.c, NCAR]} frustumCulled={false} raycast={() => null} />
+      <instancedMesh ref={lamps} args={[geo.l, mat.l, NCAR * 2]} frustumCulled={false} raycast={() => null} />
     </group>
   );
 }

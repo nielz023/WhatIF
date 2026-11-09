@@ -19,6 +19,7 @@ import { teamFor } from './staff';
 import { mergePunten, puntenVoor } from '../data/verbeter';
 import { openGesprek } from '../components/shared/Gesprek';
 import { DeptTools } from './deptTools';
+import Afdeling from '../components/shared/Afdeling';
 import { useCoach } from '../services/coach';
 
 const STATE_NL: Record<string, { t: string; c: string }> = {
@@ -117,7 +118,7 @@ function DeptPanel({ r }: { r: RoomDef }) {
   const list = useMemo(() => threadsPerRoom(d.activity)[r.id].slice().sort((a, b) => (ORDER[a.state] ?? 9) - (ORDER[b.state] ?? 9)), [d.activity, r.id]);
   const st = r.id === 'coach' ? 'werkt' : statusOf(list);
   const info = deptInfo(r, d, log);
-  const n = (f: (a: Activity) => boolean) => list.filter(f).length;
+  // dezelfde opbouw voor elke afdeling (punt 50): wat doet hij, wat loopt, wat wacht op jou, wat is klaar, snelknoppen
   return (
     <HoloPanel title={<span><span className="mr-1.5">{r.icon}</span>{r.naam}</span>} sub={r.sub} accent={r.color} onClose={() => setFocus(null)} className="max-h-full">
       <div className="space-y-3 p-4">
@@ -126,31 +127,16 @@ function DeptPanel({ r }: { r: RoomDef }) {
           <span className="min-w-0 flex-1"><span className="block text-[14px] font-bold text-white">{r.agent}</span><span className="block truncate text-[12px] text-slate-400">{r.rol}</span></span>
           <span className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ color: STATUS[st].kleur, background: `${STATUS[st].kleur}1f` }}>{STATUS[st].label}</span>
         </button>
-        <div className="grid grid-cols-3 gap-2 text-center">
-          {[['Bezig', n((a) => a.state === 'working'), '#398CFF'], ['Wacht op jou', n((a) => a.state === 'blocked' || a.state === 'review_ready'), '#FF9F1C'], ['Klaar', n((a) => a.state === 'done'), '#21D6A0']].map(([l, v, c]) => (
-            <div key={l as string} className="rounded-xl border border-white/[.07] bg-black/20 py-2"><div className="font-display text-xl font-bold" style={{ color: c as string }}>{v as number}</div><div className="text-[11px] text-slate-400">{l as string}</div></div>
-          ))}
-        </div>
-        {r.id !== 'coach' && <Team r={r} />}
-        {info.length > 0 && (
-          <div className="rounded-xl border border-white/[.07] bg-black/20 p-3 text-[13px] text-slate-300">
-            {info.map((x, i) => <div key={i} className="flex gap-2"><span style={{ color: r.color }}>›</span><span className="min-w-0">{x}</span></div>)}
-          </div>
-        )}
-        <div>
-          <div className="mb-1.5 text-[12px] font-bold uppercase tracking-wider text-slate-400">Taken ({list.length})</div>
-          <div className="space-y-1.5">
-            {list.length === 0 && <div className="text-[13px] text-slate-500">Nog geen taken voor deze afdeling.</div>}
-            {list.slice(0, 8).map((a) => <TaskRow key={a.id || a.session} a={a} />)}
-          </div>
-        </div>
-        {r.id !== 'coach' && <DeptTools r={r} />}
-        {r.page && (
-          <button onClick={() => setPage(r.page!)} className="flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-[14px] font-semibold text-white transition hover:brightness-125" style={{ borderColor: `${r.color}66`, background: `${r.color}1a` }}>
-            {r.pageLabel}<ArrowRight size={16} />
-          </button>
-        )}
-        <OrderBox r={r} />
+        <Afdeling r={r} info={info}>
+          {r.id !== 'coach' && <DeptTools r={r} />}
+          {r.id !== 'coach' && <Team r={r} />}
+          {r.page && (
+            <button onClick={() => setPage(r.page!)} className="flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-[14px] font-semibold text-white transition hover:brightness-125" style={{ borderColor: `${r.color}66`, background: `${r.color}1a` }}>
+              {r.pageLabel}<ArrowRight size={16} />
+            </button>
+          )}
+          <OrderBox r={r} />
+        </Afdeling>
       </div>
     </HoloPanel>
   );
