@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Eye, ThumbsUp, MessageCircle, Share2, Timer, UserPlus, Youtube, CalendarClock } from 'lucide-react';
 import Bijgewerkt from '../components/shared/Bijgewerkt';
 import { useLive, readFile, type YTVideo } from '../services/live';
+import VideoMuur from './studio/VideoMuur';
 
 type Filter = 'alles' | 'long' | 'short';
 type Sort = 'nieuw' | 'views' | 'avp' | 'likes';
@@ -112,6 +113,8 @@ export default function YouTubeStats() {
   const yt = useLive((s) => s.data.youtube);
   const [filter, setFilter] = useState<Filter>('alles');
   const [sort, setSort] = useState<Sort>('nieuw');
+  const [muur, setMuur] = useState<boolean>(() => { try { return localStorage.getItem('dm-yt-muur') !== 'nee'; } catch { return true; } });
+  const zetMuur = (m: boolean) => { setMuur(m); try { localStorage.setItem('dm-yt-muur', m ? 'ja' : 'nee'); } catch { /* */ } };
   const alle = yt?.videos ?? [];
   const zicht = alle.filter((v) => filter === 'alles' || v.type === filter);
   const k: Record<Sort, (v: YTVideo) => number | string> = { nieuw: sortKey, views: (v) => v.views ?? 0, avp: (v) => v.avp ?? -1, likes: (v) => v.likes ?? 0 };
@@ -136,6 +139,10 @@ export default function YouTubeStats() {
               {f.label} <span className="opacity-70">{alle.filter((v) => isPublic(v) && (f.id === 'alles' || v.type === f.id)).length}</span>
             </button>
           ))}</div>
+          <div className="flex items-center gap-1 rounded-lg bg-white/5 p-0.5 text-[13px]" aria-label="Weergave">
+            <button onClick={() => zetMuur(true)} className={`rounded-md px-2.5 py-1 ${muur ? 'bg-white/15 text-white' : 'text-slate-400'}`}>Grote plaatjes</button>
+            <button onClick={() => zetMuur(false)} className={`rounded-md px-2.5 py-1 ${!muur ? 'bg-white/15 text-white' : 'text-slate-400'}`}>Lijst met cijfers</button>
+          </div>
           <label className="flex items-center gap-2 text-[13px] text-slate-400">Sorteren
             <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className="rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[13px] text-white">
               {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -156,7 +163,7 @@ export default function YouTubeStats() {
         </p>
       </section>
 
-      {online.length ? <div className="grid gap-2 xl:grid-cols-2">{online.map((v) => <Rij key={v.id ?? v.title} v={v} />)}</div>
+      {online.length && muur ? <VideoMuur vids={online} /> : online.length ? <div className="grid gap-2 xl:grid-cols-2">{online.map((v) => <Rij key={v.id ?? v.title} v={v} />)}</div>
         : <div className="panel p-4 text-[14px] text-slate-400">Nog geen video's gevonden. De lijst vult zich bij de volgende uurronde.</div>}
 
       {gepland.length > 0 && (

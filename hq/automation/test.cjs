@@ -22,7 +22,7 @@ const HQ = path.resolve(__dirname, '..');
 const DIST = path.join(HQ, 'dist');
 const UIT = path.join(__dirname, 'test-uit');
 const PROJ = '/mnt/project-files';
-const PORT = 4199;
+const PORT = Number(process.env.HQ_TEST_PORT) || 4199; // eigen poort als er al een test draait
 const SNEL = process.argv.includes('--snel');
 
 const PAGINAS = ['overzicht', 'videos', 'kanaal', 'kennis', 'driftmark', 'coach', 'settings', 'hq', 'projects', 'agents', 'warroom'];
