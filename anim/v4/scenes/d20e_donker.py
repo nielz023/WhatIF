@@ -1,5 +1,5 @@
 """D20e · Eén googol jaar: het totale zwart (script scène 20e-20g).
-20e  ZWART 4 s: totaal zwart, alleen de tik, heel zacht.  VO: "One googol years. A one... with a hundred zeros."
+20e  ZWART 5,9 s: totaal zwart, alleen de tik, heel zacht.  VO: "One googol years. A one... with a hundred zeros."
 20f  ZWART met een zweem randlicht 4 s: zijn silhouet net zichtbaar door een heel zwakke blauwe rand.
      VO: "No stars. No planets. No light. No one."
 20g  ZWART 3 s: VO "Just you. Forever."  Daarna 2 s volledige stilte; de teller verdwijnt.
@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from v4 import *  # noqa: E402,F401,F403
 
 S = Scene4("d20e", "ruimte_nd", "donker", exposure=0.1)
-sh = S.cuts([5.2, 4.9, 4.5])
+sh = S.cuts([5.9, 4.9, 4.5])   # 5.9: D20-06 nu met gewone stem (5,5 s)
 END = sh[-1][1]
 t_f, t_g = (s[0] for s in sh[1:])
 S.cine_light = False                              # geen key-/randlicht: alleen het licht uit de scène zelf

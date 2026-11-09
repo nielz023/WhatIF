@@ -4,7 +4,7 @@
 21c  CLOSE 3 s: hij houdt het horloge stil, duim op de wijzer. Stilte.
 21d  CLOSE push-in 3 s: ver weg, links: tik. Zijn ogen schieten open.
 21e  DETAIL 2,5 s: de secondewijzer staat stil. Het was niet zijn horloge.
-21f  CLOSE: nog een tik, iets dichterbij.  VO (fluisterend): "There's no air out here. Sound can't travel through empty space."
+21f  CLOSE: nog een tik, iets dichterbij.  VO (gewone stem, niet fluisteren): "There's no air out here. Sound can't travel through empty space."
 21g  CLOSE: VO "So you shouldn't be able to hear that." Hij draait langzaam zijn hoofd naar links.
 21h  WIDE 4 s: heel ver weg één warm lichtpuntje dat op de tik aan en uit gaat.  VO: "But you do."
 21i  CLOSE push-in 4 s: hij houdt opa's horloge omhoog naar het lichtje en laat de wijzer los. Tik. Ver weg: tik, tik.
@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from v4 import *  # noqa: E402,F401,F403
 
 S = Scene4("d21", "ruimte_nd", "donker", exposure=0.1)
-sh = S.cuts([4.0, 3.0, 3.0, 3.0, 2.5, 4.9, 2.9, 4.0, 4.0, 4.0, 4.4])
+sh = S.cuts([4.0, 3.0, 3.0, 3.0, 2.5, 4.9, 2.9, 4.0, 4.0, 4.0, 5.5])   # 21j langer: D21-05 met gewone stem (4,5 s)
 END = sh[-1][1]
 t_b, t_c, t_d, t_e, t_f, t_g, t_h, t_i, t_i2, t_j = (s[0] for s in sh[1:])
 S.cine_light = False                              # geen key-/randlicht: alleen het licht uit de scène zelf
