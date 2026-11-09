@@ -196,14 +196,14 @@ for ch in (held, bro, oma, opa, mama, papa):
 # ---------------------------------------------------------------- camera's
 S.cam(0.0, (V(TX + 1.5, TY - 2.6, 1.75), V(TX - 0.1, BY - 0.2, 0.95), 24), (V(TX + 1.3, TY - 2.25, 1.68), V(TX - 0.05, BY - 0.2, 0.98), 24))
 S.cam(t_a1, (V(TX + 0.15, TY - 1.45, 1.35), V(TX, BY, 1.05), 30), (V(TX + 0.12, TY - 1.3, 1.33), V(TX, BY, 1.08), 30))
-S.cam(t_a2, (V(TX - 0.40, TY - 0.95, 1.3), V(TX - 0.36, BY, 1.12), 32), (V(TX - 0.38, TY - 0.85, 1.3), V(TX - 0.36, BY, 1.12), 32))
-S.cam(t_b, (V(TX + 0.75, TY - 0.95, 1.55), V(OPA_AT.x - 0.25, BY - 0.25, 0.98), 30),
-      (V(TX + 0.65, TY - 0.90, 1.50), V(HERO_AT.x + 0.25, BY - 0.25, 0.95), 30))
-S.cam(t_c, (BOX1 + V(0.10, -0.30, 0.38), BOX1 + V(0, 0, 0.03), 45), (BOX1 + V(0.07, -0.20, 0.27), BOX1 + V(0, 0, 0.035), 45))
+S.cam(t_a2, (V(TX - 0.02, TY - 1.35, 1.5), V(TX - 0.36, BY, 1.12), 36), (V(TX - 0.02, TY - 1.22, 1.48), V(TX - 0.36, BY, 1.12), 36))
+S.cam(t_b, (V(TX + 1.05, TY - 1.2, 1.8), V(OPA_AT.x - 0.25, BY - 0.25, 0.98), 30),
+      (V(TX + 0.95, TY - 1.15, 1.75), V(HERO_AT.x + 0.25, BY - 0.25, 0.95), 30))
+S.cam(t_c, (BOX1 + V(0.34, -0.50, 0.52), BOX1 + V(0.04, 0, 0.03), 60), (BOX1 + V(0.30, -0.44, 0.46), BOX1 + V(0.04, 0, 0.035), 60))
 S.cam(t_d, S.shot(opa, t_d + 1.0, size="cu", az=-30, lens=40), S.shot(opa, t_d + 1.0, size=0.62, az=-28, lens=40))
 S.cam(t_e, None, fn=lambda t: (S.bone_world(held, "hand.R", t_e + 0.5) + V(-0.15, -0.30, 0.40),
                                S.bone_world(held, "hand.R", t_e + 0.5) + V(0, 0, 0.03), 50))
-S.cam(t_f, S.shot(held, t_f + 1.0, size="cu", az=0, lens=40), S.shot(held, t_f + 3.0, size=0.55, az=0, lens=40))
+S.cam(t_f, S.shot(held, t_f + 1.0, size="mcu", az=0, lens=40), S.shot(held, t_f + 3.0, size=0.8, az=0, lens=40))
 S.cam(t_g, S.shot(held, t_g + 1.0, size="mcu", az=28, lens=35), S.shot(held, t_g + 4.0, size=0.85, az=24, lens=35))
 
 # ---------------------------------------------------------------- HUD, stem en geluid
