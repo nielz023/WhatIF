@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from v4 import *  # noqa: E402,F401,F403
 
 S = Scene4("d02", "slaapkamer", "ochtend", exposure=0.25)
-sh = S.cuts([3.4, 3.3, 2.9, 2.6, 3.6])
+sh = S.cuts([3.4, 3.3, 3.35, 2.6, 3.6])   # 2e2 langer: D02-04 liep over D03-01 heen
 END = sh[-1][1]
 t_e, t_e2, t_3a, t_3b = sh[1][0], sh[2][0], sh[3][0], sh[4][0]
 
