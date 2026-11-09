@@ -1,0 +1,11 @@
+/** Verbeterlijst stap 3: video's en cijfers. */
+export { default as Pijplijn } from './Pijplijn';
+export { default as Renders } from './Renders';
+export { default as Scriptlezer } from './Scriptlezer';
+export { default as Stemmen } from './Stemmen';
+export { default as Thumbnails } from './Thumbnails';
+export { default as Ideeenbus } from './Ideeenbus';
+export { default as Grafiek } from './Grafiek';
+export { default as Doelen } from './Doelen';
+export { default as Weekrapport } from './Weekrapport';
+export { default as Videorapport } from './Videorapport';

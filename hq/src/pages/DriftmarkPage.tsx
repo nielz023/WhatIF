@@ -22,6 +22,7 @@ import Keuzes from '../components/shared/Keuzes';
 import Uploaddag from './Uploaddag';
 import { SNELKNOPPEN, kiesAfdeling, antwoordVan, standVan } from '../components/shared/Opdrachtbalk';
 import { openOpdracht } from '../services/real';
+import { Pijplijn, Renders, Scriptlezer, Stemmen, Thumbnails, Ideeenbus } from './studio';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
@@ -161,12 +162,12 @@ function Section({ icon, title, children, right }: { icon: React.ReactNode; titl
 }
 
 type Tab = 'v1' | 'v2' | 'v3';
-type View = 'overzicht' | 'threads' | 'youtube' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen' | 'upload';
+type View = 'overzicht' | 'threads' | 'youtube' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen' | 'upload' | 'render' | 'script' | 'stemmen' | 'thumbs';
 const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'overzicht', label: 'Vandaag', uitleg: 'Wat op jou wacht, wat nu loopt en wat net klaar is' },
   { id: 'threads', label: 'Alle taken', uitleg: 'Elke Claude-taak in je project, per video. Klik om hem te openen' },
   { id: 'youtube', label: 'Op YouTube', uitleg: "Al je video's en shorts zoals ze op YouTube staan, met weergaven, likes, reacties en kijkduur" },
-  { id: 'videos', label: 'Productie', uitleg: 'Elke lange video met zijn productielijn en bestanden' },
+  { id: 'videos', label: 'Productie', uitleg: 'Elke lange video met al zijn stappen, de bestanden en een knop voor de volgende stap' },
   { id: 'cursus', label: 'Cursuscheck', uitleg: 'Checklist uit je cursus per video, plus de titeltester' },
   { id: 'kalender', label: 'Uploadkalender', uitleg: 'Wat er wanneer online ging en wat er ingepland staat' },
   { id: 'shorts', label: 'Shorts', uitleg: 'Welke shorts er zijn en wanneer ze online gaan' },
@@ -174,6 +175,10 @@ const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'werkwijze', label: 'Werkwijze', uitleg: 'De vaste regels voor elke video' },
   { id: 'gereedschap', label: 'Gereedschap', uitleg: 'Blender, ElevenLabs, vidIQ en wat het kost' },
   { id: 'upload', label: 'Uploaddag', uitleg: 'Titel, beschrijving, tags en thumbnail klaar om in YouTube Studio te plakken, met een afvinklijst' },
+  { id: 'render', label: 'Renders', uitleg: 'Renders op je pc live volgen: scènes klaar, schijfruimte, eindtijd en een rode melding als het misgaat' },
+  { id: 'script', label: 'Scriptlezer', uitleg: 'Het script per scène op een tijdlijn, met de hook en de abonneeroproep' },
+  { id: 'stemmen', label: 'Stemmen', uitleg: 'De stem per personage: luisteren en wisselen' },
+  { id: 'thumbs', label: 'Thumbnails', uitleg: 'Alle thumbnailvarianten naast elkaar, klein en groot zoals op YouTube' },
   { id: 'ideeen', label: 'Ideeën & links', uitleg: 'Onderwerpen voor de volgende video en alle documenten' },
 ];
 const STATE: Record<string, [string, string]> = {
@@ -191,7 +196,7 @@ function Step({ n, title, text }: { n: number; title: string; text: string }) {
 
 type Mode = 'home' | 'videos' | 'meer' | 'werk';
 // Meer is opgegaan in Vandaag (Alle taken), Video's (Cast & sets, Ideeën) en Kennis (Werkwijze, Gereedschap): verbeterlijst punt 17
-const MODE_VIEWS: Record<Mode, View[]> = { home: ['overzicht', 'threads'], videos: ['youtube', 'videos', 'upload', 'cursus', 'kalender', 'shorts', 'cast', 'ideeen'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'], werk: ['werkwijze', 'gereedschap'] };
+const MODE_VIEWS: Record<Mode, View[]> = { home: ['overzicht', 'threads'], videos: ['youtube', 'videos', 'render', 'script', 'stemmen', 'thumbs', 'upload', 'kalender', 'cursus', 'shorts', 'cast', 'ideeen'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'], werk: ['werkwijze', 'gereedschap'] };
 const MODE_TITLE: Record<Mode, [string, string]> = {
   home: ['Home', ''],
   videos: ["Video's", "Je video's en shorts op YouTube met hun cijfers, en elke nieuwe video van idee tot upload."],
@@ -438,7 +443,11 @@ export default function DriftmarkPage({ mode = 'home', embedded = false }: { mod
 
       {view === 'youtube' && <Blok naam="Op YouTube"><YouTubeStats /></Blok>}
       {view === 'cursus' && <Blok naam="Cursuscheck"><CursusCheck /><TitelTester /></Blok>}
-      {view === 'videos' && <div className="grid gap-3 lg:grid-cols-2">{[...VIDEOS].reverse().map((v) => <VideoCard key={v.nr} v={v} />)}</div>}
+      {view === 'videos' && <div className="grid gap-3 lg:grid-cols-2">{[...VIDEOS].reverse().map((v) => <Pijplijn key={v.nr} v={v} />)}</div>}
+      {view === 'render' && <Blok naam="Renders"><Renders /></Blok>}
+      {view === 'script' && <Blok naam="Scriptlezer"><Scriptlezer /></Blok>}
+      {view === 'stemmen' && <Blok naam="Stemmen"><Stemmen /></Blok>}
+      {view === 'thumbs' && <Blok naam="Thumbnails"><Thumbnails /></Blok>}
 
       {view === 'shorts' && (
         <Section icon={<Clapperboard size={16} />} title="Shorts">
@@ -507,6 +516,7 @@ export default function DriftmarkPage({ mode = 'home', embedded = false }: { mod
 
       {view === 'upload' && <Blok naam="Uploaddag"><Uploaddag /></Blok>}
 
+      {view === 'ideeen' && <Blok naam="Ideeënbus"><Ideeenbus /></Blok>}
       {view === 'ideeen' && (
         <div className="grid gap-4 xl:grid-cols-2">
           <Section icon={<Lightbulb size={16} />} title="Ideeën voor video 4+">
