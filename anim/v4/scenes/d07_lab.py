@@ -124,7 +124,9 @@ for o in hw.children_recursive:
 S.watch_open("Zakhorloge", t_h + 1.6, t_h + 1.9)
 S.watch_hands("Zakhorloge", t_h, END, every=1.0)
 
-# mama en de wetenschapper bij hem (vanaf 7c)
+# mama en de wetenschapper bij hem (vanaf 7c). niels 9 nov: in 7a gleden ze door de scène (place zonder vaste sleutel
+# interpoleert vanaf t=0). Nu: in 7a staan ze stil; ze verplaatsen zich buiten beeld (mama tijdens 7b, de wetenschapper op de snede).
+S.place(mama, t_b + 0.05, (-0.95, 3.0, 0), 90)
 S.place(mama, t_c - 0.05, (0.3, 2.3, 0), 170)
 S.beat(mama, t_c, "armen_over", face="nerveus", face_amt=0.6, at=S.head(zit))
 S.beat(mama, t_e, "armen_over", face="verdrietig", face_amt=0.6, at=V(1.25, 3.35, 1.7))
@@ -134,10 +136,10 @@ S.reach(mama, t_f, "L", None, 0.0)
 S.reach(mama, t_f + 0.6, "L", HAND_Z + V(0.0, -0.02, 0.06))
 S.reach(mama, END, "L", HAND_Z + V(0.0, -0.02, 0.06))
 S.hold(mama, END)
-S.place(wet, t_c - 0.05, (1.45, 3.5, 0), -64)
+S.teleport(wet, t_c, (1.45, 3.5, 0), -64)              # harde verplaatsing op de snede (niet door de scène glijden)
 S.beat(wet, t_c, "staan", face="neutraal", face_amt=0.6, at=S.head(zit))
 S.reach(wet, t_c - 0.45, "R", None, 0.0)
-S.reach(wet, t_c - 0.05, "R", V(1.28, 3.18, 1.42))
+S.reach(wet, t_c, "R", V(1.28, 3.18, 1.42))
 S.reach(wet, t_c + 1.2, "R", V(1.27, 3.17, 1.40))
 S.reach(wet, t_c + 1.8, "R", None, 0.0)
 S.beat(wet, t_c + 1.0, "staan", face="blij", face_amt=0.5, at=S.head(zit))
