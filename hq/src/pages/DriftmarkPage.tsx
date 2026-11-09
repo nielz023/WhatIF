@@ -6,11 +6,10 @@ import { RULES, CAST, VOICE_SETS, TOOLS, threadUrl, type RealVideo } from '../da
 import { CursusCheck, TitelTester, CursusStappen, CursusTip } from './Cursus';
 import { useLive, startLive } from '../services/live';
 import { openGesprek } from '../components/shared/Gesprek';
-import { AfkeurKnop } from '../components/shared/Afkeuren';
 import { useThreads, wanneerNl } from '../services/threads';
 import { ToolsPanel, CostsPanel, RepliesPanel, Outputs, AutomationPanel } from './DriftmarkExtra';
 import gallery from '../data/gallery.json';
-import { useReal, order } from '../services/real';
+import { useReal } from '../services/real';
 import { useDb } from '../services/db';
 import { UploadCalendar, MetroLine } from './DriftmarkVideos';
 import YouTubeStats from './YouTubeStats';
@@ -19,6 +18,10 @@ import { KLEUR } from '../lib/status';
 import Bijgewerkt from '../components/shared/Bijgewerkt';
 import Blok from '../components/shared/Blok';
 import Legenda from '../components/shared/Legenda';
+import Keuzes from '../components/shared/Keuzes';
+import Uploaddag from './Uploaddag';
+import { SNELKNOPPEN, kiesAfdeling, antwoordVan, standVan } from '../components/shared/Opdrachtbalk';
+import { openOpdracht } from '../services/real';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
@@ -45,15 +48,16 @@ function ThreadsStand() {
   return <div className="flex items-center gap-2 text-[12px] text-slate-500"><span className={`h-2 w-2 shrink-0 rounded-full ${src === 'ok' ? 'bg-sky-400/80' : 'bg-slate-500'}`} />{tekst}</div>;
 }
 
-function OrdersPanel({ quick = [] }: { quick?: string[] }) {
+function OrdersPanel(_: { quick?: string[] }) {
   const { orders, avail, send, resend } = useReal();
+  const replies = useLive((s) => s.data.replies) ?? [];
   const toast = useGame((s) => s.toast);
   const [text, setText] = useState('');
   const [label, color] = AVAIL[avail] ?? AVAIL.off;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
-    const o = await send(text.trim());
+    const o = await send(text.trim(), { doel: kiesAfdeling(text) });
     setText('');
     toast(o.status === 'verstuurd' ? '✅ Opdracht naar Claude gestuurd' : `⏳ In de wachtrij: ${o.reason ?? ''}`, o.status === 'verstuurd' ? 'success' : 'warning');
   };
@@ -63,26 +67,33 @@ function OrdersPanel({ quick = [] }: { quick?: string[] }) {
         <div className="font-display text-[20px] font-bold text-white">⚡ Geef Claude een opdracht</div>
         <span className="flex items-center gap-1.5 text-[13px]" style={{ color }}><span className="h-2 w-2 rounded-full" style={{ background: color }} />{label}</span>
       </div>
-      <p className="mb-3 text-[13px] text-slate-400">Typ gewoon wat je wilt, zoals je het in de chat zou zeggen. Claude voert het echt uit en zet het antwoord hieronder. Uploaden naar YouTube doe je zelf in Studio.</p>
-      {quick.length > 0 && <div className="mb-2 flex flex-wrap gap-1.5">{quick.map((q) => <button key={q} type="button" onClick={() => setText(q)} className="rounded-full border border-hq-line bg-white/[.04] px-3 py-1.5 text-[13px] text-slate-200 hover:border-orange-400/60 hover:text-white">{q}</button>)}</div>}
+      <p className="mb-3 text-[13px] text-slate-400">Typ of spreek in wat je wilt. Het HQ kiest de afdeling, Claude voert het uit en je ziet hieronder waar het staat. Overal kan dit ook met de toets K.</p>
+      <div className="mb-2 flex flex-wrap gap-1.5">{SNELKNOPPEN.map(([l, t]) => <button key={l} type="button" onClick={() => openOpdracht({ text: t })} className="rounded-full border border-hq-line bg-white/[.04] px-3 py-1.5 text-[13px] text-slate-200 hover:border-orange-400/60 hover:text-white">{l}</button>)}</div>
       <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
         <label htmlFor="order-text" className="sr-only">Opdracht</label>
         <input id="order-text" className="input min-w-0 flex-1" value={text} onChange={(e) => setText(e.target.value)} placeholder="Typ een opdracht, bv. 'Maak de thumbnail voor video 3'" />
         <button className="btn-primary text-[14px]" type="submit">Stuur naar Claude</button>
       </form>
+      {text.trim() && <div className="mt-1 text-[12px] text-slate-500">Gaat naar afdeling {kiesAfdeling(text)}. Kiezen of meer tegelijk versturen? <button type="button" className="text-sky-300 hover:text-white" onClick={() => { openOpdracht({ text }); setText(''); }}>Open de opdrachtbalk</button></div>}
       {orders.length > 0 && (
         <ul className="mt-3 max-h-56 space-y-1.5 overflow-y-auto">
-          {orders.slice(0, 20).map((o) => (
-            <li key={o.id} className="flex items-start justify-between gap-2 rounded-lg bg-white/[.03] px-2.5 py-1.5 text-[13px]">
-              <div className="min-w-0">
-                <div className="whitespace-pre-line text-slate-200">{o.text.split('\n')[0]}</div>
-                <div className="text-slate-500">{new Date(o.at).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{o.reason ? ` · ${o.reason}` : ''}</div>
-              </div>
-              {o.status === 'verstuurd'
-                ? <span className="shrink-0 text-emerald-300">✓ verstuurd</span>
-                : <button className="shrink-0 text-amber-300 hover:text-white" onClick={() => void resend(o.id)}>Opnieuw versturen</button>}
-            </li>
-          ))}
+          {orders.slice(0, 8).map((o) => {
+            const r = antwoordVan(o, replies); const st = standVan(o, r);
+            const kl = st === 'klaar' ? KLEUR.klaar : st === 'wachtrij' ? KLEUR.wacht : st === 'verstuurd' ? KLEUR.stil : KLEUR.bezig;
+            return (
+              <li key={o.id} className="flex items-start justify-between gap-2 rounded-lg bg-white/[.03] px-2.5 py-1.5 text-[13px]">
+                <div className="min-w-0">
+                  <div className="whitespace-pre-line text-slate-200">{o.text.split('\n')[0]}</div>
+                  <div className="text-slate-500">{new Date(o.at).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{o.doel ? ` · ${o.doel}` : ''}{o.reason && st === 'wachtrij' ? ` · ${o.reason}` : ''}</div>
+                  {r?.antwoord && <div className="mt-0.5 text-slate-300">{r.antwoord}</div>}
+                </div>
+                {st === 'wachtrij'
+                  ? <button className="shrink-0 text-amber-300 hover:text-white" onClick={() => void resend(o.id)}>Opnieuw versturen</button>
+                  : <span className="shrink-0" style={{ color: kl }}>● {st}</span>}
+              </li>
+            );
+          })}
+          <li><button className="text-[13px] text-sky-300 hover:text-white" onClick={() => openOpdracht({ tab: 'mijn' })}>Alle opdrachten met hun stand →</button></li>
         </ul>
       )}
     </section>
@@ -150,7 +161,7 @@ function Section({ icon, title, children, right }: { icon: React.ReactNode; titl
 }
 
 type Tab = 'v1' | 'v2' | 'v3';
-type View = 'overzicht' | 'threads' | 'youtube' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
+type View = 'overzicht' | 'threads' | 'youtube' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen' | 'upload';
 const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'overzicht', label: 'Vandaag', uitleg: 'Wat op jou wacht, wat nu loopt en wat net klaar is' },
   { id: 'threads', label: 'Alle taken', uitleg: 'Elke Claude-taak in je project, per video. Klik om hem te openen' },
@@ -162,6 +173,7 @@ const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'cast', label: 'Cast & sets', uitleg: 'De figuren en decors per video' },
   { id: 'werkwijze', label: 'Werkwijze', uitleg: 'De vaste regels voor elke video' },
   { id: 'gereedschap', label: 'Gereedschap', uitleg: 'Blender, ElevenLabs, vidIQ en wat het kost' },
+  { id: 'upload', label: 'Uploaddag', uitleg: 'Titel, beschrijving, tags en thumbnail klaar om in YouTube Studio te plakken, met een afvinklijst' },
   { id: 'ideeen', label: 'Ideeën & links', uitleg: 'Onderwerpen voor de volgende video en alle documenten' },
 ];
 const STATE: Record<string, [string, string]> = {
@@ -179,7 +191,7 @@ function Step({ n, title, text }: { n: number; title: string; text: string }) {
 
 type Mode = 'home' | 'videos' | 'meer' | 'werk';
 // Meer is opgegaan in Vandaag (Alle taken), Video's (Cast & sets, Ideeën) en Kennis (Werkwijze, Gereedschap): verbeterlijst punt 17
-const MODE_VIEWS: Record<Mode, View[]> = { home: ['overzicht', 'threads'], videos: ['youtube', 'videos', 'cursus', 'kalender', 'shorts', 'cast', 'ideeen'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'], werk: ['werkwijze', 'gereedschap'] };
+const MODE_VIEWS: Record<Mode, View[]> = { home: ['overzicht', 'threads'], videos: ['youtube', 'videos', 'upload', 'cursus', 'kalender', 'shorts', 'cast', 'ideeen'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'], werk: ['werkwijze', 'gereedschap'] };
 const MODE_TITLE: Record<Mode, [string, string]> = {
   home: ['Home', ''],
   videos: ["Video's", "Je video's en shorts op YouTube met hun cijfers, en elke nieuwe video van idee tot upload."],
@@ -282,13 +294,10 @@ export default function DriftmarkPage({ mode = 'home', embedded = false }: { mod
         {a.doing && <div className="mt-1 line-clamp-3 text-[14px] text-slate-300">{a.doing}</div>}
         {pct != null && !big && <div className="mt-2"><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-sky-400" style={{ width: `${pct}%` }} /></div><div className="mt-0.5 text-[12px] text-slate-500">Video {v!.nr}: {pct}% van de productielijn</div></div>}
         {a.needs && a.needs !== a.doing && (a.state === 'blocked' || a.state === 'review_ready') && <div className="mt-1.5 rounded-lg bg-orange-500/10 px-2.5 py-1.5 text-[13px] text-orange-100"><b className="text-orange-300">Jij: </b>{a.needs}</div>}
+        {big && <Keuzes a={a} />}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {a.id ? <a href={threadUrl(a.id)} target="_blank" rel="noreferrer" className={big ? 'btn-primary text-[13px]' : 'btn-ghost text-[13px]'}>Bekijk</a> : null}
           {a.id && <button className="btn-ghost text-[13px]" onClick={() => openGesprek({ kind: 'thread', thread: a.id, title: a.title })}><MessageSquare size={13} />Gesprek</button>}
-          {big && a.state === 'review_ready' && (<>
-            <button className="btn-success text-[13px]" onClick={() => order(`Goedgekeurd: taak "${a.title}"${a.id ? ` (thread ${a.id})` : ''}.`, toast)}>Goedkeuren</button>
-            <AfkeurKnop title={a.title} id={a.id || undefined} className="text-[13px]" />
-          </>)}
           <span className="text-[12px] text-slate-500">{a.live ? <span className="mr-1 cursor-help text-sky-400/80" title={UIT_THREADS} aria-label={UIT_THREADS}>●</span> : null}laatst actief {a.last}</span>
         </div>
       </div>
@@ -495,6 +504,8 @@ export default function DriftmarkPage({ mode = 'home', embedded = false }: { mod
           <CostsPanel />
         </div>
       )}
+
+      {view === 'upload' && <Blok naam="Uploaddag"><Uploaddag /></Blok>}
 
       {view === 'ideeen' && (
         <div className="grid gap-4 xl:grid-cols-2">

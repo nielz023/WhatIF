@@ -365,3 +365,15 @@ export async function laadBeeld(path: string, type: string, signal?: AbortSignal
     return URL.createObjectURL(new Blob([r.bytes], { type: echt && echt !== 'pdf' ? echt : type }));
   } finally { vrij(); }
 }
+
+/* ================= media (geluid, video) voor de bestandenlezer ================= */
+const MEDIA: Record<string, string> = { mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', ogg: 'audio/ogg', mp4: 'video/mp4', webm: 'video/webm', mov: 'video/mp4', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' };
+export const mediaType = (path: string) => MEDIA[(path.split('.').pop() ?? '').toLowerCase()] ?? '';
+/** Leest een geluids-, video- of beeldbestand en geeft een object-URL terug. Grote bestanden (> 60 MB) niet. */
+export async function laadMedia(path: string): Promise<{ url: string } | { fout: string }> {
+  if (!veiligPad(path)) return { fout: 'ontbreekt' };
+  const r = await leesBytes(path, { length: 60_000_000 });
+  if (!r.ok) return { fout: r.code };
+  if (r.size > r.bytes.length) return { fout: 'te-groot' };
+  return { url: URL.createObjectURL(new Blob([r.bytes as BlobPart], { type: mediaType(path) })) };
+}

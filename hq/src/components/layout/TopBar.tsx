@@ -11,6 +11,8 @@ import { compact, relTime } from '../../lib/util';
 import { DemoBadge } from '../ui';
 import { useLive } from '../../services/live';
 import { WalkButton } from '../../world/WalkHud';
+import Keuzes from '../shared/Keuzes';
+import { BalkKnop } from '../shared/Opdrachtbalk';
 
 /** meldingen over threads openen de echte takenlijst (Vandaag → Alle taken), ook als Vandaag al open staat */
 export function openTaken() {
@@ -41,10 +43,13 @@ function Meldingen({ close }: { close: () => void }) {
           <div className="border-b border-hq-line/60 bg-orange-500/[.06] px-2 py-2">
             <div className="px-2 pb-1 text-[11px] font-bold uppercase tracking-widest text-orange-300">Wacht op jou ({wacht.length})</div>
             {wacht.map((a) => (
-              <button key={a.id || a.title} onClick={() => { close(); if (a.id) openGesprek({ kind: 'thread', thread: a.id, title: a.title }); }} className="block w-full rounded-lg px-2 py-1.5 text-left hover:bg-white/5">
-                <div className="flex items-center gap-2"><span className="h-2 w-2 shrink-0 rounded-full bg-orange-400 shadow-[0_0_8px_#ff9f1c]" /><span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-white">{a.title}</span></div>
-                <div className="line-clamp-2 pl-4 text-[12px] text-slate-300">{a.needs || a.doing}</div>
-              </button>
+              <div key={a.id || a.title} className="rounded-lg px-2 py-1.5 hover:bg-white/5">
+                <button onClick={() => { close(); if (a.id) openGesprek({ kind: 'thread', thread: a.id, title: a.title }); }} className="block w-full text-left">
+                  <div className="flex items-center gap-2"><span className="h-2 w-2 shrink-0 rounded-full bg-orange-400 shadow-[0_0_8px_#ff9f1c]" /><span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-white">{a.title}</span></div>
+                  <div className="line-clamp-2 pl-4 text-[12px] text-slate-300">{a.needs || a.doing}</div>
+                </button>
+                <div className="pl-4"><Keuzes a={a} klein /></div>
+              </div>
             ))}
           </div>
         )}
@@ -95,6 +100,7 @@ export default function TopBar() {
       {s.demoMode && <span className="hidden xl:inline"><DemoBadge /></span>}
 
       <div className="ml-auto flex items-center gap-2">
+        <BalkKnop />
         <WalkButton />
         {/* echte klok */}
         <span className="hidden sm:inline"><RealClock /></span>

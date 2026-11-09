@@ -20,6 +20,31 @@ import { useGame } from '../../store/useGame';
 import { useAfkeuren } from './Afkeuren';
 import { Md, type MdLink } from './Md';
 import { openKennis } from '../../services/kennis';
+import Keuzes from './Keuzes';
+import { Send, Check } from 'lucide-react';
+
+/** ANTWOORDEN IN ELK GESPREK (verbeterlijst punt 6): wat niels hier typt of inspreekt, gaat als opdracht naar deze thread. */
+function Antwoordveld({ id, project, titel }: { id: string; project: boolean; titel: string }) {
+  const toast = useGame((s) => s.toast);
+  const [t, setT] = useState('');
+  const [klaar, setKlaar] = useState(false);
+  const stuur = (e?: React.FormEvent) => {
+    e?.preventDefault(); if (!t.trim()) return;
+    order(project ? `Bericht van niels voor de projectchat: ${t.trim()}` : `Antwoord van niels in het gesprek "${titel}": ${t.trim()}`, toast, project ? { doel: 'Algemeen' } : { thread: id, doel: 'Algemeen' });
+    setT(''); setKlaar(true); setTimeout(() => setKlaar(false), 4000);
+  };
+  return (
+    <form onSubmit={stuur} className="border-t border-white/10 bg-black/20 px-3 py-2.5">
+      <div className="flex items-end gap-2">
+        <label htmlFor={`antw-${id}`} className="sr-only">Antwoord</label>
+        <textarea id={`antw-${id}`} rows={2} value={t} onChange={(e) => setT(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); stuur(); } }}
+          placeholder={project ? 'Schrijf iets voor de projectchat…' : 'Antwoord in dit gesprek…'} className="input min-h-[44px] flex-1 resize-none text-[14px]" />
+        <button className="btn-primary !px-3 text-[13px]" disabled={!t.trim()} aria-label="Versturen"><Send size={14} /></button>
+      </div>
+      <div className="mt-1 text-[11px] text-slate-500">{klaar ? <span className="text-emerald-300"><Check size={11} className="inline" /> Doorgegeven. Het antwoord verschijnt hier zodra het gesprek is bijgewerkt.</span> : 'Enter = versturen, Shift+Enter = nieuwe regel. Inspreken met de microfoon in het veld.'}</div>
+    </form>
+  );
+}
 
 interface G {
   /** kind 'thread': thread is de thread-id (cmsg_...). session is van vroeger en wordt niet meer gebruikt. */
@@ -251,6 +276,7 @@ export default function GesprekDrawer() {
             {rij?.needs && (rij.state === 'blocked' || rij.state === 'review_ready') && (
               <div className="border-b border-white/[.06] px-4 py-3">
                 <div className="rounded-xl border border-orange-400/40 bg-orange-500/10 px-3 py-2 text-[13px] text-orange-100"><b className="text-orange-300">Wacht op jou: </b>{rij.needs}</div>
+                <Keuzes a={rij} klein />
               </div>
             )}
             {g ? <Berichten key={g.id} g={g} doel={doel} waar={waar} link={link} onLink={volgLink} className="flex-1" /> : (
@@ -274,6 +300,7 @@ export default function GesprekDrawer() {
               {st.fase === 'fout' && <Uitleg>Het gesprek kon nu niet geladen worden. <button className="text-sky-300 underline hover:text-white" onClick={() => setPoging((p) => p + 1)}>Opnieuw proberen</button></Uitleg>}
             </div>
             )}
+            {id && <Antwoordveld key={id} id={id} project={project} titel={open.title} />}
           </motion.aside>
         </motion.div>
       )}

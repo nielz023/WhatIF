@@ -16,10 +16,14 @@ export interface Activity {
   /** live: de stand komt uit de threads (driftmark-hq/gesprekken/threads.json, ongeveer elk uur bijgewerkt);
    *  needs: wat er voor niels klaarstaat; recent en checklist: alleen nog als status.json ze meegeeft */
   live?: boolean; needs?: string; recent?: string; checklist?: string;
+  /** keuzeknoppen bij een vraag aan niels (verbeterlijst punt 5); bestand = plaatje of geluid erbij */
+  keuzes?: { label: string; bestand?: string }[] | string[];
 }
 export interface Output { name: string; path: string; kind?: 'image' | 'video' | 'file' }
 export interface Cost { datum: string; wat: string; bedrag?: number | null; credits?: string; notitie?: string }
-export interface Reply { at: string; opdracht: string; antwoord: string; thread?: string }
+/** Antwoord op een opdracht uit het HQ. ref = het kenmerk van de opdracht (o-xxxx); stand = waar hij staat;
+ *  bestand = een projectbestand met het resultaat (opent in de bestandenlezer); link = een url (artifact, thread). */
+export interface Reply { at: string; opdracht: string; antwoord: string; thread?: string; ref?: string; stand?: 'ontvangen' | 'bezig' | 'klaar' | 'fout'; bestand?: string; link?: string }
 export interface Blender { stand: string; wachtrij: { naam: string; status: string }[] | string; bijgewerkt: string }
 /** Eén video of short zoals hij op YouTube staat (automation/videos.py): weergaven en likes elk uur uit de
  *  openbare YouTube-feed, de rest elke ochtend uit vidIQ (YouTube Analytics, loopt 1 à 2 dagen achter). */

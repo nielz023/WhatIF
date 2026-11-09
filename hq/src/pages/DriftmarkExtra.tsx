@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { openBestand } from '../components/shared/BestandViewer';
 import { Bot, ExternalLink, Cpu, Coins, MessageSquareReply, Image as ImageIcon, Download } from 'lucide-react';
 import { useTools, findNum } from '../services/tools';
 import { useLive, readFile, downloadFile, type Output } from '../services/live';
@@ -88,7 +89,7 @@ export function RepliesPanel() {
     <section className="panel mb-4 p-4">
       <div className="mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-200"><MessageSquareReply size={16} />Antwoorden op je opdrachten</div>
       <ul className="space-y-2">{replies.slice(0, 8).map((r, i) => (
-        <li key={i} className="rounded-lg bg-white/[.03] p-2.5 text-[13px]"><div className="text-slate-500">{r.at} · jij: <span className="text-slate-300">{r.opdracht}</span></div><div className="mt-0.5 text-slate-200">{r.antwoord}</div></li>
+        <li key={i} className="rounded-lg bg-white/[.03] p-2.5 text-[13px]"><div className="text-slate-500">{r.at} · jij: <span className="text-slate-300">{r.opdracht}</span></div><div className="mt-0.5 text-slate-200">{r.antwoord}</div>{r.bestand && <button className="mt-1 text-[12px] text-sky-300 hover:text-white" onClick={() => openBestand(r.bestand!)}>Resultaat openen →</button>}</li>
       ))}</ul>
     </section>
   );
@@ -104,9 +105,9 @@ function Thumb({ o }: { o: Output }) {
   }, [o.path, o.kind]);
   return (
     <div className="overflow-hidden rounded-lg border border-white/5 bg-black/20">
-      {o.kind === 'image' && url && <img src={url} alt={o.name} className="aspect-video w-full object-cover" />}
+      {o.kind === 'image' && url && <button className="block w-full" onClick={() => openBestand(o.path)} title="Groot bekijken"><img src={url} alt={o.name} className="aspect-video w-full object-cover" /></button>}
       {o.kind === 'image' && !url && <div className="flex aspect-video items-center justify-center text-[12px] text-slate-500">{fail ? 'Preview niet te laden' : <ImageIcon size={16} />}</div>}
-      <div className="flex items-center justify-between gap-1 px-2 py-1 text-[12px]"><span className="truncate text-slate-300">{o.name}</span><button className="shrink-0 text-sky-300 hover:text-white" title="Downloaden" onClick={() => void downloadFile(o.path)}><Download size={12} /></button></div>
+      <div className="flex items-center justify-between gap-1 px-2 py-1 text-[12px]"><button className="truncate text-left text-slate-300 hover:text-white" onClick={() => openBestand(o.path)}>{o.name}</button><button className="shrink-0 text-sky-300 hover:text-white" title="Downloaden" onClick={() => void downloadFile(o.path)}><Download size={12} /></button></div>
     </div>
   );
 }

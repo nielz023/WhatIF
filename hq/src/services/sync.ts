@@ -10,6 +10,7 @@ import { createAgent } from '../modules/agents/roles';
 import { useGame } from '../store/useGame';
 import { realTick, uid } from '../lib/util';
 import type { Live, Activity } from './live';
+import { prefs } from '../lib/prefs';
 
 const ROLE_BY_KEY: [RegExp, RoleId][] = [
   [/thumbnail|banner|branding/i, 'thumbnail_designer'],
@@ -112,5 +113,5 @@ export function applyReal(live: Live, echt = true) {
     projects: [...realProjects, ...ownProjects], posts: [...ownPosts, ...posts], demoMode: false,
     notifications: [...news.map((text) => ({ id: uid('n'), tick: now, text, kind: 'info' as const, read: false })), ...st.notifications].slice(0, 60),
   });
-  if (news.length) { news.slice(0, 3).forEach((n) => st.toast(n, 'info')); beep(); }
+  if (news.length && prefs().meldingen) { news.slice(0, 3).forEach((n) => st.toast(n, 'info')); if (prefs().meldingGeluid) beep(); }
 }
