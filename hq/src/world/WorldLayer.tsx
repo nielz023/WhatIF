@@ -53,7 +53,7 @@ export default function WorldLayer({ mode }: { mode: WorldMode }) {
   const nodig = useOfficeNodig(mode);
   if (!gl) return <Fallback text="Dit apparaat ondersteunt geen 3D (WebGL). Je ziet de HQ zonder kantoor; alle functies werken." />;
   return (
-    <div className="absolute inset-0 z-0">
+    <div className="dm-world absolute inset-0 z-0">
       {/* nachtlucht achter de pagina's; het kantoor tekent eroverheen zodra het geladen is */}
       <div className="dm-world-fallback absolute inset-0" />
       {nodig && (

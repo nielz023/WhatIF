@@ -638,6 +638,35 @@ function GlansLicht() {
     </>
   );
 }
+/** Houdt de 3D-tekening even groot als het venster. Soms bleef het kantoor op een oude, smallere maat staan
+ *  (bv. als het HQ eerst in een smal paneel opende en daarna groot werd): links beeld, rechts zwart. */
+function PasMaat() {
+  const gl = useThree((s) => s.gl);
+  const setSize = useThree((s) => s.setSize);
+  const get = useThree((s) => s.get);
+  useEffect(() => {
+    const doos = gl.domElement.parentElement;
+    if (!doos) return;
+    const check = () => {
+      const w = doos.clientWidth, h = doos.clientHeight;
+      const st = get();
+      if ( w < 2 || h < 2) return;
+      if (Math.abs(st.size.width - w) > 1 || Math.abs(st.size.height - h) > 1) {
+        const r = doos.getBoundingClientRect();
+        setSize(w, h, undefined, r.top, r.left);
+      }
+    };
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(check) : null;
+    ro?.observe(doos);
+    window.addEventListener('resize', check);
+    document.addEventListener('visibilitychange', check);
+    const t = setInterval(check, 1000);
+    check();
+    return () => { ro?.disconnect(); window.removeEventListener('resize', check); document.removeEventListener('visibilitychange', check); clearInterval(t); };
+  }, [gl, setSize, get]);
+  return null;
+}
+
 /* ================= de scène ================= */
 function Scene({ mode }: { mode: WorldMode }) {
   const live = useLive((s) => s.data);
@@ -773,6 +802,7 @@ export default function NeonOffice({ mode }: { mode: WorldMode }) {
       {auto && <PerformanceMonitor ms={400} iterations={8} threshold={0.75} flipflops={4}
         bounds={(hz) => [Math.min(55, hz * 0.85), Math.min(hz, 144) * 0.95]}
         onDecline={() => setPerf(useWorld.getState().perf - 1)} onIncline={() => setPerf(useWorld.getState().perf + 1)} />}
+      <PasMaat />
       <Scene mode={mode} />
     </Canvas>
   );
