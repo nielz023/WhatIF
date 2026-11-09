@@ -154,10 +154,10 @@ S.cam(t_e2, (HM + V(1.05, -1.75, -0.35), HM + V(0, 0, -0.35), 28), (HM + V(0.95,
 # 3a DETAIL: zijn opgetrokken voet (hij staat nog op één been), trage drift
 S.sc.frame_set(F(t_3a + 1.0))
 FT = held.rig.matrix_world @ held.pb["foot.L"].tail
-S.cam(t_3a, (FT + V(0.38, -0.42, 0.08), FT + V(0, 0, 0.0), 50), (FT + V(0.34, -0.38, 0.06), FT, 52))
+S.cam(t_3a, (FT + V(0.80, -1.00, 0.50), FT + V(0, 0, 0.10), 42), (FT + V(0.74, -0.93, 0.46), FT + V(0, 0, 0.10), 45))   # hoger en verder: zijn been komt anders voor de lens
 # 3b CLOSE: zijn gezicht, hij kijkt omlaag (camera laag)
 HB = S.headpos(held, t_3b + 1.5)
-S.cam(t_3b, (HB + V(0.6, -1.6, -0.42), HB + V(0, 0, -0.12), 32), (HB + V(0.55, -1.45, -0.4), HB + V(0, 0, -0.12), 33))
+S.cam(t_3b, (HB + V(0.9, -2.5, -0.30), HB + V(0, 0, -0.10), 32), (HB + V(0.85, -2.35, -0.28), HB + V(0, 0, -0.10), 33))   # verder weg: hij buigt naar voren
 
 # ---------------------------------------------------------------- HUD, stem en geluid
 S.year(2026, t0=0.6)
