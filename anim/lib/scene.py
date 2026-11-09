@@ -18,7 +18,7 @@ import argparse
 import glob
 import json
 import math
-import os
+import os, re
 import random
 import runpy
 import sys
@@ -985,6 +985,21 @@ class Scene:
         if self.args.stills:
             if self.args.stills == "auto":
                 times = [round((a + b) / 2, 2) for a, b, _ in self.shots]
+            elif self.args.stills == "full":
+                # stills-check: begin, midden en eind van elk shot + elk QC-moment (qc.txt)
+                times = []
+                for a, b, _ in self.shots:
+                    times += [round(a + min(0.08, (b - a) / 4), 2), round((a + b) / 2, 2), round(b - min(0.08, (b - a) / 4), 2)]
+                for row in getattr(self, "qc_rows", []) or []:
+                    m = re.search(r"t=\s*([0-9.]+)", row)
+                    if m:
+                        times.append(round(float(m.group(1)), 2))
+                times = sorted(set(min(max(0.0, x), self.length - 0.02) for x in times))
+                keep = []
+                for x in times:
+                    if not keep or x - keep[-1] > 0.06:
+                        keep.append(x)
+                times = keep
             else:
                 times = [float(x) for x in self.args.stills.split(",")]
             for t in times:
@@ -994,7 +1009,7 @@ class Scene:
                     if t0 <= t < t1:
                         sc.camera = cam
                 print("STILL", t, "frame", f, "camera", sc.camera.name)
-                sc.render.filepath = os.path.join(self.out, "stills", f"{self.code}_t{t:05.1f}.png")
+                sc.render.filepath = os.path.join(self.out, "stills", f"{self.code}_t{t:06.2f}.png")
                 bpy.ops.render.render(write_still=True)
             sc.render.filepath = os.path.join(self.out, "frames", "")
         if self.args.render and RANGES:
