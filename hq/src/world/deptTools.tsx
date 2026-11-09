@@ -199,6 +199,43 @@ function Competitors() {
   );
 }
 
+/* =================== ONDERZOEK: onderwerpenlijst van het team =================== */
+interface Onderwerp { nr: number; titel: string; waarom?: string; twist?: string; maak?: string }
+function Onderwerpen() {
+  const [doc, , st] = useDoc<{ at?: string; conclusie?: string; top?: Onderwerp[]; reserve?: string[]; lieverNiet?: string[]; volgorde?: string; pad?: string }>('bord/onderwerpen');
+  const [open, setOpen] = useState<number | null>(null); const [alles, setAlles] = useState(false);
+  const top = doc?.top ?? [];
+  return (
+    <Sec title="Goede onderwerpen voor de niche" icon={<Lightbulb size={13} />} color="#20D9FF" right={doc?.at && <span className="text-[11px] text-slate-500">{new Date(doc.at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}</span>}>
+      {!top.length ? <Leeg>{st === 'laden' ? 'Laden…' : 'Het team zoekt onderwerpen die nu goed werken in de What-If-niche. De lijst verschijnt hier.'}</Leeg> : (
+        <div className="space-y-1">
+          {doc?.conclusie && <div className="mb-1.5 rounded-lg bg-[#20D9FF]/10 px-2 py-1.5 text-[12px] leading-snug text-cyan-100">💡 {doc.conclusie}</div>}
+          {(alles ? top : top.slice(0, 5)).map((o) => (
+            <button key={o.nr} onClick={() => setOpen(open === o.nr ? null : o.nr)} className="block w-full rounded-lg border border-white/[.06] bg-white/[.02] px-2 py-1.5 text-left text-[12px] hover:border-white/20">
+              <div className="flex items-start gap-2">
+                <span className="mt-px w-5 shrink-0 font-bold text-[#20D9FF]">{o.nr}.</span>
+                <span className="min-w-0 flex-1 font-semibold text-white">{o.titel}</span>
+                {o.maak && <span className="shrink-0 rounded bg-white/10 px-1.5 text-[10px] text-slate-300" title="Hoeveel werk in Blender">{o.maak}</span>}
+              </div>
+              {open === o.nr && (
+                <div className="mt-1 space-y-0.5 pl-7 leading-snug text-slate-300">
+                  {o.waarom && <div><span className="text-slate-500">Waarom: </span>{o.waarom}</div>}
+                  {o.twist && <div><span className="text-slate-500">Twist: </span>{o.twist}</div>}
+                </div>
+              )}
+            </button>
+          ))}
+          {top.length > 5 && <button onClick={() => setAlles(!alles)} className="text-[12px] font-semibold text-[#20D9FF] hover:underline">{alles ? 'Minder tonen' : `Alle ${top.length} tonen`}</button>}
+          {doc?.volgorde && <div className="mt-1 rounded-lg bg-white/[.04] px-2 py-1.5 text-[12px] leading-snug text-slate-200">🎬 {doc.volgorde}</div>}
+          {!!doc?.reserve?.length && <div className="text-[11px] leading-snug text-slate-400"><span className="text-slate-500">Reserve: </span>{doc.reserve.join(' · ')}</div>}
+          {!!doc?.lieverNiet?.length && <div className="text-[11px] leading-snug text-slate-400"><span className="text-slate-500">Liever niet: </span>{doc.lieverNiet.join(' ')}</div>}
+          {doc?.pad && <div className="text-[11px] text-slate-500">Het hele onderzoek staat in Kennis ({doc.pad}).</div>}
+        </div>
+      )}
+    </Sec>
+  );
+}
+
 /* =================== CREATIEF: ideeënbord =================== */
 type Kolom = 'idee' | 'uitwerken' | 'gekozen';
 interface Kaart { id: string; tekst: string; kolom: Kolom; score?: number; waarom?: string }
@@ -508,7 +545,7 @@ export function DeptTools({ r }: { r: RoomDef }) {
   return (
     <div className="space-y-3">
       {id === 'ceo' && (<><VideoCards /><UploadChart /><WeekReport /></>)}
-      {id === 'onderzoek' && (<><ShortsTable /><Competitors /></>)}
+      {id === 'onderzoek' && (<><Onderwerpen /><ShortsTable /><Competitors /></>)}
       {id === 'creatief' && <IdeasBoard />}
       {id === 'script' && <HookCheck />}
       {id === 'stem' && <VoiceStatus />}
