@@ -1,6 +1,6 @@
 # Script video 4: What IF You Could Never Die?
 
-Versie 1.1, 5 november 2026: ingekort/herrekend naar ongeveer 12 minuten (wens niels). Gebaseerd op het verloop (https://claude.ai/artifact/YJScz92N3RPdqtLeCLpGRu), het productiehandboek en de lessen uit video 1-3.
+Versie 1.2, 9 november 2026: abonneeroproep rond 60% toegevoegd (shot 14b-c2, ~7:20 van ~12:00, wens niels). Tijden na scène 14b schuiven ~10 s op (totaal ~12:02). Versie 1.1, 5 november 2026: ingekort/herrekend naar ongeveer 12 minuten (wens niels). Gebaseerd op het verloop (https://claude.ai/artifact/YJScz92N3RPdqtLeCLpGRu), het productiehandboek en de lessen uit video 1-3.
 
 - **Lengte:** ongeveer 12:00 (11:52 berekend uit shotlengtes en spreektempo, plus korte pauzes), circa 1.230 gesproken woorden (voice-over plus dialoog).
 - **Taal:** alles wat gesproken of op beeld getoond wordt is Engels. Regie, shots en bewegingen staan in het Nederlands.
@@ -562,7 +562,7 @@ Een kind van een jaar of acht houdt een zwevend hologramscherm omhoog en filmt h
 Hij staart naar het kind. Dan begint hij te lachen, en te huilen tegelijk.
 - **VO:** "A thousand years later... kids are exactly the same."
 
-## Scène 14b · Tienduizend jaar: het museum (7:08-7:24)
+## Scène 14b · Tienduizend jaar: het museum (7:08-7:34, met abonneeroproep)
 
 **HUD:** `YEAR 10,000 · AGE 14`. **Set:** een strak wit toekomstmuseum (variant van de lab-set: witte panelen, glazen vitrines, hologrammen). **Muziek:** licht, droog-komisch, pulserende synths.
 
@@ -576,6 +576,10 @@ Het bordje onder zijn vitrine: **THE LAST OLD HUMAN. PLEASE DO NOT TAP THE GLASS
 **14b-c · MEDIUM · 3,5 s**
 Een groep toekomstkinderen tikt tegen het glas. Hij zwaait. Ze gillen en rennen weg.
 - **VO:** "To them, you're basically a dinosaur."
+
+**14b-c2 · MEDIUM · statisch met trage push-in · 9,5 s (stem 8,7 s) · ABONNEEROPROEP (~60%)**
+Hij zit weer op zijn krukje, kijkt recht in de camera (de kijker staat "voor de vitrine") en tikt zelf zacht tegen het glas, met een scheve grijns. Op het glas verschijnt even een kleine, strakke abonneerknop als hologram (geen flikkering, 0,3 s infade).
+- **VO:** "Quick thing, while you're stuck behind the glass with him: if you're enjoying this, hit subscribe. It's free... and unlike him, you don't have forever."
 
 **14b-d · CLOSE · 4 s**
 Hij leunt met zijn wang tegen het glas en zucht. Zijn adem maakt een wolkje.
