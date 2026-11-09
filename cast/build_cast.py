@@ -1010,6 +1010,149 @@ def _cast_nd():
     return base + [_10x("vuilnisman"), _nr("agent")] + CAST_ND
 
 
+# Video 5 "What IF You Could See How Many Days Everyone Has Left?": varianten van de vaste cast
+# (opa aan het meer, gezin in rouwkleding) en de nieuwe bijfiguren. Bouwen met --cast dl.
+_BLACK = dict(shirt=dict(color="#F4F4F4", sleeves="long", sleeve_color="#1F2128", cuff="#1F2128",
+                         stof="katoen", sleeve_stof="wol"),
+              blazer=dict(color="#1F2128"), pants="#1F2128", pants_stof="wol", shoes="#141414")
+
+
+def _nd(key):
+    return dict(next(c for c in CAST_ND if c["key"] == key))
+
+
+CAST_DL = [
+    # --- hoofdpersonage (14) ---
+    _hero("hoofdpersonage_kind", "Hoofdpersonage (hoodie)", body=dict()),
+    _hero("hoofdpersonage_rugzak", "Hoofdpersonage met rugzak (school)", body=dict(), backpack="#2D6CDF"),
+    _hero("hoofdpersonage_ziekenhuis", "Hoofdpersonage in ziekenhuishemd (dag 14)", body=dict(), hoodie=False,
+          shirt=dict(color="#BFD8E8", sleeves="short", stof="katoen", dots=("#8FB4CF", "#FFFFFF")),
+          pants="#BFD8E8", pants_stof="pyjama", shoes="#E8E8E8", sole="#B8B8B8"),
+    dict(_nd("hoofdpersonage_pak"), key="hoofdpersonage_pak", naam="Hoofdpersonage in zwart pak (begrafenis)"),
+    _hero("hoofdpersonage_pleister", "Hoofdpersonage met pleister (dag 41)", body=dict(), plaster=True,
+          backpack="#2D6CDF"),
+    # --- opa: meer, thuis, jong (foto) ---
+    _variant("opa", "opa_vissen", "Opa aan het meer (vissershoed, bodywarmer)", hat="bucket",
+             bucket=dict(color="#7C8A5A", band="#5A4A32"), prop=None, tie=None, cardigan=None,
+             shirt=dict(color="#C9D9E6", sleeves="long", cuff="#B3C4D2", stof="katoen"),
+             vest=dict(color="#4F6B4A", stripes="#4F6B4A"), pants="#6B5E4A", pants_stof="katoen"),
+    _variant("opa", "opa_thuis", "Opa thuis (vest, geen pet)", hat=None, prop=None),
+    dict(key="opa_jong", naam="Opa als jongen van 14 (zwart-witfoto 1964)", rol="(foto)",
+         body=dict(), skin="roze", eyes="grijs", brows=dict(color="#6A4A30", scale=1.2), mouth="grin",
+         freckles=True,
+         shirt=dict(color="#E8E2D2", sleeves="short", stof="katoen"), suspenders="#5A4A3A",
+         shorts="#5D5850", shoes="#3A2A1A", hair=dict(style="short", color="#6A4A30"), hat="flatcap"),
+    dict(key="oma_jong", naam="Oma als meisje op de fiets (foto 1966)", rol="(foto)",
+         body=dict(leg=0.86, torso=0.88, width=0.88, hips=1.02, shoulders=0.88, arm=0.86, head=0.95),
+         skin="roze", eyes="blauw", brows=dict(color="#8A5A30", raise_=0.006), mouth="grin", lashes=True,
+         freckles=True, blush="#F08A8A",
+         shirt=dict(color="#F2E6D6", sleeves="short", dots=("#C8283A", "#FFFFFF")),
+         skirt=dict(color="#C8283A", bottom=0.3), legs="#F1BC9F", shoes="#3A2A1A",
+         hair=dict(style="pigtails", color="#8A5A30", ribbon="#FFFFFF")),
+    # --- gezin in rouwkleding (begrafenis, dag 40) ---
+    _variant("mama", "mama_zwart", "Mama (zwart, begrafenis)", shirt=dict(color="#1F2128", sleeves="long",
+             cuff="#1F2128", stof="wol"), pants="#1F2128", shoes="#141414", earrings="#C9CCD1"),
+    _variant("papa", "papa_zwart", "Papa (zwart pak, begrafenis)", **_BLACK, tie="#1F2128"),
+    _variant("oma", "oma_zwart", "Oma (zwart, begrafenis)", shirt=dict(color="#2A2A30", sleeves="long",
+             cuff="#2A2A30", stof="wol"), cardigan=dict(color="#1F2128", buttons="#C9CCD1"),
+             skirt=dict(color="#1F2128", bottom=0.12)),
+    _variant("broertje", "broertje_zwart", "Broertje (zwart, begrafenis)",
+             shirt=dict(color="#F4F4F4", sleeves="long", sleeve_color="#1F2128", cuff="#1F2128"),
+             blazer=dict(color="#1F2128"), shorts=None, pants="#1F2128", shoes="#141414"),
+    # --- vaste cast ---
+    _variant("beste_vriend", "beste_vriend_koptelefoon", "Beste vriend met koptelefoon",
+             headphones=dict(color="#E5483E", cup="#1A1A1A"), backpack="#F6D04D", prop="phone"),
+    dict(_nd("wetenschapper"), key="dokter", naam="Dokter (wetenschapper, man) met stethoscoop", rol="DOCTOR",
+         prop=None, stethoscope=True),
+    _variant("gymleraar", "wiskundeleraar", "Wiskundeleraar (gymleraar in overhemd)", whistle=False,
+             shirt=dict(color="#E8EEF6", sleeves="long", cuff="#D0D8E4", stof="katoen"), tie="#7B2D26",
+             pants="#4B4F57", pant_stripes=None, shoes="#3A2A1A", glasses=dict(color="#2A2A2A", r=0.007)),
+    # --- nieuwe bijfiguren ---
+    dict(key="directeur_school", naam="Schooldirecteur (vrouw)", rol="PRINCIPAL",
+         body=dict(leg=1.0, torso=1.0, width=0.98, hips=1.08, shoulders=0.94, arm=0.9, belly=0.12, head=0.97),
+         skin="midden", eyes="bruin", brows=dict(color="#2A1A10", angle=8), mouth="flat", lashes=True,
+         glasses=dict(color="#8A2A3A", r=0.007), earrings="#E2B84B",
+         shirt=dict(color="#F2EEE8", sleeves="long", cuff="#7A3B5A"), cardigan=dict(color="#7A3B5A", buttons="#E2B84B"),
+         skirt=dict(color="#3B3F49", bottom=0.18), legs="#C98E62", shoes="#2A2A2A",
+         hair=dict(style="curly_bun", color="#2A1A10")),
+    dict(key="man_pak", naam="Man in pak met koffie (dag 5)", rol="MAN",
+         body=dict(leg=1.08, torso=1.04, width=1.04, shoulders=1.06, arm=1.04, head=0.97),
+         skin="bruin", eyes="donker", brows=dict(color="#1E1410"), mouth="flat",
+         shirt=dict(color="#F2F4F8", sleeves="long", sleeve_color="#2F3A55", cuff="#2F3A55", sleeve_stof="wol"),
+         blazer=dict(color="#2F3A55"), tie="#C8A13A", pants="#2F3A55", pants_stof="wol", shoes="#1A1A1A",
+         hair=dict(style="buzz", color="#1E1410"), prop="coffee"),
+    dict(key="moeder_kinderwagen", naam="Moeder met kinderwagen (dag 6)", rol="(geen tekst)",
+         body=dict(leg=1.02, torso=0.98, width=0.94, hips=1.06, shoulders=0.92, arm=0.88, head=0.97),
+         skin="licht", eyes="blauw", brows=dict(color="#C9A25A"), mouth="smile", lashes=True,
+         shirt=dict(color="#F4F4F4", sleeves="long", sleeve_color="#E86FA0", cuff="#E86FA0"),
+         jacket=dict(color="#E86FA0", stof="nylon"), pants="#3E5C8A", shoes="#F2EEE8",
+         hair=dict(style="ponytail", color="#E0C27A")),
+    dict(key="baby", naam="Baby in de kinderwagen", rol="(geen tekst)",
+         body=dict(leg=0.34, torso=0.42, width=0.86, arm=0.62, legt=0.82, head=0.78, belly=0.2),
+         skin="roze", eyes="blauw", brows=dict(color="#E0C27A", raise_=0.01), mouth="small", blush="#F08A8A",
+         shirt=dict(color="#F6E7A8", sleeves="long", cuff="#F6E7A8", stof="pyjama"),
+         pants="#F6E7A8", pants_stof="pyjama", shoes="#F6E7A8", hat="beanie", beanie="#9BD3E8"),
+    dict(key="jongen_zwembad", naam="Jongen bij het zwembad (dag 6)", rol="(geen tekst)",
+         body=dict(leg=0.86, torso=0.86, width=0.9, arm=0.86, head=0.94),
+         skin="olijf", eyes="bruin", brows=dict(color="#2A1A10", raise_=0.006), mouth="grin",
+         shirt=dict(color="#4FC3E8", sleeves="short", stof="nylon"), shorts="#F2B33D", shoes="#2D6CDF",
+         hair=dict(style="spiky", color="#2A1A10")),
+    dict(key="oude_man_winkel", naam="Oude man in de supermarkt (dag 7)", rol="(geen tekst)",
+         body=dict(leg=0.94, torso=0.98, width=1.0, arm=0.96, belly=0.18, head=0.98),
+         skin="licht", eyes="grijs", brows=dict(color="#F2F2F2", scale=1.4), mouth="smile", wrinkles=True,
+         mustache="#F2F2F2", glasses=dict(color="#C9CCD1", r=0.006, round_=True),
+         shirt=dict(color="#C9B89A", sleeves="long", cuff="#B0A080"), cardigan=dict(color="#8A5A3A", buttons="#E8E2D2"),
+         pants="#5A5E66", shoes="#3A2A1A", hair=dict(style="bald_sides", color="#F2F2F2"), hat="flatcap"),
+    dict(key="concierge", naam="Conciërge met bezem", rol="(geen tekst)",
+         body=dict(leg=1.0, torso=1.04, width=1.1, arm=1.04, belly=0.3, head=1.0),
+         skin="bruin", eyes="donker", brows=dict(color="#C9C9C9"), mouth="smile", mustache="#C9C9C9",
+         shirt=dict(color="#3E5C8A", sleeves="long", cuff="#34507A", stof="katoen"), name_tag=True,
+         pants="#3E5C8A", pants_stof="katoen", shoes="#2A2A2A", hair=dict(style="buzz", color="#C9C9C9"),
+         hat="cap", cap=dict(color="#3E5C8A", visor="#2A3E5E"), prop="broom"),
+    dict(key="scooterrijder", naam="Scooterrijder met helm (dag 5)", rol="(geen tekst)",
+         body=dict(leg=1.04, torso=1.02, width=1.0, arm=1.0, head=0.98),
+         skin="licht", eyes="blauw", brows=dict(color="#5B3A24"), mouth="flat",
+         shirt=dict(color="#2A2A30", sleeves="long", cuff="#2A2A30", stof="nylon"),
+         jacket=dict(color="#C8283A", stof="nylon"), pants="#2E3440", shoes="#1A1A1A",
+         hat="guard", helmet="#F2F2F2"),
+    dict(key="vrouw_hond", naam="Vrouw met hond (dag 1)", rol="(geen tekst)",
+         body=dict(leg=1.04, torso=0.98, width=0.92, hips=1.04, shoulders=0.92, arm=0.88, head=0.96),
+         skin="donker", eyes="donker", brows=dict(color="#1E1410"), mouth="smile", lashes=True,
+         shirt=dict(color="#F6D04D", sleeves="long", cuff="#E0AE3C", stof="breisel"), pants="#2E3440",
+         shoes="#F2F2F2", hair=dict(style="curly", color="#1E1410"), scarf=dict(color="#2F9C95", stripes="#F2F2F2")),
+    dict(key="postbode", naam="Postbode op de fiets (dag 1)", rol="(geen tekst)",
+         body=dict(leg=1.04, torso=1.02, width=1.0, arm=1.0, head=0.98),
+         skin="olijf", eyes="groen", brows=dict(color="#3B2416"), mouth="smile",
+         shirt=dict(color="#E5483E", sleeves="short", stof="katoen"), chest_logo="#F6D04D",
+         shorts="#2B4170", shoes="#1A1A1A", hair=dict(style="short", color="#3B2416"),
+         hat="cap", cap=dict(color="#E5483E", visor="#2B4170"), backpack="#E5483E"),
+    _variant("oma", "oude_dame_bus", "Oude dame die de bus haalt (dag 1)", skin="olijf",
+             hair=dict(style="curly_bun", color="#E8E4DA"), cardigan=dict(color="#C97A4A", buttons="#F2EEE8"),
+             skirt=dict(color="#5A4A6B", bottom=0.2), prop="bag"),
+]
+# leerlingen voor het schoolplein en de gymzaal (300 instanties met kleurvariatie in de animatie)
+for _k, (_sk, _hc, _hs, _sh, _pt) in enumerate((
+        ("licht", "#5B3A24", "short", "#2D6CDF", "#3B3F49"), ("bruin", "#1E1410", "curly", "#E5483E", "#2E3440"),
+        ("roze", "#C9772E", "ponytail", "#6CBF4B", "#3E5C8A"), ("olijf", "#2A1A10", "bob", "#F6D04D", "#4B4F57"),
+        ("donker", "#1E1410", "buzz", "#7A5BC9", "#2E3440"), ("midden", "#3B2416", "pigtails", "#E86FA0", "#3B3F49"))):
+    CAST_DL.append(dict(key=f"leerling_{'abcdef'[_k]}", naam=f"Leerling {_k + 1} (schoolplein, gymzaal)",
+                        rol="(geen tekst)",
+                        body=dict(leg=0.9 + 0.03 * (_k % 3), torso=0.9, width=0.9 + 0.04 * (_k % 2), arm=0.9,
+                                  head=0.95),
+                        skin=_sk, eyes=("bruin", "blauw", "groen")[_k % 3], brows=dict(color=_hc),
+                        mouth=("smile", "grin", "flat")[_k % 3], lashes=_hs in ("ponytail", "bob", "pigtails"),
+                        shirt=dict(color=_sh, sleeves="long" if _k % 2 else "short", stof="katoen"),
+                        pants=_pt, shoes=("#F4F1E9", "#E5483E", "#1A1A1A")[_k % 3],
+                        hair=dict(style=_hs, color=_hc), backpack=("#2D6CDF", "#F6D04D", "#3A3F47")[_k % 3]))
+
+
+def _cast_dl():
+    keep = ("mama", "papa", "oma", "broertje", "pestkop", "nieuwslezeres", "opa")
+    base = [c for c in CAST if c["key"] in keep]
+    nr = [_nr(k) for k in ("figurant_a", "figurant_b", "figurant_c", "figurant_d", "figurant_e", "figurant_f")]
+    return base + [_10x("broertje_dino"), _10x("bezorger")] + nr + CAST_DL
+
+
 # ---------------------------------------------------------------------------
 # Opbouw van één figuur
 # ---------------------------------------------------------------------------
@@ -1818,6 +1961,17 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
         if spec.get("glow"):
             B.shell("helm_streep", mats.unlit(spec["glow"]["color"]), lambda a: 0.47, lambda a: 0.5,
                     arange=(-math.radians(80), math.radians(80)), radius=HEAD_R * 1.11, thick=0.006)
+    elif hat == "bucket":
+        # vissershoedje: zachte bol met een schuin aflopende rand en een band
+        bk = spec.get("bucket", {})
+        M_h = mats.pbr(bk.get("color", "#7C8A5A"), stof="katoen")
+        B.shell("vissershoed", M_h, lambda a: 0.34, radius=HEAD_R * 1.07, scale=(1.0, 1.0, 1.06), thick=0.016)
+        B.cylinder("vissershoed_rand", M_h, (0, 0, HEAD_C.z + HEAD_R * 0.36),
+                   (0, 0, HEAD_C.z + HEAD_R * 0.36 - 0.06), HEAD_R * 1.04, HEAD_R * 1.42, cat="head", seg=48,
+                   cap=False)
+        B.cylinder("vissershoed_band", mats.pbr(bk.get("band", "#5A4A32"), stof="katoen"),
+                   (0, 0, HEAD_C.z + HEAD_R * 0.4), (0, 0, HEAD_C.z + HEAD_R * 0.47), HEAD_R * 1.075,
+                   cat="head", seg=48)
     elif hat == "flowerhat":
         hf = spec.get("flowerhat", {})
         M_h = mats.pbr(hf.get("color", "#B58FC9"), stof="wol")
@@ -1906,6 +2060,89 @@ def build_character(spec, base_parts, unlit_tpl, parent_coll):
               rot=(math.radians(-10), 0, 0), cat="arm-", bevel=0)
         B.box("hologram_band", mats.pbr("#2A2F3A", rough=0.3), hand + Vector((0.0, 0.0, 0.07)), (0.07, 0.07, 0.02),
               cat="arm-", bevel=0.4)
+
+    # --- 6b. accessoires video 5 (koptelefoon, stethoscoop, rugzak, pleister, bretels, props) ---
+    if spec.get("headphones"):
+        hp = spec["headphones"] if isinstance(spec["headphones"], dict) else {}
+        M_hb = mats.pbr(hp.get("color", "#E5483E"), rough=0.3)
+        M_hc = mats.pbr(hp.get("cup", "#1A1A1A"), rough=0.35)
+        R_b = HEAD_R * 1.1
+        pts = [HEAD_C + Vector((math.sin(t) * R_b, 0.01, math.cos(t) * R_b))
+               for t in [math.radians(a) for a in range(-96, 97, 12)]]
+        for k in range(len(pts) - 1):
+            B.cylinder(f"koptelefoon_band{k}", M_hb, pts[k], pts[k + 1], 0.016, cat="head", seg=12)
+        for side in (-1, +1):
+            s_ = "L" if side > 0 else "R"
+            c = HEAD_C + Vector((side * HEAD_R * 1.02, 0.01, -0.02))
+            B.cylinder(f"koptelefoon_schelp_{s_}", M_hc, c, c + Vector((side * 0.07, 0, 0)), 0.088, 0.08,
+                       cat="head", seg=28)
+            B.cylinder(f"koptelefoon_kussen_{s_}", mats.pbr("#2A2A2A", rough=0.9), c - Vector((side * 0.012, 0, 0)),
+                       c + Vector((side * 0.004, 0, 0)), 0.082, cat="head", seg=28)
+            B.cylinder(f"koptelefoon_logo_{s_}", M_hb, c + Vector((side * 0.07, 0, 0)),
+                       c + Vector((side * 0.074, 0, 0)), 0.04, cat="head", seg=20)
+
+    if spec.get("stethoscope"):
+        M_st = mats.pbr("#1A1A1A", rough=0.35)
+        M_sm = mats.pbr("#C9CCD1", rough=0.2, metal=1.0)
+        z0 = 1.15
+        rx, ry = torso_r(z0)
+        B.torus("stethoscoop_nek", M_st, (0, 0.0, z0), (rx + ry) / 2 + 0.03, 0.009, normal=(0, 0, 1),
+                cat="torso", arc=(math.radians(-60), math.radians(240)))
+        for side in (-1, +1):
+            a = Vector((side * 0.13, -ry - 0.02, z0 - 0.01))
+            b = Vector((side * 0.11, -torso_r(0.95)[1] - 0.035, 0.95))
+            B.cylinder(f"stethoscoop_slang_{'L' if side > 0 else 'R'}", M_st, a, b, 0.009, cat="torso", seg=10)
+        B.cylinder("stethoscoop_borststuk", M_sm, (0.11, -torso_r(0.93)[1] - 0.04, 0.93),
+                   (0.11, -torso_r(0.93)[1] - 0.055, 0.93), 0.028, cat="torso", seg=20)
+
+    if spec.get("backpack"):
+        M_bp = mats.pbr(spec["backpack"], stof="nylon")
+        M_bs = mats.pbr(_darker(spec["backpack"], 0.7), stof="nylon")
+        rx, ry = torso_r(0.88)
+        B.box("rugzak", M_bp, (0, ry + 0.07, 0.86), (0.3, 0.15, 0.36), cat="torso", bevel=0.35)
+        B.box("rugzak_vak", M_bs, (0, ry + 0.15, 0.8), (0.22, 0.05, 0.16), cat="torso", bevel=0.4)
+        pad = 0.022 if any(spec.get(k) for k in ("hoodie", "jacket", "blazer", "cardigan", "vest")) else 0.01
+        for side in (-1, +1):
+            s_ = "L" if side > 0 else "R"
+            # schouderband: plat op de borst, van de schouder naar de onderkant van de rugzak
+            B.body_disc(f"rugzak_band_{s_}", M_bs, math.radians(side * 26), 0.98, 0.024, thick=0.006,
+                        lift=pad, sz=0.17)
+            B.body_disc(f"rugzak_gesp_{s_}", mats.pbr("#2A2A2A", rough=0.4), math.radians(side * 26), 0.88, 0.02,
+                        thick=0.006, lift=pad + 0.005, sz=0.014)
+            B.sphere(f"rugzak_schouder_{s_}", M_bs, (side * 0.13, 0.0, 1.13), (0.03, 0.17, 0.02), cat="torso")
+
+    if spec.get("suspenders"):
+        M_su = mats.pbr(spec["suspenders"], stof="katoen")
+        for side in (-1, +1):
+            B.body_disc(f"bretel_{'L' if side > 0 else 'R'}", M_su, math.radians(side * 22), 0.88, 0.016,
+                        thick=0.004, lift=0.006, sz=0.24)
+
+    if spec.get("plaster"):
+        M_pl = mats.pbr("#E9C9A6", rough=0.6)
+        B.face_disc("pleister", M_pl, 0.15, 1.43, 0.05, 0.022, thick=0.004, lift=0.004, roll=math.radians(20))
+
+    if prop == "coffee":
+        M_cu = mats.pbr("#F2EEE6", rough=0.5)
+        B.cylinder("koffiebeker", M_cu, hand + Vector((0, -0.05, -0.04)), hand + Vector((0, -0.05, 0.1)),
+                   0.034, 0.042, cat="arm-", seg=24)
+        B.cylinder("koffiebeker_hoes", mats.pbr("#8A5A3A", rough=0.8), hand + Vector((0, -0.05, 0.0)),
+                   hand + Vector((0, -0.05, 0.05)), 0.0395, 0.0415, cat="arm-", seg=24)
+        B.cylinder("koffiebeker_deksel", mats.pbr("#2A2A2A", rough=0.4), hand + Vector((0, -0.05, 0.1)),
+                   hand + Vector((0, -0.05, 0.115)), 0.044, 0.04, cat="arm-", seg=24)
+    elif prop == "broom":
+        M_wd = mats.pbr("#B58A5A", rough=0.6)
+        B.cylinder("bezemsteel", M_wd, hand + Vector((0, -0.03, 0.35)), (-0.36, -0.2, 0.08), 0.014, cat="arm-")
+        B.box("bezem_kop", mats.pbr("#3A3A3A", rough=0.5), (-0.37, -0.21, 0.06), (0.36, 0.06, 0.05), cat="arm-",
+              bevel=0.3)
+        B.box("bezem_haren", mats.pbr("#C9A24A", rough=0.95), (-0.37, -0.21, 0.02), (0.34, 0.05, 0.05),
+              cat="arm-", bevel=0.1)
+    elif prop == "bag":
+        M_bg = mats.pbr("#2F9C95", stof="katoen")
+        B.box("boodschappentas", M_bg, hand + Vector((0, -0.02, -0.17)), (0.07, 0.24, 0.26), cat="arm-", bevel=0.3)
+        B.torus("boodschappentas_hengsel", M_bg, hand + Vector((0, -0.02, -0.03)), 0.06, 0.007, normal=(1, 0, 0),
+                arc=(0, math.pi), cat="arm-")
+        B.sphere("boodschappentas_brood", mats.pbr("#D9A55A", rough=0.8), hand + Vector((0, -0.05, -0.02)),
+                 (0.03, 0.03, 0.07), cat="arm-")
 
     # --- 7. lichaamsbouw toepassen -------------------------------------------
     apply, head_c = make_warp(spec["body"])
@@ -2075,7 +2312,7 @@ def main():
     hero_root = next(o for o in imported if o.type == "EMPTY" and o.parent is None)
     hero_root.name = "hoofdpersonage"
 
-    src = {"10x": CAST_10X, "nr": CAST + CAST_NR, "nd": _cast_nd()}.get(opts["--cast"], CAST)
+    src = {"10x": CAST_10X, "nr": CAST + CAST_NR, "nd": _cast_nd(), "dl": _cast_dl()}.get(opts["--cast"], CAST)
     specs = [s for s in src if not only or s["key"] in only]
     built = []
     for spec in specs:
@@ -2084,7 +2321,8 @@ def main():
         print("gebouwd:", spec["key"], "lengte %.2f m" % zmax)
 
     cam = setup_render(int(opts["--samples"]))
-    blend = {"10x": "cast_10x_faster.blend", "nr": "cast_no_rules.blend", "nd": "cast_never_die.blend"}.get(opts["--cast"],
+    blend = {"10x": "cast_10x_faster.blend", "nr": "cast_no_rules.blend", "nd": "cast_never_die.blend",
+             "dl": "cast_days_left.blend"}.get(opts["--cast"],
                                                                              "cast_video1.blend")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(out, blend))
 

@@ -581,7 +581,7 @@ def house_rules(name, loc, rot=(90, 0, 0), extra=None, yellowed=False):
     mag = T.cyl(name + "_magneet", (0, -0.004, 0.13), 0.012, 0.008, _m("magneet_rood", (0.9, 0.15, 0.12)), rot=(90, 0, 0), seg=12, ol=0)
     mag.parent = root
     lines = [("HOUSE RULES", 0.024, "rood"), ("1. NO PHONES AT DINNER", 0.0125, "blauw"), ("2. WAIT FOR GREEN", 0.0125, "blauw"),
-             ("3. BED AT 9", 0.0125, "blauw"), ("4. BE NICE TO OPA", 0.0125, "blauw")]
+             ("3. BED AT 9", 0.0125, "blauw"), ("4. BE NICE TO GRANDPA", 0.0125, "blauw")]
     if extra:
         lines.append((extra, 0.0125, "zwart"))
     for i, (tx, s, col) in enumerate(lines):
