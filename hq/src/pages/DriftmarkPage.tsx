@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ExternalLink, Clapperboard, Users, Map, ListChecks, Lightbulb, Wrench, Mic, Youtube, Play, Building2, MessageSquare } from 'lucide-react';
 import { useGame } from '../store/useGame';
-import { Tabs } from '../components/ui';
+import { Tabs, Telt } from '../components/ui';
 import { RULES, CAST, VOICE_SETS, TOOLS, threadUrl, type RealVideo } from '../data/driftmark';
 import { CursusCheck, TitelTester, CursusStappen, CursusTip } from './Cursus';
 import { useLive, startLive } from '../services/live';
@@ -246,7 +246,7 @@ function BigNum({ label, value, sub, info, color = '#f3f6ff' }: { label: string;
   return (
     <div className="panel min-w-0 p-4 dm-pop">
       <div className="flex items-center text-[13px] font-semibold text-slate-400">{label}<Info text={info} /></div>
-      <div className="mt-1 font-display text-3xl font-bold" style={{ color }}>{value}</div>
+      <div className="getal mt-1 text-3xl" style={{ color }}><Telt value={value} /></div>
       {sub && <div className="mt-0.5 text-[13px] text-slate-400">{sub}</div>}
     </div>
   );

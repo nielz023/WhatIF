@@ -22,6 +22,7 @@ import { Md, type MdLink } from './Md';
 import { openKennis } from '../../services/kennis';
 import Keuzes from './Keuzes';
 import { Send, Check } from 'lucide-react';
+import { Empty } from '../ui';
 
 /** ANTWOORDEN IN ELK GESPREK (verbeterlijst punt 6): wat niels hier typt of inspreekt, gaat als opdracht naar deze thread. */
 function Antwoordveld({ id, project, titel }: { id: string; project: boolean; titel: string }) {
@@ -185,7 +186,7 @@ export function Berichten({ g, doel, waar, link, onLink, className = '' }: { g: 
         : g.hasMore
           ? <div className="rounded-xl border border-sky-400/25 bg-sky-500/[.06] px-3 py-2 text-center text-[12px] text-slate-300">Oudere berichten staan in de {waar} zelf. {link && <a className="text-sky-300 underline hover:text-white" href={link} target="_blank" rel="noreferrer">Open de {waar}</a>}</div>
           : len > 0 && <div className="text-center text-[11px] text-slate-500">Begin van het gesprek</div>}
-      {!len && <div className="py-10 text-center text-[13px] text-slate-500">Nog geen berichten.</div>}
+      {!len && <div className="py-6"><Empty icon={<MessageSquare size={16} />} titel="Nog geen berichten">Zodra jij of Claude iets schrijft in dit gesprek, staat het hier.</Empty></div>}
       {g.msgs.slice(start).map((m, j) => {
         const i = start + j;
         return (

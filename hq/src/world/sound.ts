@@ -12,6 +12,10 @@ let master: GainNode | null = null;
 let verb: ConvolverNode | null = null;
 let on = (() => { try { return localStorage.getItem('dm-geluid') !== 'uit'; } catch { return true; } })();
 const listeners = new Set<(v: boolean) => void>();
+/** hoofdvolume 0..1 (localStorage dm-volume); 0,7 klinkt als het oude vaste volume */
+const MASTER = 0.46;
+let vol = (() => { try { const v = parseFloat(localStorage.getItem('dm-volume') ?? ''); return isNaN(v) ? 0.7 : Math.max(0, Math.min(1, v)); } catch { return 0.7; } })();
+const volListeners = new Set<(v: number) => void>();
 const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66]; // C-pentatonisch, rustig en altijd "goed"
 
 function ac(): AudioContext | null {
@@ -25,7 +29,7 @@ function ac(): AudioContext | null {
       const C = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!C) return null;
       ctx = new C();
-      master = ctx.createGain(); master.gain.value = 0.32;
+      master = ctx.createGain(); master.gain.value = MASTER * vol;
       // kleine galm: korte ruis-impuls die uitsterft
       verb = ctx.createConvolver();
       const len = ctx.sampleRate * 1.4, buf = ctx.createBuffer(2, len, ctx.sampleRate);
@@ -151,6 +155,16 @@ function startAmbience() {
   }, 140);
   amb = { gain, murmur, timer };
 }
+
+/* ---------- ÉÉN KNOP (verbeterlijst punt 37): één volumeschuif voor alles + dempen ---------- */
+export const volume = () => vol;
+export function setVolume(v: number) {
+  vol = Math.max(0, Math.min(1, v)); try { localStorage.setItem('dm-volume', String(vol)); } catch { /* */ }
+  if (master && ctx) master.gain.setTargetAtTime(MASTER * vol, ctx.currentTime, 0.08);
+  volListeners.forEach((f) => f(vol));
+  if (vol > 0 && !on) setSound(true); // schuif omhoog = dempen opheffen
+}
+export function onVolume(f: (v: number) => void) { volListeners.add(f); return () => { volListeners.delete(f); }; }
 
 export const soundOn = () => on;
 export function setSound(v: boolean) {

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '../components/ui';
 import { useWorld } from '../world/useWorld';
-import { soundOn, setSound, onSoundChange, officeVolume, setOfficeVolume, onOfficeVolume } from '../world/sound';
+import Geluid from '../components/shared/Geluid';
 import { prefs, setPref, type Prefs } from '../lib/prefs';
 import { useTools } from '../services/tools';
 import { useLive } from '../services/live';
@@ -68,11 +68,7 @@ function Aan({ on, set }: { on: boolean; set: (v: boolean) => void }) {
 export default function SettingsPage() {
   const ov = useRealConnections();
   const { theme, setTheme, focusMode, setFocusMode, quality, setQuality } = useWorld();
-  const [on, setOn] = useState(soundOn());
-  const [vol, setVol] = useState(officeVolume());
   const [p, setP] = useState<Prefs>(prefs());
-  useEffect(() => onSoundChange(setOn), []);
-  useEffect(() => onOfficeVolume(setVol), []);
   const zet = <K extends keyof Prefs>(k: K, v: Prefs[K]) => { setPref(k, v); setP(prefs()); };
 
   return (
@@ -81,8 +77,7 @@ export default function SettingsPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="panel space-y-2 p-5">
           <div className="mb-1 font-semibold text-white">Geluid en beeld</div>
-          <Rij titel="Geluidjes" uitleg="Klikjes en een geluidje bij een nieuwe melding."><Aan on={on} set={setSound} /></Rij>
-          <Rij titel="Kantoorgeluid" uitleg={`Geroezemoes in het 3D-kantoor: ${Math.round(vol * 100)}%`}><input type="range" min={0} max={1} step={0.05} value={vol} onChange={(e) => setOfficeVolume(parseFloat(e.target.value))} className="w-32 accent-[#FF7A24]" aria-label="Volume van het kantoorgeluid" /></Rij>
+          <Rij titel="Geluid" uitleg="Eén schuif voor klikjes, meldingen en het kantoorgeluid. Links: dempen."><div className="w-56"><Geluid breed /></div></Rij>
           <Rij titel="3D-kwaliteit" uitleg="Auto past zich aan je computer aan. 4K is het scherpst, Snel het soepelst."><Seg value={quality} set={setQuality} opts={[['snel', 'Snel'], ['auto', 'Auto'], ['4k', '4K']]} /></Rij>
           <Rij titel="Licht in het kantoor" uitleg="Klok volgt de echte tijd."><Seg value={theme} set={setTheme} opts={[['auto', 'Klok'], ['dag', 'Dag'], ['nacht', 'Nacht']]} /></Rij>
           <Rij titel="Focusmodus" uitleg="Kantoor gedimd, alleen wat op jou wacht."><Aan on={focusMode} set={setFocusMode} /></Rij>
