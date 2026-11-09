@@ -70,7 +70,7 @@ S.teleport(held, t_e, V(-0.45, -0.7, Z), 165)
 S.beat(held, t_e, "staan", face="zelfverzekerd", face_amt=0.7, at=V(0.0, -2.6, Z + 1.2), crouch=(0.06, 10))
 S.beat(held, t_e + 0.75, "staan", face="inspanning", face_amt=0.9, at=V(0.0, -3.0, Z + 0.8), crouch=(0.22, 30))
 STOP = V(0.0, -30.6, Z)
-S.run(held, t_e + 0.8, t_f2, [V(-0.45, -0.7, Z), V(0.15, -1.9, Z), V(0.1, -3.4, Z), V(-0.2, DOOR_Y + 3.6, Z)],
+S.run(held, t_e + 0.8, t_f2, [V(-0.45, -0.7, Z), V(-0.8, -1.9, Z), V(-0.6, -3.4, Z), V(-0.2, DOOR_Y + 3.6, Z)],
       stride=0.8, ease_out=0.0)
 S.run(held, t_f2, t_g + 0.9, [V(-0.2, DOOR_Y + 3.6, Z), V(-0.55, DOOR_Y + 0.6, Z), V(-0.5, DOOR_Y - 0.8, Z), STOP],
       stride=0.8, ease_in=0.0, end_rot=0)
@@ -100,11 +100,11 @@ cup = T.cyl("Dienblad_beker", (0.08, 0.0, 0.01), 0.035, 0.09, S.mat("beker_groen
 cup.parent = tray
 grab(S, tray, bw, t_e - 0.05, "hand.R", loc=(-0.12, 0.10, 0.05), rot=(0, 0, 0), release=t_e + 1.0)
 TRAY = arms(arm("L", (0.25, 0.55, -0.80), (-0.35, 0.92, 0.10)), arm("R", (0.25, 0.55, -0.80), (-0.35, 0.92, 0.10)))
-S.walk(bw, t_e, t_e + 0.8, [V(0.0, -3.6, Z), V(0.0, -2.0, Z)], stride=0.5)
+S.walk(bw, t_e, t_e + 0.8, [V(0.0, -3.6, Z), V(0.3, -2.0, Z)], stride=0.5)
 S.beat(bw, t_e, "staan", arms=TRAY, face="neutraal", face_amt=0.5)
 S.beat(bw, t_e + 1.0, "schrik", face="geschrokken", face_amt=1.0, at=V(0.2, -4.0, Z + 0.8))
-key(tray, t_e + 1.0, loc=(0.0, -2.1, Z + 0.95))
-key(tray, t_e + 1.35, loc=(0.1, -2.0, Z + 0.01), rot=(20, 10, 40))                     # dienblad valt
+key(tray, t_e + 1.0, loc=(0.3, -2.1, Z + 0.95))
+key(tray, t_e + 1.35, loc=(0.4, -2.0, Z + 0.01), rot=(20, 10, 40))                     # dienblad valt
 bw2 = S.actor("bewaker_b", (0.6, -5.5, Z), 180)
 show(bw2.rig, t_f - 0.05)
 for ch, dx, dt in ((bw, -0.3, 0.0), (bw2, 0.5, 0.3)):

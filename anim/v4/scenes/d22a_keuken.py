@@ -32,6 +32,8 @@ for o in bpy.data.objects:
         o.hide_render = o.hide_viewport = True                 # kaarsjes zijn al uitgeblazen
     if o.name.startswith("Taartbordje_") and abs(o.location.x - TX) < 0.05:
         o.hide_render = o.hide_viewport = True
+    if o.name.startswith("Ballonnen_touw"):
+        o.hide_render = o.hide_viewport = True                 # losse ballontouwtjes liepen dwars door het beeld
 bpy.context.view_layer.update()
 
 held = S.actor("hoofdpersonage_kind", HERO_AT, 0)
@@ -51,14 +53,16 @@ in_doos.parent = doos
 in_doos.location = (0.004, -0.01, 0.034)
 in_doos.rotation_euler = (0, 0, math.radians(180))
 T_OPEN = 1.6
+for o in [in_doos] + list(in_doos.children_recursive):       # open klepje stak door het dichte deksel
+    show(o, T_OPEN + 0.12)
 for t, v in ((0.0, 0.0), (T_OPEN, 0.0), (T_OPEN + 0.35, 1.0)):
     dek.rotation_euler.x = -math.radians(105) * v
     dek.keyframe_insert("rotation_euler", index=0, frame=F(t))
 
 # opa klikt het doosje open
 S.beat(opa, 0.0, **SEAT[opa], face="blij", face_amt=0.8, at=BOX)
-S.reach(opa, 0.0, "R", None, 0.0)
-S.reach(opa, 0.8, "R", BOX + V(0.06, -0.03, 0.09))
+S.reach(opa, 0.0, "R", BOX + V(0.02, 0.12, 0.28))                 # hand is al in beeld bij het doosje
+S.reach(opa, 0.8, "R", BOX + V(0.02, 0.08, 0.11))
 S.reach(opa, T_OPEN + 0.3, "R", BOX + V(0.04, -0.06, 0.13))
 S.reach(opa, T_OPEN + 1.2, "R", None, 0.0)
 S.beat(opa, T_OPEN + 1.0, **SEAT[opa], face="blij", face_amt=1.0, at=H_HEAD)

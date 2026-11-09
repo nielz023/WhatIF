@@ -85,12 +85,12 @@ S.qc_skip.add(bw2.name)
 PIGGY = arms(arm("L", (0.40, 0.70, -0.30), (-0.45, 0.85, -0.10)), arm("R", (0.40, 0.70, -0.30), (-0.45, 0.85, -0.10)))
 for t in frange(t_c, t_c2 - 0.04, 0.1):
     M = S._root_matrix(held, t)
-    p = M.translation + M.to_3x3() @ V(0.0, 0.26, 0.52)
+    p = M.translation + M.to_3x3() @ V(0.30, 0.42, 0.40)
     A.place(meisje, F(t), tuple(p), math.degrees(S._rot_now(held, t)))
 S.beat(meisje, t_c, "staan", arms=PIGGY, face="nerveus", face_amt=0.8, look=(0.0, -0.2),
        feet=((0.16, 0.30, 0.20), (-0.16, 0.30, 0.20)))
 S.hold(meisje, t_c2 - 0.04)
-GIRL0 = OUT_AT + V(0.35, 0.1, 0)
+GIRL0 = OUT_AT + V(0.6, 0.15, 0)
 S.teleport(meisje, t_c2, GIRL0, 100)
 S.run(meisje, t_c2 + 0.1, t_c2 + 1.0, [GIRL0, MOM + V(-0.45, 0.05, 0)], stride=0.45)
 S.beat(meisje, t_c2 + 1.0, "staan", arms=arms(arm("L", (0.6, 0.6, 0.2), (-0.2, 0.9, 0.2)), arm("R", (0.6, 0.6, 0.2), (-0.2, 0.9, 0.2))),
