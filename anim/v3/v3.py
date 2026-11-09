@@ -204,6 +204,19 @@ class Scene3(_v2.Scene2):
         super().post_cams()
         if os.environ.get("WHATIF_LIGHT", "1") != "0":
             self._cine_post()
+        if os.environ.get("WHATIF_LIGHTDUMP"):          # bv. "0.3,1.0": welke lampen staan dicht bij welk hoofd
+            for tt in (float(x) for x in os.environ["WHATIF_LIGHTDUMP"].split(",")):
+                self.sc.frame_set(F(tt))
+                for ch in self.cast[:3]:
+                    hp = self.headpos(ch, tt)
+                    rows = []
+                    for o in bpy.data.objects:
+                        if o.type == "LIGHT" and not o.hide_render and o.data.type != "SUN":
+                            d = (o.matrix_world.translation - hp).length
+                            if o.data.energy > 0 and d < 6:
+                                rows.append((round(o.data.energy / max(0.05, d * d), 1), o.name, round(d, 2), round(o.data.energy, 1)))
+                    rows.sort(reverse=True)
+                    print("LAMPEN", tt, ch.name, ch.rig.users_collection[0].name, rows[:3])
         sc = self.sc
         sc.view_settings.exposure = self.exposure + (0.15 if _v2.ENGINE == "EEVEE" else 0.0)
         try:                                   # grote sets: anders 'Shadow buffer full' en ontbrekende schaduwen
@@ -348,6 +361,9 @@ class Scene3(_v2.Scene2):
                 b = hud[j]
                 if tuple(a["loc"]) == tuple(b["loc"]) and a["t0"] < b["t1"] - 1e-3 and b["t0"] < a["t1"] - 1e-3:
                     warn("HUD_OVERLAP", max(a["t0"], b["t0"]), f"'{a['body']}' en '{b['body']}'")
+        # 5-10: lessen video 3 (fouten die niels pas in de eindversie zag), zie qc_v3lessen()
+        if os.environ.get("WHATIF_QC_SNEL") != "1":
+            self.qc_v3lessen(warn, shots, people)
         # samenvatten (zelfde soort + shot niet 20 keer herhalen)
         seen, rows = set(), []
         for kind, t, msg in issues:
@@ -366,6 +382,202 @@ class Scene3(_v2.Scene2):
         if rows and self.args.render and os.environ.get("WHATIF_QC_STRICT") == "1":
             raise SystemExit("QC-fouten, render afgebroken (zie qc.txt)")
         sc.frame_set(1)
+
+
+# ---------------------------------------------------------------------------
+# Kwaliteitscheck: lessen uit video 3 (2026-11-08). Fouten die stills niet vangen omdat ze in de BEWEGING zitten.
+NL_WOORDEN = {"opa", "oma", "oom", "tante", "broer", "broertje", "zus", "zusje", "niet", "geen", "regel", "regels",
+              "dag", "dagen", "nieuws", "uitgang", "ingang", "kassa", "gesloten", "politie", "winkel", "supermarkt",
+              "aanbieding", "korting", "welkom", "bedankt", "alstublieft", "straat", "huis", "het", "een", "van",
+              "voor", "met", "wel", "altijd", "nooit", "lief", "luister", "eten", "schoon", "verboden", "pas", "op",
+              "ja", "nee", "jij", "jou", "mij", "wij", "ons", "zijn", "haar", "hij", "zij", "school", "les", "uur"}
+NL_OOK_ENGELS = {"school", "op", "pas", "zij"}       # komen ook in Engelse woorden/afkortingen voor: alleen samen tellen
+FX_PREFIX = ("Brokstuk", "Stof", "Scherf", "Flits", "Ring", "Vonk", "Druppel", "Regen", "Rook", "Confetti", "Snelheid",
+             "Wolk", "Vogel", "Kraai", "Blad", "Sneeuw", "Ster", "Vuur", "Vlam", "Gloed", "Lichtpunt", "Deeltje")
+VOERTUIG_PREFIX = ("Auto_", "Bus", "Vrachtwagen", "Vuilniswagen", "Trein", "Tram", "Boot", "Vliegtuig", "Helikopter")
+
+
+def _tekst_rect(d, t):
+    """Benaderde schermrechthoek (x0, y0, x1, y1 in 0..1, y omhoog) van een 2D-overlay uit self.texts."""
+    body = d["body"](t) if callable(d["body"]) else str(d["body"])
+    w = max(1, len(body)) * d["size"] * 0.58 / 1920.0
+    h = d["size"] * 1.0 / 1080.0
+    x, y = d["loc"]
+    ax, ay = d.get("anchor", ("LEFT", "TOP"))
+    x0 = x if ax == "LEFT" else (x - w if ax == "RIGHT" else x - w / 2)
+    y1 = y if ay == "TOP" else (y + h if ay == "BOTTOM" else y + h / 2)
+    return (x0, y1 - h, x0 + w, y1), body
+
+
+def _overlap(a, b, pad=0.006):
+    return a[0] < b[2] + pad and b[0] < a[2] + pad and a[1] < b[3] + pad and b[1] < a[3] + pad
+
+
+def qc_v3lessen(self, warn, shots, people):
+    """Extra checks na video 3:
+    5. SCHOK / BOTSING / DOOR_ELKAAR: de bewegingsprobe draait nu altijd mee (niet alleen met WHATIF_PROBE).
+    6. CAMERA_DOOR_OBJECT: de camera mag tussen twee frames nergens doorheen gaan (grijze flits door een paal, 2:51).
+    7. PROP_ZONDER_PERSOON: een bewegend voorwerp (kar, product, fiets, voertuig) in beeld zonder iemand erbij.
+    8. TEKST_ONDER_HUD / HUD_BOTSING: 3D-tekst (logo, bord) of twee overlays op dezelfde plek (NEWS 24 over de klok).
+    9. NEDERLANDS_IN_BEELD: Nederlandse woorden in beeldtekst (OPA/OMA op het koelkastbriefje).
+    10. LICHT_IN_HOOFD: een lamp (rand-/keylicht) vlak bij of in een hoofd (witte flits bij fietsshots)."""
+    import re
+    from bpy_extras.object_utils import world_to_camera_view
+    sc = self.sc
+    if not hasattr(self, "probe_rows"):
+        self.probe_rows = []
+    # 5. beweging
+    self._probe()
+    self._probe_people()
+    for kind, t, msg in self.probe_rows:
+        warn(kind, t, msg)
+
+    def cam_at(t):
+        for t0, t1, cam in shots:
+            if t0 <= t < t1:
+                return cam
+        return None
+
+    skip_lens = ("Irradiance", "Randlicht", "Keylicht", "Vullicht", "Volume", "Mist", "Lucht", "Sky")
+    # 6. camera door een object: straal van de vorige naar de huidige camerapositie, elk frame binnen een shot
+    for t0, t1, cam in shots:
+        prev = None
+        for f in range(F(t0), F(t1)):
+            sc.frame_set(f)
+            p = cam.matrix_world.translation.copy()
+            if prev is not None:
+                d = p - prev
+                if d.length > 1e-4:
+                    dg = bpy.context.evaluated_depsgraph_get()
+                    hit, loc, nrm, _i, ob, _m = sc.ray_cast(dg, prev, d.normalized(), distance=d.length + 0.15)
+                    if hit and ob is not None and not ob.name.startswith(skip_lens) and not ob.hide_render:
+                        warn("CAMERA_DOOR_OBJECT", (f - 1) / FPS, f"{cam.name} gaat door {ob.name}")
+            prev = p
+    # 7. bewegende voorwerpen zonder persoon (alleen wat in beeld is)
+    rigs = set()
+    for ch in people:
+        rigs.add(ch.rig)
+        rigs.update(ch.rig.children_recursive)
+    movers = []
+    for o in bpy.data.objects:
+        if o in rigs or o.type not in ("MESH", "EMPTY", "FONT", "CURVE") or o.name.startswith(FX_PREFIX):
+            continue
+        if o.parent is not None and (o.parent in rigs or o.parent.type == "ARMATURE"):
+            continue
+        anim = o.animation_data is not None and o.animation_data.action is not None
+        if not anim or any(c.type == "CHILD_OF" for c in o.constraints):
+            continue                                   # vastgemaakt aan een hand (grab) = er is een persoon
+        if o.parent is not None and o.parent.animation_data and o.parent.animation_data.action:
+            continue                                   # de ouder wordt al bekeken
+        movers.append(o)
+    step = 2
+    for o in movers:
+        veh = o.name.startswith(VOERTUIG_PREFIX)
+        reach = 3.5 if veh else 1.1
+        prev, last_warn = None, -9.0
+        for f in range(1, F(self.length) + 1, step):
+            sc.frame_set(f)
+            t = (f - 1) / FPS
+            p = o.matrix_world.translation.copy()
+            if prev is None or o.hide_render or min(o.matrix_world.to_scale()) < 0.01:
+                prev = p
+                continue
+            v = (p - prev).length * FPS / step
+            prev = p
+            if v < 0.25 or t - last_warn < 1.0:
+                continue
+            cam = cam_at(t)
+            if cam is None:
+                continue
+            q = world_to_camera_view(sc, cam, p)
+            if not (q.z > 0 and -0.05 <= q.x <= 1.05 and -0.05 <= q.y <= 1.05):
+                continue
+            near = False
+            for ch in people:
+                if ch.body is not None and (ch.body.hide_render or min(ch.body.matrix_world.to_scale()) < 0.01):
+                    continue
+                M = ch.rig.matrix_world
+                for bn in ("hand.L", "hand.R", "hips"):
+                    pb = ch.rig.pose.bones.get(bn)
+                    if pb and ((M @ pb.tail) - p).length < reach * max(ch.rig.scale.z, 0.5):
+                        near = True
+                        break
+                if near:
+                    break
+            if not near:
+                warn("PROP_ZONDER_PERSOON", t, f"{o.name} beweegt ({v:.1f} m/s) zonder iemand die hem duwt/draagt/bestuurt")
+                last_warn = t
+    # 8. tekst: 3D-tekst onder een overlay en overlays die elkaar raken
+    fonts = [o for o in bpy.data.objects if o.type == "FONT"]
+    texts = [d for d in self.texts if d["t1"] is None or d["t1"] > d["t0"]]
+    for i, d in enumerate(texts):
+        t1 = d["t1"] if d["t1"] is not None else self.length
+        for t0s, t1s, cam in shots:
+            a, b = max(d["t0"], t0s), min(t1, t1s)
+            if b - a < 0.1:
+                continue
+            tm = (a + b) / 2
+            r, body = _tekst_rect(d, tm)
+            sc.frame_set(F(tm))
+            for o in fonts:
+                if o.hide_render or min(o.matrix_world.to_scale()) < 0.01:
+                    continue
+                pts = [world_to_camera_view(sc, cam, o.matrix_world @ Vector(c)) for c in o.bound_box]
+                if any(q.z <= 0 for q in pts):
+                    continue
+                orc = (min(q.x for q in pts), min(q.y for q in pts), max(q.x for q in pts), max(q.y for q in pts))
+                if orc[2] < 0 or orc[0] > 1 or orc[3] < 0 or orc[1] > 1 or (orc[2] - orc[0]) < 0.02:
+                    continue
+                th = orc[3] - orc[1]
+                cov = 0.0
+                if _overlap(r, orc, pad=0.0):
+                    ix = min(r[2], orc[2]) - max(r[0], orc[0])
+                    iy = min(r[3], orc[3]) - max(r[1], orc[1])
+                    cov = max(0.0, ix) * max(0.0, iy) / max(1e-6, (orc[2] - orc[0]) * th)
+                if os.environ.get("WHATIF_QC_DEBUG"):
+                    print("TEKSTDBG", o.name, round(th, 3), round(cov, 2), body[:12])
+                if th >= 0.02 and cov > 0:             # leesbare 3D-tekst (>= 2% beeldhoogte) die de overlay raakt
+                    warn("TEKST_ONDER_HUD", tm, f"{cam.name}: '{o.data.body[:20]}' ({o.name}) onder overlay '{re.sub(r'[0-9:]+', '#', body)[:24]}'")
+        for e in texts[i + 1:]:
+            e1 = e["t1"] if e["t1"] is not None else self.length
+            a, b = max(d["t0"], e["t0"]), min(t1, e1)
+            if b - a < 0.05 or tuple(d["loc"]) == tuple(e["loc"]):
+                continue                               # zelfde plek = HUD_OVERLAP (hierboven)
+            tm = (a + b) / 2
+            r1, b1 = _tekst_rect(d, tm)
+            r2, b2 = _tekst_rect(e, tm)
+            if _overlap(r1, r2, pad=0.0):
+                warn("HUD_BOTSING", tm, f"'{b1[:20]}' raakt '{b2[:20]}'")
+    # 9. Nederlands in beeld (scripts en beeldtekst zijn Engels)
+    bodies = [(o.name, o.data.body) for o in fonts if not o.hide_render]
+    bodies += [("overlay", d["body"]) for d in self.texts if isinstance(d["body"], str)]
+    bodies += [("kaart", c["body"] or "") for c in self.cards] + [("kaart", c.get("sub") or "") for c in self.cards]
+    for nm, body in bodies:
+        words = {w.lower() for w in re.findall(r"[A-Za-zÀ-ÿ]+", body or "")}
+        nl = words & NL_WOORDEN
+        if nl - NL_OOK_ENGELS or len(nl) >= 2:
+            warn("NEDERLANDS_IN_BEELD", 0.0, f"{nm}: '{body[:40]}' ({', '.join(sorted(nl))})")
+    # 10. lamp in/vlak bij een hoofd
+    lamps = [o for o in bpy.data.objects if o.type == "LIGHT" and o.data.type != "SUN"]
+    for f in range(1, F(self.length) + 1, 3):
+        sc.frame_set(f)
+        t = (f - 1) / FPS
+        for ch in people:
+            if ch.body is not None and (ch.body.hide_render or min(ch.body.matrix_world.to_scale()) < 0.01):
+                continue
+            pb = ch.rig.pose.bones.get("head")
+            if pb is None:
+                continue
+            hr = ch.J["head_r"].z * ch.rig.scale.z
+            hc = ch.rig.matrix_world @ pb.head + Vector((0, 0, hr * 0.9))
+            for o in lamps:
+                if o.hide_render or o.data.energy <= 0:
+                    continue
+                if (o.matrix_world.translation - hc).length < hr * 1.4:
+                    warn("LICHT_IN_HOOFD", t, f"{o.name} bij het hoofd van {ch.name}")
+
+
+Scene3.qc_v3lessen = qc_v3lessen
 
 
 # ---------------------------------------------------------------------------
@@ -441,16 +653,28 @@ def bike(S, ch, color=(0.15, 0.35, 0.75), name=None, lamp=False, jerrycan=False)
     return b, crank
 
 
-def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway=0.0):
+def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway=0.0, plant=None, crouch_fn=None, ease=0.0,
+              accel=None, decel=False):
     """Fietsen langs punten: wortel beweegt mee (zonder loopcyclus), trappers draaien, lichte stuurzwaai."""
     pts = [Vector(p) for p in pts]
+    prev = getattr(ch, "_ride_prev", None)
+    joined = bool(prev and abs(prev[0] - t0) <= 1.5 / FPS)
+    acc = (0.9 if joined and prev[3] else 0.0) if accel is None else accel     # na stilstaan (voet aan de grond) rustig optrekken
     segs = [(pts[i + 1] - pts[i]).length for i in range(len(pts) - 1)]
     total = sum(segs) or 1e-6
     frames = list(range(F(t0), F(t1) + 1))
     locs, rots = [], []
     for f in frames:
         t = (f - 1) / FPS
-        u = (t - t0) / max(1e-3, t1 - t0)
+        u = max(0.0, min(1.0, (t - t0) / max(1e-3, t1 - t0)))
+        if acc > 0:                                      # optrekken vanuit stilstand: snelheid loopt lineair op
+            T = max(1e-3, t1 - t0)
+            tt = min(T, t - t0)
+            u = (tt * tt / (2 * acc) if tt < acc else tt - acc / 2) / (T - acc / 2)
+        elif decel:                                      # remmen tot stilstand: snelheid loopt lineair af naar 0
+            u = 1 - (1 - u) ** 2
+        elif ease > 0:                                     # zacht wegrijden/afremmen
+            u = (1 - ease) * u + ease * (u * u * (3 - 2 * u))
         d = total * u
         for i, L in enumerate(segs):
             if d <= L or i == len(segs) - 1:
@@ -460,14 +684,35 @@ def ride_path(S, ch, crank, t0, t1, pts, cadence=1.6, lean=18, stand=False, sway
                 break
             d -= L
         locs.append(tuple(p))
-        r = math.atan2(dv.x, -dv.y)
-        rots.append((math.radians(sway * math.sin(t * cadence * 2 * math.pi)), 0.0, r))
+        rots.append([math.radians(sway * math.sin(t * cadence * 2 * math.pi)), 0.0, math.atan2(dv.x, -dv.y)])
+    # stuurrichting zonder sprongen: hoek doorlopend maken en over ~0,4 s uitsmeren (geen ruk in bochten)
+    for i in range(1, len(rots)):
+        while rots[i][2] - rots[i - 1][2] > math.pi:
+            rots[i][2] -= 2 * math.pi
+        while rots[i][2] - rots[i - 1][2] < -math.pi:
+            rots[i][2] += 2 * math.pi
+    yaw = [r[2] for r in rots]
+    W = 6
+    for i in range(len(rots)):
+        lo, hi = max(0, i - W), min(len(rots), i + W + 1)
+        rots[i][2] = sum(yaw[lo:hi]) / (hi - lo)
+    y_prev = getattr(ch, "_ride_yaw", None)
+    if joined and y_prev is not None and rots:      # sluit aan op de stuurhoek van het vorige stuk, verschil wegwerken in ~0,6 s
+        d0 = y_prev - rots[0][2]
+        d0 = (d0 + math.pi) % (2 * math.pi) - math.pi
+        for i, r in enumerate(rots):
+            u = min(1.0, i / (0.6 * FPS))
+            r[2] += d0 * (1 - u * u * (3 - 2 * u))
+    ch._ride_yaw = rots[-1][2] if rots else None
+    # bochten afronden: knik in de lijn gaf een ruk in snelheid (zelfde venster als de stuurhoek, begin/eind vast)
+    raw = [Vector(p) for p in locs]
+    n = len(raw)
+    for i in range(n):
+        k = min(W, i, n - 1 - i)
+        locs[i] = tuple(sum(raw[i - k:i + k + 1], Vector()) / (2 * k + 1))
     bake(ch.rig, "location", frames, locs, interp="BEZIER")
-    bake(ch.rig, "rotation_euler", frames, rots, interp="BEZIER")
-    ride(S, ch, crank, t0, t1, cadence=cadence, lean=lean)
-    if stand:
-        for f in range(F(t0), F(t1) + 1, 2):
-            A.crouch(ch, f, -0.12, lean + 10)
+    bake(ch.rig, "rotation_euler", frames, [tuple(r) for r in rots], interp="BEZIER")
+    ride(S, ch, crank, t0, t1, cadence=cadence, lean=lean, stand=stand, plant=plant, crouch_fn=crouch_fn)
     ch.last = None
 
 
@@ -497,6 +742,13 @@ def _subjects(S, t0, t1, cam, maxd=7.0):
     return out[:2]
 
 
+def S_head(S, ch, t):
+    try:
+        return S.headpos(ch, t)
+    except Exception:
+        return S.bone_world(ch, "head", t)
+
+
 def _cine_light(self):
     """Per shot een zacht key-licht van de camerakant op de onderwerpen (light linking: alleen op het figuur),
     plus oranje/blauwe randlichten (zoals bij het hoofdpersonage) voor iedereen die ergens onderwerp is."""
@@ -505,6 +757,7 @@ def _cine_light(self):
     night = getattr(self, "night", False)
     keys = {}
     order = []
+    moving_keys = {}
     for t0, t1, camobj in getattr(self, "shots_plan", []) or []:
         pass
     cams = sorted(self.cams, key=lambda c: c["t0"])
@@ -535,21 +788,34 @@ def _cine_light(self):
             side = Vector((-d.y, d.x, 0))
             sc_ = ch.rig.scale.z
             dist = 1.7 * sc_
-            lo.location = h + (d * math.cos(0.6) + side * math.sin(0.6)) * dist + Vector((0, 0, 0.75 * sc_))
-            lo.rotation_euler = (h - lo.location).to_track_quat("-Z", "Y").to_euler()
+            off = (d * math.cos(0.6) + side * math.sin(0.6)) * dist + Vector((0, 0, 0.75 * sc_))
             e = (15.0 if rank == 0 else 9.0) * sc_ * sc_ * (1.0 if night else 0.6)
-            for f, en in ((F(t0), e), (max(F(t0), F(t1) - 1), e)):
-                lo.data.energy = en
-                lo.data.keyframe_insert("energy", frame=f)
+            fa, fb = F(t0), max(F(t0), F(t1) - 1)
+            # het licht reist mee met het hoofd (een fietser/renner reed anders dóór het stilstaande licht: witte flits)
+            moving = (S_head(self, ch, t0) - S_head(self, ch, (t1 - 1.0 / FPS))).length > 0.3
+            frames = sorted(set(list(range(fa, fb + 1, 3)) + [fb])) if moving else [fa, fb]
+            lo.data.energy = e
+            lo.data.keyframe_insert("energy", frame=fa)
+            for f in frames:
+                hh = S_head(self, ch, (f - 1) / FPS) if moving else h
+                lo.location = hh + off
+                lo.rotation_euler = (hh - lo.location).to_track_quat("-Z", "Y").to_euler()
                 lo.keyframe_insert("location", frame=f)
                 lo.keyframe_insert("rotation_euler", frame=f)
             lo.data.energy = 0.0
             lo.data.keyframe_insert("energy", frame=F(t1))
+            moving_keys.setdefault(lo, set()).update(frames if moving else [])
+            if os.environ.get("WHATIF_LIGHTDBG"):
+                print("KEYLICHT", ch.name, round(t0, 2), round(t1, 2), "bewegend" if moving else "stil", round(e, 1),
+                      "afstand bij start", round((S_head(self, ch, t0) - (h + off)).length, 2))
     for lo in keys.values():
+        mk = moving_keys.get(lo, set())
         for owner in (lo, lo.data):
             for fc in A._fcurves(owner):
                 for kp in fc.keyframe_points:
-                    kp.interpolation = "CONSTANT"
+                    # binnen een bewegend shot: positie lineair tussen de sleutels; bij een cut/energie: hard
+                    lin = owner is lo and int(round(kp.co.x)) in mk and fc.data_path in ("location", "rotation_euler")
+                    kp.interpolation = "LINEAR" if lin else "CONSTANT"
     # randlichten ook voor de belangrijkste bijfiguren (max 4 extra)
     for ch in order[:6]:
         if ch not in self.heroes and len(self.heroes) < 5:

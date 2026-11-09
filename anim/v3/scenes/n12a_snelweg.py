@@ -116,14 +116,25 @@ _, crank_v = bike(S, vr, color=(0.85, 0.12, 0.10), name="Fiets_vriend")
 
 # de jongen: slalom, dan hard remmen (twee korte stukjes met afnemende snelheid) en stilstaan
 ride_path(S, held, crank_h, 0.0, T_BRAKE, route, cadence=1.9, lean=18, sway=3)
-ride_path(S, held, crank_h, T_BRAKE, T_BRAKE + 0.35, [LAST, LAST + V(1.3, 0, 0)], cadence=0.4, lean=34)
-ride_path(S, held, crank_h, T_BRAKE + 0.35, T_BRAKE + 0.6, [LAST + V(1.3, 0, 0), STOP_H], cadence=0.05, lean=40)
-ride_path(S, held, crank_h, T_BRAKE + 0.6, END, [STOP_H, STOP_H + V(0.01, 0, 0)], cadence=0.02, lean=6)
-# bijna over zijn stuur: zwaar voorover, dan terug
-for t, dz, ln in ((T_BRAKE + 0.3, -0.05, 55), (T_BRAKE + 0.55, -0.06, 62), (T_BRAKE + 0.9, 0.0, 20), (T_BRAKE + 1.3, 0.04, 6)):
-    A.crouch(held, F(t), dz, ln)
-for f in range(F(T_BRAKE + 0.7), F(END), 2):
-    A.foot(held, f, "R", (-0.3, 0.05, -0.02))
+# bijna over zijn stuur: zwaar voorover, dan terug (vloeiend, per frame binnen ride: geen losse sleutels erbovenop)
+_DEPTH = max(0.0, held.rig.data.bones["hips"].head_local.z - 0.68)
+_BK = [(T_BRAKE, _DEPTH, 18), (T_BRAKE + 0.3, -0.05, 55), (T_BRAKE + 0.55, -0.06, 62), (T_BRAKE + 0.9, 0.0, 20), (T_BRAKE + 1.3, 0.04, 6)]
+
+
+def brake_pose(t):
+    if t <= _BK[0][0]:
+        return None
+    for (ta, za, la), (tb, zb, lb) in zip(_BK, _BK[1:]):
+        if t <= tb:
+            u = (t - ta) / (tb - ta)
+            u = u * u * (3 - 2 * u)
+            return za + (zb - za) * u, la + (lb - la) * u
+    return _BK[-1][1], _BK[-1][2]
+
+
+ride_path(S, held, crank_h, T_BRAKE, T_BRAKE + 0.6, [LAST, STOP_H], cadence=0.3, lean=34, decel=True, crouch_fn=brake_pose)
+ride_path(S, held, crank_h, T_BRAKE + 0.6, END, [STOP_H, STOP_H + V(0.01, 0, 0)], cadence=0.02, lean=6, crouch_fn=brake_pose,
+          plant=("R", (-0.3, 0.05, -0.02)))
 
 # de vriend: zelfde spoor, een halve seconde erachter, staand op de pedalen; remt naast hem met zijn voet aan de grond
 DELAY = 0.45
@@ -132,10 +143,9 @@ T_BRAKE_V = T_BRAKE + DELAY
 ride_path(S, vr, crank_v, 0.0, DELAY, [route[0] + V(-2.9, 0, 0), route[0]], cadence=2.2, lean=22, stand=True, sway=6)
 ride_path(S, vr, crank_v, DELAY, T_BRAKE_V, vroute, cadence=2.2, lean=22, stand=True, sway=6)
 STOP_V = STOP_H + V(-0.9, -1.3 if clear(STOP_H.x - 0.9, STOP_H.y - 1.3) > 0.8 else 1.3, 0)
-ride_path(S, vr, crank_v, T_BRAKE_V, T_BRAKE_V + 0.5, [LAST, STOP_V], cadence=0.3, lean=30)
-ride_path(S, vr, crank_v, T_BRAKE_V + 0.5, END, [STOP_V, STOP_V + V(0.01, 0, 0)], cadence=0.02, lean=5)
-for f in range(F(T_BRAKE_V + 0.35), F(END), 2):
-    A.foot(vr, f, "L", (0.32, 0.05, -0.02))
+ride_path(S, vr, crank_v, T_BRAKE_V, T_BRAKE_V + 0.5, [LAST, STOP_V], cadence=0.3, lean=30, decel=True)
+ride_path(S, vr, crank_v, T_BRAKE_V + 0.5, END, [STOP_V, STOP_V + V(0.01, 0, 0)], cadence=0.02, lean=5, plant=("L", (0.32, 0.05, -0.02)))
+no_phone(vr)                                                    # geen telefoon in zijn hand op de fiets
 S.face(held, 0.0, "vastberaden", 0.7, look=(0.0, 0.1))
 S.face(held, t_b + 1.0, "verbaasd", 0.5, look=(0.6, 0.2))           # kijkt naar het open hek
 S.face(held, t_c + 0.5, "geschrokken", 1.0, look=(0.0, 0.0))

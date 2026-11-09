@@ -397,14 +397,17 @@ S.cam(t_f, (OH2 + do * 2.6 + V(0, 0, -0.35), OH2 + V(0, 0, -0.35), 30), (OH2 + d
 # 14g WIDE trage pull-back, hoog
 S.cam(t_g, ((3.4, -4.2, 2.6), FC, 24), ((6.2, -7.8, 4.8), FC, 24))
 # 14h CLOSE de jongen, vanaf het vuur
-S.cam(t_h, *close(held, t_h + 1.0, OH, dist=1.3, lens=32))
+AZH = 35.0   # 3/4 van voren aan de kant weg van opa
+_c = S.shot(held, t_h + 1.0, "mcu", az=AZH, lens=32)
+S.cam(t_h, _c, (_c[0], _c[1], 34))
 # 14i1 WIDE het eiland, 14i2 bij het vuurtje, 14i3 twee jongens maken het goed
 IC = ISL + V(0, 1.0, 0)
 S.cam(t_i1, ((IC.x - 2.0, IC.y - 11.0, 1.4), IC + V(0, 4.0, 1.4), 28), ((IC.x - 1.6, IC.y - 10.0, 1.35), IC + V(0, 4.0, 1.4), 28))
 S.cam(t_i2, ((IC.x + 1.2, IC.y - 4.2, 0.9), IC + V(0, 0.4, 0.6), 30), ((IC.x + 1.0, IC.y - 3.7, 0.9), IC + V(0, 0.4, 0.6), 32))
 S.cam(t_i3, ((IC.x - 3.2, IC.y - 3.6, 1.0), IC + V(-0.6, 0.0, 0.6), 30), ((IC.x - 3.0, IC.y - 3.3, 1.0), IC + V(-0.6, 0.0, 0.6), 31))
 # 14j CLOSE de jongen, iets van opzij
-S.cam(t_j, *close(held, t_j + 1.0, FH + V(0, 0, 0.5), dist=1.2, side=0.25, lens=34))
+_c = S.shot(held, t_j + 1.0, "mcu", az=AZH, lens=34)
+S.cam(t_j, _c, (_c[0], _c[1], 36))
 # 14k WIDE drone omhoog: één vuurtje in de donkere stad, verderop andere vuren
 S.cam(t_k, ((-8.0, -10.0, 9.0), FC, 26), ((-45.0, -8.0, 42.0), FC + V(4, 0, 0), 26))
 

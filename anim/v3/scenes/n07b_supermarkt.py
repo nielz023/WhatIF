@@ -102,6 +102,8 @@ S.walk(dief, t_e + 1.6, t_e + 6.2, BACK, stride=0.32, turn=False)
 S.beat(dief, t_e + 2.2, "staan", arms=arms(arm("R", (0.3, 0.3, -0.3), (0.0, 0.5, 0.8))), face="grijns", face_amt=0.8,
        at=S.head(kas, 0.0), feet="keep")
 S.hold(dief, t_h)
+visible(dief.body, t_h, False)                     # hij is de winkel uit: niet meer in de weg bij de uitgang
+visible(reep, t_h, False)                          # de reep gaat met hem mee (niet los zweven bij de deur)
 
 # ---- 7f: de kassière kijkt naar de agent
 S.beat(kas, t_e + 0.7, "staan", face="verbaasd", face_amt=0.8, at=S.head(dief, t_e + 0.7))
@@ -146,18 +148,25 @@ grab(S, fles, woman, t_h + 2.45, "hand.R", loc=(0, 0.05, 0.0), rot=(0, 0, 0))
 S.reach(woman, t_h + 2.6, "R", inf=0.0)
 # en dan rent iedereen (met karren) naar de kassa's en de deur
 T_GO = t_h + 2.6
-LANES = [-7.9, -4.0, 0.0, 4.0]
+LANES = [-6.2, -4.0, 0.0, 4.0]                      # baan 0 niet langs mama (-8.0, -8.3)
 for k, e in enumerate(shoppers):
     lx = LANES[k % 4]
     x0, y0 = SHOP[k][1]
-    path = [V(x0, y0, 0), V(lx, -9.0, 0), V(lx, -14.2, 0), V(-0.9 + 0.6 * (k % 3), -17.4, 0), V(-2.0 + 1.3 * k, -24.0, 0)]
+    path = [V(x0, y0, 0), V(lx, -9.0, 0), V(lx, -14.2, 0), V(-3.0 + 1.2 * k, -17.4, 0), V((-8.5, -3.6, 3.0, 6.6, 9.5, 12.0)[k], -22.0, 0)]   # uitgang gespreid, eindplek tussen de karbanen buiten
     t0 = T_GO + 0.12 * k
     S.run(e, t0, t0 + 5.2, path, stride=1.0, lean=12, arms=0.0 if k % 2 == 0 else 1.0)
+    c = None
     if k % 2 == 0:
         c = new_cart(f"Kar_{k}", path[0] + V(0, -0.8, 0))
         push_cart(e, c, t0, t0 + 5.2)
     S.beat(e, t0 + 0.2, "staan", face="inspanning", face_amt=0.8, look=(0.0, 0.0), feet="keep")
     S.hold(e, END)
+    if True:                                       # buiten (7j/7k) nemen de buiten-figuren het over: binnenploeg weg (geen dubbelen, niemand door elkaar)
+        visible(e.body, t_j, False)                # precies op de cut (geen 'pop' in het laatste binnenbeeld)
+        if c:
+            visible(c, t_j, False)          # zijn kar verdwijnt mee (geen kar die zonder iemand doorrijdt)
+
+visible(fles, t_j, False)                          # de fles gaat met de vrouw mee (niet los zweven buiten)
 
 # ---------------------------------------------------------------- 7i: mama grijpt de jongen bij zijn pols
 S.beat(mama, t_h + 0.6, "staan", face="bang", face_amt=0.7, at=S.head(shoppers[0], 0.0))
@@ -182,6 +191,20 @@ S.beat(held, t_i + 0.5, "schrik", amount=0.5, face="geschrokken", face_amt=0.8, 
 S.beat(held, t_i + 1.6, "staan", face="bang", face_amt=0.8, look=(0.4, 0.0), feet="keep")
 S.hold(mama, END)
 S.hold(held, END)
+# het mandje: mama laat het los als ze hem pakt; het valt naast haar op de grond (niet terug naar het midden van de winkel)
+T_REL = t_i - 0.05
+bpy.context.scene.frame_set(F(T_REL) - 1)
+mw = mandje.matrix_world.copy()
+p_rel = mw.translation.copy()
+mandje.location = p_rel
+mandje.rotation_euler = mw.to_euler()
+for fr in (F(T_REL), ):
+    mandje.keyframe_insert("location", frame=fr)
+    mandje.keyframe_insert("rotation_euler", frame=fr)
+mandje.location = V(p_rel.x + 0.1, p_rel.y - 0.15, 0.11)
+mandje.rotation_euler = (0, 0, mw.to_euler().z + 0.4)
+mandje.keyframe_insert("location", frame=F(T_REL + 0.3))
+mandje.keyframe_insert("rotation_euler", frame=F(T_REL + 0.3))
 S.beat(agent, t_h + 2.8, "staan", face="verdrietig", face_amt=0.6, at=S.head(shoppers[0], t_h + 3.0))
 S.hold(agent, END)
 S.beat(kas, t_h + 2.8, "handen_hoofd", amount=0.8, face="geschrokken", face_amt=0.9, at=S.head(shoppers[2], t_h + 3.0))
@@ -191,14 +214,17 @@ S.hold(kas, END)
 OUT = []
 for k in range(5):
     nm = ["figurant_a", "figurant_d", "figurant_e", "figurant_f", "figurant_b"][k]
-    e = S.actor(nm, (-3.0 + 1.4 * k, -17.0, 0), 0, label=f"buiten_{k}")
-    p0 = V(-2.4 + 1.25 * k, -17.5 - 0.9 * (k % 2), 0)
-    lane = (-7.5, -1.5, 4.5, -13.5, 10.5)[k]                                   # tussen de geparkeerde auto's door
+    e = S.actor(nm, (-5.0 + 2.5 * k, -19.6, 0), 0, label=f"buiten_{k}")
+    p0 = V(-5.0 + 2.5 * k, -19.6 - 0.9 * (k % 2), 0)     # verder van de deur, ruim uit elkaar
+    lane = (-13.5, -7.5, 4.5, 10.5, 13.5)[k]                                  # midden tussen de geparkeerde auto's (x -10.5, -4.5, 1.5, 7.5)                                   # tussen de geparkeerde auto's door, op volgorde: niemand kruist
     p1 = V(lane, -33.0 - 1.5 * (k % 2), 0)
     t0 = t_j - 0.3 + 0.35 * k
-    S.teleport(e, t0 - 0.05, p0, 0)
+    S.teleport(e, t_j - 0.15, p0, 0)               # vóór hij zichtbaar wordt (geen sprong in beeld)
     pm = V(lane, -23.0, 0)
-    S.run(e, t0, END, [p0, pm, p1], stride=1.0, lean=12, arms=0.0)
+    # bocht afgerond (scherpe knik gaf een ruk in de kar en de handen)
+    pa, pb = p0.lerp(pm, 0.6), pm.lerp(p1, 0.18)
+    path_b = [p0, pa, pa.lerp(pm, 0.5).lerp(pm.lerp(pb, 0.5), 0.5), pb, p1]
+    S.run(e, t0, END, path_b, stride=1.0, lean=12, arms=0.0)
     c = new_cart(f"Kar_buiten_{k}", p0 + V(0, -0.8, 0))
     push_cart(e, c, t0, END)
     S.beat(e, t0 + 0.2, "staan", face="inspanning", face_amt=0.8, feet="keep")
@@ -214,10 +240,12 @@ HDF = S.headpos(dief, t_e + 0.8)
 S.cam(t_e, ((-8.0, -14.2, 1.5), V(-9.85, -12.0, 1.2), 28), ((-11.3, -15.3, 1.65), V(-7.0, -14.6, 1.1), 26))
 S.cam(t_f, (HK + V(0.95, 1.45, 0.0), HK + V(0, 0, 0.0), 36), (HK + V(0.88, 1.35, 0.0), HK + V(0, 0, 0.0), 38))
 HA = S.headpos(agent, t_g + 1.5)
-S.cam(t_g, (HA + V(0.35, -1.75, 0.05), HA + V(0, 0, 0.02), 36), (HA + V(0.25, -1.35, 0.04), HA + V(0, 0, 0.02), 38))
+S.cam(t_g, (HA + V(0.6, -1.75, 0.05), HA + V(0, 0, 0.02), 38), (HA + V(0.5, -1.4, 0.04), HA + V(0, 0, 0.02), 40))
 S.cam(t_h, ((5.5, -14.5, 3.0), (-3.0, -6.5, 1.0), 22), ((5.4, -14.3, 3.0), (-3.0, -6.5, 1.0), 22), shake=lambda t: 0.0 if t < T_GO else 0.9,
       ease=False)
-S.cam(t_i, None, fn=S.follow(mama, (2.3, -2.8, 1.55), lens=26, look_offset=(-0.4, 0.0, -0.3)), shake=S.shake(0.8))
+_fol_i = S.follow(mama, (2.3, -2.8, 1.55), lens=26, look_offset=(-0.4, 0.0, -0.3))
+# het laatste stukje blijft de camera staan (anders reed hij door de paal bij de kassa: grijs beeld vlak voor de cut)
+S.cam(t_i, None, fn=lambda t: _fol_i(min(t, t_j - 0.65)), shake=S.shake(0.8))
 S.cam(t_j, ((0.0, -44.0, 15.0), (0.0, -20.0, 0.5), 26), ((0.0, -42.0, 13.0), (0.0, -22.0, 0.5), 26))
 S.cam(t_k, ((15.0, -36.5, 0.7), (0.0, -27.0, 1.2), 24), ((14.8, -36.2, 0.7), (-1.0, -28.0, 1.2), 24), handheld=0.6)
 

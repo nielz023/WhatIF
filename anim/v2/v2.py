@@ -301,6 +301,7 @@ class Scene2(Scene):
                 lo.visible_camera = False
                 lo.light_linking.receiver_collection = coll
                 bpy.context.scene.collection.objects.link(lo)
+                lin = set()
                 for t0, t1, cam in self.shots:
                     p = self.headpos(ch, t0) + Vector((0, 0, -0.15))
                     cm = self._cam_eval([c for c in self.cams if c["name"] == cam.name][0], t0, t1)[0]
@@ -311,13 +312,22 @@ class Scene2(Scene):
                     d.normalize()
                     side = Vector((-d.y, d.x, 0))
                     sc = ch.rig.scale.z
-                    lo.location = p - d * 1.6 * sc + side * s_ * 1.4 * sc + Vector((0, 0, 0.6 * sc))
-                    lo.rotation_euler = (p - lo.location).to_track_quat("-Z", "Y").to_euler()
-                    for path in ("location", "rotation_euler"):
-                        lo.keyframe_insert(path, frame=F(t0))
+                    off = - d * 1.6 * sc + side * s_ * 1.4 * sc + Vector((0, 0, 0.6 * sc))
+                    # rijdt/rent hij in dit shot: het randlicht reist mee (anders rijdt hij er dwars doorheen: witte flits)
+                    fa, fb = F(t0), max(F(t0), F(t1) - 1)
+                    moving = (self.headpos(ch, (fb - 1) / FPS) - self.headpos(ch, t0)).length > 0.3
+                    frames = sorted(set(list(range(fa, fb + 1, 3)) + [fb])) if moving else [fa]
+                    for f in frames:
+                        pp = (self.headpos(ch, (f - 1) / FPS) + Vector((0, 0, -0.15))) if moving else p
+                        lo.location = pp + off
+                        lo.rotation_euler = (pp - lo.location).to_track_quat("-Z", "Y").to_euler()
+                        for path in ("location", "rotation_euler"):
+                            lo.keyframe_insert(path, frame=f)
+                    if moving:
+                        lin.update(frames)
                 for fc in A._fcurves(lo):
                     for kp in fc.keyframe_points:
-                        kp.interpolation = "CONSTANT"
+                        kp.interpolation = "LINEAR" if int(round(kp.co.x)) in lin else "CONSTANT"
 
     def _engine(self):
         sc = self.sc

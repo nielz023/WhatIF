@@ -1,0 +1,37 @@
+[
+  {
+    "scene": "n01",
+    "file": "n01_kruispunt_1a_UE.mp4",
+    "t0": 0.0
+  },
+  {
+    "scene": "n01",
+    "file": "n01_kruispunt_1f_UE.mp4",
+    "t0": 10.5
+  },
+  {
+    "scene": "n12a",
+    "file": "n12a_snelweg_12a_UE.mp4",
+    "t0": 0.0
+  },
+  {
+    "scene": "n13a",
+    "file": "n13a_brug_13a_UE.mp4",
+    "t0": 0.0
+  },
+  {
+    "scene": "n16f",
+    "file": "n16f_melkweg_16f_UE.mp4",
+    "t0": 0.0
+  },
+  {
+    "scene": "n16f",
+    "file": "n16f_melkweg_16g2_UE.mp4",
+    "t0": 9.2
+  },
+  {
+    "scene": "n20a",
+    "file": "n20a_raad_20a_UE.mp4",
+    "t0": 1.3
+  }
+]
