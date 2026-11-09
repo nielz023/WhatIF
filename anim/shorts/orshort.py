@@ -34,6 +34,9 @@ for _c in OR_TITLES:
 _sh.GAPS["or1"].update({1: 0.15})
 _sh.GAPS["or2"].update({4: 0.3, 6: 0.45})
 _sh.GAPS["or3"].update({4: 0.2, 5: 0.25, 6: 0.25})
+_sh.GAPS["or5"].update({5: 0.3, 7: 0.2})
+_sh.GAPS["or6"].update({5: 0.25, 7: 0.2})
+_sh.GAPS["or7"].update({5: 0.3, 6: 0.2})
 _sh.TAIL = 1.5                      # na de cliffhanger: eindkaart
 
 OUT_FPS_OR = int(os.environ.get("WHATIF_FPS", "30"))

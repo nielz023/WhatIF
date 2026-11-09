@@ -5,6 +5,7 @@ Varianten (zelfde plekken, zodat 19d-19e het spiegelbeeld van 3c-3d is):
     jaar5    scène 19d-19e: weer vol, maar met zonnepanelen op de strandtent, fietsenrekken
              op de boulevard en een handgeschilderd bord terug op dezelfde plek.
     leeg     reserve (dag 2-6): leeg strand, omgewaaide parasol, bord scheef.
+    nacht    originele short OR7 (maan 2x dichterbij): leeg strand 's nachts, maanlicht vanaf zee, verlichte flats.
 
 De zee ligt aan de -y kant, de boulevard aan de +y kant.
 
@@ -31,6 +32,9 @@ mood.update(sun_rot=(40, 0, 160), sky_horizon=(0.62, 0.82, 1.0), lit_tint=(1.0, 
                 fog_max=0.35, exposure=-0.35)
 if VAR == "leeg":
     mood = dict(T.MOODS["bewolkt"])
+if VAR == "nacht":
+    mood = dict(T.MOODS["nacht"])
+    mood.update(sun_rot=(60, 0, 0), sun_strength=0.5, sun_color=(0.75, 0.82, 1.0), fog_start=60.0, fog_end=700.0, fog_max=0.5)
 T.new_scene("Strand_" + VAR, mood, samples=32)
 rnd = random.Random(19)
 
@@ -56,7 +60,7 @@ for i in range(14):  # duinen met helmgras
 T.box("Boulevard", (0, 40, 0), (300, 7, 1.6), T.toon("stoep_boulevard", (0.75, 0.72, 0.68)), bevel=0.05, ol=0)
 for i in range(8):
     S.building(f"Boulevardflat_{i}", (-70 + i * 20, 44, 0), w=17, d=10, floors=rnd.randint(4, 8),
-               color=[(0.95, 0.92, 0.85), (0.70, 0.82, 0.90), (0.98, 0.85, 0.70)][i % 3], lit=0.0, seed=60 + i,
+               color=[(0.95, 0.92, 0.85), (0.70, 0.82, 0.90), (0.98, 0.85, 0.70)][i % 3], lit=0.5 if VAR == "nacht" else 0.0, seed=60 + i,
                glass_col=(0.45, 0.65, 0.85))
 # strandtent
 tent = T.toon("hout_strandtent", (0.78, 0.60, 0.40))
@@ -72,7 +76,7 @@ T.use_collection(T.collection("Strandwacht"))
 S.strandwachtstoel("Strandwachtstoel", (6, -8, 0), rot_z=0)
 S.vlag("Vlag_links", (-6, -19.5, 0), color=(0.95, 0.85, 0.1))
 S.vlag("Vlag_rechts", (18, -19.5, 0), color=(0.95, 0.85, 0.1))
-leeg = VAR == "leeg"
+leeg = VAR in ("leeg", "nacht")
 txt = ["NO SWIMMING", "BEYOND THE FLAGS"]
 bord = S.sign("Bord_NO_SWIMMING", txt, (1.0, -14.5, 0), rot_z=200, w=1.5, h=0.7, bg=(0.88, 0.12, 0.10) if VAR != "jaar5" else (0.95, 0.92, 0.80),
               fg=(1, 1, 1) if VAR != "jaar5" else (0.12, 0.25, 0.65), post_h=1.3, marker=(VAR == "jaar5"))

@@ -30,7 +30,7 @@ def ease(u, p=1.7):
 
 
 # -- jij, met een glas water ---------------------------------------------------------------------------
-P = V(-4.0, 7.2, 0.12)
+P = V(-6.0, 7.2, 0.12)
 held = S.actor("hoofdpersonage", P, 0)            # kijkt naar -y, de straat in
 HOLD = P + V(0.24, -0.3, 0.74)
 glass = T.cyl("Waterglas", tuple(HOLD + V(0, 0, 0.02)), 0.04, 0.12, T.glass("glas_or4", (0.85, 0.93, 1.0), alpha=0.25), seg=20, ol=0.002)
@@ -92,11 +92,11 @@ for k in range(9):
     b.parent = glass
     t0 = W(3, 4) - 0.1 + k * 0.07
     x, y = rnd.uniform(-0.02, 0.02), rnd.uniform(-0.02, 0.02)
-    r = rnd.uniform(0.012, 0.026)
+    r = rnd.uniform(0.022, 0.04)
     key(b, 0.0, loc=(x, y, 0.07), scale=0.001)
     key(b, t0, loc=(x, y, 0.07), scale=0.001)
     key(b, t0 + 0.15, loc=(x, y, 0.1), scale=r)
-    key(b, r4 + 0.2, loc=(x * 4 + rnd.uniform(-0.05, 0.05), y * 4 + rnd.uniform(-0.05, 0.05), 0.16 + 0.35 * rnd.random()), scale=r * 1.1)
+    key(b, r4 + 0.2, loc=(x * 4 + rnd.uniform(-0.05, 0.05), y * 4 + rnd.uniform(-0.05, 0.05), 0.25 + 0.45 * rnd.random()), scale=r * 1.2)
 key(water, 0.0, scale=(1, 1, 1))
 key(water, W(3, 4) - 0.1, scale=(1, 1, 1))
 key(water, r4, scale=(1, 1, 0.08))
@@ -122,13 +122,13 @@ def drift(obj, t0, t1, h, spin, seed):
 L4A, L6B = r2 + 0.9, fall0
 names = [("Auto_geparkeerd_2", 3.5, 25), ("Auto_overkant_2", 4.5, 35), ("Auto_geparkeerd_3", 3.0, 20),
          ("Auto_overkant_1", 4.0, 30), ("Straatboom_-3_-5.4", 2.5, 15), ("Straatboom_-13_-5.4", 3.0, 18),
-         ("Straatboom_-13_7.9", 2.2, 12), ("Lantaarn_z_0", 1.2, 25)]
+         ("Straatboom_-13_7.9", 2.2, 12), ("Straatboom_-3_7.9", 2.4, 14), ("Lantaarn_n_-15", 1.4, 20), ("Lantaarn_z_0", 1.2, 25)]
 for k, (nm, h, sp) in enumerate(names):
     o = S.obj(nm)
     if o:
         drift(o, L4A, L6B, h * 1.6, sp, k)
 people = []
-for k, (loc, rot) in enumerate((((-9.0, -4.6, 0.12), 20), ((1.5, -4.8, 0.12), -30), ((-12.0, 7.0, 0.12), 160))):
+for k, (loc, rot) in enumerate((((-11.0, 6.9, 0.12), 20), ((-1.2, 6.8, 0.12), -30), ((-10.0, 0.6, 0.0), 160))):
     ex = S.extra(k + 2, loc, rot)
     people.append(ex)
     S.beat(ex, 0.0, "staan", face="neutraal")
@@ -163,15 +163,16 @@ S.sfx("sfx_dreun", fall0 - 0.05, 0.45)
 S.sfx("sfx_vrije_val", fall0, 0.4, cut=END)
 
 # -- camera's ------------------------------------------------------------------------------------------
-S.cam(0.0, ((-4.5, -9.0, 1.0), (-4.5, 4.0, 5.5), 18), ((-4.5, -8.4, 1.4), (-4.5, 4.0, 6.0), 19))
+S.cam(0.0, ((-4.2, 0.2, 0.7), (-6.3, 7.2, 3.6), 22), ((-4.3, 0.6, 1.0), (-6.3, 7.2, 3.9), 24))
 # voeten die loskomen (laag), dan het glas
 S.cam(r2, ((P.x + 0.9, P.y - 1.6, 0.25), (P.x, P.y, 0.35), 24), ((P.x + 0.85, P.y - 1.5, 0.3), (P.x, P.y, 0.45), 26))
 S.cam(r3, ((P.x + 0.7, P.y - 1.15, 1.1 + 0.3), tuple(HOLD + V(0, 0, 0.35 + 0.15)), 26),
       ((P.x + 0.7, P.y - 1.15, 1.1 + 0.9), tuple(HOLD + V(0, 0, 0.9 + 0.15)), 28))
-S.cam(r4, ((-4.5, -9.5, 1.0), (-4.5, 4.0, 3.0), 18), ((-4.5, -9.0, 2.6), (-4.5, 4.0, 5.5), 18))
+S.cam(r4, ((-4.0, -0.7, 0.5), (-7.4, 6.75, 2.4), 17), ((-4.1, -0.3, 1.2), (-7.4, 6.75, 4.0), 17))
 # hoog: boven en achter je, de straat ver beneden
-S.cam(r5, ((P.x + 1.2, P.y + 3.2, HIGH + 3.6), (P.x - 0.6, P.y - 4.0, 0.0), 24),
-      ((P.x + 1.0, P.y + 2.8, HIGH + 3.9), (P.x - 0.6, P.y - 4.0, 0.0), 26))
-S.cam(r6, ((P.x + 1.0, P.y + 2.8, HIGH + 3.9), (P.x - 0.6, P.y - 4.0, 0.0), 26),
-      ((P.x + 0.9, P.y + 2.6, HIGH + 4.2), (P.x - 0.6, P.y - 4.0, 0.0), 28))
+HC = P + V(0, 0, HIGH + 0.7)
+C5a, C5b = P + V(0.2, 1.3, HIGH + 3.2), P + V(0.2, 1.2, HIGH + 3.6)
+C6b = P + V(0.2, 1.1, HIGH + 4.2)
+S.cam(r5, (tuple(C5a), tuple(HC + (HC - C5a) * 8), 22), (tuple(C5b), tuple(HC + (HC - C5b) * 8), 24))
+S.cam(r6, (tuple(C5b), tuple(HC + (HC - C5b) * 8), 24), (tuple(C6b), tuple(HC + (HC - C6b) * 8), 26))
 S.done()
