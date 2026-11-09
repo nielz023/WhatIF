@@ -32,6 +32,8 @@ _sh.TITLES.update(OR_TITLES)
 for _c in OR_TITLES:
     _sh.GAPS[_c] = {n: 0.03 for n in range(1, 12)}
 _sh.GAPS["or1"].update({1: 0.15})
+_sh.GAPS["or2"].update({4: 0.3, 6: 0.45})
+_sh.GAPS["or3"].update({4: 0.2, 5: 0.25, 6: 0.25})
 _sh.TAIL = 1.5                      # na de cliffhanger: eindkaart
 
 OUT_FPS_OR = int(os.environ.get("WHATIF_FPS", "30"))
@@ -160,3 +162,23 @@ def merge_or(out, total, code):
     spec = json.load(open(p))
     spec["fps"] = OUT_FPS_OR
     json.dump(spec, open(p, "w"), indent=1)
+
+
+def copy_anim(objs, src_a, src_b, dst_a, dst_b, skip_face=True):
+    """Speel de animatie van objs uit [src_a, src_b] opnieuw af in [dst_a, dst_b] (src_a > src_b = achteruit,
+    terugspoelen). Bakt elk beeld; gezichts-eigenschappen (["..."]) blijven vrij voor eigen beats."""
+    bake_ = []
+    for o in objs:
+        for fc in A._fcurves(o):
+            if skip_face and fc.data_path.startswith('["'):
+                continue
+            vals = []
+            for f in range(F(dst_a), F(dst_b) + 1):
+                u = ((f - 1) / FPS - dst_a) / max(dst_b - dst_a, 1e-6)
+                ts = src_a + (src_b - src_a) * min(1.0, max(0.0, u))
+                vals.append((f, fc.evaluate(ts * FPS + 1)))
+            bake_.append((fc, vals))
+    for fc, vals in bake_:
+        for f, v in vals:
+            fc.keyframe_points.insert(f, v, options={"FAST"})
+        fc.update()
