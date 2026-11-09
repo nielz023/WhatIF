@@ -4,7 +4,7 @@
  * Alle tekst is data: Markdown via components/shared/Md.tsx, nooit als HTML.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, Brain, Download, FileText, FolderOpen, Image as ImageIcon, Library, MessageSquare, MessagesSquare, Paperclip, RefreshCw, Search, X, LayoutDashboard, Wrench } from 'lucide-react';
+import { ScrollText, GitCompare, ArrowLeft, Brain, Download, FileText, FolderOpen, Image as ImageIcon, Library, MessageSquare, MessagesSquare, Paperclip, RefreshCw, Search, X, LayoutDashboard, Wrench } from 'lucide-react';
 import { WerkPage } from './DriftmarkPage';
 import { Md, type MdLink } from '../components/shared/Md';
 import { Berichten, openGesprek, volgLink } from '../components/shared/Gesprek';
@@ -19,13 +19,16 @@ import {
   SOORT_NAAM, INDEX, GROEPEN, BESTAND_GROEPEN, ZOEK_FILTERS,
   type KennisTab, type Laad, type Notitie, type Beeld, type Bestand, type BestandLees, type ZoekGroep, type ZoekItem,
 } from '../services/kennis';
+import { Afspraken, Besluiten, Versies } from './Afspraken';
 
 const TABS: { id: KennisTab; label: string; icon: typeof Search; uitleg: string }[] = [
   { id: 'overzicht', label: 'Overzicht', icon: LayoutDashboard, uitleg: 'Wat er is opgeslagen, de vaste regels en het nieuwste' },
   { id: 'geheugen', label: 'Geheugen', icon: Brain, uitleg: 'Alle regels en lessen uit het projectgeheugen' },
+  { id: 'afspraken', label: 'Afspraken & besluiten', icon: ScrollText, uitleg: 'Je vaste regels (aan te passen) en alle beslissingen op een tijdlijn' },
   { id: 'threads', label: 'Threads', icon: MessagesSquare, uitleg: 'Elke thread met het hele gesprek' },
   { id: 'projectchat', label: 'Projectchat', icon: MessageSquare, uitleg: 'De hele projectchat' },
   { id: 'documenten', label: 'Documenten', icon: FolderOpen, uitleg: 'Artifacts, bestanden, beelden en bijlagen' },
+  { id: 'versies', label: 'Versies', icon: GitCompare, uitleg: 'Twee versies van een script of document naast elkaar' },
   { id: 'werk', label: 'Werkwijze & gereedschap', icon: Wrench, uitleg: 'De vaste regels voor elke video, je stemmen en je tools' },
   { id: 'zoeken', label: 'Zoeken', icon: Search, uitleg: 'Zoek door alles heen' },
 ];
@@ -120,6 +123,8 @@ export default function KennisPage() {
       {tab === 'documenten' && <DocumentenTab />}
       {tab === 'werk' && <WerkPage />}
       {tab === 'zoeken' && <ZoekenTab />}
+      {tab === 'afspraken' && <div className="grid gap-5"><Afspraken /><div><h2 className="mb-2 font-display text-[20px] font-bold text-white">Besluitenlogboek</h2><Besluiten /></div></div>}
+      {tab === 'versies' && <Versies />}
     </div>
   );
 }

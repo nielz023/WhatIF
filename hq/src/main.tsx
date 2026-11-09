@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 import { startDutch } from './lib/nl';
 import { pasToe } from './lib/prefs';
+import { startRoute } from './lib/route';
 import { useGame } from './store/useGame';
 
 pasToe();
@@ -17,3 +18,4 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 startDutch(document.getElementById('root')!);
+startRoute();

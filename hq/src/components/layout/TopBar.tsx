@@ -1,7 +1,7 @@
 import { useWorld } from '../../world/useWorld';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bell, Users, MonitorPlay, Eye, Tv, HelpCircle, Volume2, VolumeX, Settings } from 'lucide-react';
+import { Bell, Users, MonitorPlay, Eye, Tv, HelpCircle, Volume2, VolumeX, Settings, Search } from 'lucide-react';
 import { openGesprek } from '../shared/Gesprek';
 import { useShallow } from 'zustand/react/shallow';
 import { KLEUR } from '../../lib/status';
@@ -13,6 +13,7 @@ import { useLive } from '../../services/live';
 import { WalkButton } from '../../world/WalkHud';
 import Keuzes from '../shared/Keuzes';
 import { BalkKnop } from '../shared/Opdrachtbalk';
+import { zoek } from '../../lib/route';
 
 /** meldingen over threads openen de echte takenlijst (Vandaag → Alle taken), ook als Vandaag al open staat */
 export function openTaken() {
@@ -101,6 +102,7 @@ export default function TopBar() {
 
       <div className="ml-auto flex items-center gap-2">
         <BalkKnop />
+        <button onClick={zoek} className="rounded-xl border border-hq-line/60 bg-hq-panel/60 p-2 text-slate-300 hover:text-white" aria-label="Zoeken door alles (toets /)" title="Zoeken door alles: geheugen, gesprekken, documenten (toets /)"><Search size={18} /></button>
         <WalkButton />
         {/* echte klok */}
         <span className="hidden sm:inline"><RealClock /></span>

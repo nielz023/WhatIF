@@ -24,6 +24,7 @@ export const SNELTOETSEN: [string, string][] = [
   ['1 t/m 5', 'Vandaag, Video\'s, Kanaal, Kennis, 3D-kantoor'],
   ['K', 'Opdrachtbalk openen'],
   ['Esc', 'Sluiten / terug naar Vandaag'],
+  ['/', 'Zoeken door alles'],
   ['?', 'Deze uitleg'],
 ];
 
