@@ -22,6 +22,10 @@ Varianten (scènes):
     gymzaal             13a-f, 13h2  300 stoelen, podium, tribune, plafond in losse panelen + lichtkoepels
     schoolplein         1a, 11  plein, hekken, bomen, gymzaal met plat dak in losse delen (bewolkt)
     schoolplein_regen   13g-j   zelfde, stortregen
+    gymzaal_leeg        11e-11f lege gymzaal overdag: gele emmer onder een lek, waterplek, doorgezakte plafondplaat
+    steiger_leeg        16g     grijze dag, alleen opa's krukje met zijn vissershoed erop
+    gang_opa            15e3    nachtelijke gang, deur op een kier naar opa's slaapkamer (opa in bed)
+    skatepark           9d1-9d4 hoge helling, pad naar de weg, gras naast het pad, weg met stoep
 
 Animatie-afspraken (namen in de .blend):
     PLEK_*                 empties waar personages staan (richting = pijl)
@@ -57,7 +61,7 @@ VAR = args[0] if args else "kruispunt_laat"
 NR = {"props": "00", "kruispunt_laat": "01", "kruispunt_grijs": "01", "steiger_zomer": "02", "steiger_herfst": "02",
       "steiger_mist": "02", "opa_avond": "03", "opa_ochtend": "03", "begraafplaats": "04", "schoolwc": "05",
       "directeur": "06", "ziekenhuis": "07", "zwembad": "08", "gymzaal": "09", "schoolplein": "10",
-      "schoolplein_regen": "10"}[VAR]
+      "schoolplein_regen": "10", "gymzaal_leeg": "11", "steiger_leeg": "12", "gang_opa": "13", "skatepark": "14"}[VAR]
 OUT = args[1] if len(args) > 1 else f"/mnt/project-files/videos/dagen-over/sets/{NR}_{VAR}"
 rnd = random.Random(5)
 M = T.MOODS
@@ -78,10 +82,13 @@ mood = {"props": dict(M["binnen"], bloom=0.5), "kruispunt_laat": LAAT, "kruispun
         "schoolwc": dict(BINNEN, ambient=(0.30, 0.32, 0.36), exposure=-0.7),
         "directeur": BINNEN, "ziekenhuis": dict(M["ochtend"], sun_strength=0.9), "zwembad": dict(M["dag"], sun_rot=(40, 0, 20)),
         "gymzaal": dict(BINNEN, sun_strength=0.3, sky_top=(0.30, 0.33, 0.37), sky_horizon=(0.50, 0.52, 0.55)),
-        "schoolplein": dict(M["bewolkt"], sun_strength=0.6), "schoolplein_regen": REGEN}[VAR]
+        "schoolplein": dict(M["bewolkt"], sun_strength=0.6), "schoolplein_regen": REGEN,
+        "gymzaal_leeg": dict(BINNEN, sun_strength=0.35, sky_top=(0.30, 0.33, 0.37), sky_horizon=(0.50, 0.52, 0.55)),
+        "steiger_leeg": dict(GRIJS, sun_strength=0.3), "gang_opa": dict(M["avond"], ambient=(0.05, 0.05, 0.08), sun_strength=0.05, bloom=0.5),
+        "skatepark": dict(M["dag"], sun_rot=(50, 0, -40))}[VAR]
 T.new_scene("DagenOver_" + VAR, mood, samples=32)
 T.use_collection(T.collection(VAR))
-BINNEN_SET = VAR in {"props", "opa_avond", "opa_ochtend", "schoolwc", "directeur", "ziekenhuis", "gymzaal"}
+BINNEN_SET = VAR in {"props", "opa_avond", "opa_ochtend", "schoolwc", "directeur", "ziekenhuis", "gymzaal", "gymzaal_leeg", "gang_opa"}
 
 
 def mt(name, col, rough=0.5, metal=0.0, coat=0.1):
@@ -275,6 +282,7 @@ elif VAR.startswith("kruispunt"):
 elif VAR.startswith("steiger"):
     herfst = VAR == "steiger_herfst"
     mist = VAR == "steiger_mist"
+    leeg = VAR == "steiger_leeg"
     meer = ND.pbr("meerwater", (0.05, 0.16, 0.20) if not mist else (0.30, 0.34, 0.36), rough=0.06, coat=0.9)
     w = T.plane("Meer", (0, 25, -0.25), (260, 260), meer)
     w.modifiers.new("sub", "SUBSURF").levels = 0
@@ -333,10 +341,17 @@ elif VAR.startswith("steiger"):
               mt("lelieblad", (0.18, 0.42, 0.16), rough=0.5), seg=16, ol=0)
     # opa's spullen
     D.klapkrukje("Krukje_opa", (-0.45, 6.4, 0.29), rot_z=0)
-    D.klapkrukje("Krukje_held", (0.45, 6.4, 0.29), rot_z=0)
-    D.vishengel("Hengel_opa", grip=(-0.45, 6.75, 0.85), tip=(-0.9, 9.8, 2.6), dobber=(-1.4, 14.5, -0.24))
-    D.schepnet("Schepnet", (0.95, 5.8, 0.29), rot_z=90)
-    T.box("Viskist", (0.0, 5.6, 0.29), (0.45, 0.3, 0.28), mt("kunststof_viskist", (0.15, 0.40, 0.55)), bevel=0.03, ol=0)
+    if leeg:
+        # 16g: alleen opa's krukje met zijn vissershoed erop (zelfde hoed als in 10)
+        hoedmat = mt("vissershoed", (0.55, 0.50, 0.36), rough=0.85, coat=0)
+        T.cyl("Vissershoed_rand", (-0.45, 6.4, 0.745), 0.17, 0.012, hoedmat, seg=32, ol=0)
+        T.cyl("Vissershoed_kroon", (-0.45, 6.4, 0.757), 0.10, 0.075, hoedmat, seg=32, ol=0)
+        T.cyl("Vissershoed_band", (-0.45, 6.4, 0.762), 0.102, 0.018, mt("hoedband", (0.25, 0.20, 0.14), rough=0.7), seg=32, ol=0)
+    else:
+        D.klapkrukje("Krukje_held", (0.45, 6.4, 0.29), rot_z=0)
+        D.vishengel("Hengel_opa", grip=(-0.45, 6.75, 0.85), tip=(-0.9, 9.8, 2.6), dobber=(-1.4, 14.5, -0.24))
+        D.schepnet("Schepnet", (0.95, 5.8, 0.29), rot_z=90)
+        T.box("Viskist", (0.0, 5.6, 0.29), (0.45, 0.3, 0.28), mt("kunststof_viskist", (0.15, 0.40, 0.55)), bevel=0.03, ol=0)
     if herfst:
         bl = [T.box(f"Blad_steiger_{k}", (rnd.uniform(-0.9, 0.9), rnd.uniform(-4, 7), 0.295), (0.07, 0.05, 0.003),
                     mt(["blad_geel", "blad_oranje"][k % 2], [(0.95, 0.70, 0.12), (0.85, 0.40, 0.08)][k % 2], rough=0.7, coat=0),
@@ -349,6 +364,8 @@ elif VAR.startswith("steiger"):
             T.camera("CAM_10e_ACHTER", (0.0, 3.2, 1.3), (0, 9.0, 0.8), lens=30),
             T.camera("CAM_10f_OPA", (-1.6, 8.8, 1.1), (-0.45, 6.4, 1.15), lens=50, dof=2.8),
             T.camera("CAM_15a_VAST", (-9, 4.0, 1.6), (0, 6.2, 0.8), lens=35)]
+    if leeg:
+        cams.append(T.camera("CAM_16g_KRUKJE", (1.2, 3.4, 1.0), (-0.45, 6.4, 0.6), lens=40, dof=2.8))
 
 # ---------------------------------------------------------------------------
 elif VAR.startswith("opa"):
@@ -572,7 +589,8 @@ elif VAR == "zwembad":
     cams = [T.camera("CAM_9c_WIDE", (8, -9.5, 2.2), (-3, -5, 0.3), lens=26)]
 
 # ---------------------------------------------------------------------------
-elif VAR == "gymzaal":
+elif VAR.startswith("gymzaal"):
+    leeg = VAR == "gymzaal_leeg"
     W, Dd, Hh = 28.0, 20.0, 8.0
     wins = [(a, a + 2.4, 5.6, 7.4) for a in [1.5 + k * 3.2 for k in range(8)]]
     room = I.room("Gymzaal", W, Dd, Hh, (0.86, 0.84, 0.78), (0.85, 0.55, 0.25), hide=(), ceiling=False, skirting=False,
@@ -629,7 +647,7 @@ elif VAR == "gymzaal":
     stoel_src.location = (-100, -100, 0)
     stoel_src.hide_render = True
     n = 0
-    for r in range(15):
+    for r in range(0 if leeg else 15):
         for c in range(20):
             x = -10.3 + c * 0.95 + (1.2 if c >= 10 else 0) - 0.6
             y = Dd / 2 - 5.2 - r * 0.85
@@ -642,10 +660,36 @@ elif VAR == "gymzaal":
         T.box(f"Basketbalbord_{k}", ((k * 2 - 1) * (W / 2 - 0.6), 0, 3.0), (0.05, 1.8, 1.05), mt("bord_wit", (0.96, 0.96, 0.94)), bevel=0.01, ol=0)
     D.plek("PLEK_directeur", (0, Dd / 2 - 3.6, 0.9), rot_z=180)
     D.plek("PLEK_held", (-6.0, -1.0, 0), rot_z=0)
-    cams = [T.camera("CAM_13a_TRIBUNE", (W / 2 - 1.2, -Dd / 2 + 2.5, 3.6), (-2, 3, 1.0), lens=22),
-            T.camera("CAM_13b_PLAFOND", (-4.0, -2.0, 1.4), (-4.0, 0.0, Hh), lens=24),
-            T.camera("CAM_13f_WIDE", (0, -Dd / 2 + 0.8, 2.2), (0, 4, 1.5), lens=20),
-            T.camera("CAM_13h2_LEEG", (-W / 2 + 1.5, -Dd / 2 + 1.5, 1.6), (3, 3, 1.5), lens=22)]
+    # achter de plafondpanelen en de deuren: dicht (geen lege wereld door naden en deuropeningen)
+    T.box("Plafond_achterkant", (0, 0, Hh + 0.06), (W + 0.4, Dd + 0.4, 0.02), mt("plafond_achter", (0.18, 0.18, 0.2), rough=0.9), bevel=0, ol=0)
+    T.box("Gang_achter_zijdeur", (-W / 2 - 1.6, -Dd / 2 + 2.8, 0), (3.0, 3.0, 2.6), mt("gang_school", (0.80, 0.78, 0.72), rough=0.9), bevel=0, ol=0)
+    T.box("Hal_achter_voordeur", (-W / 2 + 14.0, -Dd / 2 - 1.8, 0), (5.0, 3.2, 2.8), mt("gang_school", (0.80, 0.78, 0.72), rough=0.9), bevel=0, ol=0)
+    for nm in ("Gang_achter_zijdeur", "Hal_achter_voordeur"):
+        bpy.data.objects[nm].modifiers.new("hol", "SOLIDIFY").thickness = 0.1
+    if leeg:
+        # 11e-11f: gele emmer onder een lek, waterplek op het plafond, een doorgezakte plaat (paneel 2_2)
+        ex, ey = -W / 2 + 2.5 * W / 7, -Dd / 2 + 2.5 * Dd / 5
+        pz = bpy.data.objects["Plafond_paneel_2_2"]
+        pz.location.z -= 0.10
+        pz.rotation_euler = (math.radians(2.5), math.radians(-1.5), 0)
+        wp = T.cyl("Waterplek", (0, 0, 0), 1.1, 0.004, mt("waterplek", (0.55, 0.50, 0.38), rough=0.9, coat=0), seg=32, ol=0)
+        wp.scale = (1.0, 0.75, 1.0)
+        wp.parent = pz
+        wp.location = (0, 0, -0.008)  # net onder het doorgezakte paneel, draait mee
+        geel = mt("emmer_geel", (0.98, 0.78, 0.08), rough=0.4, coat=0.3)
+        T.cyl("Emmer", (ex, ey, 0), 0.16, 0.30, geel, seg=24, ol=0)
+        bpy.data.objects["Emmer"].modifiers.new("hol", "SOLIDIFY").thickness = 0.008
+        T.cyl("Emmer_water", (ex, ey, 0.04), 0.15, 0.1, ND.pbr("emmerwater", (0.35, 0.40, 0.42), rough=0.02, coat=1.0), seg=24, ol=0)
+        T.box("Plas_vloer", (ex + 0.25, ey - 0.1, 0.001), (0.6, 0.4, 0.002), ND.pbr("plas_vloer", (0.5, 0.35, 0.18), rough=0.02, coat=1.0), bevel=0, ol=0)
+        D.plek("PLEK_held_11e", (ex - 1.2, ey - 1.6, 0), rot_z=-30)
+        cams = [T.camera("CAM_11e_EMMER", (ex - 2.6, ey - 3.2, 1.3), (ex, ey, 0.4), lens=35, dof=4.0),
+                T.camera("CAM_11f_PLAFOND", (ex - 2.0, ey - 2.5, 1.5), (ex, ey, Hh), lens=24),
+                T.camera("CAM_11e_WIJD", (W / 2 - 1.5, -Dd / 2 + 1.5, 2.0), (ex, ey, 1.5), lens=24)]
+    else:
+        cams = [T.camera("CAM_13a_TRIBUNE", (W / 2 - 1.2, -Dd / 2 + 2.5, 3.6), (-2, 3, 1.0), lens=22),
+                T.camera("CAM_13b_PLAFOND", (-4.0, -2.0, 1.4), (-4.0, 0.0, Hh), lens=24),
+                T.camera("CAM_13f_WIDE", (0, -Dd / 2 + 0.8, 2.2), (0, 4, 1.5), lens=20),
+                T.camera("CAM_13h2_LEEG", (-W / 2 + 1.5, -Dd / 2 + 1.5, 1.6), (3, 3, 1.5), lens=22)]
 
 # ---------------------------------------------------------------------------
 elif VAR.startswith("schoolplein"):
@@ -701,6 +745,75 @@ elif VAR.startswith("schoolplein"):
     cams = [T.camera("CAM_11a_DRONE", (-10, -40, 18), (8, -4, 2), lens=24),
             T.camera("CAM_11d_LAAG", (3, -22.5, 0.4), (gx, gy, 5), lens=22),
             T.camera("CAM_13h_LAAG", (4, -26, 1.2), (gx, gy, 6), lens=24)]
+
+# ---------------------------------------------------------------------------
+elif VAR == "gang_opa":
+    # opa's slaapkamer (rechts) eerst bouwen en opschuiven, dan de gang met een deur op een kier
+    voor = set(bpy.data.objects)
+    kamer = I.room("Slaapkamer_opa", 4.0, 4.0, 2.6, (0.62, 0.66, 0.72), (0.42, 0.30, 0.20), hide=(),
+                   holes={"left": [(1.5, 2.5, 0, 2.1)], "back": [(1.4, 2.6, 0.9, 2.1)]})
+    I.window("Raam_opa_slaap", 4.0, 4.0, "back", 1.4, 2.6, 0.9, 2.1)
+    T.box("Bed_opa", (0.6, 0.6, 0), (1.5, 2.1, 0.5), mt("bed_hout", (0.40, 0.26, 0.16)), bevel=0.03, ol=0)
+    T.box("Bed_dekbed", (0.6, 0.45, 0.5), (1.45, 1.6, 0.16), mt("dekbed_blauw", (0.35, 0.45, 0.62), rough=0.9, coat=0), bevel=0.06, ol=0)
+    T.box("Bed_kussen", (0.6, 1.4, 0.52), (0.9, 0.4, 0.14), mt("kussen_wit", (0.92, 0.92, 0.9), rough=0.9, coat=0), bevel=0.06, ol=0)
+    T.box("Nachtkastje", (1.65, 1.5, 0), (0.45, 0.4, 0.55), mt("bed_hout", (0.40, 0.26, 0.16)), bevel=0.02, ol=0)
+    T.cyl("Nachtlampje", (1.65, 1.5, 0.55), 0.09, 0.28, T.glow("nachtlamp", (1.0, 0.75, 0.45), 2.0), seg=16, ol=0)
+    T.point_light("Lamp_slaap", (1.65, 1.5, 0.95), color=(1.0, 0.72, 0.42), energy=60) if hasattr(T, "point_light") else T.area_light("Lamp_slaap", (1.65, 1.4, 1.0), (0.6, 0.6, 0.5), size=(0.3, 0.3), color=(1.0, 0.72, 0.42), energy=40)
+    buiten_door_raam((0, 2.0), rz=0, afstand=5, stad=False)
+    for o in set(bpy.data.objects) - voor:
+        if o.parent is None:
+            o.location.x += 3.04
+    gang = I.room("Gang", 1.6, 5.0, 2.6, (0.70, 0.66, 0.58), (0.38, 0.28, 0.20), hide=(),
+                  holes={"right": [(2.0, 3.0, 0, 2.1)]})
+    # deur op een kier (draait om de scharnierkant)
+    deur = T.box("Deur_slaapkamer", (0, 0, 0), (0.92, 0.04, 2.05), mt("deur_wit", (0.90, 0.89, 0.86)), bevel=0.01, ol=0)
+    deur.location = (0.86 + 0.46 * math.sin(math.radians(70)), 0.5 - 0.46 * math.cos(math.radians(70)), 0)
+    deur.rotation_euler.z = math.radians(-20)
+    T.area_light("Gang_nachtlicht", (-0.4, -2.0, 2.4), (-0.4, -2.0, 0), size=(0.4, 0.4), color=(0.55, 0.62, 0.85), energy=45)
+    T.area_light("Maanlicht_slaap", (4.04, 2.6, 1.6), (3.6, 0.6, 0.6), size=(1.2, 1.0), color=(0.60, 0.70, 1.0), energy=120)
+    D.plek("PLEK_held", (0.35, 0.3, 0), rot_z=-90)
+    D.plek("PLEK_opa_bed", (3.64, 0.9, 0.62), rot_z=0)
+    cams = [T.camera("CAM_15e3_DEUR", (-0.65, -0.1, 1.55), (3.6, 0.5, 0.75), lens=26),
+            T.camera("CAM_15e3_GEZICHT", (0.62, -0.55, 1.5), (0.35, 0.3, 1.45), lens=30, dof=2.8)]
+
+# ---------------------------------------------------------------------------
+elif VAR == "skatepark":
+    P.ground("Gras_park", (3000, 3000), (0.30, 0.56, 0.20), z=-0.02)
+    beton = mt("beton_skatepark", (0.70, 0.70, 0.72), rough=0.7)
+    T.box("Skatevloer", (0, 0, -0.01), (24, 16, 0.04), beton, bevel=0, ol=0)
+    T.box("Helling_blok", (0, 5.5, 0), (6, 3.0, 3.2), beton, bevel=0.05, ol=0)
+    T.box("Helling_platform", (0, 6.0, 3.2), (6, 2.0, 0.1), mt("staal_platform", (0.55, 0.57, 0.6), metal=0.5), bevel=0.01, ol=0)
+    me = bpy.data.meshes.new("Helling_schuin")
+    vs = [(x, y, z) for x in (-3.0, 3.0) for (y, z) in ((4.0, 0.0), (4.0, 3.2), (0.8, 0.0))]
+    me.from_pydata(vs, [], [(0, 1, 2), (5, 4, 3), (0, 3, 4, 1), (1, 4, 5, 2), (2, 5, 3, 0)])
+    me.validate()
+    import bmesh
+    bm_ = bmesh.new()
+    bm_.from_mesh(me)
+    bmesh.ops.recalc_face_normals(bm_, faces=bm_.faces)
+    bm_.to_mesh(me)
+    bm_.free()
+    T._obj("Helling_schuin", me, beton, (0, 0, 0), None, 0)
+    P.railing("Hekje_platform", [(-3, 6.9, 3.3), (3, 6.9, 3.3)], h=1.0)
+    T.box("Funbox", (-6, -2, 0), (3, 2, 0.6), beton, bevel=0.05, ol=0)
+    # pad van de helling naar de weg, gras ernaast (zachte val 9d2), weg met stoep
+    T.box("Pad", (0, -12, -0.005), (2.4, 9, 0.02), mt("pad_asfalt", (0.32, 0.32, 0.34), rough=0.85), bevel=0, ol=0)
+    T.box("Stoep_weg", (0, -17.2, 0), (80, 2.0, 0.12), mt("stoep", (0.62, 0.60, 0.58), rough=0.8), bevel=0.01, ol=0)
+    T.box("Weg", (0, -21.5, -0.02), (80, 6.5, 0.02), mt("asfalt", (0.16, 0.16, 0.18), rough=0.8), bevel=0, ol=0)
+    for k in range(10):
+        T.box(f"Wegstreep_{k}", (-36 + k * 8, -21.5, 0.002), (3, 0.15, 0.005), mt("wegverf", (0.95, 0.95, 0.92)), bevel=0, ol=0)
+    for k in range(8):
+        P.tree(f"Parkboom_{k}", (rnd.uniform(-30, 30), rnd.uniform(12, 30), 0), h=rnd.uniform(6, 9), r=3, seed=k)
+    S.sign("Bord_skatepark", ["SKATE PARK"], (8, -6, 0), rot_z=-20, w=1.2, h=0.4)
+    bomenring("Bomen_park", (0, 0), 45, 70, 36, seed=21)
+    stad_rondom("Wijk_park", (0, 0), r=120, n=36, rijen=1)
+    D.plek("PLEK_pestkop_top", (0.6, 6.0, 3.25), rot_z=180)
+    D.plek("PLEK_held", (3.0, -4.0, 0), rot_z=150)
+    D.plek("PLEK_val_gras", (2.4, -13.0, 0), rot_z=0)
+    D.plek("PLEK_auto_start", (-30, -22.5, 0), rot_z=-90)
+    cams = [T.camera("CAM_9d1_HELLING", (7, -6, 2.2), (0, 4.0, 2.4), lens=24),
+            T.camera("CAM_9d2_WIJD", (-11, -9, 2.4), (0, -12, 0.8), lens=22),
+            T.camera("CAM_9d3_GRAS", (4.6, -15.4, 0.8), (2.4, -13.0, 0.6), lens=35, dof=2.8)]
 
 # ---------------------------------------------------------------------------
 setcheck.check(cams, OUT, binnen=BINNEN_SET)
