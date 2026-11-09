@@ -109,7 +109,7 @@ function Spel({ id }: { id: GameId }) {
             onPointerLeave={(e) => { if (e.pointerType === 'mouse' && id !== 'hockey') { ptr.current.x = ptr.current.y = null; } }} />
           {eind && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-xl bg-[#03050f]/75 text-center">
-              <div className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">Game over</div>
+              <div className="text-[13px] font-semibold uppercase tracking-widest text-slate-400">Afgelopen</div>
               <div className="font-display text-[40px] font-black text-white">{eind.score}</div>
               {eind.record && <div className="rounded-full bg-[#FACC15]/20 px-3 py-1 text-[13px] font-bold text-[#FACC15]">Nieuw record!</div>}
               <div className="flex gap-2">

@@ -101,7 +101,7 @@ interface Actions {
 export type GameStore = GameData & UIState & Actions;
 
 const uiDefaults: UIState = {
-  page: 'driftmark', selectedDept: null, selectedAgentId: null, selectedProjectId: null, modal: null, modalPayload: null,
+  page: 'overzicht', selectedDept: null, selectedAgentId: null, selectedProjectId: null, modal: null, modalPayload: null,
   confirm: null, paused: false, speed: 1, toasts: [], notifOpen: false,
 };
 

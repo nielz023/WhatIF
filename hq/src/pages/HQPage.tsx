@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useGame } from '../store/useGame';
-import { Avatar, DemoBadge } from '../components/ui';
+import { Avatar, DemoBadge, STATUS_NL } from '../components/ui';
+import { openTaken } from '../components/layout/TopBar';
 import PipelineStepper from '../components/shared/Pipeline';
 import { stageById } from '../modules/workflows/pipeline';
 import { deptById } from '../modules/departments/departments';
@@ -17,7 +18,7 @@ export default function HQPage() {
     <div className="pointer-events-none relative h-full w-full">
       {/* title */}
       <div className="pointer-events-none absolute left-4 top-3 select-none">
-        <div className="font-display text-2xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(99,102,241,.6)] md:text-3xl">STUDIO <span className="text-gradient">BEHEER</span></div>
+        <div className="font-display text-2xl font-bold tracking-tight text-white drop-shadow-[0_0_20px_rgba(99,102,241,.6)] md:text-3xl">TEAM <span className="text-gradient">& PROJECTEN</span></div>
         <div className="mt-1 flex items-center gap-2 text-[13px] text-slate-400">
           <span><span className="text-emerald-400">●</span> {counts.working} aan het werk</span>
           <span><span className="text-sky-400">●</span> {counts.meeting} in overleg</span>
@@ -30,18 +31,18 @@ export default function HQPage() {
       {/* pipeline panel */}
       <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} className="panel pointer-events-auto absolute bottom-20 left-3 hidden w-[330px] p-3 lg:block">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[13px] font-bold uppercase tracking-wider text-slate-300">Production pipeline</span>
-          <button className="text-[13px] text-sky-300 hover:text-white" onClick={() => s.setPage('projects')}>All projects →</button>
+          <span className="text-[13px] font-bold uppercase tracking-wider text-slate-300">Productielijn</span>
+          <button className="text-[13px] text-sky-300 hover:text-white" onClick={() => s.setPage('projects')}>Alle projecten →</button>
         </div>
         <div className="space-y-2">
-          {active.length === 0 && <div className="text-[13px] text-slate-500">No active projects. Start a new video!</div>}
+          {active.length === 0 && <div className="text-[13px] text-slate-500">Geen lopende projecten. Start een nieuwe video.</div>}
           {active.map((p) => {
             const st = stageById(p.stage);
             return (
               <button key={p.id} onClick={() => s.selectProject(p.id)} className="w-full rounded-xl bg-white/[.03] p-2 text-left hover:bg-white/[.07]">
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-[13px] font-semibold text-white">{p.title}</span>
-                  <span className="shrink-0 text-[12px]" style={{ color: deptById(st.department).color }}>{p.status === 'Active' ? st.label : p.status}</span>
+                  <span className="shrink-0 text-[12px]" style={{ color: deptById(st.department).color }}>{p.status === 'Active' ? st.label : (STATUS_NL[p.status] ?? p.status)}</span>
                 </div>
                 <div className="mt-1.5"><PipelineStepper project={p} small /></div>
               </button>
@@ -55,18 +56,18 @@ export default function HQPage() {
         <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} className="pointer-events-auto absolute right-3 top-3 hidden w-[310px] space-y-3 xl:block">
           {approvals.length > 0 && (
             <div className="panel border-amber-400/40 p-3">
-              <div className="mb-2 text-[13px] font-bold uppercase tracking-wider text-amber-300">⏳ Waiting for you ({approvals.length})</div>
+              <div className="mb-2 text-[13px] font-bold uppercase tracking-wider text-amber-300">⏳ Wacht op jou ({approvals.length})</div>
               {approvals.slice(0, 3).map((p) => (
                 <button key={p.id} onClick={() => s.selectProject(p.id)} className="mb-1.5 flex w-full items-center justify-between rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-left text-[13px] hover:bg-amber-500/20">
-                  <span className="truncate text-white">{p.title}</span><span className="ml-2 shrink-0 text-amber-300">{p.status === 'Awaiting Approval' ? 'Approve' : 'Publish'}</span>
+                  <span className="truncate text-white">{p.title}</span><span className="ml-2 shrink-0 text-amber-300">{p.status === 'Awaiting Approval' ? 'Goedkeuren' : 'Uploaden'}</span>
                 </button>
               ))}
             </div>
           )}
           <div className="panel p-3">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[13px] font-bold uppercase tracking-wider text-slate-300">Live on Threads</span>
-              <button className="text-[13px] text-sky-300 hover:text-white" onClick={() => { try { localStorage.setItem('driftmark-view-meer', 'threads'); } catch { /* */ } s.setPage('meer'); }}>Open →</button>
+              <span className="text-[13px] font-bold uppercase tracking-wider text-slate-300">Laatste updates</span>
+              <button className="text-[13px] text-sky-300 hover:text-white" onClick={() => openTaken()}>Alle taken →</button>
             </div>
             <div className="space-y-2.5">
               {feed.map((p) => {

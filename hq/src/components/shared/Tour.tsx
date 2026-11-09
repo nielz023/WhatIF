@@ -1,45 +1,56 @@
-/** Rondleiding van 4 stapjes: de eerste keer vanzelf, daarna via de ?-knop. */
+/**
+ * Uitleg per pagina (verbeterlijst punt 25): het ?-knopje (of de toets ?) laat in twee zinnen zien wat je
+ * op deze pagina kunt doen, plus de sneltoetsen (punt 24). Geen lange rondleiding meer.
+ */
 import { useEffect, useState } from 'react';
 import { useGame } from '../../store/useGame';
 import type { PageId } from '../../types';
 
-const STEPS: { title: string; text: string; page: PageId; emoji: string }[] = [
-  { emoji: '🏠', page: 'driftmark', title: 'Home', text: 'Hier zie je in één blik wat Claude nu doet en wat op jou wacht. Oranje = jij moet iets, blauw = Claude is bezig, groen = klaar.' },
-  { emoji: '⚡', page: 'driftmark', title: 'Opdracht geven', text: 'Typ wat je wilt in het opdrachtvak, of tik op een snelle keuze. Claude voert het echt uit en zet het antwoord op Home.' },
-  { emoji: '🎬', page: 'videos', title: "Video's en Kanaal", text: "Bij Video's zie je elke video op de metrolijn van idee tot online. Bij Kanaal staan je echte cijfers en grafieken." },
-  { emoji: '🏢', page: 'hq', title: 'Studio en de coach', text: 'Studio is je 3D-kantoor met je teamleden en projecten. Rechtsonder zit je coach: vraag hem alles of wacht op een tip.' },
+const UITLEG: Partial<Record<PageId, [string, string]>> = {
+  overzicht: ['Vandaag', 'Bovenaan staat wat op jou wacht, daaronder wat Claude nu doet en wat net klaar is. Onder "Alle taken" vind je elke thread per video.'],
+  videos: ["Video's", "Elke video en short zoals hij op YouTube staat, met cijfers, plus de productielijn van idee tot upload. Ook cast, sets en ideeën voor nieuwe video's staan hier."],
+  kanaal: ['Kanaal', 'Je echte kanaalcijfers: abonnees, weergaven, kijkduur en groei per dag. Alles komt uit vidIQ en de YouTube-feed en wordt elk uur bijgewerkt.'],
+  kennis: ['Kennis', 'Alles wat is opgeslagen: het projectgeheugen met je regels, elke thread met het hele gesprek, documenten, werkwijze en gereedschap. Zoek bovenaan door alles heen.'],
+  driftmark: ['3D-kantoor', 'Je kantoor met een kamer per afdeling. Klik op een kamer of een teamlid om te zien waar het aan werkt, of loop rond met de knop Rondlopen.'],
+  coach: ['Coachkamer', 'Je coach met briefing, doelen, beslissingen en rapporten. Stel hem een vraag over je kanaal; hij kent de echte stand.'],
+  hq: ['Team', 'Je team en projecten in het kantoor. Knoppen als Nieuwe video en Goedkeuren worden echte opdrachten voor Claude.'],
+  projects: ['Projecten', "Elke echte video als project met zijn stappen. Klik op een project voor de details."],
+  agents: ['Teamleden', 'Elke lopende of afgeronde taak als teamlid. Klik op iemand om het gesprek te openen.'],
+  warroom: ['Crisiskamer', 'Hier komt alleen iets te staan als er echt iets mis is, met wat er gebeurde en wat jij moet doen.'],
+  settings: ['Instellingen', 'Geluid, beeldkwaliteit en meldingen. Alles wordt alleen in deze browser bewaard.'],
+};
+
+export const SNELTOETSEN: [string, string][] = [
+  ['1 t/m 5', 'Vandaag, Video\'s, Kanaal, Kennis, 3D-kantoor'],
+  ['K', 'Opdrachtbalk openen'],
+  ['Esc', 'Sluiten / terug naar Vandaag'],
+  ['?', 'Deze uitleg'],
 ];
 
 export default function Tour() {
-  const setPage = useGame((s) => s.setPage);
-  const [i, setI] = useState<number | null>(null);
+  const page = useGame((s) => s.page);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
-    let seen = true;
-    try { seen = localStorage.getItem('dm-tour') === 'gezien'; } catch { /* */ }
-    if (!seen) setTimeout(() => setI(0), 1200);
-    const h = () => setI(0);
+    const h = () => setOpen((o) => !o);
     window.addEventListener('dm-tour', h);
     return () => window.removeEventListener('dm-tour', h);
   }, []);
-  if (i == null) return null;
-  const s = STEPS[i];
-  const close = () => { setI(null); try { localStorage.setItem('dm-tour', 'gezien'); } catch { /* */ } };
-  const go = (n: number) => { setI(n); setPage(STEPS[n].page); };
+  useEffect(() => { try { localStorage.setItem('dm-tour', 'gezien'); } catch { /* */ } }, []);
+  if (!open) return null;
+  const [t, uitleg] = UITLEG[page] ?? ['Driftmark HQ', 'Je digitale kantoor: alles over je kanaal en je video\'s op één plek.'];
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/55 p-4 backdrop-blur-sm md:items-center" role="dialog" aria-modal="true" aria-label="Rondleiding">
-      <div className="dm-pop w-full max-w-md rounded-3xl border border-orange-400/40 bg-[#0f1630] p-5 shadow-2xl">
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-4 backdrop-blur-sm md:items-center" role="dialog" aria-modal="true" aria-label={`Uitleg: ${t}`} onClick={() => setOpen(false)}>
+      <div className="dm-pop w-full max-w-md rounded-3xl border border-orange-400/40 bg-[#0f1630] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3">
-          <img src="./img/c1_hoofdpersonage.jpg" alt="" className="h-14 w-14 rounded-full object-cover ring-2 ring-orange-400" />
-          <div><div className="text-[13px] font-semibold text-slate-400">Rondleiding · {i + 1} van {STEPS.length}</div><div className="font-display text-[22px] font-bold text-white">{s.emoji} {s.title}</div></div>
+          <img src="./img/c1_hoofdpersonage.jpg" alt="" className="h-12 w-12 rounded-full object-cover ring-2 ring-orange-400" />
+          <div><div className="text-[13px] font-semibold text-slate-400">Uitleg bij deze pagina</div><div className="font-display text-[22px] font-bold text-white">{t}</div></div>
         </div>
-        <p className="mt-3 text-[15px] leading-relaxed text-slate-200">{s.text}</p>
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex gap-1.5">{STEPS.map((_, n) => <span key={n} className={`h-2 rounded-full transition-all ${n === i ? 'w-6 bg-orange-400' : 'w-2 bg-white/20'}`} />)}</div>
-          <div className="flex gap-2">
-            <button className="btn-ghost text-[14px]" onClick={close}>Overslaan</button>
-            {i < STEPS.length - 1 ? <button className="btn-primary text-[14px]" onClick={() => go(i + 1)}>Volgende</button> : <button className="btn-primary text-[14px]" onClick={() => { close(); setPage('driftmark'); }}>Klaar! 🚀</button>}
-          </div>
+        <p className="mt-3 text-[15px] leading-relaxed text-slate-200">{uitleg}</p>
+        <div className="mt-4 rounded-2xl bg-white/[.04] p-3">
+          <div className="mb-1.5 text-[12px] font-bold uppercase tracking-wider text-slate-400">Sneltoetsen</div>
+          <div className="grid gap-1">{SNELTOETSEN.map(([k, w]) => <div key={k} className="flex items-center gap-3 text-[13px]"><kbd className="min-w-[64px] rounded-md bg-white/10 px-2 py-0.5 text-center font-mono text-[12px] text-white">{k}</kbd><span className="text-slate-300">{w}</span></div>)}</div>
         </div>
+        <div className="mt-4 flex justify-end"><button className="btn-primary text-[14px]" onClick={() => setOpen(false)}>Duidelijk</button></div>
       </div>
     </div>
   );

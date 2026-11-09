@@ -40,59 +40,26 @@ export default function AgentDrawer() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 text-[13px]">
-        <div className="rounded-xl bg-white/[.03] p-2.5"><div className="text-slate-500">Performance</div><div className="mb-1 font-semibold text-white">{a.performance}</div><Progress value={a.performance} h={4} color="#22c55e" /></div>
-        <div className="rounded-xl bg-white/[.03] p-2.5"><div className="text-slate-500">Morale</div><div className="mb-1 font-semibold text-white">{Math.round(a.morale)}</div><Progress value={a.morale} h={4} color="#f59e0b" /></div>
-      </div>
-
       <div className="mt-4 flex flex-wrap gap-2">
         <button className="btn-ghost text-[13px]" onClick={() => s.openModal('assignTask', { agentId: a.id })}><ClipboardList size={14} />Taak geven</button>
       </div>
 
-      <Section title="About">
+      <Section title="Wat doet dit teamlid">
         <p className="text-sm text-slate-300">{role.description}</p>
-        <p className="mt-1 text-sm italic text-slate-400">“{a.personality}”</p>
-      </Section>
-
-      <Section title="Vaardigheden">
-        <div className="space-y-2">
-          {Object.entries(a.skills).map(([k, v]) => (
-            <div key={k} className="flex items-center gap-3">
-              <div className="w-36 text-[13px] text-slate-300">{SKILL_NL[k] ?? k}</div>
-              <div className="flex-1"><Progress value={v} h={5} color={dept.color} /></div>
-              <div className="w-7 text-right text-[13px] text-slate-400">{v}</div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Instructions (system prompt)">
-        <textarea className="input min-h-[90px] text-[13px]" value={instr} onChange={(e) => setInstr(e.target.value)} />
-        <button className="btn-ghost mt-2 text-[13px]" disabled={instr === a.instructions} onClick={() => { s.updateAgent(a.id, { instructions: instr }); s.toast('Instructions saved.', 'success'); }}>Save instructions</button>
-      </Section>
-
-      <Section title="Channel assignment">
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => s.updateAgent(a.id, { channelIds: [] })} className={`chip px-3 py-1 ring-1 ${a.channelIds.length === 0 ? 'bg-sky-500/20 text-white ring-sky-400/50' : 'text-slate-400 ring-slate-600'}`}>All channels</button>
-          {s.channels.map((c) => {
-            const on = a.channelIds.includes(c.id);
-            return <button key={c.id} onClick={() => s.updateAgent(a.id, { channelIds: on ? a.channelIds.filter((x) => x !== c.id) : [...a.channelIds, c.id] })} className={`chip px-3 py-1 ring-1 ${on ? 'bg-sky-500/20 text-white ring-sky-400/50' : 'text-slate-400 ring-slate-600'}`}>{c.logo.emoji} {c.name}</button>;
-          })}
-        </div>
       </Section>
 
       {/* geen werksessie meer: die gaf gesimuleerde uitvoer (niels 2026-11-06) */}
-      <Section title="Current task">
-        {current ? <div className="flex items-center justify-between gap-2 text-sm"><span className="text-white">{current.title}</span><StatusBadge status={current.status} /></div> : <div className="text-sm text-slate-500">{a.state === 'training' ? 'In training.' : 'Idle — waiting for work.'}</div>}
+      <Section title="Huidige taak">
+        {current ? <div className="flex items-center justify-between gap-2 text-sm"><span className="text-white">{current.title}</span><StatusBadge status={current.status} /></div> : <div className="text-sm text-slate-500">Geen lopende taak.</div>}
       </Section>
 
       <Section title={`Takengeschiedenis · ${a.completed} afgerond`}>
         <div className="space-y-1.5">
-          {history.length === 0 && <div className="text-sm text-slate-500">No tasks yet.</div>}
+          {history.length === 0 && <div className="text-sm text-slate-500">Nog geen taken.</div>}
           {history.map((t) => t && (
             <div key={t.id} className="flex items-center justify-between gap-2 rounded-lg bg-white/[.03] px-3 py-1.5 text-[13px]">
               <span className="truncate text-slate-300">{t.title}</span>
-              <span className="flex shrink-0 items-center gap-2">{t.quality != null && <span className="text-slate-400">Q{t.quality}</span>}<StatusBadge status={t.status} /></span>
+              <span className="flex shrink-0 items-center gap-2"><StatusBadge status={t.status} /></span>
             </div>
           ))}
         </div>

@@ -6,6 +6,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Eye, ThumbsUp, MessageCircle, Share2, Timer, UserPlus, Youtube, CalendarClock } from 'lucide-react';
+import Bijgewerkt from '../components/shared/Bijgewerkt';
 import { useLive, readFile, type YTVideo } from '../services/live';
 
 type Filter = 'alles' | 'long' | 'short';
@@ -127,6 +128,7 @@ export default function YouTubeStats() {
 
   return (
     <div className="space-y-3">
+      <Bijgewerkt at={yt?.feedAt ?? null} bron="weergaven en likes uit de YouTube-feed, kijkduur uit vidIQ" />
       <section className="panel p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1.5">{FILTERS.map((f) => (

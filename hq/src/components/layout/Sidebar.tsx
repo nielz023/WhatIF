@@ -1,32 +1,27 @@
-import { Sparkles, Home, Clapperboard, LineChart, Building2, LayoutGrid, FolderKanban, Users, Tv, ShieldAlert } from 'lucide-react';
+import { Home, Clapperboard, LineChart, Building2, FolderKanban, Users, ShieldAlert, Library } from 'lucide-react';
 import type { PageId } from '../../types';
 import { useGame } from '../../store/useGame';
 import { useLive } from '../../services/live';
-import { Library } from 'lucide-react';
 
-/** De vaste knoppen. Studio is het 3D-kantoor met je teamleden en projecten, Meer is naslag. */
+/** De vijf vaste knoppen (verbeterlijst 9 nov, punten 16-18). De Coach zit rechtsonder op elke pagina; Meer is opgegaan in Vandaag, Video's en Kennis. */
 export const MAIN: { id: PageId; label: string; icon: typeof Home; uitleg: string }[] = [
-  { id: 'driftmark', label: 'Kantoor', icon: Home, uitleg: 'Wat er nu gebeurt en wat op jou wacht' },
-  { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts' },
-  { id: 'kanaal', label: 'Kanaal', icon: LineChart, uitleg: 'Abonnees, weergaven en wat werkt' },
-  { id: 'coach', label: 'Coach', icon: Sparkles, uitleg: 'Je CEO Coach: gesprek, briefing, doelen, beslissingen' },
-  { id: 'hq', label: 'Studio', icon: Building2, uitleg: 'Het 3D-kantoor' },
-  { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
+  { id: 'overzicht', label: 'Vandaag', icon: Home, uitleg: 'Wat op jou wacht, wat nu loopt en wat net klaar is' },
+  { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts, cast en ideeën' },
+  { id: 'kanaal', label: 'Kanaal', icon: LineChart, uitleg: 'Abonnees, weergaven, kijkduur en groei' },
+  { id: 'kennis', label: 'Kennis', icon: Library, uitleg: 'Geheugen, threads, documenten, werkwijze en gereedschap' },
+  { id: 'driftmark', label: '3D-kantoor', icon: Building2, uitleg: 'Je 3D-kantoor: loop rond en zie wie waaraan werkt' },
 ];
-// Kennis (v35) staat direct na Coach; op een eigen regel zodat andere wijzigingen in de lijst er los van staan
-MAIN.splice(MAIN.findIndex((x) => x.id === 'coach') + 1, 0, { id: 'kennis', label: 'Kennis', icon: Library, uitleg: 'Alles wat is opgeslagen: geheugen, threads, documenten' });
-/** Alles onder Studio (het 3D-kantoor). Speelgeld, spelcijfers, upgrades, prestaties en nepberichten zijn weg (niels 2026-11-06). */
+/** Binnen het 3D-kantoor: team, projecten en crisiskamer. Het demokanaal-scherm is weg (punt 38). */
 export const STUDIO: { id: PageId; label: string; icon: typeof Home }[] = [
-  { id: 'hq', label: '3D-kantoor', icon: Building2 },
+  { id: 'hq', label: 'Team', icon: Building2 },
   { id: 'projects', label: 'Projecten', icon: FolderKanban },
   { id: 'agents', label: 'Teamleden', icon: Users },
-  { id: 'channels', label: 'Kanalen', icon: Tv },
   { id: 'warroom', label: 'Crisiskamer', icon: ShieldAlert },
 ];
 /** oude naam, nog gebruikt door andere schermen */
 export const NAV = [...MAIN, ...STUDIO.slice(1)];
 
-export const mainOf = (p: PageId): PageId => (STUDIO.some((s) => s.id === p) ? 'hq' : p === 'settings' ? 'meer' : p === 'overzicht' ? 'driftmark' : p);
+export const mainOf = (p: PageId): PageId => (STUDIO.some((s) => s.id === p) || p === 'channels' ? 'driftmark' : p === 'settings' || p === 'meer' || p === 'coach' ? 'overzicht' : p);
 
 function useWaiting() {
   return useLive((s) => s.data.activity.filter((a) => a.state === 'blocked' || a.state === 'review_ready').length);
@@ -51,7 +46,7 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-1 px-2">
         {MAIN.map(({ id, label, icon: Icon, uitleg }, i) => {
           const active = cur === id;
-          const b = id === 'driftmark' ? waiting : 0;
+          const b = id === 'overzicht' ? waiting : 0;
           return (
             <div key={id}>
               {i === 4 && <div className="mx-3 my-2 border-t border-hq-line" />}
@@ -66,7 +61,7 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="hidden px-4 pb-4 text-[12px] leading-snug text-slate-500 lg:block">Home, Video's en Kanaal tonen je echte cijfers. Studio is je 3D-kantoor met je echte video's.</div>
+      <div className="hidden px-4 pb-4 text-[12px] leading-snug text-slate-500 lg:block">Alles toont je echte cijfers en taken. De Coach staat rechtsonder op elke pagina.</div>
     </aside>
   );
 }
@@ -75,17 +70,16 @@ export default function Sidebar() {
 export function MobileNav() {
   const page = useGame((s) => s.page);
   const setPage = useGame((s) => s.setPage);
-  // Kennis past niet meer in de balk (360-390 px): op de telefoon staat hij bovenaan Meer
-  const cur = mainOf(page) === 'kennis' ? 'meer' : mainOf(page);
+  const cur = mainOf(page);
   const waiting = useWaiting();
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-hq-line bg-[#080d22]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
-      {MAIN.filter((x) => x.id !== 'kennis').map(({ id, label, icon: Icon }) => {
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-hq-line bg-[#080d22]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
+      {MAIN.map(({ id, label, icon: Icon }) => {
         const active = cur === id;
         return (
           <button key={id} onClick={() => setPage(id)} className={`relative flex flex-col items-center gap-0.5 py-2.5 text-[12px] font-semibold ${active ? 'text-orange-300' : 'text-slate-400'}`}>
             <Icon size={22} />{label}
-            {id === 'driftmark' && waiting > 0 && <span className="absolute right-[22%] top-1.5 h-2.5 w-2.5 rounded-full bg-orange-500" />}
+            {id === 'overzicht' && waiting > 0 && <span className="absolute right-[22%] top-1.5 h-2.5 w-2.5 rounded-full bg-orange-500" />}
           </button>
         );
       })}
@@ -99,7 +93,7 @@ export function StudioTabs() {
   const setPage = useGame((s) => s.setPage);
   return (
     <div className="shrink-0 border-b border-hq-line bg-[#080d22]/80 px-3 pt-2 backdrop-blur md:px-6">
-      <div className="mb-1.5 text-[12px] text-slate-400"><span className="font-semibold text-sky-300">🏢 Studio is je 3D-kantoor</span> met je echte video's en taken. Knoppen als "Nieuwe video" en "Goedkeuren" worden echte opdrachten voor Claude.</div>
+      <div className="mb-1.5 text-[12px] text-slate-400"><span className="font-semibold text-sky-300">🏢 Team en projecten</span> in je 3D-kantoor, met je echte video's en taken. Knoppen als "Nieuwe video" en "Goedkeuren" worden echte opdrachten voor Claude.</div>
       <div className="flex gap-1 overflow-x-auto pb-2">
         {STUDIO.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setPage(id)} className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition ${page === id ? 'bg-sky-500/20 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>

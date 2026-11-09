@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CursusMeter } from './Cursus';
 import { useLive } from '../services/live';
+import Bijgewerkt from '../components/shared/Bijgewerkt';
 import { useDb, type StatRow } from '../services/db';
 
 const RANGES = [{ id: 7, label: '7 dagen' }, { id: 28, label: '28 dagen' }, { id: 0, label: 'Altijd' }] as const;
@@ -69,7 +70,8 @@ export default function KanaalPage() {
   return (
     <div className="h-full overflow-y-auto p-3 pb-28 md:p-6 md:pb-10">
       <h1 className="font-display text-[28px] font-bold text-white">Kanaal</h1>
-      <p className="mb-4 text-[15px] text-slate-400">Je echte cijfers van YouTube: kanaal en weergaven elk uur, kijkduur per video elke ochtend via vidIQ.</p>
+      <p className="text-[15px] text-slate-400">Je echte cijfers van YouTube: kanaal en weergaven elk uur, kijkduur per video elke ochtend via vidIQ.</p>
+      <Bijgewerkt at={yt?.feedAt ?? null} bron="vidIQ en YouTube-feed" className="mb-4" />
 
       <div className="mb-4 flex gap-1.5">{RANGES.map((r) => (
         <button key={r.id} onClick={() => setRange(r.id)} className={`rounded-full px-4 py-2 text-[14px] font-semibold ${range === r.id ? 'bg-orange-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>{r.label}</button>

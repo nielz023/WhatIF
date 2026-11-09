@@ -1,11 +1,8 @@
-import { useRef, useState } from 'react';
-import { Download, Upload, RotateCcw, CloudUpload, CloudDownload } from 'lucide-react';
-import { useGame } from '../store/useGame';
+import { useEffect, useState } from 'react';
 import { PageHeader } from '../components/ui';
-import { YouTubeDataAdapter } from '../services/adapters';
-import { SupabaseAdapter } from '../services/persistence/storage';
-import type { GameData } from '../store/state';
-import type { IntegrationSettings } from '../types';
+import { useWorld } from '../world/useWorld';
+import { soundOn, setSound, onSoundChange, officeVolume, setOfficeVolume, onOfficeVolume } from '../world/sound';
+import { prefs, setPref, type Prefs } from '../lib/prefs';
 import { useTools } from '../services/tools';
 import { useLive } from '../services/live';
 import { useDb } from '../services/db';
@@ -35,7 +32,7 @@ function useRealConnections() {
     { id: 'image', name: 'Beelden (Higgsfield)', purpose: 'Thumbnails en upgrades', status: ok('higgsfield'), note: ok('higgsfield') === 'connected' ? `Verbonden, ${hf?.credits ?? 0} credits (${hf?.subscription_plan_type ?? 'gratis'}). Ook als add-on in Blender.` : 'Higgsfield is nog niet bereikbaar vanaf deze pagina.' },
     { id: 'video', name: 'Blender op je pc', purpose: 'Animatie en renders', status: (bl ? 'connected' : 'stub') as St, note: bl ? `${bl.stand} (bijgewerkt ${bl.bijgewerkt})` : 'Draait via Remote Control op je pc; de animatie-thread zet de stand hier neer.' },
     { id: 'db', name: 'Database (ingebouwd)', purpose: 'Cijfergeschiedenis, logboek, reserve-kopie', status: (db.ready ? 'connected' : db.offline ? 'stub' : 'stub') as St, note: db.ready ? `${db.stats.length} meetpunten, laatste ronde ${db.engine?.lastRun ? new Date(db.engine.lastRun).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' }) : 'nog niet'}.` : 'Nog niet bereikbaar.' },
-    { id: 'files', name: 'Projectbestanden', purpose: 'Opslag van alles', status: (live.source === 'live' ? 'connected' : 'stub') as St, note: 'Scripts, cast, sets en renders staan in de projectbestanden. Je spelvoortgang staat in deze browser.' },
+    { id: 'files', name: 'Projectbestanden', purpose: 'Opslag van alles', status: (live.source === 'live' ? 'connected' : 'stub') as St, note: 'Scripts, cast, sets en renders staan in de projectbestanden. Je instellingen staan alleen in deze browser.' },
   ];
 }
 
@@ -46,121 +43,69 @@ const STATUS = {
   not_configured: 'bg-slate-600/30 text-slate-400',
 };
 
-function snapshot(): GameData {
-  const st = useGame.getState() as unknown as Record<string, unknown>;
-  const keys: (keyof GameData)[] = ['version', 'tick', 'company', 'agents', 'tasks', 'projects', 'videos', 'channels', 'stats', 'ledger', 'posts', 'notifications', 'achievements', 'missions', 'missionDay', 'upgrades', 'warCases', 'modifiers', 'settings', 'demoMode'];
-  return JSON.parse(JSON.stringify(Object.fromEntries(keys.map((k) => [k, st[k]])))) as GameData;
+function Rij({ titel, uitleg, children }: { titel: string; uitleg: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-white/[.03] p-3">
+      <div className="min-w-0"><div className="text-[14px] font-semibold text-white">{titel}</div><div className="text-[12px] text-slate-400">{uitleg}</div></div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
 }
 
+function Seg<T extends string>({ value, opts, set }: { value: T; opts: [T, string][]; set: (v: T) => void }) {
+  return (
+    <div className="grid grid-flow-col gap-1 rounded-lg bg-black/30 p-1">
+      {opts.map(([v, l]) => <button key={v} onClick={() => set(v)} className={`rounded-md px-2 py-1 text-[12px] font-semibold ${value === v ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'}`}>{l}</button>)}
+    </div>
+  );
+}
+
+function Aan({ on, set }: { on: boolean; set: (v: boolean) => void }) {
+  return <button onClick={() => set(!on)} className={`rounded-full px-3 py-1 text-[12px] font-bold ${on ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/10 text-slate-400'}`}>{on ? 'Aan' : 'Uit'}</button>;
+}
+
+/** Instellingen die echt iets doen (verbeterlijst punt 73). De oude spel-instellingen (API-sleutels, Supabase, opslaan/laden, reset) zijn weg (punt 38). */
 export default function SettingsPage() {
-  const s = useGame();
-  const [f, setF] = useState<IntegrationSettings>({ ...s.settings });
-  const [ytId, setYtId] = useState('UCJhUg9hdXlhRRc7GBU_nRgg');
-  const vqTools = useTools((x) => x.tools);
-  const liveYt = useLive((x) => x.data.youtube);
-  const [ytOut, setYtOut] = useState('');
-  const fileRef = useRef<HTMLInputElement>(null);
   const ov = useRealConnections();
-  const set = (k: keyof IntegrationSettings, v: string) => setF({ ...f, [k]: v });
-  const supa = new SupabaseAdapter(s.settings.supabaseUrl, s.settings.supabaseAnonKey);
+  const { theme, setTheme, focusMode, setFocusMode, quality, setQuality } = useWorld();
+  const [on, setOn] = useState(soundOn());
+  const [vol, setVol] = useState(officeVolume());
+  const [p, setP] = useState<Prefs>(prefs());
+  useEffect(() => onSoundChange(setOn), []);
+  useEffect(() => onOfficeVolume(setVol), []);
+  const zet = <K extends keyof Prefs>(k: K, v: Prefs[K]) => { setPref(k, v); setP(prefs()); };
 
   return (
     <div className="h-full overflow-y-auto p-4 pb-28 md:p-6 md:pb-28">
-      <PageHeader title="Settings" subtitle="Integrations, data and simulation." />
+      <PageHeader title="Instellingen" subtitle="Geluid, beeld, meldingen en koppelingen. Alles wordt alleen in deze browser bewaard." />
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="panel p-5">
+        <div className="panel space-y-2 p-5">
+          <div className="mb-1 font-semibold text-white">Geluid en beeld</div>
+          <Rij titel="Geluidjes" uitleg="Klikjes en een geluidje bij een nieuwe melding."><Aan on={on} set={setSound} /></Rij>
+          <Rij titel="Kantoorgeluid" uitleg={`Geroezemoes in het 3D-kantoor: ${Math.round(vol * 100)}%`}><input type="range" min={0} max={1} step={0.05} value={vol} onChange={(e) => setOfficeVolume(parseFloat(e.target.value))} className="w-32 accent-[#FF7A24]" aria-label="Volume van het kantoorgeluid" /></Rij>
+          <Rij titel="3D-kwaliteit" uitleg="Auto past zich aan je computer aan. 4K is het scherpst, Snel het soepelst."><Seg value={quality} set={setQuality} opts={[['snel', 'Snel'], ['auto', 'Auto'], ['4k', '4K']]} /></Rij>
+          <Rij titel="Licht in het kantoor" uitleg="Klok volgt de echte tijd."><Seg value={theme} set={setTheme} opts={[['auto', 'Klok'], ['dag', 'Dag'], ['nacht', 'Nacht']]} /></Rij>
+          <Rij titel="Focusmodus" uitleg="Kantoor gedimd, alleen wat op jou wacht."><Aan on={focusMode} set={setFocusMode} /></Rij>
+          <Rij titel="Minder beweging" uitleg="Geen inschuivende kaarten en optellende cijfers."><Aan on={p.minderBeweging} set={(v) => zet('minderBeweging', v)} /></Rij>
+          <Rij titel="3D-kantoor op de telefoon" uitleg="Uit: op een klein scherm laadt het 3D-kantoor pas als je erom vraagt."><Aan on={p.telefoon3d} set={(v) => zet('telefoon3d', v)} /></Rij>
+        </div>
+        <div className="panel space-y-2 p-5">
+          <div className="mb-1 font-semibold text-white">Meldingen</div>
+          <Rij titel="Meldingen in het HQ" uitleg="Een melding rechtsboven als een taak klaar is of op jou wacht."><Aan on={p.meldingen} set={(v) => zet('meldingen', v)} /></Rij>
+          <Rij titel="Geluid bij een melding" uitleg="Zacht belletje als er een antwoord of melding binnenkomt."><Aan on={p.meldingGeluid} set={(v) => zet('meldingGeluid', v)} /></Rij>
+          <p className="pt-1 text-[12px] text-slate-500">Pushmeldingen op je telefoon komen via de Claude-app; die kan het HQ zelf niet sturen.</p>
+        </div>
+        <div className="panel p-5 xl:col-span-2">
           <div className="mb-3 font-semibold text-white">Echte koppelingen</div>
-          <div className="space-y-2">
+          <div className="grid gap-2 md:grid-cols-2">
             {ov.map((i) => (
               <div key={i.id} className="rounded-xl bg-white/[.03] p-3">
                 <div className="flex items-center justify-between gap-2"><span className="font-semibold text-white">{i.name}</span><span className={`chip ${STATUS[i.status]}`}>{LABEL[i.status]}</span></div>
-                <div className="text-[13px] text-slate-400">{i.purpose} — {i.note}</div>
+                <div className="text-[13px] text-slate-400">{i.purpose}: {i.note}</div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-[13px] text-slate-500">Uploaden naar YouTube gebeurt nooit automatisch: dat doe je zelf in YouTube Studio.</p>
-        </div>
-
-        <div className="panel p-5">
-          <div className="mb-3 font-semibold text-white">API credentials</div>
-          <p className="mb-3 rounded-lg bg-amber-500/10 p-2.5 text-[13px] text-amber-200">Keys are stored only in this browser's local storage and sent directly to the provider you choose. Use restricted keys and never share your save file if it contains keys.</p>
-          <div className="grid gap-3">
-            <div>
-              <label className="label">Agent AI provider</label>
-              <select className="input" value={f.llmProvider} onChange={(e) => set('llmProvider', e.target.value)}>
-                <option value="simulation">Local simulation (no API)</option>
-                <option value="anthropic">Anthropic Claude</option>
-                <option value="openai">OpenAI</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-[1fr_170px] gap-2">
-              <div><label className="label">Anthropic API key</label><input className="input" type="password" value={f.anthropicKey} onChange={(e) => set('anthropicKey', e.target.value)} placeholder="sk-ant-…" autoComplete="off" /></div>
-              <div><label className="label">Claude model</label><input data-geen-mic className="input" value={f.anthropicModel} onChange={(e) => set('anthropicModel', e.target.value)} /></div>
-            </div>
-            <div className="grid grid-cols-[1fr_170px] gap-2">
-              <div><label className="label">OpenAI API key</label><input className="input" type="password" value={f.openaiKey} onChange={(e) => set('openaiKey', e.target.value)} placeholder="sk-…" autoComplete="off" /></div>
-              <div><label className="label">OpenAI model</label><input data-geen-mic className="input" value={f.openaiModel} onChange={(e) => set('openaiModel', e.target.value)} /></div>
-            </div>
-            <div><label className="label">YouTube Data API key (read-only stats)</label><input className="input" type="password" value={f.youtubeApiKey} onChange={(e) => set('youtubeApiKey', e.target.value)} autoComplete="off" /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><label className="label">Threads access token</label><input className="input" type="password" value={f.threadsToken} onChange={(e) => set('threadsToken', e.target.value)} autoComplete="off" /></div>
-              <div><label className="label">Voice API key</label><input className="input" type="password" value={f.elevenLabsKey} onChange={(e) => set('elevenLabsKey', e.target.value)} autoComplete="off" /></div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><label className="label">Supabase URL</label><input data-geen-mic className="input" value={f.supabaseUrl} onChange={(e) => set('supabaseUrl', e.target.value)} placeholder="https://xyz.supabase.co" /></div>
-              <div><label className="label">Supabase anon key</label><input className="input" type="password" value={f.supabaseAnonKey} onChange={(e) => set('supabaseAnonKey', e.target.value)} autoComplete="off" /></div>
-            </div>
-            <button className="btn-primary" onClick={() => { s.updateSettings(f); s.toast('Settings saved locally.', 'success'); }}>Save settings</button>
-          </div>
-        </div>
-
-        <div className="panel p-5">
-          <div className="mb-3 font-semibold text-white">YouTube Data API test (read-only)</div>
-          <div className="mb-2 text-xs text-slate-400">Geen API-sleutel nodig: zonder sleutel haalt de HQ je cijfers via vidIQ. De ID van Driftmark staat al ingevuld.</div>
-          <div className="flex gap-2">
-            <input data-geen-mic className="input" value={ytId} onChange={(e) => setYtId(e.target.value)} placeholder="Channel ID, e.g. UC_x5XG1OV2P6uZZ5FSM9Ttw" />
-            <button className="btn-ghost" disabled={!ytId} onClick={async () => {
-              const fmt = (a: number, b: number, c: number, bron: string) => `${Number(a).toLocaleString('nl-NL')} abonnees · ${Number(b).toLocaleString('nl-NL')} weergaven · ${c} video's (${bron})`;
-              if (!s.settings.youtubeApiKey) {
-                const ch = ((vqTools.vidiqch?.data as Any)?.channels ?? []).find((c: Any) => c.id === ytId || c.channelId === ytId || /drift/i.test(c.title ?? ''));
-                if (ch) { setYtOut(fmt(ch.subscriberCount, ch.viewCount, ch.videoCount, 'live via vidIQ')); return; }
-                if (liveYt?.subscribers != null) { setYtOut(fmt(liveYt.subscribers, liveYt.views ?? 0, liveYt.videoCount ?? 0, 'laatste ronde van Claude')); return; }
-                setYtOut('vidIQ is nog aan het laden. Probeer het over een paar seconden opnieuw.'); return;
-              }
-              try { const r = await new YouTubeDataAdapter(s.settings.youtubeApiKey).fetchChannelStats(ytId); setYtOut(fmt(r.subscribers, r.views, r.videos, 'YouTube Data API')); }
-              catch (e) { setYtOut(`⚠️ ${(e as Error).message}`); }
-            }}>Fetch</button>
-          </div>
-          {ytOut && <div className="mt-2 text-sm text-slate-300">{ytOut}</div>}
-        </div>
-
-        <div className="panel p-5">
-          <div className="mb-3 font-semibold text-white">Save data</div>
-          <div className="flex flex-wrap gap-2">
-            <button className="btn-ghost text-[13px]" onClick={() => {
-              const data = snapshot();
-              data.settings = { ...data.settings, anthropicKey: '', openaiKey: '', youtubeApiKey: '', threadsToken: '', elevenLabsKey: '', supabaseAnonKey: '' };
-              const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
-              const a = document.createElement('a'); a.href = url; a.download = `faceless-hq-save-day${Math.floor(s.tick / 24)}.json`; a.click(); URL.revokeObjectURL(url);
-            }}><Download size={14} />Export save (keys stripped)</button>
-            <button className="btn-ghost text-[13px]" onClick={() => fileRef.current?.click()}><Upload size={14} />Import save</button>
-            <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={async (e) => {
-              const file = e.target.files?.[0]; if (!file) return;
-              try {
-                const data = JSON.parse(await file.text()) as GameData;
-                if (!data.agents || !data.channels) throw new Error('Not a valid save file');
-                s.askConfirm({ title: 'Import save?', body: 'Your current progress will be replaced by the imported save.', confirmLabel: 'Replace progress', danger: true, onConfirm: () => { s.importSave({ ...data, settings: { ...data.settings, ...s.settings } }); s.toast('Save imported.', 'success'); } });
-              } catch (err) { s.toast(`Importeren mislukt: ${(err as Error).message}`, 'warning'); }
-              e.target.value = '';
-            }} />
-            <button className="btn-ghost text-[13px]" disabled={!supa.isConfigured()} onClick={async () => { try { await supa.save('default', snapshot()); s.toast('Saved to Supabase.', 'success'); } catch (e) { s.toast((e as Error).message, 'warning'); } }}><CloudUpload size={14} />Save to Supabase</button>
-            <button className="btn-ghost text-[13px]" disabled={!supa.isConfigured()} onClick={async () => { try { const d = await supa.load('default'); if (d) { s.importSave(d as GameData); s.toast('Loaded from Supabase.', 'success'); } else s.toast('No cloud save found.', 'warning'); } catch (e) { s.toast((e as Error).message, 'warning'); } }}><CloudDownload size={14} />Load from Supabase</button>
-          </div>
-          <p className="mt-2 text-[13px] text-slate-500">Progress autosaves to this browser. Supabase requires the table in <code>supabase/schema.sql</code>.</p>
-          <div className="mt-5 border-t border-hq-line/60 pt-4">
-            <div className="mb-2 text-sm font-semibold text-rose-300">Danger zone</div>
-            <button className="btn-danger text-[13px]" onClick={() => s.askConfirm({ title: 'Reset the whole company?', body: 'All progress, agents, channels and history will be permanently replaced with a fresh demo company. This cannot be undone.', confirmLabel: 'Reset everything', danger: true, onConfirm: () => { s.resetGame(); s.toast('Company reset to demo state.', 'info'); } })}><RotateCcw size={14} />Reset game</button>
-          </div>
+          <p className="mt-3 text-[13px] text-slate-500">Uploaden naar YouTube gebeurt nooit automatisch: dat doe je zelf in YouTube Studio. Het HQ zet alles voor je klaar.</p>
         </div>
       </div>
     </div>

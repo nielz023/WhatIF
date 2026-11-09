@@ -1,25 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, Clapperboard, LineChart, Sparkles, Layers, LayoutGrid, Home, LayoutDashboard, SquarePlay, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import { useGame } from '../../store/useGame';
 import { useLive, type Activity } from '../../services/live';
 import { openGesprek } from '../shared/Gesprek';
-import { mainOf } from './Sidebar';
-import type { PageId } from '../../types';
-import { Library } from 'lucide-react';
+import { mainOf, MAIN } from './Sidebar';
+import { KLEUR } from '../../lib/status';
 
-/** De zwevende glazen hoofdnavigatie boven het kantoor. */
-const ITEMS: { id: PageId; label: string; icon: typeof BarChart3; uitleg: string }[] = [
-  { id: 'driftmark', label: 'Overzicht', icon: BarChart3, uitleg: 'Het 3D-kantoor: je hele bedrijf in één blik' },
-  { id: 'videos', label: "Video's", icon: Clapperboard, uitleg: 'Elke video van idee tot upload, plus shorts' },
-  { id: 'kanaal', label: 'Kanaal', icon: SquarePlay, uitleg: 'Abonnees, weergaven, kijkduur en cursusmeter' },
-  { id: 'coach', label: 'Coach', icon: Sparkles, uitleg: 'Je CEO Coach: gesprek, briefing, doelen, beslissingen' },
-  { id: 'hq', label: 'Studio', icon: Layers, uitleg: 'Het kantoor beheren: teamleden en projecten' },
-  { id: 'meer', label: 'Meer', icon: LayoutGrid, uitleg: 'Taken, werkwijze, cast, gereedschap, koppelingen' },
-];
-// Kennis (v35) direct na Coach, net als in Sidebar.tsx; op een eigen regel zodat andere wijzigingen in de lijst er los van staan
-ITEMS.splice(ITEMS.findIndex((x) => x.id === 'coach') + 1, 0, { id: 'kennis', label: 'Kennis', icon: Library, uitleg: 'Alles wat is opgeslagen: geheugen, threads, documenten' });
+/** De zwevende glazen hoofdnavigatie boven het kantoor: dezelfde vijf knoppen als overal (punt 17). */
+const ITEMS = MAIN;
 
 const ago = (iso?: string) => {
   const t = Date.parse(iso ?? ''); if (isNaN(t)) return '';
@@ -41,7 +31,7 @@ function WachtLijst({ items, onPick }: { items: Activity[]; onPick: () => void }
           const wat = a.needs || a.doing || (klaar ? 'Klaar om te bekijken.' : 'Wacht op jouw antwoord.');
           const inner = (<>
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: klaar ? '#FACC15' : '#FF9F1C', boxShadow: `0 0 8px ${klaar ? '#FACC15' : '#FF9F1C'}` }} />
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: KLEUR.wacht, boxShadow: `0 0 8px ${KLEUR.wacht}` }} />
               <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-white">{a.title}</span>
               <span className="shrink-0 text-[11px] text-slate-500">{klaar ? 'bekijken' : 'jouw beurt'}{ago(a.lastIso) && ` · ${ago(a.lastIso)}`}</span>
             </div>
@@ -56,7 +46,7 @@ function WachtLijst({ items, onPick }: { items: Activity[]; onPick: () => void }
           );
         })}
       </ul>
-      {items.length > shown.length && <div className="px-2 pt-1 text-[11px] text-slate-500">En nog {items.length - shown.length}. Alles staat in Meer › Alle taken.</div>}
+      {items.length > shown.length && <div className="px-2 pt-1 text-[11px] text-slate-500">En nog {items.length - shown.length}. Alles staat in Vandaag › Alle taken.</div>}
     </motion.div>
   );
 }
@@ -80,7 +70,7 @@ export default function GlassNav() {
       <div className="flex gap-2 lg:gap-3">
         {ITEMS.map(({ id, label, icon: Icon, uitleg }, i) => {
           const active = cur === id;
-          const lijst = id === 'driftmark' && waiting > 0;
+          const lijst = id === 'overzicht' && waiting > 0;
           return (
             <div key={id} className="relative" style={{ perspective: 900 }} onMouseEnter={lijst ? enter : undefined} onMouseLeave={lijst ? leave : undefined}>
               <button onClick={() => { if (lijst) close(); setPage(id); }} title={lijst ? undefined : uitleg} data-active={active} className="glass-btn group" style={{ ['--ry' as string]: `${(i - (ITEMS.length - 1) / 2) * -5}deg` }} aria-current={active ? 'page' : undefined}
@@ -98,16 +88,7 @@ export default function GlassNav() {
   );
 }
 
-const SIDE: { id: PageId; label: string; icon: typeof Home }[] = [
-  { id: 'driftmark', label: 'HQ', icon: Home },
-  { id: 'overzicht', label: 'Dagoverzicht', icon: LayoutDashboard },
-  { id: 'videos', label: "Video's", icon: Clapperboard },
-  { id: 'kanaal', label: 'Kanaal', icon: LineChart },
-  { id: 'coach', label: 'Coach', icon: Sparkles },
-  { id: 'hq', label: 'Studio', icon: Layers },
-  { id: 'meer', label: 'Meer', icon: LayoutGrid },
-];
-SIDE.splice(SIDE.findIndex((x) => x.id === 'coach') + 1, 0, { id: 'kennis', label: 'Kennis', icon: Library });
+const SIDE = MAIN;
 
 /** Zwevende glazen zijbalk links (zoals op het referentiebeeld), alleen op grote schermen. */
 export function GlassSide() {
@@ -116,7 +97,7 @@ export function GlassSide() {
   return (
     <aside className="glass-side pointer-events-auto absolute left-4 top-2 z-30 hidden w-[190px] p-2.5 xl:block" aria-label="Zijbalk">
       {SIDE.map(({ id, label, icon: Icon }) => {
-        const active = page === id || (id === 'hq' && mainOf(page) === 'hq');
+        const active = mainOf(page) === id;
         return (
           <button key={id} onClick={() => setPage(id)} data-active={active} className="glass-side-btn">
             <Icon size={20} /><span>{label}</span>

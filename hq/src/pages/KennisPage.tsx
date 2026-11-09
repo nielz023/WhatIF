@@ -4,7 +4,8 @@
  * Alle tekst is data: Markdown via components/shared/Md.tsx, nooit als HTML.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, Brain, Download, FileText, FolderOpen, Image as ImageIcon, Library, MessageSquare, MessagesSquare, Paperclip, RefreshCw, Search, X, LayoutDashboard } from 'lucide-react';
+import { ArrowLeft, Brain, Download, FileText, FolderOpen, Image as ImageIcon, Library, MessageSquare, MessagesSquare, Paperclip, RefreshCw, Search, X, LayoutDashboard, Wrench } from 'lucide-react';
+import { WerkPage } from './DriftmarkPage';
 import { Md, type MdLink } from '../components/shared/Md';
 import { Berichten, openGesprek, volgLink } from '../components/shared/Gesprek';
 import { useThreads, stateOf, wanneerNl, loadGesprek, type GesprekLees, type ThreadState } from '../services/threads';
@@ -25,6 +26,7 @@ const TABS: { id: KennisTab; label: string; icon: typeof Search; uitleg: string 
   { id: 'threads', label: 'Threads', icon: MessagesSquare, uitleg: 'Elke thread met het hele gesprek' },
   { id: 'projectchat', label: 'Projectchat', icon: MessageSquare, uitleg: 'De hele projectchat' },
   { id: 'documenten', label: 'Documenten', icon: FolderOpen, uitleg: 'Artifacts, bestanden, beelden en bijlagen' },
+  { id: 'werk', label: 'Werkwijze & gereedschap', icon: Wrench, uitleg: 'De vaste regels voor elke video, je stemmen en je tools' },
   { id: 'zoeken', label: 'Zoeken', icon: Search, uitleg: 'Zoek door alles heen' },
 ];
 const NIET_OPGEHAALD = 'Nog niet opgehaald. Dit wordt elk uur bijgewerkt.';
@@ -116,6 +118,7 @@ export default function KennisPage() {
       {tab === 'threads' && <ThreadsTab />}
       {tab === 'projectchat' && <ProjectchatTab />}
       {tab === 'documenten' && <DocumentenTab />}
+      {tab === 'werk' && <WerkPage />}
       {tab === 'zoeken' && <ZoekenTab />}
     </div>
   );

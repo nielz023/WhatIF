@@ -158,7 +158,7 @@ export function vindNotitie(g: Geheugen | undefined, naam: string): string | nul
 }
 
 /* ================= navigatie binnen Kennis ================= */
-export type KennisTab = 'overzicht' | 'geheugen' | 'threads' | 'projectchat' | 'documenten' | 'zoeken';
+export type KennisTab = 'overzicht' | 'geheugen' | 'threads' | 'projectchat' | 'documenten' | 'werk' | 'zoeken';
 const TABS: KennisTab[] = ['overzicht', 'geheugen', 'threads', 'projectchat', 'documenten', 'zoeken'];
 interface Nav {
   tab: KennisTab;

@@ -198,3 +198,6 @@ textarea.dm-mic { background-position: right 9px top 9px !important; }
   50% { background-size: 21px 21px; box-shadow: 0 0 0 4px rgba(244,63,94,.18); }
 }
 @media (prefers-reduced-motion: reduce) { .dm-mic.dm-mic-aan { animation: none; box-shadow: 0 0 0 3px rgba(244,63,94,.3); } }
+
+/* Minder beweging (instellingen, verbeterlijst punt 73) */
+.dm-rustig *, .dm-rustig *::before, .dm-rustig *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }

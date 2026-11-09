@@ -15,7 +15,7 @@ export default function TaskCard({ task, compact }: { task: Task; compact?: bool
   const agent = s.agents.find((a) => a.id === task.agentId);
   const overdue = !['Completed', 'Rejected'].includes(task.status) && task.deadlineTick < s.tick;
   const deps = task.dependencies.map((d) => s.tasks.find((t) => t.id === d)).filter(Boolean) as Task[];
-  const nameOf = (id: string) => (id === 'player' ? 'CEO (you)' : id === 'system' ? 'Workflow Engine' : s.agents.find((a) => a.id === id)?.name ?? 'Former agent');
+  const nameOf = (id: string) => (id === 'player' ? 'niels' : id === 'system' ? 'HQ' : s.agents.find((a) => a.id === id)?.name ?? 'Oud teamlid');
 
   return (
     <div className={`rounded-xl border bg-hq-bg/50 transition ${open ? 'border-sky-400/50' : 'border-hq-line/70 hover:border-slate-500/70'}`}>
@@ -26,9 +26,9 @@ export default function TaskCard({ task, compact }: { task: Task; compact?: bool
           <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[13px] text-slate-400">
             <StatusBadge status={task.status} />
             {!compact && <PriorityBadge p={task.priority} />}
-            <span>{agent ? agent.name : 'Unassigned'}</span>
-            {overdue && <span className="text-rose-400">· overdue</span>}
-            {task.revision > 0 && <span className="text-amber-300">· rev {task.revision + 1}</span>}
+            <span>{agent ? agent.name : 'Nog niemand'}</span>
+            {overdue && <span className="text-rose-400">· te laat</span>}
+            {task.revision > 0 && <span className="text-amber-300">· versie {task.revision + 1}</span>}
           </div>
           {['In Progress', 'Assigned'].includes(task.status) && <div className="mt-1.5"><Progress value={task.progress} h={4} /></div>}
         </div>
@@ -38,19 +38,17 @@ export default function TaskCard({ task, compact }: { task: Task; compact?: bool
         <div className="space-y-3 border-t border-hq-line/60 p-3 text-sm">
           <p className="text-slate-300">{task.description}</p>
           <div className="grid grid-cols-2 gap-2 text-[13px] text-slate-400">
-            <div>Created: <span className="text-slate-200">{fmtTick(task.createdTick)}</span></div>
+            <div>Gemaakt: <span className="text-slate-200">{fmtTick(task.createdTick)}</span></div>
             <div>Deadline: <span className={overdue ? 'text-rose-300' : 'text-slate-200'}>{fmtTick(task.deadlineTick)}</span></div>
-            <div>Quality: <span className="text-slate-200">{task.quality ?? '—'}</span></div>
-            <div>Kind: <span className="capitalize text-slate-200">{task.kind}</span></div>
           </div>
           {deps.length > 0 && (
-            <div className="text-[13px] text-slate-400"><Link2 size={12} className="mr-1 inline" />Depends on: {deps.map((d) => <span key={d.id} className="mr-2 text-slate-200">{d.title} <StatusBadge status={d.status} /></span>)}</div>
+            <div className="text-[13px] text-slate-400"><Link2 size={12} className="mr-1 inline" />Hangt af van: {deps.map((d) => <span key={d.id} className="mr-2 text-slate-200">{d.title} <StatusBadge status={d.status} /></span>)}</div>
           )}
-          {task.result && <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-200">Result: {task.result}</div>}
+          {task.result && <div className="rounded-lg bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-200">Resultaat: {task.result}</div>}
 
           {task.documents.length > 0 && (
             <div>
-              <div className="label">Documents</div>
+              <div className="label">Documenten</div>
               <div className="flex flex-wrap gap-1.5">
                 {task.documents.map((d) => (
                   <button key={d.id} onClick={() => setDoc(doc === d.id ? null : d.id)} className={`chip ring-1 ${doc === d.id ? 'bg-sky-500/20 text-white ring-sky-400/50' : 'bg-slate-700/30 text-slate-300 ring-slate-600/50'}`}>
@@ -63,37 +61,37 @@ export default function TaskCard({ task, compact }: { task: Task; compact?: bool
           )}
 
           <div>
-            <div className="label flex items-center gap-1"><MessageSquare size={11} />Comments ({task.comments.length})</div>
+            <div className="label flex items-center gap-1"><MessageSquare size={11} />Opmerkingen ({task.comments.length})</div>
             <div className="max-h-40 space-y-1.5 overflow-y-auto">
               {task.comments.map((c) => (
                 <div key={c.id} className="rounded-lg bg-white/[.03] px-2.5 py-1.5 text-[13px]"><span className="font-semibold text-slate-200">{nameOf(c.authorId)}</span> <span className="text-slate-500">· {relTime(c.tick, s.tick)}</span><div className="text-slate-300">{c.text}</div></div>
               ))}
             </div>
             <form className="mt-2 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (comment.trim()) { s.commentTask(task.id, comment.trim()); setComment(''); } }}>
-              <input className="input !py-1.5 text-[13px]" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Leave feedback for the agent…" />
-              <button className="btn-ghost !py-1.5 text-[13px]" disabled={!comment.trim()}>Send</button>
+              <input className="input !py-1.5 text-[13px]" value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Opmerking voor dit teamlid…" />
+              <button className="btn-ghost !py-1.5 text-[13px]" disabled={!comment.trim()}>Sturen</button>
             </form>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {task.kind !== 'pipeline' && task.status === 'Review' && (
               <>
-                <button className="btn-success !py-1.5 text-[13px]" onClick={() => s.reviewTask(task.id, true)}>Approve deliverable</button>
-                <button className="btn-danger !py-1.5 text-[13px]" onClick={() => s.reviewTask(task.id, false, comment || undefined)}>Request changes</button>
+                <button className="btn-success !py-1.5 text-[13px]" onClick={() => s.reviewTask(task.id, true)}>Goedkeuren</button>
+                <button className="btn-danger !py-1.5 text-[13px]" onClick={() => s.reviewTask(task.id, false, comment || undefined)}>Aanpassen</button>
               </>
             )}
             {!['Completed', 'Rejected'].includes(task.status) && task.stage !== 'approval' && task.stage !== 'publishing' && (
               <>
                 <select className="input !w-auto !py-1.5 text-[13px]" value={task.priority} onChange={(e) => s.setTaskPriority(task.id, e.target.value as Priority)}>
-                  {['Low', 'Medium', 'High', 'Critical'].map((p) => <option key={p}>{p}</option>)}
+                  {([['Low', 'Laag'], ['Medium', 'Normaal'], ['High', 'Hoog'], ['Critical', 'Spoed']] as const).map(([p, l]) => <option key={p} value={p}>{l}</option>)}
                 </select>
                 <select className="input !w-auto !py-1.5 text-[13px]" value="" onChange={(e) => e.target.value && s.reassignTask(task.id, e.target.value)}>
-                  <option value="">Reassign to…</option>
+                  <option value="">Iemand anders geven…</option>
                   {s.agents.filter((a) => a.id !== task.agentId && (!task.stage || stageById(task.stage).roles.includes(a.role))).map((a) => <option key={a.id} value={a.id}>{a.name} ({roleById(a.role).title})</option>)}
                 </select>
               </>
             )}
-            {agent && <button className="btn-ghost !py-1.5 text-[13px]" onClick={() => s.selectAgent(agent.id)}>Open agent</button>}
+            {agent && <button className="btn-ghost !py-1.5 text-[13px]" onClick={() => s.selectAgent(agent.id)}>Teamlid openen</button>}
           </div>
         </div>
       )}

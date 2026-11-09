@@ -76,11 +76,11 @@ function useScreens() {
   }, []);
 }
 
-/** Namen op de borden zoals op het referentiebeeld (Engels + Nederlandse ondertitel). */
+/** Namen op de borden, in het Nederlands (verbeterlijst punt 39). */
 const SIGN: Partial<Record<string, [string, string]>> = {
-  onderzoek: ['RESEARCH', 'Onderzoek'], creatief: ['CREATIVE', 'Ideeën & titels'], script: ['SCRIPT', 'Scripts & verhaallijn'],
-  stem: ['VOICE', 'Stem & audio'], productie: ['PRODUCTION', 'Animatie & montage'], thumbnail: ['THUMBNAIL', 'Design & CTR'],
-  publicatie: ['PUBLISHING', 'Upload & SEO'], ceo: ['CEO & ANALYTICS', 'Strategie & prestaties'], crisis: ['CRISIS KAMER', 'Analyse & oplossingen'],
+  onderzoek: ['ONDERZOEK', 'Niches & trends'], creatief: ['CREATIEF', 'Ideeën & titels'], script: ['SCRIPT', 'Scripts & verhaallijn'],
+  stem: ['STEM', 'Voice-overs & audio'], productie: ['PRODUCTIE', 'Animatie & montage'], thumbnail: ['THUMBNAIL', 'Ontwerp & klikratio'],
+  publicatie: ['PUBLICATIE', 'Upload & planning'], ceo: ['CEO & CIJFERS', 'Strategie & prestaties'], crisis: ['CRISISKAMER', 'Analyse & oplossingen'],
 };
 /** Groot lichtbord per afdeling (icoon + naam + ondertitel), net als op het referentiebeeld. */
 function signTex(r: RoomDef) {

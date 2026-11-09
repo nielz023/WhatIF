@@ -24,7 +24,6 @@ import DepartmentDrawer from './components/shared/DepartmentDrawer';
 import HQPage from './pages/HQPage';
 import ProjectsPage from './pages/ProjectsPage';
 import AgentsPage from './pages/AgentsPage';
-import ChannelsPage from './pages/ChannelsPage';
 import SettingsPage from './pages/SettingsPage';
 import WarRoomPage from './pages/WarRoomPage';
 import DriftmarkPage, { VideosPage, MeerPage } from './pages/DriftmarkPage';
@@ -39,12 +38,12 @@ import { startTools } from './services/tools';
 
 /** Schermen die weg zijn (speelgeld, upgrades, spelcijfers, prestaties, berichten): een oude link gaat terug naar het kantoor. */
 function NaarKantoor() {
-  useEffect(() => { useGame.getState().setPage('hq'); }, []);
+  useEffect(() => { useGame.getState().setPage('driftmark'); }, []);
   return null;
 }
 
 const PAGES: Record<PageId, () => JSX.Element | null> = {
-  driftmark: () => null, overzicht: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: ChannelsPage, analytics: NaarKantoor,
+  driftmark: () => null, overzicht: () => <DriftmarkPage />, videos: VideosPage, kanaal: KanaalPage, coach: CoachPage, meer: MeerPage, hq: HQPage, projects: ProjectsPage, agents: AgentsPage, channels: NaarKantoor, analytics: NaarKantoor,
   threads: NaarKantoor, finances: NaarKantoor, upgrades: NaarKantoor, achievements: NaarKantoor,
   settings: SettingsPage, warroom: WarRoomPage,
   kennis: KennisPage,
@@ -77,10 +76,10 @@ class PageBoundary extends Component<{ children: ReactNode }, { err: string | nu
         <div className="panel max-w-md p-6 text-center">
           <div className="text-3xl">🛠️</div>
           <div className="mt-2 font-display text-xl font-bold text-white">Dit scherm liep vast</div>
-          <p className="mt-1 text-[14px] text-slate-300">De rest van de HQ werkt gewoon. Ga terug naar Home, of laat Claude weten welke knop je indrukte.</p>
+          <p className="mt-1 text-[14px] text-slate-300">De rest van het HQ werkt gewoon. Ga terug naar Vandaag, of laat Claude weten welke knop je indrukte.</p>
           <p className="mt-2 break-words text-[12px] text-slate-500">{this.state.err}</p>
           <div className="mt-4 flex justify-center gap-2">
-            <button className="btn-primary" onClick={() => useGame.getState().setPage('driftmark')}>Naar Home</button>
+            <button className="btn-primary" onClick={() => useGame.getState().setPage('overzicht')}>Naar Vandaag</button>
             <button className="btn-ghost" onClick={() => this.setState({ err: null })}>Opnieuw</button>
           </div>
         </div>
@@ -90,12 +89,12 @@ class PageBoundary extends Component<{ children: ReactNode }, { err: string | nu
 }
 
 const TITLES: Partial<Record<PageId, { t: string; sub: string; c: string }>> = {
-  overzicht: { t: 'Dagoverzicht', sub: 'Wat er nu gebeurt en wat op jou wacht', c: '#FF7A24' },
+  overzicht: { t: 'Vandaag', sub: 'Wat op jou wacht, wat nu loopt en wat net klaar is', c: '#FF7A24' },
   videos: { t: "Video's", sub: 'Productie van idee tot upload, plus shorts', c: '#FF4DB8' },
   kanaal: { t: 'Kanaal', sub: 'Abonnees, weergaven, kijkduur en groei', c: '#FACC15' },
   coach: { t: 'Claude · CEO Coach', sub: 'Gesprek, briefing, doelen, beslissingen, agents en rapporten', c: '#FF7A24' },
   meer: { t: 'Meer', sub: 'Taken, cast & sets, werkwijze, gereedschap, ideeën, koppelingen', c: '#20D9FF' },
-  settings: { t: 'Instellingen', sub: 'Koppelingen en opslag', c: '#94A3B8' },
+  settings: { t: 'Instellingen', sub: 'Geluid, beeld, meldingen en koppelingen', c: '#94A3B8' },
 };
 
 export default function App() {
@@ -116,14 +115,21 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.closest('input,textarea,select')) return;
+      if ((e.target as HTMLElement)?.closest('input,textarea,select,[contenteditable]')) return;
+      // sneltoetsen (verbeterlijst punt 24): 1-5 hoofdpagina's, ? uitleg, K opdrachtbalk
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !useWorld.getState().walk) {
+        const n = Number(e.key);
+        if (n >= 1 && n <= MAIN.length) { useGame.getState().setPage(MAIN[n - 1].id); return; }
+        if (e.key === '?') { window.dispatchEvent(new Event('dm-tour')); return; }
+        if (e.key === 'k' || e.key === 'K') { e.preventDefault(); window.dispatchEvent(new Event('dm-opdracht')); return; }
+      }
       if (e.key === 'Escape') {
         if (useWorld.getState().walk) return useWorld.getState().setWalk(false); // rondlopen: Esc stopt alleen het rondlopen
         const st = useGame.getState(); const w = useWorld.getState();
         if (st.selectedAgentId || st.selectedProjectId || st.selectedDept || st.notifOpen) { st.selectAgent(null); st.selectProject(null); st.selectDept(null); st.setNotifOpen(false); return; }
         if (w.worker) return w.openWorker(null);
         if (w.focus) return w.setFocus(null);
-        if (st.page !== 'driftmark') st.setPage('driftmark');
+        if (st.page !== 'overzicht') st.setPage('overzicht');
       }
     };
     window.addEventListener('keydown', onKey);

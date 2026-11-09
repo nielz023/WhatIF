@@ -21,7 +21,7 @@ export default function AgentsPage() {
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <input className="input !w-56 !py-1.5 text-[13px]" placeholder="Zoek een teamlid…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button onClick={() => setDept('all')} className={`chip px-3 py-1 ring-1 ${dept === 'all' ? 'bg-sky-500/25 text-white ring-sky-400/60' : 'text-slate-400 ring-slate-700'}`}>All</button>
+        <button onClick={() => setDept('all')} className={`chip px-3 py-1 ring-1 ${dept === 'all' ? 'bg-sky-500/25 text-white ring-sky-400/60' : 'text-slate-400 ring-slate-700'}`}>Alle</button>
         {DEPARTMENTS.map((d) => (
           <button key={d.id} onClick={() => setDept(d.id)} className={`chip px-3 py-1 ring-1 ${dept === d.id ? 'text-white' : 'text-slate-400 ring-slate-700'}`} style={dept === d.id ? { background: `${d.color}30`, boxShadow: `inset 0 0 0 1px ${d.color}` } : undefined}>
             {d.icon} {d.short} <span className="text-slate-500">{s.agents.filter((a) => a.department === d.id).length}</span>
@@ -44,15 +44,11 @@ export default function AgentsPage() {
                   <div className="text-[13px]" style={{ color: d.color }}>{d.icon} {d.short}</div>
                 </div>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] text-slate-400">
-                <div>Performance<Progress value={a.performance} h={4} color="#22c55e" /></div>
-                <div>Morale<Progress value={a.morale} h={4} color="#f59e0b" /></div>
-              </div>
               <div className="mt-3 flex items-center justify-between">
                 <StateDot state={a.state} />
                 <span className="text-[12px] text-slate-500">{a.completed} {a.completed === 1 ? 'taak' : 'taken'} af</span>
               </div>
-              <div className="mt-1 truncate text-[13px] text-slate-400">{task ? `▶ ${task.title}` : a.channelIds.length ? `Kanalen: ${a.channelIds.map((id) => s.channels.find((c) => c.id === id)?.name).join(', ')}` : 'Alle kanalen'}</div>
+              <div className="mt-1 truncate text-[13px] text-slate-400">{task ? `▶ ${task.title}` : 'Geen lopende taak'}</div>
             </div>
           );
         })}

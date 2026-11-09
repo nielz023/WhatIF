@@ -15,6 +15,10 @@ import { useDb } from '../services/db';
 import { UploadCalendar, MetroLine } from './DriftmarkVideos';
 import YouTubeStats from './YouTubeStats';
 import { Library } from 'lucide-react';
+import { KLEUR } from '../lib/status';
+import Bijgewerkt from '../components/shared/Bijgewerkt';
+import Blok from '../components/shared/Blok';
+import Legenda from '../components/shared/Legenda';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Any = any;
 
@@ -140,7 +144,7 @@ function Section({ icon, title, children, right }: { icon: React.ReactNode; titl
         <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-200">{icon}{title}</div>
         {right}
       </div>
-      {children}
+      <Blok naam={title}>{children}</Blok>
     </section>
   );
 }
@@ -148,7 +152,7 @@ function Section({ icon, title, children, right }: { icon: React.ReactNode; titl
 type Tab = 'v1' | 'v2' | 'v3';
 type View = 'overzicht' | 'threads' | 'youtube' | 'videos' | 'cursus' | 'kalender' | 'shorts' | 'cast' | 'werkwijze' | 'gereedschap' | 'ideeen';
 const VIEWS: { id: View; label: string; uitleg: string }[] = [
-  { id: 'overzicht', label: 'Overzicht', uitleg: 'Wat er nu gebeurt en wat jij moet doen' },
+  { id: 'overzicht', label: 'Vandaag', uitleg: 'Wat op jou wacht, wat nu loopt en wat net klaar is' },
   { id: 'threads', label: 'Alle taken', uitleg: 'Elke Claude-taak in je project, per video. Klik om hem te openen' },
   { id: 'youtube', label: 'Op YouTube', uitleg: "Al je video's en shorts zoals ze op YouTube staan, met weergaven, likes, reacties en kijkduur" },
   { id: 'videos', label: 'Productie', uitleg: 'Elke lange video met zijn productielijn en bestanden' },
@@ -161,7 +165,7 @@ const VIEWS: { id: View; label: string; uitleg: string }[] = [
   { id: 'ideeen', label: 'Ideeën & links', uitleg: 'Onderwerpen voor de volgende video en alle documenten' },
 ];
 const STATE: Record<string, [string, string]> = {
-  working: ['Claude is bezig', '#3db8ff'], blocked: ['wacht op jou', '#ff8a3d'], review_ready: ['klaar om te bekijken', '#ff8a3d'], done: ['klaar', '#3ddc97'], failed: ['mislukt', '#ff4d6d'], stopped: ['gestopt', '#94a3b8'],
+  working: ['Claude is bezig', KLEUR.bezig], blocked: ['wacht op jou', KLEUR.wacht], review_ready: ['klaar om te bekijken', KLEUR.wacht], done: ['klaar', KLEUR.klaar], failed: ['mislukt', KLEUR.probleem], stopped: ['gestopt', KLEUR.stil],
 };
 
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
@@ -173,12 +177,14 @@ function Step({ n, title, text }: { n: number; title: string; text: string }) {
   );
 }
 
-type Mode = 'home' | 'videos' | 'meer';
-const MODE_VIEWS: Record<Mode, View[]> = { home: [], videos: ['youtube', 'videos', 'cursus', 'kalender', 'shorts'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'] };
+type Mode = 'home' | 'videos' | 'meer' | 'werk';
+// Meer is opgegaan in Vandaag (Alle taken), Video's (Cast & sets, Ideeën) en Kennis (Werkwijze, Gereedschap): verbeterlijst punt 17
+const MODE_VIEWS: Record<Mode, View[]> = { home: ['overzicht', 'threads'], videos: ['youtube', 'videos', 'cursus', 'kalender', 'shorts', 'cast', 'ideeen'], meer: ['threads', 'cast', 'werkwijze', 'gereedschap', 'ideeen'], werk: ['werkwijze', 'gereedschap'] };
 const MODE_TITLE: Record<Mode, [string, string]> = {
   home: ['Home', ''],
   videos: ["Video's", "Je video's en shorts op YouTube met hun cijfers, en elke nieuwe video van idee tot upload."],
   meer: ['Meer', 'Alles om op terug te vallen: taken, regels, cast en gereedschap.'],
+  werk: ['Werkwijze en gereedschap', 'De vaste regels voor elke video en de tools die je gebruikt.'],
 };
 
 const greet = () => { const h = Number(new Date().toLocaleString('nl-NL', { hour: 'numeric', hour12: false, timeZone: 'Europe/Amsterdam' })); return h < 6 ? 'Goedenacht' : h < 12 ? 'Goedemorgen' : h < 18 ? 'Goedemiddag' : 'Goedenavond'; };
@@ -192,6 +198,32 @@ export function uploadStreak(vids: { type?: string; datum?: string; date?: strin
   if (!weeks.has(weekKey(d))) d.setDate(d.getDate() - 7);
   while (weeks.has(weekKey(d))) { n++; d.setDate(d.getDate() - 7); }
   return n;
+}
+
+/** Compacte lijst voor Vandaag: Loopt nu en Net klaar (verbeterlijst punt 16). */
+function KortLijst({ kleur, titel, uitleg, leeg, items, meer }: { kleur: string; titel: string; uitleg: string; leeg: string; items: Any[]; meer: () => void }) {
+  const shown = items.slice(0, 5);
+  return (
+    <section className="panel p-4">
+      <h2 className="mb-2 flex items-center gap-2 font-display text-[19px] font-bold" style={{ color: kleur }}><span className="h-2.5 w-2.5 rounded-full" style={{ background: kleur, boxShadow: `0 0 8px ${kleur}` }} />{titel}<Info text={uitleg} /></h2>
+      {shown.length ? (
+        <ul className="space-y-1">
+          {shown.map((a) => (
+            <li key={a.id || a.session || a.title}>
+              <button className="block w-full rounded-xl px-2 py-2 text-left hover:bg-white/[.05]" onClick={() => a.id && openGesprek({ kind: 'thread', thread: a.id, title: a.title })} title="Gesprek openen">
+                <div className="flex items-baseline justify-between gap-2"><span className="min-w-0 truncate text-[15px] font-semibold text-white">{a.title}</span><span className="shrink-0 text-[12px] text-slate-500">{a.last}</span></div>
+                {a.doing && <div className="mt-0.5 line-clamp-2 text-[13px] leading-snug text-slate-400">{a.doing}</div>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : <div className="px-2 py-2 text-[14px] text-slate-400">{leeg}</div>}
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-2 px-2">
+        {items.length > shown.length ? <button className="text-[13px] text-sky-300 hover:text-white" onClick={meer}>Alle {items.length} bekijken →</button> : <span />}
+        <Bijgewerkt bron="threads" />
+      </div>
+    </section>
+  );
 }
 
 function Info({ text }: { text: string }) {
@@ -211,7 +243,9 @@ function BigNum({ label, value, sub, info, color = '#f3f6ff' }: { label: string;
 export function VideosPage() { return <DriftmarkPage mode="videos" />; }
 export function MeerPage() { return <DriftmarkPage mode="meer" />; }
 
-export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
+export function WerkPage() { return <DriftmarkPage mode="werk" embedded />; }
+
+export default function DriftmarkPage({ mode = 'home', embedded = false }: { mode?: Mode; embedded?: boolean }) {
   const setPage = useGame((s) => s.setPage);
   const toast = useGame((s) => s.toast);
   const views = MODE_VIEWS[mode];
@@ -235,6 +269,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
   const nu = VIDEOS.find((v) => v.status === 'In productie');
   const wachten = activity.filter((a) => a.state === 'blocked' || a.state === 'review_ready');
   const bezig = activity.filter((a) => a.state === 'working');
+  const netKlaar = activity.filter((a) => a.state === 'done' && Date.now() - (Date.parse(a.lastIso ?? '') || 0) < 48 * 36e5).sort((a, b) => (Date.parse(b.lastIso ?? '') || 0) - (Date.parse(a.lastIso ?? '') || 0));
   const srcLabel = live.source === 'live' ? ['● Live: ververst elke minuut', '#3ddc97'] : live.source === 'database' ? ['● Live via de database (elk uur bijgewerkt)', '#3db8ff'] : live.source === 'ingebouwd' ? ['Stand laden…', '#94a3b8'] : ['Live stand niet bereikbaar, je ziet de laatst bekende stand', '#ff8a3d'];
 
   const ActCard = ({ a, big }: { a: (typeof activity)[number]; big?: boolean }) => {
@@ -274,8 +309,8 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
   const [title, sub] = MODE_TITLE[mode];
 
   return (
-    <div className="h-full overflow-y-auto p-3 pb-28 md:p-6 md:pb-10">
-      {mode === 'home' ? (
+    <div className={embedded ? '' : 'h-full overflow-y-auto p-3 pb-28 md:p-6 md:pb-10'}>
+      {embedded ? null : mode === 'home' ? (view === 'overzicht' &&
         <div className="panel relative mb-5 overflow-hidden">
           <img src="./img/hq_header.jpg" alt="Het hoofdpersonage tussen twee portalen in de nachtstad (Unreal Engine 5)" className="h-36 w-full object-cover object-[70%_45%] md:h-60" onError={(e) => { (e.currentTarget as HTMLImageElement).src = g.banner; }} />
           <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-t from-[#0f1630] via-[#0f1630]/30 to-transparent md:inset-0 md:h-auto md:from-[#070b1a] md:via-[#070b1a]/40" />
@@ -283,7 +318,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
             <div className="min-w-0">
               <div className="font-display text-[26px] font-bold leading-tight text-white md:text-[32px]">{greet()} niels 👋</div>
               <div className="mt-1 text-[15px] text-slate-200">Claude werkt aan <b className="text-sky-300">{bezig.length}</b> {bezig.length === 1 ? 'ding' : 'dingen'}{wachten.length ? <>, <b className="text-orange-300">{wachten.length}</b> {wachten.length === 1 ? 'ding wacht' : 'dingen wachten'} op jou.</> : '. Er wacht niets op jou.'}</div>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px]" style={{ color: srcLabel[1] }}>{srcLabel[0]}<span className="text-slate-500">· stand {UPDATED}</span><button className="text-sky-300 underline hover:text-white" onClick={() => void live.refresh()}>Nu verversen</button></div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px]" style={{ color: srcLabel[1] }}>{srcLabel[0]}<Bijgewerkt /></div>
             </div>
             <div className="flex flex-wrap gap-2">
               <button className="btn-primary text-[14px]" onClick={() => document.getElementById('orders-anchor')?.scrollIntoView({ behavior: 'smooth' })}>⚡ Geef Claude een opdracht</button>
@@ -306,7 +341,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
       )}
 
       {views.length > 1 && (
-        <div className="sticky -top-3 z-20 -mx-3 mb-4 bg-[#070b1a]/95 px-3 pb-2 pt-3 backdrop-blur md:-top-6 md:-mx-6 md:px-6 md:pt-6">
+        <div className={embedded ? 'mb-4' : 'sticky -top-3 z-20 -mx-3 mb-4 bg-[#070b1a]/95 px-3 pb-2 pt-3 backdrop-blur md:-top-6 md:-mx-6 md:px-6 md:pt-6'}>
           <div className="flex gap-1.5 overflow-x-auto">
             {views.map((id) => { const v = VIEWS.find((x) => x.id === id)!; return (
               <button key={id} onClick={() => go(id)} className={`shrink-0 rounded-full px-4 py-2 text-[14px] font-semibold transition ${view === id ? 'bg-orange-500 text-white' : 'bg-white/5 text-slate-300 hover:bg-white/10'}`}>{v.label}</button>
@@ -317,12 +352,18 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         </div>
       )}
 
-      {mode === 'home' && (<>
+      {mode === 'home' && view === 'overzicht' && (<>
+        <Legenda className="mb-3" />
         <section className="mb-5">
           <h2 className="mb-2 flex items-center font-display text-[20px] font-bold text-orange-300">Wacht op jou<Info text="Dingen waar Claude jouw keuze of blik voor nodig heeft. Klik op Bekijk om de taak te openen." /></h2>
           {wachten.length ? <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">{wachten.map((a) => <ActCard key={a.id || a.session} a={a} big />)}</div>
-            : <div className="panel flex items-center gap-3 p-4 text-[15px] text-slate-200"><span className="text-2xl">✅</span>Alles is bij, chill 😎 Je hoeft nu niets te doen.</div>}
+            : <div className="panel flex items-center gap-3 p-4 text-[15px] text-slate-200"><span className="text-2xl">✅</span>Alles is bij. Je hoeft nu niets te doen.</div>}
         </section>
+
+        <div className="mb-5 grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <KortLijst kleur={KLEUR.bezig} titel={`Loopt nu (${bezig.length})`} uitleg="Taken waar Claude nu aan werkt." leeg="Er werkt nu geen taak." items={bezig} meer={() => go('threads')} />
+          <KortLijst kleur={KLEUR.klaar} titel={`Net klaar (${netKlaar.length})`} uitleg="Taken die de afgelopen 48 uur zijn afgerond." leeg="Er is de afgelopen 48 uur niets afgerond." items={netKlaar} meer={() => go('threads')} />
+        </div>
 
         <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <BigNum label="Abonnees" value={subs ? subs.toLocaleString('nl-NL') : '—'} color="#ff8a3d" info="Hoeveel mensen je kanaal volgen. Elk uur opgehaald via vidIQ."
@@ -346,17 +387,12 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
           </div>
         </div>
 
-        <OrdersPanel quick={QUICK} />
+        <Blok naam="Opdrachten"><OrdersPanel quick={QUICK} /></Blok>
 
-        <section className="mb-5">
-          <h2 className="mb-2 flex items-center font-display text-[20px] font-bold text-sky-300">Nu bezig ({bezig.length})<Info text="Claude-taken die nu aan het werk zijn. Het balkje toont hoe ver de video is." /></h2>
-          {bezig.length ? <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{bezig.slice(0, 4).map((a) => <ActCard key={a.id || a.session} a={a} />)}</div> : <div className="panel p-4 text-[15px] text-slate-400">Er werkt nu geen taak.</div>}
-          {bezig.length > 4 && <button className="mt-2 text-[14px] text-sky-300 hover:text-white" onClick={() => { try { localStorage.setItem('driftmark-view-meer', 'threads'); } catch { /* */ } setPage('meer'); }}>Alle {bezig.length} taken bekijken →</button>}
-        </section>
 
-        <div className="mb-4"><CursusTip /></div>
-        <RepliesPanel />
-        <AutomationPanel />
+        <div className="mb-4"><Blok naam="Cursustip"><CursusTip /></Blok></div>
+        <Blok naam="Antwoorden"><RepliesPanel /></Blok>
+        <Blok naam="Automatische ronde"><AutomationPanel /></Blok>
 
         <section className="panel mb-5 border-orange-400/30 p-4">
           <div className="mb-2 flex items-center gap-2 font-display text-[18px] font-bold text-orange-300"><Play size={16} />Hierna</div>
@@ -366,7 +402,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         </section>
       </>)}
 
-      {view === 'kalender' && <UploadCalendar vids={(yt?.videos ?? []) as Any} />}
+      {view === 'kalender' && <Blok naam="Uploadkalender"><UploadCalendar vids={(yt?.videos ?? []) as Any} /></Blok>}
 
       {view === 'threads' && (
         <div className="grid gap-4">
@@ -391,8 +427,8 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
         </div>
       )}
 
-      {view === 'youtube' && <YouTubeStats />}
-      {view === 'cursus' && <><CursusCheck /><TitelTester /></>}
+      {view === 'youtube' && <Blok naam="Op YouTube"><YouTubeStats /></Blok>}
+      {view === 'cursus' && <Blok naam="Cursuscheck"><CursusCheck /><TitelTester /></Blok>}
       {view === 'videos' && <div className="grid gap-3 lg:grid-cols-2">{[...VIDEOS].reverse().map((v) => <VideoCard key={v.nr} v={v} />)}</div>}
 
       {view === 'shorts' && (

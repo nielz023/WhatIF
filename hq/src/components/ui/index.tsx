@@ -36,19 +36,25 @@ const STATUS_STYLE: Record<TaskStatus, string> = {
   Rejected: 'bg-rose-500/15 text-rose-300 ring-rose-400/30',
   Completed: 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/30',
 };
+/** Statussen blijven in de logica Engels, maar je ziet ze altijd in het Nederlands (verbeterlijst punt 39). */
+export const STATUS_NL: Record<string, string> = {
+  Pending: 'Wacht', Assigned: 'Toegewezen', 'In Progress': 'Bezig', Review: 'Controle', Approved: 'Goedgekeurd', Rejected: 'Afgekeurd', Completed: 'Klaar',
+  Active: 'Actief', 'Awaiting Approval': 'Wacht op jouw akkoord', 'Awaiting Publish': 'Klaar voor upload', Published: 'Online', Cancelled: 'Gestopt',
+};
 export function StatusBadge({ status }: { status: TaskStatus | string }) {
   const cls = STATUS_STYLE[status as TaskStatus] ?? 'bg-slate-500/15 text-slate-300 ring-slate-400/30';
-  return <span className={`chip ring-1 ${cls}`}>{status}</span>;
+  return <span className={`chip ring-1 ${cls}`}>{STATUS_NL[status] ?? status}</span>;
 }
 
 const PRIO: Record<Priority, string> = {
   Low: 'text-slate-400 bg-slate-500/10', Medium: 'text-sky-300 bg-sky-500/10', High: 'text-orange-300 bg-orange-500/10', Critical: 'text-rose-300 bg-rose-500/15',
 };
-export const PriorityBadge = ({ p }: { p: Priority }) => <span className={`chip ${PRIO[p]}`}>{p}</span>;
+const PRIO_NL: Record<Priority, string> = { Low: 'Laag', Medium: 'Normaal', High: 'Hoog', Critical: 'Spoed' };
+export const PriorityBadge = ({ p }: { p: Priority }) => <span className={`chip ${PRIO[p]}`}>{PRIO_NL[p] ?? p}</span>;
 
 export const StateDot = ({ state }: { state: Agent['state'] }) => {
   const c = { working: 'bg-emerald-400', meeting: 'bg-sky-400', idle: 'bg-slate-400', training: 'bg-purple-400' }[state];
-  return <span className="inline-flex items-center gap-1.5 text-[13px] capitalize text-slate-300"><span className={`h-2 w-2 rounded-full ${c} shadow-[0_0_8px_currentColor]`} />{state}</span>;
+  return <span className="inline-flex items-center gap-1.5 text-[13px] capitalize text-slate-300"><span className={`h-2 w-2 rounded-full ${c} shadow-[0_0_8px_currentColor]`} />{{ working: 'aan het werk', meeting: 'in overleg', idle: 'vrij', training: 'in training' }[state] ?? state}</span>;
 };
 
 export function Progress({ value, color = '#6366f1', h = 6 }: { value: number; color?: string; h?: number }) {
@@ -118,7 +124,7 @@ export function Drawer({ open, onClose, children, width = 520, title }: { open: 
   );
 }
 
-export const DemoBadge = ({ label = 'DEMO DATA' }: { label?: string }) => (
+export const DemoBadge = ({ label = 'VOORBEELD' }: { label?: string }) => (
   <span className="chip bg-amber-500/15 text-[12px] tracking-wider text-amber-300 ring-1 ring-amber-400/30">{label}</span>
 );
 
