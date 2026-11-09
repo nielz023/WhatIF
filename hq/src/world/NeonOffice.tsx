@@ -649,6 +649,12 @@ function Scene({ mode }: { mode: WorldMode }) {
   const perf = useWorld((s) => s.perf);
   /** 0 = licht t/m 3 = alles: snel is altijd licht, 4K altijd alles, Auto volgt de gemeten beeldsnelheid */
   const lvl = quality === 'snel' ? 0 : quality === '4k' ? 3 : perf;
+  /* het nabewerkingslaagje past zich alleen aan bij een andere venstergrootte, niet bij een andere pixeldichtheid;
+     zonder dit tekent het na een kwaliteitsstap maar een deel van het scherm (rest zwart) */
+  const fxRef = useRef<any>(null);
+  const { width: fxW, height: fxH } = useThree((s) => s.size);
+  const fxDpr = useThree((s) => s.viewport.dpr);
+  useEffect(() => { fxRef.current?.setSize?.(fxW, fxH); }, [fxW, fxH, fxDpr, lvl]);
   const phone = useMemo(() => isPhone(), []);
   const screens = useScreens();
   const office = useOffice();
@@ -745,7 +751,7 @@ function Scene({ mode }: { mode: WorldMode }) {
       {mode !== 'studio' && ground && <Beacon alarms={alarms} />}
       <Snow />
       <Disco />
-      <EffectComposer multisampling={lvl <= 0 ? 0 : lvl === 1 ? 2 : 4}>
+      <EffectComposer ref={fxRef} multisampling={lvl <= 0 ? 0 : lvl === 1 ? 2 : 4}>
         {/* zachtere neon (punt 33): minder gloed, pas boven een hogere drempel */}
         <Bloom intensity={office ? 0.22 : 0.34} luminanceThreshold={office ? 1.25 : 1.0} luminanceSmoothing={0.2} radius={0.4} mipmapBlur />
         <Vignette eskil={false} offset={0.4} darkness={0.22} />

@@ -4,11 +4,12 @@
  * Bij een nieuwe versie: VERSIE ophogen en bovenaan NIEUW een blok toevoegen. Het venster
  * "Wat is nieuw" verschijnt dan één keer per browser (onthouden in localStorage).
  */
-export const VERSIE = 'v42';
+export const VERSIE = 'v43';
 
 export interface Nieuw { versie: string; datum?: string; punten: string[] }
 
 export const NIEUW: Nieuw[] = [
+  { versie: 'v43', datum: '9 nov', punten: ['Het 3D-kantoor vult weer het hele scherm: na een automatische kwaliteitsstap bleef een deel zwart.'] },
   {
     versie: 'v42',
     datum: '9 nov',
