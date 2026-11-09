@@ -14,8 +14,8 @@
  * dan glijd je langs de wand. Zonder kaart loop je zonder botsen, binnen de rand van het kantoor.
  * Zolang je loopt staan de orbit-besturing en CameraRig stil; de terugvlucht doet CameraRig (NeonOffice.tsx).
  *
- * Verdiepingen (niels 2026-11-07, floors.ts): het podium en de trap vooraan geven hoogte (de camera gaat mee
- * omhoog). De zijtrap op het podium is een smalle looplijn die je alleen aan de uiteinden op- en afloopt: onder
+ * Verdiepingen (niels 2026-11-07, floors.ts): het podium ligt sinds 9 nov op de hoogte van de afdelingen, zodat je
+ * vanaf de balie zo de kamers in loopt. De zijtrap op het podium is een smalle looplijn die je alleen aan de uiteinden op- en afloopt: onder
  * vanaf het podium, boven vanaf de bovenverdieping (eigen looproutekaart, buildNav1). Halverwege de trap wisselt
  * het beeld naar de bovenverdieping. Het knopje rechts in het midden brengt je in één vloeiende beweging naar de
  * andere verdieping.
@@ -41,7 +41,7 @@ export const angDiff = (a: number, b: number) => { const T = Math.PI * 2; return
 /** draaihoek en kijkhoek van een kijkrichting (camera kijkt bij 0 naar -z) */
 export const lookAngles = (dir: THREE.Vector3) => ({ yaw: Math.atan2(-dir.x, -dir.z), pitch: Math.asin(THREE.MathUtils.clamp(dir.y, -1, 1)) });
 
-const START: [number, number] = [0, 12.4]; // ingang vooraan, onder aan de trap naar de receptie
+const START: [number, number] = [0, 12.4]; // ingang vooraan, op de loopbrug naar de receptie
 const SPEED = 2.2, RUN = 4.3; // m/s
 const ACC = 8, BRAKE = 11; // optrekken en afremmen (1/s)
 const STEP = 0.025; // botsen in stapjes van een halve cel

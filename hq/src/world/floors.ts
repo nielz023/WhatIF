@@ -3,10 +3,10 @@
  * middenconsole een trap omhoog. Ik wil dat die ook in gebruik is. Dat poppetjes erop kunnen lopen en dat je rechts
  * in het midden van het beeld een klein knopje hebt om een verdieping hoger te gaan".
  *
- * - De begane grond krijgt hoogte: het podium van de receptie (0,5 m) en de brede trap vooraan zijn beloopbaar.
+ * - Het podium van de receptie ligt sinds 9 nov op de hoogte van de afdelingen (HUB_Y); de trap vooraan is een vlakke loopbrug.
  *   De looproutekaart uit Blender had het hele podium zwart; patchGround() opent het podium en de trap en zet de
  *   balie, de zuil, de banken, de planten en de zijtrap er weer als obstakel in.
- * - De zijtrap links op het podium (9 treden, office_build.py) loopt naar de bovenverdieping op Y1. Daar staan de
+ * - De zijtrap links op het podium (10 treden, office_build.py) loopt naar de bovenverdieping op Y1. Daar staan de
  *   kantine en de gamekamer (Upstairs.tsx).
  * - useFloor: welke verdieping je bekijkt. Op de begane grond is de bovenverdieping weg (zoals bij een poppenhuis),
  *   boven ligt de vloer over het kantoor heen.
@@ -17,8 +17,14 @@ import { R_HUB } from './rooms';
 type V2 = [number, number];
 type V3 = [number, number, number];
 
-/** vloer van de bovenverdieping: één trede (0,32 m) boven de bovenste trede van de zijtrap */
+/** vloer van de bovenverdieping: één trede boven de bovenste trede van de zijtrap */
 export const Y1 = 3.38;
+/**
+ * vloer van het podium in het midden (niels 2026-11-09: "ik kan de kamers niet in, maak het middenconsole gelijk met
+ * de kamers"). Was 0,5 m; nu even hoog als de afdelingsvloeren (6 cm), zodat je vanaf de balie zo de kamers in loopt.
+ * Zelfde waarde als HUB_Y in office_build.py.
+ */
+export const HUB_Y = 0.06;
 /** dikte van de vloerplaat (de wanden beneden zijn 3,0 m met neon tot ~3,06 m) */
 export const SLAB = 0.28;
 /** straal (hoekpunten van de achthoek) van de bovenverdieping; de rand van de begane grond blijft eronder zichtbaar */
@@ -36,17 +42,18 @@ export const useFloor = create<FloorStore>((set) => ({
 }));
 
 /* ---------- zijtrap (zelfde maten als office_build.py) ---------- */
-// trede i (0..8): midden x = -3.4 - 0.05 i, z = -1 - 0.55 i, bovenkant y = 0.54 + 0.32 i, 1,5 m breed, 0,5 m diep
-export const STAIR_FOOT: V2 = [-3.4, -0.42]; // op het podium, net voor de eerste trede
+// trede i (-1..8): midden x = -3.4 - 0.05 i, z = -1 - 0.55 i, bovenkant y = HUB_Y + (i + 2) * RISE, 1,5 m breed, 0,5 m diep
+const RISE = (Y1 - HUB_Y) / 11;
+export const STAIR_FOOT: V2 = [-3.33, 0.15]; // op het podium, net voor de eerste trede
 export const STAIR_LAND: V2 = [-3.87, -6.3]; // boven, net voorbij de laatste trede
-const Z0 = -0.75, Z1 = -5.67; // begin van trede 0 en eind van trede 8
+const Z0 = -0.2, Z1 = -5.67; // begin van trede -1 en eind van trede 8
 
 /** hoogte van de trap onder een punt (z), traptreden als echte stappen */
 export function stairStepY(z: number) {
-  if (z >= Z0) return 0.5;
+  if (z >= Z0) return HUB_Y;
   if (z <= Z1) return Y1;
-  const i = Math.max(0, Math.min(8, Math.round((-1 - z) / 0.55)));
-  return 0.54 + 0.32 * i;
+  const i = Math.max(-1, Math.min(8, Math.round((-1 - z) / 0.55)));
+  return HUB_Y + (i + 2) * RISE;
 }
 /** punt op de looplijn van de trap: u = 0 onderaan (podium), u = 1 boven op de verdieping */
 export function stairPoint(u: number, smooth = false): V3 {
@@ -58,7 +65,7 @@ export function stairPoint(u: number, smooth = false): V3 {
 }
 /** vloeiende hoogte langs de trap (voor de camera bij het rondlopen): zelfde helling als de treden */
 export function stairRampY(z: number) {
-  return 0.5 + Math.max(0, Math.min(1, (Z0 - z) / (Z0 - Z1 + 0.28))) * (Y1 - 0.5);
+  return HUB_Y + Math.max(0, Math.min(1, (Z0 - z) / (Z0 - Z1 + 0.28))) * (Y1 - HUB_Y);
 }
 export const STAIR_LEN = Math.hypot(STAIR_LAND[0] - STAIR_FOOT[0], STAIR_LAND[1] - STAIR_FOOT[1]);
 /** halve breedte van de looplijn op de trap (de trap is 1,5 m breed) */
@@ -75,24 +82,24 @@ export function onStair(x: number, z: number) {
 }
 /** waar je uitkomt met het knopje tijdens het rondlopen: boven net voorbij de trap, beneden aan de voet */
 export const ARRIVE_UP: V2 = [-3.87, -6.85];
-export const ARRIVE_DOWN: V2 = [-3.35, -0.1];
+export const ARRIVE_DOWN: V2 = [-3.3, 0.5];
 
-/* ---------- trap vooraan (ingang) ---------- */
+/* ---------- loopbrug vooraan (ingang; was een trap toen het podium hoog lag) ---------- */
 const FRONT_N = 7, FRONT_D = (15.2 - R_HUB - 1) / FRONT_N, FRONT_Z0 = R_HUB + 0.3;
 const frontHalfW = (i: number) => (3.6 + i * 0.22) / 2;
 const FRONT_END = FRONT_Z0 + FRONT_N * FRONT_D;
 
 /**
- * Vloerhoogte op de begane grond voor het podium en de trap vooraan; null = gewone vloer (de afdelingen en gangen
+ * Vloerhoogte op de begane grond voor het podium en de loopbrug vooraan; null = gewone vloer (de afdelingen en gangen
  * regelt crew.tsx zelf, met hun 6-7,5 cm vloer en tapijt).
  */
 export function groundY(x: number, z: number): number | null {
   if (z > R_HUB - 0.2 && z < FRONT_END && Math.abs(x) < 2.7) {
-    if (z < FRONT_Z0) return 0.5;
-    const i = Math.floor((z - FRONT_Z0) / FRONT_D);
-    return Math.max(0, 0.5 - (i + 1) * (0.6 / FRONT_N));
+    if (z < FRONT_Z0) return HUB_Y;
+    const t = Math.min(1, (z - FRONT_Z0) / (FRONT_END - FRONT_Z0));
+    return HUB_Y * (1 - t) + 0.02 * t;
   }
-  if (Math.hypot(x, z) < R_HUB + 0.05) return 0.5;
+  if (Math.hypot(x, z) < R_HUB + 0.05) return HUB_Y;
   return null;
 }
 
@@ -116,7 +123,7 @@ function podiumBlocked(x: number, z: number) {
   if (r < 2.95 + PAD && Math.abs(Math.atan2(x, z)) < 1.25 + 0.08) return true; // ronde balie vooraan
   for (const s of SOFAS) if (inRect(x, z, s, PAD)) return true;
   for (const [px, pz, s] of PLANTS) if (Math.hypot(x - px, z - pz) < 0.45 * s + PAD) return true;
-  if (x > -4.25 - PAD && x < -2.55 + PAD && z < -0.78 && z > -6.0) return true; // zijtrap (je loopt hem op via de voet)
+  if (x > -4.25 - PAD && x < -2.55 + PAD && z < -0.2 && z > -6.0) return true; // zijtrap (je loopt hem op via de voet)
   return false;
 }
 

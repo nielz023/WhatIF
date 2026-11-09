@@ -378,7 +378,7 @@ export default function DriftmarkPage({ mode = 'home' }: { mode?: Mode }) {
             <button className="ml-auto btn-ghost !py-1 text-[13px]" onClick={() => openGesprek({ kind: 'project', title: 'Projectchat' })}><MessageSquare size={13} />Projectchat lezen</button>
           </div>
           <ThreadsStand />
-          {[...new Set([...VIDEOS.map((v) => v.nr).sort((a, b) => b - a), 0])].map((nr) => {
+          {[...new Set([...[...VIDEOS.map((v) => v.nr), ...activity.map((a) => a.video ?? 0)].filter((n) => n > 0).sort((a, b) => b - a), 0])].map((nr) => {
             const list = activity.filter((a) => (a.video ?? 0) === nr);
             if (!list.length) return null;
             const v = VIDEOS.find((x) => x.nr === nr);

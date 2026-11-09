@@ -35,7 +35,9 @@ import { selectRoom } from './select';
 import { City } from './city';
 import { Upstairs, Plafond } from './Upstairs';
 import { CastProps } from './castProps';
-import { useFloor, Y1 } from './floors';
+import { useFloor, Y1, HUB_Y } from './floors';
+/** zoveel lager ligt het podium sinds 9 nov (was 0,5 m hoog) */
+const DROP = 0.5 - HUB_Y;
 
 type V3 = [number, number, number];
 export type WorldMode = 'home' | 'studio' | 'panel';
@@ -545,36 +547,36 @@ function Reception({ screens, onSelect, lit, baked, walk }: { screens: THREE.Tex
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
     if (holo.current) holo.current.opacity = 0.05 + Math.sin(t * 2) * 0.015;
-    if (ring1.current) { const k = (t * 0.5) % 1; ring1.current.position.y = 1.3 + k * 6; (ring1.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
-    if (ring2.current) { const k = ((t * 0.5) + 0.5) % 1; ring2.current.position.y = 1.3 + k * 6; (ring2.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
+    if (ring1.current) { const k = (t * 0.5) % 1; ring1.current.position.y = 1.3 - DROP + k * 6.4; (ring1.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
+    if (ring2.current) { const k = ((t * 0.5) + 0.5) % 1; ring2.current.position.y = 1.3 - DROP + k * 6.4; (ring2.current.material as THREE.MeshBasicMaterial).opacity = (1 - k) * 0.45; }
     if (play.current) play.current.position.y = 5.9 + Math.sin(t * 1.4) * 0.15;
   });
   return (
     <group onClick={(e) => { e.stopPropagation(); onSelect(); }} onPointerOver={() => { document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = 'auto'; }}>
       {!baked && (<>
       {/* podium */}
-      <mesh position={[0, 0.25, 0]} castShadow receiveShadow><cylinderGeometry args={[R_HUB, R_HUB + 0.3, 0.5, 64]} /><meshStandardMaterial color="#121a38" metalness={0.6} roughness={0.2} /></mesh>
-      <mesh position={[0, 0.51, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[R_HUB - 0.05, 0.07, 8, 96]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3} toneMapped={false} /></mesh>
-      <mesh position={[0, 0.52, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[3.6, 3.72, 96]} /><meshBasicMaterial color="#20D9FF" toneMapped={false} /></mesh>
-      <mesh position={[0, 0.52, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[4.7, 4.76, 96]} /><meshBasicMaterial color="#398CFF" toneMapped={false} /></mesh>
+      <mesh position={[0, HUB_Y / 2, 0]} castShadow receiveShadow><cylinderGeometry args={[R_HUB, R_HUB + 0.3, HUB_Y, 64]} /><meshStandardMaterial color="#121a38" metalness={0.6} roughness={0.2} /></mesh>
+      <mesh position={[0, HUB_Y + 0.012, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[R_HUB - 0.05, 0.035, 8, 96]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3} toneMapped={false} /></mesh>
+      <mesh position={[0, HUB_Y + 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[3.6, 3.72, 96]} /><meshBasicMaterial color="#20D9FF" toneMapped={false} /></mesh>
+      <mesh position={[0, HUB_Y + 0.012, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[4.7, 4.76, 96]} /><meshBasicMaterial color="#398CFF" toneMapped={false} /></mesh>
       {/* ronde balie */}
-      <mesh position={[0, 1.05, 0]} castShadow><cylinderGeometry args={[2.7, 2.7, 1.1, 48, 1, true, Math.PI * 0.18, Math.PI * 1.64]} /><meshStandardMaterial color="#1a2550" metalness={0.6} roughness={0.25} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[0, 1.61, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.72, 0.06, 8, 96, Math.PI * 2]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3} toneMapped={false} /></mesh>
-      <mesh position={[0, 0.6, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.75, 0.05, 8, 96]} /><meshStandardMaterial color="#20D9FF" emissive="#20D9FF" emissiveIntensity={2.4} toneMapped={false} /></mesh>
+      <mesh position={[0, 1.05 - DROP, 0]} castShadow><cylinderGeometry args={[2.7, 2.7, 1.1, 48, 1, true, Math.PI * 0.18, Math.PI * 1.64]} /><meshStandardMaterial color="#1a2550" metalness={0.6} roughness={0.25} side={THREE.DoubleSide} /></mesh>
+      <mesh position={[0, 1.61 - DROP, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.72, 0.06, 8, 96, Math.PI * 2]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3} toneMapped={false} /></mesh>
+      <mesh position={[0, 0.6 - DROP, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.75, 0.05, 8, 96]} /><meshStandardMaterial color="#20D9FF" emissive="#20D9FF" emissiveIntensity={2.4} toneMapped={false} /></mesh>
       {/* schermen op de balie */}
       {[-1.1, 0, 1.1].map((x, i) => (
-        <group key={i} position={[x, 1.95, 1.35 - Math.abs(x) * 0.25]} rotation={[0, -x * 0.35, 0]}>
+        <group key={i} position={[x, 1.95 - DROP, 1.35 - Math.abs(x) * 0.25]} rotation={[0, -x * 0.35, 0]}>
           <Box p={[0, 0, -0.02]} s={[0.9, 0.52, 0.04]} c="#0d1120" />
           <mesh position={[0, 0, 0.001]}><planeGeometry args={[0.84, 0.47]} /><meshBasicMaterial map={screens[i]} toneMapped={false} /></mesh>
         </group>
       ))}
       </>)}
       {/* het hoofdpersonage achter de balie */}
-      <Mascot p={[0, 0.5, -0.4]} rot={0} s={1.05} />
+      <Mascot p={[0, HUB_Y, -0.4]} rot={0} s={1.05} />
       {/* glazen hologramzuil */}
-      <mesh position={[0, 5.0, 0]}><cylinderGeometry args={[2.3, 2.3, 7, 64, 1, true]} /><meshStandardMaterial ref={holo} color="#7fe8ff" emissive="#20D9FF" emissiveIntensity={0.2} transparent opacity={0.05} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} /></mesh>
-      <mesh ref={ring1} position={[0, 1.3, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
-      <mesh ref={ring2} position={[0, 1.3, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
+      <mesh position={[0, (1.5 - DROP + 8.5) / 2, 0]}><cylinderGeometry args={[2.3, 2.3, 7 + DROP, 64, 1, true]} /><meshStandardMaterial ref={holo} color="#7fe8ff" emissive="#20D9FF" emissiveIntensity={0.2} transparent opacity={0.05} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} /></mesh>
+      <mesh ref={ring1} position={[0, 1.3 - DROP, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
+      <mesh ref={ring2} position={[0, 1.3 - DROP, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.32, 0.035, 6, 80]} /><meshBasicMaterial color="#b8f6ff" transparent toneMapped={false} /></mesh>
       {!baked && (<>
       <mesh position={[0, 8.5, 0]} rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[2.35, 0.09, 8, 80]} /><meshStandardMaterial color="#FF7A24" emissive="#FF7A24" emissiveIntensity={3.2} toneMapped={false} /></mesh>
       <mesh position={[0, 8.55, 0]}><cylinderGeometry args={[2.4, 2.4, 0.12, 64]} /><meshStandardMaterial color="#1a1530" metalness={0.6} roughness={0.3} /></mesh>
@@ -593,29 +595,29 @@ function Reception({ screens, onSelect, lit, baked, walk }: { screens: THREE.Tex
       <pointLight position={[0, 2.2, 2.5]} color="#FFE2C4" intensity={18} distance={8} decay={1.6} />
       {!baked && (<>
       {/* planten op het podium */}
-      <Palm p={[-3.9, 0.5, -3.1]} s={1.0} />
-      <Palm p={[3.9, 0.5, -3.1]} s={1.0} />
-      <Sofa p={[-4.1, 0.5, 1.6]} rot={Math.PI / 2 + 0.4} color="#26305e" />
-      <Sofa p={[4.1, 0.5, 1.6]} rot={-Math.PI / 2 - 0.4} color="#26305e" />
+      <Palm p={[-3.9, HUB_Y, -3.1]} s={1.0} />
+      <Palm p={[3.9, HUB_Y, -3.1]} s={1.0} />
+      <Sofa p={[-4.1, HUB_Y, 1.6]} rot={Math.PI / 2 + 0.4} color="#26305e" />
+      <Sofa p={[4.1, HUB_Y, 1.6]} rot={-Math.PI / 2 - 0.4} color="#26305e" />
       </>)}
     </group>
   );
 }
 
-/** Trap vooraan + lichtgevende ingang (zeshoek). */
+/** Vlakke loopbrug vooraan (was een trap toen het podium 0,5 m hoog lag) + lichtgevende ingang (zeshoek). */
 function Entrance() {
   const n = 7;
   return (
     <group>
       {Array.from({ length: n }, (_, i) => {
-        const z = R_HUB + 0.3 + i * ((R_OUT - R_HUB - 1) / n); const y = 0.5 - (i + 1) * (0.6 / n);
+        const z = R_HUB + 0.3 + i * ((R_OUT - R_HUB - 1) / n); const y = HUB_Y * (1 - (i + 1) / n) + 0.02 * ((i + 1) / n);
         const w = 3.6 + i * 0.22;
         return (<group key={i}>
-          <Box p={[0, y / 2 - 0.05, z]} s={[w, y + 0.1, (R_OUT - R_HUB - 1) / n]} c="#151d3d" metal={0.5} rough={0.25} />
-          <Box p={[0, y + 0.01, z + (R_OUT - R_HUB - 1) / n / 2 - 0.02]} s={[w, 0.03, 0.04]} c="#20D9FF" e="#20D9FF" ei={2.2} cast={false} />
+          <Box p={[0, y / 2, z]} s={[w, y, (R_OUT - R_HUB - 1) / n]} c="#151d3d" metal={0.5} rough={0.25} />
+          <Box p={[0, y + 0.006, z + (R_OUT - R_HUB - 1) / n / 2 - 0.02]} s={[w, 0.012, 0.04]} c="#20D9FF" e="#20D9FF" ei={2.2} cast={false} />
         </group>);
       })}
-      {[-1, 1].map((sd) => <Neon key={sd} pts={[[sd * 1.9, 0.6, R_HUB + 0.2], [sd * 2.6, 0.1, R_OUT]]} color="#20D9FF" r={0.05} i={2.2} />)}
+      {[-1, 1].map((sd) => <Neon key={sd} pts={[[sd * 1.9, 1.0, R_HUB + 0.2], [sd * 2.7, 1.0, R_OUT]]} color="#20D9FF" r={0.04} i={2.2} />)}
       <mesh position={[0, 0.05, R_OUT + 0.6]} rotation={[-Math.PI / 2, 0, Math.PI / 6]}><ringGeometry args={[1.5, 1.68, 6]} /><meshBasicMaterial color="#20D9FF" toneMapped={false} /></mesh>
       <mesh position={[0, 0.04, R_OUT + 0.6]} rotation={[-Math.PI / 2, 0, Math.PI / 6]}><circleGeometry args={[1.5, 6]} /><meshBasicMaterial color="#123a66" transparent opacity={0.6} toneMapped={false} /></mesh>
       <Palm p={[-3.0, 0, R_OUT - 0.4]} s={1.1} />

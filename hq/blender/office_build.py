@@ -593,50 +593,56 @@ for rid, slot, col, props in ROOMS:
         cyl(nl, at(2.6, 3.3, 2.9), 0.16, 0.25, neon('#FF3B4E', 9), 12)
 
 # ---------- receptie ----------
+# niels 2026-11-09: "ik kan de kamers niet in, maak het middenconsole gelijk met de kamers". Het podium lag 0,5 m hoog en
+# was alleen via de trap vooraan te bereiken. Nu ligt het op de hoogte van de afdelingsvloeren (HUB_Y, 6 cm), zodat je
+# vanaf de balie zo de gang en de kamers in loopt. Alles op het podium zakt mee (DROP); de zijtrap krijgt er een trede bij.
+HUB_Y = 0.06; DROP = 0.5 - HUB_Y
 b = 'baked'; NH = 'neon_hub'
-cyl(b, (0, 0, 0), R_HUB, 0.5, M['podium'], 72, r2=R_HUB + 0.3)
-tube(NH, arc(R_HUB - 0.04, 0, math.tau, 0.52, 96), 0.07, neon('#FF7A24', 8))
-tube(NH, arc(3.66, 0, math.tau, 0.515, 80), 0.04, neon('#20D9FF', 6))
-tube(NH, arc(4.73, 0, math.tau, 0.515, 80), 0.03, neon('#398CFF', 6))
-tube(NH, arc(R_HUB + 0.32, 0, math.tau, 0.02, 96), 0.05, neon('#20D9FF', 6))
+cyl(b, (0, 0, 0), R_HUB, HUB_Y, M['podium'], 72, r2=R_HUB + 0.3)
+tube(NH, arc(R_HUB - 0.04, 0, math.tau, HUB_Y + 0.012, 96), 0.035, neon('#FF7A24', 8))
+tube(NH, arc(3.66, 0, math.tau, HUB_Y + 0.012, 80), 0.025, neon('#20D9FF', 6))
+tube(NH, arc(4.73, 0, math.tau, HUB_Y + 0.012, 80), 0.02, neon('#398CFF', 6))
+tube(NH, arc(R_HUB + 0.32, 0, math.tau, 0.012, 96), 0.03, neon('#20D9FF', 6))
 # ronde balie aan de voorkant van de zuil
-for (r0, r1, y0, y1, m) in ((2.55, 2.85, 0.5, 1.55, M['hubdesk']), (2.45, 2.95, 1.55, 1.62, M['white'])):
+for (r0, r1, y0, y1, m) in ((2.55, 2.85, HUB_Y, 1.55 - DROP, M['hubdesk']), (2.45, 2.95, 1.55 - DROP, 1.62 - DROP, M['white'])):
     sector(b, r0, r1, -1.25, 1.25, y0, y1, m, 40)
-tube(NH, arc(2.96, -1.25, 1.25, 1.6, 40), 0.045, neon('#FF7A24', 8))
-tube(NH, arc(2.87, -1.25, 1.25, 0.62, 40), 0.04, neon('#20D9FF', 6))
+tube(NH, arc(2.96, -1.25, 1.25, 1.6 - DROP, 40), 0.045, neon('#FF7A24', 8))
+tube(NH, arc(2.87, -1.25, 1.25, 0.62 - DROP, 40), 0.04, neon('#20D9FF', 6))
 for i, x in enumerate((-1.1, 0, 1.1)):
     zc = 2.35 - abs(x) * 0.25; ry = -x * 0.35
-    box(b, (x, 2.0, zc), (0.92, 0.54, 0.04), M['mon'], ry); screen(tf((x, 2.0, zc), ry, (0, 0, 0.022)), 0.86, 0.48, ry)
-    box(b, (x, 1.7, zc), (0.06, 0.12, 0.06), M['mon'])
+    box(b, (x, 2.0 - DROP, zc), (0.92, 0.54, 0.04), M['mon'], ry); screen(tf((x, 2.0 - DROP, zc), ry, (0, 0, 0.022)), 0.86, 0.48, ry)
+    box(b, (x, 1.7 - DROP, zc), (0.06, 0.12, 0.06), M['mon'])
 # voet en kap van de hologramzuil
-cyl(b, (0, 0.5, 0), 2.45, 0.25, M['podium'], 64)
-tube(NH, arc(2.46, 0, math.tau, 0.76, 80), 0.05, neon('#20D9FF', 7))
+cyl(b, (0, HUB_Y, 0), 2.45, 0.25, M['podium'], 64)
+tube(NH, arc(2.46, 0, math.tau, 0.76 - DROP, 80), 0.05, neon('#20D9FF', 7))
 cyl(b, (0, 8.45, 0), 2.5, 0.22, M['podium'], 64)
 tube(NH, arc(2.52, 0, math.tau, 8.45, 80), 0.09, neon('#FF7A24', 8))
 tube(NH, arc(2.52, 0, math.tau, 8.67, 80), 0.05, neon('#FF7A24', 6))
 # banken en planten op het podium
-sofa(b, (-4.2, 0.5, 1.4), math.pi / 2 + 0.5); sofa(b, (4.2, 0.5, 1.4), -math.pi / 2 - 0.5)
+sofa(b, (-4.2, HUB_Y, 1.4), math.pi / 2 + 0.5); sofa(b, (4.2, HUB_Y, 1.4), -math.pi / 2 - 0.5)
 # (niet over de rand van het podium en niet in de trap aan de linkerkant)
 for (px, pz, s, k) in ((3.4, -2.6, 0.85, 0), (-2.0, -3.9, 0.9, 1), (4.6, -1.0, 0.8, 1), (-4.6, -1.0, 0.8, 1), (3.0, 3.9, 0.75, 2), (-3.0, 3.9, 0.75, 2)):
-    plant(b, (px, 0.5, pz), s, k)
-# tweede trap aan de linkerkant naar achteren (zoals op de foto)
-for i in range(9):
-    x, z = -3.4 - i * 0.05, -1.0 - i * 0.55; y = 0.5 + i * 0.32
+    plant(b, (px, HUB_Y, pz), s, k)
+# tweede trap aan de linkerkant naar achteren (zoals op de foto): 10 treden (i = -1..8) van het podium tot één trede
+# onder de bovenverdieping (Y1 = 3,38); de bovenste negen liggen waar ze altijd lagen, alleen iets lager per trede
+Y1 = 3.38; RISE = (Y1 - HUB_Y) / 11
+for i in range(-1, 9):
+    x, z = -3.4 - i * 0.05, -1.0 - i * 0.55; y = HUB_Y + (i + 2) * RISE - 0.04
     box(b, (x, y, z), (1.5, 0.08, 0.5), M['step'], 0.0)
     box(NH, (x, y + 0.045, z + 0.24), (1.5, 0.02, 0.03), neon('#20D9FF', 6))
 for sx in (-0.78, 0.78):
-    tube(NH, [(-3.4 + sx, 1.4, -1.0), (-3.8 + sx, 4.3, -5.4)], 0.03, neon('#20D9FF', 6))
+    tube(NH, [(-3.35 + sx, HUB_Y + RISE + 0.9, -0.45), (-3.8 + sx, 4.3, -5.4)], 0.03, neon('#20D9FF', 6))
 
-# ---------- ingang: trap naar voren ----------
+# ---------- ingang: vlakke loopbrug naar voren (was een trap; het podium ligt nu laag) ----------
 n = 7; depth = (R_OUT - R_HUB - 1) / n
 for i in range(n):
-    z = R_HUB + 0.3 + i * depth + depth / 2; y = 0.5 - (i + 1) * (0.6 / n); w = 3.6 + i * 0.22
-    box(b, (0, (y - 0.0) / 2 - 0.05, z), (w, y + 0.1, depth), M['step'])
-    box(NH, (0, y + 0.01, z + depth / 2 - 0.02), (w, 0.03, 0.04), neon('#20D9FF', 7))
+    z = R_HUB + 0.3 + i * depth + depth / 2; y = HUB_Y * (1 - (i + 1) / n) + 0.02 * (i + 1) / n; w = 3.6 + i * 0.22
+    box(b, (0, y / 2, z), (w, y, depth), M['step'])
+    box(NH, (0, y + 0.006, z + depth / 2 - 0.02), (w, 0.012, 0.04), neon('#20D9FF', 7))
 for sd in (-1, 1):
-    tube(NH, [(sd * 1.9, 1.3, R_HUB + 0.2), (sd * 2.7, 0.8, R_OUT)], 0.04, neon('#20D9FF', 6))
+    tube(NH, [(sd * 1.9, 1.0, R_HUB + 0.2), (sd * 2.7, 1.0, R_OUT)], 0.04, neon('#20D9FF', 6))
     for k in range(5):
-        t = k / 4; box(b, (sd * (1.9 + 0.8 * t), (1.3 - 0.5 * t) / 2 + 0.1 * (1 - t), R_HUB + 0.2 + t * (R_OUT - R_HUB - 0.2)), (0.05, (1.3 - 0.5 * t) - 0.1, 0.05), M['metal'])
+        t = k / 4; box(b, (sd * (1.9 + 0.8 * t), 0.5, R_HUB + 0.2 + t * (R_OUT - R_HUB - 0.2)), (0.05, 1.0, 0.05), M['metal'])
     plant(b, (sd * 3.1, 0, R_OUT - 0.6), 1.0, 0)
 # zeshoekig platform vooraan
 hexr = 1.6
@@ -674,7 +680,7 @@ if os.path.exists(LOGO):
     nt.links.new(im.outputs['Color'], bs.inputs['Emission Color'])
     bs.inputs['Roughness'].default_value = 0.3
     FLOOR_MATS.add('logo')
-    y = 0.507; lw, z0, z1 = 1.35, 3.72, 4.43
+    y = HUB_Y + 0.007; lw, z0, z1 = 1.35, 3.72, 4.43
     f = L('baked').poly([(-lw, y, z1), (lw, y, z1), (lw, y, z0), (-lw, y, z0)], lm)
     _bm = L('baked').bm; uvl = _bm.loops.layers.uv.get('UVMap') or _bm.loops.layers.uv.new('UVMap')
     for lp, uv in zip(f.loops, ((0, 0), (1, 0), (1, 1), (0, 1))): lp[uvl].uv = uv

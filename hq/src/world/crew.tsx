@@ -122,7 +122,7 @@ export const hash = (s: string) => { let h = 2166136261; for (let i = 0; i < s.l
 const angDiff = (a: number, b: number) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 const yawTo = (dx: number, dz: number) => Math.atan2(-dx, -dz); // figuur kijkt naar -z
 
-/** hoogte van de vloer: gang 0, afdeling 6 cm, tapijt 7,5 cm, podium 0,5 m en de trap vooraan */
+/** hoogte van de vloer: gang 0, afdeling 6 cm, tapijt 7,5 cm, podium 6 cm (sinds 9 nov) en de loopbrug vooraan */
 function floorY(x: number, z: number) {
   const gy = groundY(x, z); if (gy !== null) return gy;
   const r = Math.hypot(x, z);
