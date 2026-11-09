@@ -11,9 +11,30 @@ import { order } from '../../services/real';
 import { useGame } from '../../store/useGame';
 import { startCoach, vraag, parse } from '../../services/coach';
 import { useWorld } from '../../world/useWorld';
+import { roomById, type RoomId } from '../../world/rooms';
+import type { PageId } from '../../types';
 
 type Tip = { text: string; doe?: string };
 type Msg = { role: 'user' | 'assistant'; content: string };
+
+/** Coach overal bij de hand (verbeterlijst punt 59): hij weet op welke pagina je bent en stelt daar passende vragen voor. */
+const PAGINA: Partial<Record<PageId, { naam: string; vragen: string[] }>> = {
+  overzicht: { naam: 'Vandaag', vragen: ['Wat moet ik vandaag als eerste doen?', 'Wat wacht er op mij en waarom?'] },
+  videos: { naam: "Video's", vragen: ['Welke video loopt achter en waarom?', 'Geef 3 titels voor de video in productie'] },
+  kanaal: { naam: 'Kanaal', vragen: ['Wat zeggen mijn cijfers van deze week?', "Waarom blijven mijn lange video's achter bij de shorts?"] },
+  kennis: { naam: 'Kennis', vragen: ['Welke regels moet ik bij elke video onthouden?', 'Wat hebben we geleerd van video 1 tot 3?'] },
+  driftmark: { naam: '3D-kantoor', vragen: ['Welke afdeling heeft nu aandacht nodig?', 'Wat doet het team op dit moment?'] },
+  hq: { naam: 'Team', vragen: ['Welke afdeling heeft nu aandacht nodig?'] },
+  projects: { naam: 'Projecten', vragen: ['Welk project moet als eerste af?'] },
+  agents: { naam: 'Teamleden', vragen: ['Welke agent heeft aandacht nodig?'] },
+  warroom: { naam: 'Crisiskamer', vragen: ['Wat is er mis en wat moet ik doen?'] },
+  settings: { naam: 'Instellingen', vragen: ['Welke instellingen zijn handig voor mij?'] },
+};
+function waarBen(page: PageId, focus: string | null): string {
+  const p = PAGINA[page]?.naam ?? 'de HQ';
+  const r = page === 'driftmark' && focus ? roomById(focus as RoomId) : null;
+  return r ? `${p}, afdeling ${r.naam}` : p;
+}
 
 function tipsFor(d: Live): Tip[] {
   const t: Tip[] = [];
@@ -77,7 +98,10 @@ export default function Coach() {
     if (!text.trim() || busy) return;
     const next: Msg[] = [...msgs, { role: 'user', content: text.trim() }];
     setMsgs(next); setQ(''); setBusy(true);
-    const r = await vraag(next, d, stats, (t) => setMsgs([...next, { role: 'assistant', content: t }]));
+    // de coach krijgt mee waar niels nu kijkt (alleen in wat Claude leest; het gesprek zelf blijft schoon)
+    const st = useGame.getState(); const waar = waarBen(st.page, useWorld.getState().focus);
+    const sent: Msg[] = next.map((m, i) => (i === next.length - 1 ? { ...m, content: `(niels kijkt nu naar: ${waar})\n${m.content}` } : m));
+    const r = await vraag(sent, d, stats, (t) => setMsgs([...next, { role: 'assistant', content: t }]));
     setMsgs([...next, { role: 'assistant', content: r.tekst }]);
     setBusy(false);
   };
@@ -87,6 +111,7 @@ export default function Coach() {
   const saveSet = (on: boolean, f: number) => { setTipsOn(on); setFreq(f); try { localStorage.setItem('coach-tips', on ? 'aan' : 'uit'); localStorage.setItem('coach-freq', String(f)); } catch { /* */ } };
 
   const panelOpen = useWorld((w) => !!(w.focus || w.worker));
+  const focus = useWorld((w) => w.focus);
   if (page === 'coach') return null;
   return (
     <div className="pointer-events-none fixed bottom-[76px] right-3 z-[60] flex flex-col items-end gap-2 md:bottom-4 md:right-4">
@@ -102,10 +127,11 @@ export default function Coach() {
       )}
 
       {open && (
-        <div className="dm-pop pointer-events-auto flex h-[min(520px,calc(100vh-170px))] w-[360px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-2xl border border-hq-line bg-[#0b1128] shadow-2xl backdrop-blur-xl">
+        // zijpaneel rechts over de hele hoogte (punt 59); de pagina eronder blijft zichtbaar en bruikbaar
+        <aside aria-label="Je coach" className="dm-pop pointer-events-auto fixed bottom-[64px] right-0 top-[64px] z-[61] flex w-[min(400px,100vw)] flex-col overflow-hidden rounded-l-2xl border-l border-hq-line bg-[#0b1128]/95 shadow-2xl backdrop-blur-xl md:bottom-0">
           <div className="flex items-center gap-2 border-b border-hq-line px-3 py-2.5">
             <img src="./img/c1_hoofdpersonage.jpg" alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-orange-400" />
-            <div className="min-w-0 flex-1"><div className="font-display text-[16px] font-bold text-white">Je coach</div><div className="text-[12px] text-slate-400">{canAsk ? 'Vraag me alles over je kanaal' : canAsk === false ? 'Tips (vragen werkt in claude.ai)' : 'Even opstarten…'}</div></div>
+            <div className="min-w-0 flex-1"><div className="font-display text-[16px] font-bold text-white">Je coach</div><div className="truncate text-[12px] text-slate-400">{canAsk ? <>Je bent bij <span className="text-orange-200">{waarBen(page, focus)}</span></> : canAsk === false ? 'Tips (vragen werkt in claude.ai)' : 'Even opstarten…'}</div></div>
             <button onClick={() => { setPage('coach'); setOpen(false); }} className="rounded-lg bg-orange-500/20 px-2 py-1 text-[12px] font-semibold text-orange-200 hover:bg-orange-500/30">Coachkamer</button>
             <button aria-label="Instellingen coach" onClick={() => setShowSet(!showSet)} className="p-1 text-slate-400 hover:text-white"><Settings2 size={17} /></button>
             <button aria-label="Coach sluiten" onClick={() => setOpen(false)} className="p-1 text-slate-400 hover:text-white"><X size={18} /></button>
@@ -123,8 +149,8 @@ export default function Coach() {
           <div className="flex-1 space-y-2 overflow-y-auto p-3">
             {msgs.length === 0 && (
               <div className="space-y-2">
-                <div className="rounded-2xl rounded-tl-sm bg-white/[.06] p-3 text-[14px] text-slate-100">Hoi niels! 👋 Ik ben je CEO Coach. Snelle vraag hier, of open de Coachkamer voor je briefing, doelen en beslissingen.</div>
-                {['Hoe krijg ik meer kijkers op mijn lange video\'s?', 'Wat moet ik nu als eerste doen?', 'Welke short werkt het best en waarom?', 'Geef 3 titels voor video 4'].map((s) => (
+                <div className="rounded-2xl rounded-tl-sm bg-white/[.06] p-3 text-[14px] text-slate-100">Hoi niels! 👋 Ik zie dat je bij {waarBen(page, focus)} bent. Vraag gerust iets over deze pagina, of open de Coachkamer voor je briefing, doelen en beslissingen.</div>
+                {[...(PAGINA[page]?.vragen ?? []), ...(page === 'driftmark' && focus ? [`Hoe staat de afdeling ${roomById(focus)?.naam ?? ''} ervoor?`] : []), 'Hoe krijg ik meer kijkers op mijn lange video\'s?', 'Welke short werkt het best en waarom?'].slice(0, 5).map((s) => (
                   <button key={s} onClick={() => void ask(s)} className="block w-full rounded-xl border border-hq-line px-3 py-2 text-left text-[13px] text-slate-200 hover:border-orange-400/60">{s}</button>
                 ))}
                 <div className="pt-1 text-[12px] font-bold uppercase tracking-wider text-slate-500">Tips</div>
@@ -150,11 +176,11 @@ export default function Coach() {
             <input id="coach-q" className="input min-w-0 flex-1 !py-2 text-[14px]" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Vraag iets…" />
             <button className="btn-primary !px-3" aria-label="Versturen" disabled={busy || !q.trim()}><Send size={16} /></button>
           </form>
-        </div>
+        </aside>
       )}
 
       <button onClick={() => { setOpen(!open); setBubble(null); }} aria-label={open ? 'Coach sluiten' : 'Coach openen'}
-        className="pointer-events-auto relative h-14 w-14 overflow-hidden rounded-full border-2 border-orange-400 bg-[#0f1630] shadow-[0_0_24px_rgba(255,138,61,.5)] transition hover:scale-105">
+        title="Je coach: vraag iets over deze pagina" className="pointer-events-auto relative h-12 w-12 overflow-hidden rounded-full border-2 border-orange-400 bg-[#0f1630] shadow-[0_0_24px_rgba(255,138,61,.5)] transition hover:scale-105">
         <img src="./img/c1_hoofdpersonage.jpg" alt="" className="h-full w-full object-cover" />
         {bubble && !open && <span className="absolute right-0.5 top-0.5 h-3 w-3 rounded-full bg-orange-500 ring-2 ring-[#070b1a]" />}
       </button>

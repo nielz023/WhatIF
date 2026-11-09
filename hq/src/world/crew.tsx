@@ -30,6 +30,7 @@ import { useLive } from '../services/live';
 import { useTalk, crewIndex, begin, spreek } from './talk';
 import { personaOf, losZin } from './persona';
 import { walkLock } from './walkState';
+import { useCastModel, type CastModel } from './castModels';
 
 type V2 = [number, number];
 type V3 = [number, number, number];
@@ -63,6 +64,8 @@ export interface CrewMember {
   guest?: boolean;
   /** hover-tekst "Nu:" zolang hij op zijn plek is */
   doing?: string;
+  /** het echte model uit de video's (castModels.tsx) in plaats van het poppetje, zodra het geladen is */
+  model?: CastModel;
   onClick?: () => void;
 }
 export interface Handoff { from: string; to: string; label: string }
@@ -407,11 +410,12 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
   const geos = useMemo(buildGeos, []);
   const faceTex = useMemo(faceAtlas, []);
   const mats = useMemo(() => {
-    const vinyl = new THREE.MeshPhysicalMaterial({ roughness: 0.42, clearcoat: 0.75, clearcoatRoughness: 0.22, metalness: 0 });
+    // glans-look van de video's (punt 33): vinyl met een heldere lak
+    const vinyl = new THREE.MeshPhysicalMaterial({ roughness: 0.4, clearcoat: 1, clearcoatRoughness: 0.1, metalness: 0 });
     const vinyl2 = vinyl.clone(); vinyl2.side = THREE.DoubleSide;
-    const skin = new THREE.MeshPhysicalMaterial({ roughness: 0.48, sheen: 0.6, sheenRoughness: 0.5, sheenColor: new THREE.Color('#ffb59a'), clearcoat: 0.3, clearcoatRoughness: 0.45 });
+    const skin = new THREE.MeshPhysicalMaterial({ roughness: 0.48, sheen: 0.6, sheenRoughness: 0.5, sheenColor: new THREE.Color('#ffb59a'), clearcoat: 0.7, clearcoatRoughness: 0.12 });
     const skinV = skin.clone(); skinV.vertexColors = true;
-    const hair = new THREE.MeshPhysicalMaterial({ roughness: 0.55, clearcoat: 0.5, clearcoatRoughness: 0.35, side: THREE.DoubleSide });
+    const hair = new THREE.MeshPhysicalMaterial({ roughness: 0.5, clearcoat: 0.8, clearcoatRoughness: 0.15, side: THREE.DoubleSide });
     const face = new THREE.MeshPhysicalMaterial({ map: faceTex, alphaTest: 0.5, roughness: 0.48, clearcoat: 0.3, clearcoatRoughness: 0.45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
     face.onBeforeCompile = (sh) => {
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aFace;')
@@ -479,6 +483,8 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
   const [hover, setHover] = useState<number | null>(null);
   const [nu, setNu] = useState<string | null>(null); const nuRef = useRef<string | null>(null);
   const label = useRef<THREE.Group>(null);
+  /** groepen met het echte castmodel per medewerker (zie CrewModel hieronder) */
+  const modelRefs = useRef(new Map<string, THREE.Group>());
   const idxOf = (e: ThreeEvent<PointerEvent | MouseEvent>) => { const i = e.instanceId ?? -1; return PER[e.object.name as PartKey] === 2 ? Math.floor(i / 2) : i; };
   const onOver = (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); const ii = idxOf(e); if (ii >= 0 && sims.current[ii]) { setHover(ii); onHoverRoom?.(sims.current[ii].m.room); document.body.style.cursor = 'pointer'; } };
   const onOut = () => { setHover(null); onHoverRoom?.(null); document.body.style.cursor = 'auto'; };
@@ -753,6 +759,14 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
       e.set(0, s.yaw, 0); q.setFromEuler(e);
       root.compose(v.set(s.x, s.y, s.z + (hang ? 0 : k * SIT_Z)), q, sv.set(scale, scale, scale));
       if (hidden) root.copy(zero);
+      // echt castmodel geladen: poppetje weg, model volgt de plek (met een vinyl-huppel als hij loopt)
+      const mg = s.m.model ? modelRefs.current.get(s.m.key) : undefined;
+      if (mg && mg.userData.ready) {
+        root.copy(zero);
+        mg.visible = !hidden;
+        mg.position.set(s.x, s.y + wa * Math.abs(Math.sin(ph)) * 0.07 + chr * Math.abs(Math.sin(t * 9 + s.seed * 5)) * 0.12, s.z);
+        mg.rotation.set(0, s.yaw + Math.PI, Math.sin(ph) * 0.07 * wa);
+      }
       // romp (licht voorover bij typen, achterover als het af is)
       const lean = k * (busy ? 0.14 : done ? -0.06 : 0.04) + wa * 0.06;
       joint(root, 0, hipY, 0, -lean, Math.sin(ph) * 0.03 * wa, chest); put('torso', i, chest);
@@ -904,6 +918,11 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
             {...(events ? { onPointerOver: onOver, onPointerOut: onOut, onClick, onDoubleClick: onDouble } : { raycast: () => null })} />
         );
       })}
+      {list.filter((m) => m.model).map((m) => (
+        <CrewModel key={m.key} m={m} reg={(g) => { if (g) modelRefs.current.set(m.key, g); else modelRefs.current.delete(m.key); }}
+          onOver={() => { const i = sims.current.findIndex((x) => x.m.key === m.key); if (i >= 0) { setHover(i); onHoverRoom?.(m.room); document.body.style.cursor = 'pointer'; } }}
+          onOut={onOut} onClick={() => { if (useWorld.getState().walk) begin(m); else m.onClick?.(); }} onDouble={() => begin(m)} />
+      ))}
       {Object.entries(bubbles).map(([key, bb]) => (
         <group key={key} ref={(g) => { if (g) bubbleRefs.current.set(key, g); else bubbleRefs.current.delete(key); }}>
           <Html center zIndexRange={[28, 18]} style={{ pointerEvents: 'none' }}>
@@ -930,6 +949,19 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
           </Html>
         )}
       </group>
+    </group>
+  );
+}
+
+/** Eén echt castmodel; Crew zet elke frame de plek en draaiing. Zolang het laadt, staat het poppetje er nog. */
+function CrewModel({ m, reg, onOver, onOut, onClick, onDouble }: { m: CrewMember; reg: (g: THREE.Group | null) => void; onOver: () => void; onOut: () => void; onClick: () => void; onDouble: () => void }) {
+  const h = (m.big ? 1.72 : 1.55) * (m.small ? 0.78 : 1);
+  const obj = useCastModel(m.model, h);
+  return (
+    <group ref={(g) => { if (g) g.userData.ready = !!obj; reg(g); }} visible={!!obj}
+      onPointerOver={(e) => { e.stopPropagation(); onOver(); }} onPointerOut={onOut}
+      onClick={(e) => { e.stopPropagation(); onClick(); }} onDoubleClick={(e) => { e.stopPropagation(); onDouble(); }}>
+      {obj && <primitive object={obj} />}
     </group>
   );
 }

@@ -17,6 +17,7 @@ import { useGame } from '../store/useGame';
 import { threadsPerRoom, type RoomDef, type RoomId } from './rooms';
 import { alarmsFrom } from './alarms';
 import { mergePunten, puntenVoor } from '../data/verbeter';
+import { OnderwerpenBord, ConcurrentUploads, TitelLab, SceneBoard, PublicatieBlok, LessenVanDeMaand } from './afdelingTools';
 
 /* ---------- toegang tot database en Claude (alleen op de gepubliceerde pagina) ---------- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,7 +29,7 @@ const getSample = () => (smP ??= (async () => { try { const c = (window as Any).
 const foutTekst = (e: unknown) => { const c = (e as Any)?.code; return c === 'not_granted' ? 'Claude mag nog niet antwoorden: sta het toe als claude.ai erom vraagt.' : c === 'rate_limited' ? 'Even rustig aan, probeer het zo nog eens.' : c === 'images_unavailable' ? 'Plaatjes meesturen mag hier niet.' : 'Dat lukte nu niet. Probeer het zo nog een keer.'; };
 
 /** één document uit de database, live bijgewerkt; met opslaan */
-function useDoc<T>(path: string): [T | null, (v: T) => Promise<boolean>, 'laden' | 'ok' | 'geen'] {
+export function useDoc<T>(path: string): [T | null, (v: T) => Promise<boolean>, 'laden' | 'ok' | 'geen'] {
   const [v, setV] = useState<T | null>(null); const [st, setSt] = useState<'laden' | 'ok' | 'geen'>('laden');
   useEffect(() => {
     let on = true; let un: (() => void) | undefined;
@@ -43,9 +44,9 @@ function useDoc<T>(path: string): [T | null, (v: T) => Promise<boolean>, 'laden'
   return [v, save, st];
 }
 
-const nl = (n?: number | null) => (n == null ? '—' : n.toLocaleString('nl-NL'));
+export const nl = (n?: number | null) => (n == null ? '—' : n.toLocaleString('nl-NL'));
 const short = (s: string, n = 46) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
-function Sec({ title, icon, right, children, color }: { title: string; icon?: ReactNode; right?: ReactNode; children: ReactNode; color?: string }) {
+export function Sec({ title, icon, right, children, color }: { title: string; icon?: ReactNode; right?: ReactNode; children: ReactNode; color?: string }) {
   return (
     <div className="rounded-xl border border-white/[.07] bg-black/20 p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -55,7 +56,7 @@ function Sec({ title, icon, right, children, color }: { title: string; icon?: Re
     </div>
   );
 }
-const Leeg = ({ children }: { children: ReactNode }) => <div className="text-[12px] leading-relaxed text-slate-500">{children}</div>;
+export const Leeg = ({ children }: { children: ReactNode }) => <div className="text-[12px] leading-relaxed text-slate-500">{children}</div>;
 
 /* =================== CEO =================== */
 function VideoCards() {
@@ -200,7 +201,7 @@ function Competitors() {
 }
 
 /* =================== ONDERZOEK: onderwerpenlijst van het team =================== */
-interface Onderwerp { nr: number; titel: string; waarom?: string; twist?: string; maak?: string }
+export interface Onderwerp { nr: number; titel: string; waarom?: string; twist?: string; maak?: string }
 function Onderwerpen() {
   const [doc, , st] = useDoc<{ at?: string; conclusie?: string; top?: Onderwerp[]; reserve?: string[]; lieverNiet?: string[]; volgorde?: string; pad?: string }>('bord/onderwerpen');
   const [open, setOpen] = useState<number | null>(null); const [alles, setAlles] = useState(false);
@@ -544,14 +545,14 @@ export function DeptTools({ r }: { r: RoomDef }) {
   const id = r.id as RoomId;
   return (
     <div className="space-y-3">
-      {id === 'ceo' && (<><VideoCards /><UploadChart /><WeekReport /></>)}
-      {id === 'onderzoek' && (<><Onderwerpen /><ShortsTable /><Competitors /></>)}
-      {id === 'creatief' && <IdeasBoard />}
+      {id === 'ceo' && (<><LessenVanDeMaand /><VideoCards /><UploadChart /><WeekReport /></>)}
+      {id === 'onderzoek' && (<><OnderwerpenBord /><ConcurrentUploads /><Competitors /><ShortsTable /></>)}
+      {id === 'creatief' && (<><TitelLab /><IdeasBoard /></>)}
       {id === 'script' && <HookCheck />}
       {id === 'stem' && <VoiceStatus />}
-      {id === 'productie' && <RenderPanel />}
+      {id === 'productie' && (<><SceneBoard /><RenderPanel /></>)}
       {id === 'thumbnail' && <ThumbCompare />}
-      {id === 'publicatie' && (<><Check48Panel /><Orders /></>)}
+      {id === 'publicatie' && (<><PublicatieBlok /><Check48Panel /><Orders /></>)}
       {id === 'crisis' && <AlarmList />}
       {id !== 'coach' && <AskDept r={r} />}
       {id !== 'coach' && <Notes r={r} />}

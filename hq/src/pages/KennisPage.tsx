@@ -353,6 +353,19 @@ function ProjectchatTab() {
 }
 
 /* ================= 5. Documenten ================= */
+/** Onderwerpen voor documenten (verbeterlijst punt 61). Eerst lessen en regels (op woorden), dan de video, dan tools. */
+const ONDERWERPEN = ['Video 1', 'Video 2', 'Video 3', 'Video 4', 'Regels en werkwijze', 'Lessen', 'Tools en Driftmark HQ', 'Overig'] as const;
+type Onderwerp = (typeof ONDERWERPEN)[number];
+const BESTAND_KOP: Record<string, string> = { Werkwijze: 'Regels en werkwijze', Cursus: 'Regels uit de cursus', 'Driftmark HQ': 'Tools en Driftmark HQ' };
+function onderwerpVan(tekst: string): Onderwerp {
+  if (/\bless(en)?\b|geleerd|evaluatie|terugblik|weekrapport/i.test(tekst)) return 'Lessen';
+  if (/regel|werkwijze|checklist|cursus|stijlgids|handleiding/i.test(tekst)) return 'Regels en werkwijze';
+  const g = groepVanThread(tekst);
+  if (g.startsWith('Video')) return g as Onderwerp;
+  if (g === 'Driftmark HQ' || /driftmark|dashboard|tool|blender|script|automatis/i.test(tekst)) return 'Tools en Driftmark HQ';
+  return 'Overig';
+}
+
 function DocumentenTab() {
   const documenten = useKennis((s) => s.documenten);
   const bestand = useKennisNav((s) => s.bestand);
@@ -365,6 +378,12 @@ function DocLijsten({ d }: { d: NonNullable<ReturnType<typeof useKennis.getState
   const [groot, setGroot] = useState<{ b: Beeld; url: string } | null>(null);
   const toast = useGame((s) => s.toast);
   const artifacts = useMemo(() => artifactRijen(d.artifacts), [d]);
+  // verbeterlijst punt 61: artifacts per onderwerp (per video, regels, tools, lessen), niet als één lange lijst
+  const perOnderwerp = useMemo(() => {
+    const per = new Map<Onderwerp, typeof artifacts>();
+    for (const a of meerA ? artifacts : artifacts.slice(0, 24)) { const gr = onderwerpVan(`${a.title} ${a.threadTitle ?? ''}`); per.set(gr, [...(per.get(gr) ?? []), a]); }
+    return ONDERWERPEN.map((gr) => ({ gr, lijst: per.get(gr) ?? [] })).filter((x) => x.lijst.length);
+  }, [artifacts, meerA]);
   const bestanden = useMemo(() => {
     const per = new Map<string, Bestand[]>();
     for (const b of [...d.bestanden].sort((x, y) => x.name.localeCompare(y.name, 'nl'))) { const gr = groepVanBestand(b); per.set(gr, [...(per.get(gr) ?? []), b]); }
@@ -377,16 +396,21 @@ function DocLijsten({ d }: { d: NonNullable<ReturnType<typeof useKennis.getState
       <section className="panel p-4">
         <Kop icon={FileText} extra={<span className="text-[12px] text-slate-500">{artifacts.length}</span>}>Documenten en artifacts</Kop>
         {!artifacts.length ? <Leeg>{NIET_OPGEHAALD}</Leeg> : (
-          <div className="grid gap-x-4 md:grid-cols-2">
-            {(meerA ? artifacts : artifacts.slice(0, 12)).map((a) => (
-              <a key={a.url + a.title} href={a.url} target="_blank" rel="noreferrer" className="block rounded-lg px-2 py-1.5 hover:bg-white/5">
-                <div className="truncate text-[14px] font-semibold text-sky-200">{a.title}</div>
-                <div className="truncate text-[12px] text-slate-400">{datumNl(a.at)}{a.threadTitle ? ` · ${a.threadTitle}` : ''}</div>
-              </a>
+          <div className="grid gap-3 md:grid-cols-2">
+            {perOnderwerp.map(({ gr, lijst }) => (
+              <div key={gr} className="rounded-xl bg-white/[.03] p-2">
+                <div className="px-1 pb-1 text-[12px] font-bold uppercase tracking-wider text-slate-400">{gr} <span className="font-normal text-slate-500">({lijst.length})</span></div>
+                {lijst.map((a) => (
+                  <a key={a.url + a.title} href={a.url} target="_blank" rel="noreferrer" className="block rounded-lg px-1 py-1 hover:bg-white/5">
+                    <div className="truncate text-[13.5px] font-semibold text-sky-200">{a.title}</div>
+                    <div className="truncate text-[11px] text-slate-500">{datumNl(a.at)}{a.threadTitle ? ` · ${a.threadTitle}` : ''}</div>
+                  </a>
+                ))}
+              </div>
             ))}
           </div>
         )}
-        {artifacts.length > 12 && <button className="btn-ghost mt-2 text-[13px]" onClick={() => setMeerA((x) => !x)}>{meerA ? 'Minder tonen' : `Alles tonen (${artifacts.length})`}</button>}
+        {artifacts.length > 24 && <button className="btn-ghost mt-2 text-[13px]" onClick={() => setMeerA((x) => !x)}>{meerA ? 'Minder tonen' : `Alles tonen (${artifacts.length})`}</button>}
       </section>
 
       <section className="panel p-4">
@@ -395,7 +419,7 @@ function DocLijsten({ d }: { d: NonNullable<ReturnType<typeof useKennis.getState
           <div className="grid gap-3 md:grid-cols-2">
             {bestanden.map(({ gr, lijst }) => (
               <div key={gr} className="rounded-xl bg-white/[.03] p-2">
-                <div className="px-1 pb-1 text-[12px] font-bold uppercase tracking-wider text-slate-400">{gr}</div>
+                <div className="px-1 pb-1 text-[12px] font-bold uppercase tracking-wider text-slate-400">{BESTAND_KOP[gr] ?? gr} <span className="font-normal text-slate-500">({lijst.length})</span></div>
                 {lijst.map((b) => (
                   <div key={b.path} className="flex items-center gap-2 rounded-lg px-1 py-1 hover:bg-white/5">
                     {b.soort === 'pdf' ? (

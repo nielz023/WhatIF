@@ -19,7 +19,7 @@ import { useLive } from '../services/live';
 import { Box, Chair, Bookshelf, MicStand, Easel, Sofa, MeetingTable, ServerRack } from '../components/office/Furniture';
 import { Mascot } from '../components/office/DriftmarkDecor';
 import { ROOMS, STATUS, threadsPerRoom, statusOf, SPAN, R_HUB, R_IN, R_OUT, R_BASE, slotAngle, roomCenter, roomById, type RoomDef, type RoomId } from './rooms';
-import { useWorld, reducedMotion, dprFor, isPhone } from './useWorld';
+import { useWorld, reducedMotion, dprFor, isPhone, PERF_DPR } from './useWorld';
 import { useOffice, BakedOffice, type OfficeModel } from './BakedOffice';
 import { useOfficeLoad } from './loadState';
 import { Crew } from './crew';
@@ -626,6 +626,18 @@ function Entrance() {
   );
 }
 
+/* ================= glans-look (punt 33) =================
+ * Zoals de renders van de video's: een warm hoofdlicht schuin van voren, en een oranje en een blauw randlicht
+ * van achteren die de lak van de vinylfiguren laten glanzen. Geen schaduw (die zit al in het kantoor gebakken). */
+function GlansLicht() {
+  return (
+    <>
+      <directionalLight position={[-14, 20, 24]} color="#FFD7AE" intensity={1.25} />
+      <directionalLight position={[-22, 9, -20]} color="#FF8A3D" intensity={1.6} />
+      <directionalLight position={[22, 9, -20]} color="#3D9BFF" intensity={1.6} />
+    </>
+  );
+}
 /* ================= de scène ================= */
 function Scene({ mode }: { mode: WorldMode }) {
   const live = useLive((s) => s.data);
@@ -634,6 +646,9 @@ function Scene({ mode }: { mode: WorldMode }) {
   const { focus, openWorker, hover, setHover, walk } = useWorld(useShallow((s) => ({ focus: s.focus, openWorker: s.openWorker, hover: s.hover, setHover: s.setHover, walk: s.walk })));
   const per = useMemo(() => threadsPerRoom(activity), [activity]);
   const quality = useWorld((s) => s.quality);
+  const perf = useWorld((s) => s.perf);
+  /** 0 = licht t/m 3 = alles: snel is altijd licht, 4K altijd alles, Auto volgt de gemeten beeldsnelheid */
+  const lvl = quality === 'snel' ? 0 : quality === '4k' ? 3 : perf;
   const phone = useMemo(() => isPhone(), []);
   const screens = useScreens();
   const office = useOffice();
@@ -691,6 +706,7 @@ function Scene({ mode }: { mode: WorldMode }) {
       <Sky baked={!!office} />
       <pointLight position={[-30, 12, 6]} color="#FF7A24" intensity={55} distance={80} decay={1.4} />
       <pointLight position={[30, 12, 6]} color="#398CFF" intensity={55} distance={80} decay={1.4} />
+      <GlansLicht />
 
       {!office && (<>
       {/* grondplaat: spiegelende vloer met oranje rand */}
@@ -729,22 +745,28 @@ function Scene({ mode }: { mode: WorldMode }) {
       {mode !== 'studio' && ground && <Beacon alarms={alarms} />}
       <Snow />
       <Disco />
-      <EffectComposer multisampling={quality === 'snel' ? 0 : 4}>
-        <Bloom intensity={office ? 0.32 : 0.45} luminanceThreshold={office ? 1.1 : 0.9} luminanceSmoothing={0.15} radius={0.45} mipmapBlur />
-        <Vignette eskil={false} offset={0.4} darkness={0.28} />
+      <EffectComposer multisampling={lvl <= 0 ? 0 : lvl === 1 ? 2 : 4}>
+        {/* zachtere neon (punt 33): minder gloed, pas boven een hogere drempel */}
+        <Bloom intensity={office ? 0.22 : 0.34} luminanceThreshold={office ? 1.25 : 1.0} luminanceSmoothing={0.2} radius={0.4} mipmapBlur />
+        <Vignette eskil={false} offset={0.4} darkness={0.22} />
       </EffectComposer>
     </>
   );
 }
 
 export default function NeonOffice({ mode }: { mode: WorldMode }) {
-  const [dpr, setDpr] = useState(1.5);
   const quality = useWorld((s) => s.quality);
+  const perf = useWorld((s) => s.perf); const setPerf = useWorld((s) => s.setPerf);
   const setFocus = useWorld((s) => s.setFocus);
+  const auto = quality === 'auto';
   return (
-    <Canvas shadows dpr={dprFor(quality, dpr)} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
+    <Canvas shadows dpr={dprFor(quality, PERF_DPR[auto ? perf : 2])} gl={{ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.15 }}
       onPointerMissed={(e) => { if (mode === 'home' && !useWorld.getState().walk && (e.target as HTMLElement)?.tagName === 'CANVAS') setFocus(null); }}>
-      <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.75)} />
+      {/* soepel op elke computer (punt 74): de beeldsnelheid wordt gemeten tegen de verversing van het scherm (tot 144 Hz).
+          Zakt hij onder ~55 fps, dan een stap lichter (minder pixels en minder randafvlakking); loopt hij ruim, dan een stap mooier. */}
+      {auto && <PerformanceMonitor ms={400} iterations={8} threshold={0.75} flipflops={4}
+        bounds={(hz) => [Math.min(55, hz * 0.85), Math.min(hz, 144) * 0.95]}
+        onDecline={() => setPerf(useWorld.getState().perf - 1)} onIncline={() => setPerf(useWorld.getState().perf + 1)} />}
       <Scene mode={mode} />
     </Canvas>
   );
