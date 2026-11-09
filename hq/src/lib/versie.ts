@@ -4,24 +4,23 @@
  * Bij een nieuwe versie: VERSIE ophogen en bovenaan NIEUW een blok toevoegen. Het venster
  * "Wat is nieuw" verschijnt dan één keer per browser (onthouden in localStorage).
  */
-export const VERSIE = 'v41';
+export const VERSIE = 'v42';
 
 export interface Nieuw { versie: string; datum?: string; punten: string[] }
 
 export const NIEUW: Nieuw[] = [
   {
-    // v42: de coördinator vult deze lijst bij het uitbrengen; tot dan staan hier de onderdelen van stap 4.
     versie: 'v42',
+    datum: '9 nov',
     punten: [
-      'Eén vaste huisstijl: dezelfde kaarten, knoppen, letters en kleuren op elke pagina.',
-      'Driftmark-logo en banner bovenin, nachtblauw met oranje gloed.',
-      'Rustiger lettertype; cijfers staan netjes onder elkaar.',
-      'Lege plekken leggen uit wat er komt, in plaats van een leeg vak of een nul.',
-      'Kaarten komen zacht binnen en cijfers tellen op; bij verversen springt niets.',
-      'Pagina\'s openen sneller: het 3D-kantoor laadt pas als je het opent, met een laadscherm.',
-      'Geluid met één knop: één volumeschuif en dempen.',
-      'Een eigen opdracht volg je sneller: zolang hij niet klaar is, kijkt het HQ elke 20 seconden.',
-      'Valt YouTube of vidIQ even weg, dan zie je de laatst bekende cijfers met de tijd erbij.',
+      "Video's: per video de hele productielijn met 'volgende stap starten', renders live volgen, grote thumbnails, scriptlezer met tijdlijn, stemmenpaneel en thumbnailmuur.",
+      'Kanaal: mooiere grafieken met je uploads als stipjes, een videorapport per video, doelen met prognose en het weekrapport. Bij elk cijfer staat de bron en de tijd.',
+      'Klikratio uit een Studio-screenshot, uploadplanning en een ideeënbus.',
+      '3D-kantoor in de glans-look, met jouw hoofdpersonage als CEO en de cast van je video\'s als team, plus rijdende auto\'s in de stad.',
+      'Elke afdeling dezelfde opbouw: wat ze doet, wat loopt, wat op jou wacht, wat klaar is en snelknoppen. Met onderwerpenbord, titellab en scènebord.',
+      'De coach als zijpaneel op elke pagina; de crisiskamer verschijnt alleen als er echt iets mis is.',
+      'Kennis: vaste afspraken aanpassen, besluitenlogboek, versies van scripts vergelijken, zoeken met de toets /.',
+      'Nieuwe huisstijl met Driftmark-logo, sneller openen (3D laadt pas als je het opent) en één volumeknop.',
     ],
   },
   {
