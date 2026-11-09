@@ -17,7 +17,8 @@ const typing = (e: KeyboardEvent) => !!(e.target as HTMLElement | null)?.closest
 /** wie of wat er voor je staat: een machine wint als de rand ervan dichterbij is dan het figuurtje (midden) */
 function kies(): 'talk' | 'game' | null {
   const t = useTalk.getState().near; const g = usePlay.getState().near;
-  if (g && (!t || g.d <= t.d)) return 'game';
+  // een speler die vlak bij een spel staat (bijv. aan de airhockeytafel) is meestal aan het spelen: het spel gaat iets voor
+  if (g && (!t || g.d <= t.d + 0.3)) return 'game';
   return t ? 'talk' : null;
 }
 
