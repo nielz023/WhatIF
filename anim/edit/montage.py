@@ -164,7 +164,7 @@ def _font():
     return _FONT[0]
 
 
-def text(sed, body, t0, t1, loc, size, color, channel, anchor=("LEFT", "TOP")):
+def text(sed, body, t0, t1, loc, size, color, channel, anchor=("LEFT", "TOP"), box=False):
     s = new_strip("effect", sed, body[:20], channel, F(t0), type="TEXT", length=F(t1) - F(t0))
     s.text = body
     s.font_size = size * bpy.context.scene.render.resolution_x / 1920
@@ -178,6 +178,10 @@ def text(sed, body, t0, t1, loc, size, color, channel, anchor=("LEFT", "TOP")):
     s.use_shadow = True
     if hasattr(s, "shadow_color"):
         s.shadow_color = (0, 0, 0, 0.85)
+    if box and hasattr(s, "use_box"):        # donkere balk achter de tekst (leesbaar op lichte hoofden)
+        s.use_box = True
+        s.box_color = (0, 0, 0, 0.55)
+        s.box_margin = 0.012
     if hasattr(s, "anchor_x"):
         s.anchor_x, s.anchor_y = anchor
     else:
@@ -312,7 +316,7 @@ def build(spec, frames_dir, out, render=True):
         if f1 <= f0:                     # korter dan één beeld (snelle kloktikken bij 30 fps)
             continue
         s = text(sed, x["body"], x["t0"], t1, tuple(x["loc"]), x["size"], tuple(x["color"]), _pack(used, 40, f0, f1),
-                 anchor=tuple(x["anchor"]))
+                 anchor=tuple(x["anchor"]), box=x.get("box", False))
         _fade(s, f0, f1, x.get("pop", True), out=x["t1"] is not None)
 
     # titel (S01: "16 DAYS EARLIER")
