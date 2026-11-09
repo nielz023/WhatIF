@@ -71,7 +71,7 @@ function Hint() {
     <div className="absolute inset-x-0 bottom-5 flex flex-col items-center gap-2 px-3">
       {!locked && !noLock && <div className="holo-mini px-3 py-1 text-[12px] font-semibold text-[#FFD2AE]">Klik in het kantoor om met de muis rond te kijken</div>}
       <div className="holo-mini flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 px-4 py-2 text-[13px] text-slate-200">
-        <Key>WASD</Key> of <Key>pijltjes</Key>: lopen <span className="text-slate-500">·</span> <Key>Shift</Key>: sneller <span className="text-slate-500">·</span> <Key>Q</Key>: verdieping <span className="text-slate-500">·</span> {noLock ? 'slepen met de muis' : 'muis'}: rondkijken <span className="text-slate-500">·</span> <Key>Esc</Key>: stoppen
+        <Key>WASD</Key> of <Key>pijltjes</Key>: lopen <span className="text-slate-500">·</span> <Key>Shift</Key>: sneller <span className="text-slate-500">·</span> <Key>Q</Key>: verdieping <span className="text-slate-500">·</span> <Key>E</Key>: praten of spelen <span className="text-slate-500">·</span> {noLock ? 'slepen met de muis' : 'muis'}: rondkijken <span className="text-slate-500">·</span> <Key>Esc</Key>: stoppen
       </div>
     </div>
   );

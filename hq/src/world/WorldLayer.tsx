@@ -3,6 +3,7 @@ import { hasWebGL, reducedMotion } from './useWorld';
 import { useOfficeLoad } from './loadState';
 import type { WorldMode } from './NeonOffice';
 import WalkHud, { FloorButton } from './WalkHud';
+import TalkLayer from './TalkPanel';
 
 const NeonOffice = lazy(() => import('./NeonOffice'));
 
@@ -40,6 +41,8 @@ export default function WorldLayer({ mode }: { mode: WorldMode }) {
       <WalkHud />
       {/* knopje rechts in het midden: naar de bovenverdieping en terug */}
       <FloorButton />
+      {/* praten met de figuurtjes en zelf gamen in de game room */}
+      <TalkLayer />
     </div>
   );
 }

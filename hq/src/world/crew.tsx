@@ -27,6 +27,9 @@ import { buildNav1, SPOTS, occupied, type Spot, type SpotPose } from './upstairs
 import { STATUS, R_IN, R_OUT, SPAN, type Status } from './rooms';
 import { reducedMotion, useWorld } from './useWorld';
 import { useLive } from '../services/live';
+import { useTalk, crewIndex, begin, spreek } from './talk';
+import { personaOf, losZin } from './persona';
+import { walkLock } from './walkState';
 
 type V2 = [number, number];
 type V3 = [number, number, number];
@@ -326,6 +329,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
   // bij het openen en net nadat de echte gegevens binnenkomen: nieuwe plekken meteen innemen in plaats van erheen te lopen
   const boot = useRef(performance.now()); const firstLive = useRef(0); const booted = useRef(new Set<string>());
   const list = useMemo(() => members.filter((m) => m.standAt || seats[m.room]?.[m.seat]).slice(0, MAXN), [members, seats]);
+  useEffect(() => { crewIndex.members = new Map(list.map((m) => [m.key, m])); }, [list]);
   useMemo(() => {
     const old = new Map(sims.current.map((s) => [s.m.key, s]));
     const now0 = performance.now();
@@ -478,7 +482,11 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
   const idxOf = (e: ThreeEvent<PointerEvent | MouseEvent>) => { const i = e.instanceId ?? -1; return PER[e.object.name as PartKey] === 2 ? Math.floor(i / 2) : i; };
   const onOver = (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); const ii = idxOf(e); if (ii >= 0 && sims.current[ii]) { setHover(ii); onHoverRoom?.(sims.current[ii].m.room); document.body.style.cursor = 'pointer'; } };
   const onOut = () => { setHover(null); onHoverRoom?.(null); document.body.style.cursor = 'auto'; };
-  const onClick = (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); sims.current[idxOf(e)]?.m.onClick?.(); };
+  const onClick = (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); const m = sims.current[idxOf(e)]?.m; if (!m) return; if (useWorld.getState().walk) begin(m); else m.onClick?.(); };
+  const onDouble = (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); const m = sims.current[idxOf(e)]?.m; if (m) begin(m); };
+  // praten: wie er vlak voor je staat, losse zinnetjes als je langsloopt, en tekstballonnetjes
+  const talkT = useRef(0); const zegT = useRef(0); const gezegd = useRef(new Map<string, number>());
+  const bubbles = useTalk((st) => st.bubbles); const bubbleRefs = useRef(new Map<string, THREE.Group>());
 
   // ---- gedrag ----
   const plansThisFrame = useRef(0);
@@ -614,8 +622,9 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     : s.carry === 'folder' ? `brengt een map${s.target && roomName ? ` naar ${roomName(s.target)}` : ''}`
       : s.carry === 'cup' || s.pose === 'pour' ? 'haalt koffie'
         : s.target && s.target !== s.m.room && roomName ? `overlegt bij ${roomName(s.target)}` : s.target ? 'overlegt met een collega' : 'loopt even rond';
-  useFrame(({ clock }, dtRaw) => {
+  useFrame(({ clock, camera }, dtRaw) => {
     const dt = Math.min(0.05, dtRaw); const t = clock.elapsedTime; const now = performance.now() / 1000;
+    const talkKey = useTalk.getState().open?.key; const walkOn = useWorld.getState().walk;
     plansThisFrame.current = 0;
     const cheer = now - partyAt.current < 4.5;
     const all = sims.current;
@@ -642,7 +651,13 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
       // een staande medewerker op de dichtstbijzijnde vrije plek zetten (niet in een tafel)
       if (s.stander && !s.snapped && !s.m.standAt?.fixed) { const n = navOf(s.homeFl); if (n) { s.snapped = true; const p = nearestFree(n, s.seatP[0], s.seatP[1]); if (p) { s.seatP = p; s.standP = p; } } }
       // ---- toestand ----
-      if (s.mode === 'sit') {
+      if (talkKey === s.m.key) {
+        // in gesprek: blijft staan (of zitten) en kijkt naar jou
+        s.walkAmt = Math.max(0, s.walkAmt - dt * 4);
+        const dx = camera.position.x - s.x, dz = camera.position.z - s.z;
+        if (s.sit < 0.5) s.yaw += angDiff(s.yaw, yawTo(dx, dz)) * Math.min(1, dt * 5);
+        else { s.look = THREE.MathUtils.clamp(angDiff(s.mode === 'hang' ? s.yaw : s.stander ? s.yaw : 0, yawTo(dx, dz)), -1.3, 1.3); s.lookT = 0.5; }
+      } else if (s.mode === 'sit') {
         s.walkAmt = Math.max(0, s.walkAmt - dt * 4);
         s.x += (s.seatP[0] - s.x) * Math.min(1, dt * 6); s.z += (s.seatP[1] - s.z) * Math.min(1, dt * 6);
         if (s.stander) { s.sit = 0; if (s.homeFace) s.yaw += angDiff(s.yaw, yawTo(s.homeFace[0] - s.x, s.homeFace[1] - s.z)) * Math.min(1, dt * 4); }
@@ -762,7 +777,8 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
       put('glasses', i, L.glasses ? head : zero); put('phones', i, L.headphones ? head : zero);
       // gezichtsuitdrukking: 0 gewoon, 1 knipperen, 2 blij, 3 praten
       // om de beurt praten aan tafel; de cast zingt in de microfoon of speelt voor de camera
-      const talking = (s.mode === 'wait' && s.pose === 'talk') || ((hang === 'talk' || act === 'chat') && Math.sin(t * 0.55 + s.seed * 11) > 0.1) || sing || act === 'act';
+      const praat = (bubbles[s.m.key]?.tot ?? 0) > now;
+      const talking = praat || (s.mode === 'wait' && s.pose === 'talk') || ((hang === 'talk' || act === 'chat') && Math.sin(t * 0.55 + s.seed * 11) > 0.1) || sing || act === 'act';
       const glee = (hang === 'game' || hang === 'race' || hang === 'tv' || hang === 'paddle' || hang === 'foos' || act === 'pose') && Math.sin(t * 0.45 + s.seed * 4) > 0.55;
       fa[i] = up > 0.15 || glee ? 2 : s.blink < 0 ? 1 : talking ? (Math.sin(t * (sing ? 11 : 14) + s.seed * 3) > 0.2 ? 3 : 0) : done && Math.sin(t * 0.3 + s.seed * 6) > 0.6 ? 2 : 0;
       // status-bolletje boven het hoofd
@@ -802,6 +818,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
           else { sh = 0.55; el = 1.25; roll = -0.25; }
         }
         if (s.mode === 'wait' && s.pose === 'talk' && right) { sh = 0.55 + Math.sin(t * 3.2 + s.seed) * 0.25; el = 0.95; roll = 0.14; }
+        if (praat && right && k < 0.5 && !hang) { sh = 0.55 + Math.sin(t * 3.4 + s.seed) * 0.3; el = 0.95; roll = 0.14; }
         if (hang) { // boven
           const j = Math.sin(t * 12 + sd * 1.7 + s.seed * 9) * 0.06;
           if (hang === 'game') { sh = 1.0 + j; el = 0.55 - j; roll = -sg * 0.08; } // knoppen en joystick van de gamekast
@@ -834,6 +851,42 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
     faceAttr.needsUpdate = true;
     for (const [key, m] of Object.entries(M) as [PartKey, THREE.InstancedMesh | null][]) if (m) { m.count = all.length * (PER[key] ?? 1); m.instanceMatrix.needsUpdate = true; }
     { const d = hover !== null && all[hover] ? doing(all[hover]) : null; if (d !== nuRef.current) { nuRef.current = d; setNu(d); } }
+    // ---- praten (alleen tijdens het rondlopen) ----
+    talkT.current -= dt;
+    if (talkT.current <= 0) {
+      talkT.current = 0.15;
+      const T = useTalk.getState();
+      if (!walkOn) { if (T.near) T.setNear(null); }
+      else {
+        camera.getWorldDirection(v); const fx = v.x, fz = v.z; const fl = Math.hypot(fx, fz) || 1;
+        let best: Sim | null = null; let bd = 2.6; let los: Sim | null = null; let ld = 4.6;
+        for (const s of all) {
+          if (s.fl !== view && s.mode !== 'climb') continue;
+          const dx = s.x - camera.position.x, dz = s.z - camera.position.z; const d = Math.hypot(dx, dz);
+          const dot = (dx * fx + dz * fz) / (fl * (d || 1));
+          if (d < bd && dot > 0.5) { bd = d; best = s; }
+          if (d < ld && dot > 0.35 && s.m.key !== talkKey) { ld = d; los = s; }
+        }
+        const nb = best ? personaOf(best.m) : null;
+        T.setNear(best && nb ? { key: best.m.key, naam: nb.naam, kleur: nb.kleur, d: bd } : null);
+        // als je langsloopt zegt iemand soms iets (niet te vaak, en niet als je al praat)
+        zegT.current -= 0.15;
+        if (los && !talkKey && !walkLock.on && zegT.current <= 0 && now - (gezegd.current.get(los.m.key) ?? -99) > 45 && Math.random() < 0.35) {
+          zegT.current = rnd(6, 11); gezegd.current.set(los.m.key, now);
+          const p = personaOf(los.m); const z = losZin(p, los.m); T.zeg(los.m.key, z);
+          if (ld < 3.2) spreek(p, z);
+        }
+      }
+      // verlopen ballonnetjes opruimen
+      const b = T.bubbles; const weg = Object.keys(b).filter((k) => b[k].tot < now);
+      if (weg.length) useTalk.setState((st) => { const nb2 = { ...st.bubbles }; weg.forEach((k) => delete nb2[k]); return { bubbles: nb2 }; });
+    }
+    for (const [key, g] of bubbleRefs.current) {
+      const s = all.find((x) => x.m.key === key); if (!s) { g.visible = false; continue; }
+      const scale = FIG * (s.m.big ? BIG : 1) * (s.m.small ? SMALL : 1);
+      const top = s.sit > 0.5 ? s.sitW - s.y + (HEAD_Y + HEAD_R) * scale : (HIP + HEAD_Y + HEAD_R) * scale;
+      g.position.set(s.x, s.y + top + 0.45, s.z); g.visible = !(view === 0 && s.fl === 1 && s.mode !== 'climb') && !(view === 1 && s.fl === 0 && s.mode !== 'climb');
+    }
     if (hover !== null && label.current && all[hover]) {
       const s = all[hover]; const scale = FIG * (s.m.big ? BIG : 1) * (s.m.small ? SMALL : 1);
       const top = (s.sit > 0.5 ? s.sitW - s.y + (HEAD_Y + HEAD_R) * scale : (HIP + HEAD_Y + HEAD_R) * scale);
@@ -848,9 +901,19 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
         const per = PER[k] ?? 1; const cap = MAXN * per;
         return (
           <instancedMesh key={k} name={k} ref={R(k, cap)} args={[geos[k], mat, cap]} frustumCulled={false} renderOrder={k === 'ring' || k === 'blob' ? 1 : 0}
-            {...(events ? { onPointerOver: onOver, onPointerOut: onOut, onClick } : { raycast: () => null })} />
+            {...(events ? { onPointerOver: onOver, onPointerOut: onOut, onClick, onDoubleClick: onDouble } : { raycast: () => null })} />
         );
       })}
+      {Object.entries(bubbles).map(([key, bb]) => (
+        <group key={key} ref={(g) => { if (g) bubbleRefs.current.set(key, g); else bubbleRefs.current.delete(key); }}>
+          <Html center zIndexRange={[28, 18]} style={{ pointerEvents: 'none' }}>
+            <div className="dm-ballon relative w-max max-w-[230px] rounded-2xl bg-white px-3 py-1.5 text-[13px] font-semibold leading-snug text-[#141a33] shadow-[0_6px_20px_rgba(0,0,0,.45)]">
+              {bb.tekst}
+              <span className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white" />
+            </div>
+          </Html>
+        </group>
+      ))}
       <group ref={label}>
         {hovered && (
           <Html center zIndexRange={[30, 20]} style={{ pointerEvents: 'none' }}>
@@ -862,6 +925,7 @@ export function Crew({ members, seats, chairs, handoffs, onHoverRoom, roomName }
               {hovered.m.task && <div className="mt-0.5 leading-snug">{hovered.m.taskDone ? <span className="text-[#4ADE80]">✓ Klaar: </span> : <span className="text-sky-300">Verbetert: </span>}{hovered.m.task}</div>}
               {hovered.m.thread && <div className="mt-0.5 leading-snug text-slate-300"><span className="text-orange-300">Taak: </span>{hovered.m.thread}</div>}
               {nu && <div className="mt-0.5 text-slate-400">Nu: {nu}</div>}
+              <div className="mt-0.5 text-[11px] text-[#FFB070]">{useWorld.getState().walk ? 'Klik of E: praten' : 'Dubbelklik: praten'}</div>
             </div>
           </Html>
         )}

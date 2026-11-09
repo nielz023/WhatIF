@@ -188,6 +188,9 @@ export function parse(t: string) {
 /* ---------- capabilities ---------- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let sampleFn: any = null; let dbRef: any = null;
+/** de sample-functie (Claude) voor andere onderdelen, zoals praten met de figuurtjes (null buiten claude.ai) */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getSample = (): any => sampleFn;
 interface CS {
   klaar: boolean; kanVragen: boolean | null; dbOk: boolean;
   kennis: Kennis | null; geheugen: Geheugen; briefing: Briefing | null; doelen: Doel[]; besluiten: Besluit[]; rapporten: Rapport[]; gesprek: Msg[];

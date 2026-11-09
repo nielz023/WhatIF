@@ -14,7 +14,8 @@ import * as THREE from 'three';
 import { mergeBufferGeometries } from 'three-stdlib';
 import { Y1, SLAB, UP_R, useFloor } from './floors';
 import { VIDE_R, RAIL_R, HOLE, K, G, L, PLANTS, occupied } from './upstairs';
-import { reducedMotion } from './useWorld';
+import { KASTEN, MACHINES, usePlay } from './play';
+import { reducedMotion, useWorld } from './useWorld';
 
 type V2 = [number, number];
 type V3 = [number, number, number];
@@ -81,19 +82,16 @@ function drawRace(g: CanvasRenderingContext2D, w: number, h: number, t: number) 
   g.fillStyle = '#ffffff'; g.font = `bold ${Math.round(h * 0.09)}px system-ui`; g.textAlign = 'left'; g.fillText('DRIFT GP', 6, h * 0.1);
   g.textAlign = 'right'; g.fillText(`${Math.floor(180 + Math.sin(t) * 40)} km/h`, w - 6, h * 0.1);
 }
-/** vier verzonnen arcadespellen */
-const ARCADE = [
-  { name: 'NEON BLOCKS', a: '#20D9FF', b: '#FF4DB8' },
-  { name: 'SKY HOP', a: '#4ADE80', b: '#FACC15' },
-  { name: 'ORBIT RUN', a: '#A855F7', b: '#FF7A24' },
-  { name: 'DRIFT DASH', a: '#FF3B4E', b: '#20D9FF' },
-];
+/** zes verzonnen arcadespellen (je kunt ze tijdens het rondlopen zelf spelen, zie games.ts) */
+const ARCADE = KASTEN;
 function drawArcade(g: CanvasRenderingContext2D, w: number, h: number, k: number, t: number) {
   const A = ARCADE[k]; g.fillStyle = '#070a1a'; g.fillRect(0, 0, w, h);
-  g.fillStyle = A.a; g.font = `bold ${Math.round(w * 0.12)}px system-ui`; g.textAlign = 'center'; g.fillText(A.name, w / 2, h * 0.12);
-  if (k === 0) { // vallende blokken
-    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) if ((i * 7 + j * 3) % 5 < 3) { g.fillStyle = (i + j) % 2 ? A.a : A.b; g.fillRect(w * 0.15 + i * w * 0.12, h * 0.82 - j * h * 0.07, w * 0.11, h * 0.06); }
-    const y = ((t * 0.35) % 1) * h * 0.55 + h * 0.18; g.fillStyle = A.b; g.fillRect(w * 0.45, y, w * 0.24, h * 0.06); g.fillRect(w * 0.45, y + h * 0.06, w * 0.12, h * 0.06);
+  g.fillStyle = A.a; g.font = `bold ${Math.round(w * 0.11)}px system-ui`; g.textAlign = 'center'; g.fillText(A.naam, w / 2, h * 0.12);
+  if (k === 0) { // stenen kapot kaatsen
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) if ((i * 7 + j * 3 + Math.floor(t * 0.5)) % 5 < 4) { g.fillStyle = j % 2 ? A.a : A.b; g.fillRect(w * 0.08 + i * w * 0.145, h * 0.2 + j * h * 0.06, w * 0.13, h * 0.045); }
+    const p = (t * 0.45) % 2; const q = p < 1 ? p : 2 - p; const bx = w * (0.15 + 0.7 * ((t * 0.37) % 1 < 0.5 ? ((t * 0.37) % 1) * 2 : 2 - ((t * 0.37) % 1) * 2));
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(bx, h * (0.48 + q * 0.38), w * 0.025, 0, Math.PI * 2); g.fill();
+    g.fillStyle = A.b; g.fillRect(bx - w * 0.12, h * 0.88, w * 0.24, h * 0.03);
   } else if (k === 1) { // springende bal op wolkjes
     for (let i = 0; i < 4; i++) { g.fillStyle = '#e8f0ff'; g.fillRect(w * (0.1 + i * 0.22), h * (0.85 - i * 0.16), w * 0.2, h * 0.04); }
     const p = (t * 0.6) % 1; const i = Math.floor(p * 4); const f = p * 4 - i;
@@ -102,12 +100,33 @@ function drawArcade(g: CanvasRenderingContext2D, w: number, h: number, k: number
     g.strokeStyle = A.a; g.lineWidth = 2; for (let r = 1; r <= 3; r++) { g.beginPath(); g.ellipse(w / 2, h * 0.55, w * 0.13 * r, h * 0.06 * r, 0, 0, Math.PI * 2); g.stroke(); }
     g.fillStyle = A.b; g.beginPath(); g.arc(w / 2, h * 0.55, w * 0.09, 0, Math.PI * 2); g.fill();
     const a = t * 1.4; g.fillStyle = '#ffffff'; g.beginPath(); g.arc(w / 2 + Math.cos(a) * w * 0.39, h * 0.55 + Math.sin(a) * h * 0.18, w * 0.03, 0, Math.PI * 2); g.fill();
-  } else { // auto ontwijkt kegels
+  } else if (k === 3) { // auto ontwijkt kegels
     g.fillStyle = '#16203d'; g.fillRect(w * 0.2, h * 0.18, w * 0.6, h * 0.8);
     for (let i = 0; i < 5; i++) { const y = ((t * 0.5 + i * 0.2) % 1) * h * 0.8 + h * 0.18; g.fillStyle = A.b; g.fillRect(w * (0.25 + ((i * 37) % 5) * 0.1), y, w * 0.06, h * 0.04); }
     g.fillStyle = A.a; g.fillRect(w * (0.45 + Math.sin(t * 2) * 0.15), h * 0.84, w * 0.1, h * 0.09);
+  } else if (k === 4) { // vallende sterren in een mandje
+    for (let i = 0; i < 6; i++) { const y = ((t * 0.4 + i * 0.17) % 1) * h * 0.7 + h * 0.16; const x = w * (0.12 + ((i * 53) % 7) * 0.12); g.fillStyle = i % 3 ? A.a : '#ff5a5a'; g.beginPath(); g.arc(x, y, w * 0.025, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = A.b; const bx = w * (0.5 + Math.sin(t * 1.6) * 0.3); g.fillRect(bx - w * 0.1, h * 0.86, w * 0.2, h * 0.05);
+  } else { // rennen en springen
+    g.fillStyle = '#16203d'; g.fillRect(0, h * 0.78, w, h * 0.22); g.fillStyle = A.b; g.fillRect(0, h * 0.78, w, 2);
+    for (let i = 0; i < 3; i++) { const x = w - ((t * 0.6 + i * 0.37) % 1) * w * 1.2; g.fillStyle = A.b; g.fillRect(x, h * 0.7, w * 0.06, h * 0.08); }
+    const j = Math.max(0, Math.sin(t * 3.2)); g.fillStyle = A.a; g.fillRect(w * 0.22, h * (0.66 - j * 0.16), w * 0.08, h * 0.12);
   }
-  g.fillStyle = '#ffffff'; g.font = `${Math.round(w * 0.075)}px monospace`; g.textAlign = 'left'; g.fillText(`${String(Math.floor(t * 37 + k * 1111) % 99999).padStart(5, '0')}`, w * 0.05, h * 0.97);
+  const best = usePlay.getState().best[A.id];
+  g.fillStyle = '#ffffff'; g.font = `${Math.round(w * 0.07)}px monospace`; g.textAlign = 'left';
+  g.fillText(best ? `HI ${best}` : `${String(Math.floor(t * 37 + k * 1111) % 99999).padStart(5, '0')}`, w * 0.05, h * 0.97);
+}
+/** bord met de highscores van alle spellen (deze browser) */
+const BOARD = [...KASTEN.map((k) => [k.id, k.naam, k.a] as const), ['gp', 'DRIFT GP', '#FF7A24'] as const, ['hockey', 'AIRHOCKEY', '#20D9FF'] as const, ['claw', 'GRIJPMACHINE', '#FF4DB8'] as const];
+function drawBoard(g: CanvasRenderingContext2D, w: number, h: number) {
+  g.fillStyle = '#080b1e'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#A855F7'; g.lineWidth = 4; g.strokeRect(4, 4, w - 8, h - 8);
+  g.fillStyle = '#ffffff'; g.font = `900 ${Math.round(h * 0.1)}px system-ui`; g.textAlign = 'center'; g.fillText('HIGHSCORES', w / 2, h * 0.14);
+  const best = usePlay.getState().best; g.font = `bold ${Math.round(h * 0.062)}px monospace`;
+  BOARD.forEach(([id, naam, col], i) => {
+    const y = h * (0.26 + i * 0.081); g.textAlign = 'left'; g.fillStyle = col; g.fillText(naam, w * 0.07, y);
+    g.textAlign = 'right'; g.fillStyle = '#ffffff'; g.fillText(String(best[id] ?? '-'), w * 0.93, y);
+  });
 }
 function vendingTex(hue: string) {
   const { c, g } = canvas(128, 256);
@@ -235,17 +254,26 @@ function buildFloor() {
     kit.at(tx, tz); kit.add(new THREE.CircleGeometry(1.55, 40), [0, 0.006, 0], ['#2a2040', '#1f2a46', '#2a2040', '#1f2a46'][t], 'soft', [-Math.PI / 2, 0, 0]);
   });
 
-  // ---- GAMEKAMER ----
+  // ---- GAMEKAMER (sinds 9 nov groter: glaswand op x -5,9 en glazen zijwanden op z ±6,6) ----
   kit.at();
   kit.box([G.wall.c[0], 1.4, 0], [G.wall.w, 2.8, G.wall.d], '#140f2e', 'std');
-  for (let i = 0; i < 4; i++) kit.neon([G.wall.c[0] + 0.11, 0.6 + i * 0.6, 0], [0.03, 0.03, G.wall.d - 0.4], i % 2 ? '#A855F7' : '#20D9FF', 2.4);
+  { const z0 = -G.wall.d / 2 + 0.2, z1 = G.wall.d / 2 - 0.2, b0 = G.board.c[1] - 0.68, b1 = G.board.c[1] + 0.68; // lichtlijnen, met ruimte voor het highscorebord
+    for (let i = 0; i < 4; i++) { const y = 0.6 + i * 0.6, col = i % 2 ? '#A855F7' : '#20D9FF';
+      if (y < 0.9 || y > 2.2) kit.neon([G.wall.c[0] + 0.11, y, 0], [0.03, 0.03, z1 - z0], col, 2.4);
+      else { kit.neon([G.wall.c[0] + 0.11, y, (z0 + b0) / 2], [0.03, 0.03, b0 - z0], col, 2.4); kit.neon([G.wall.c[0] + 0.11, y, (b1 + z1) / 2], [0.03, 0.03, z1 - b1], col, 2.4); } } }
   G.glass.forEach((w) => {
     kit.at(w.c[0], w.c[1]); kit.add(new THREE.BoxGeometry(0.03, 2.2, w.d), [0, 1.12, 0], '#ffffff', 'glass');
     kit.neon([0, 2.24, 0], [0.05, 0.05, w.d], '#A855F7', 2.6); kit.neon([0, 0.03, 0], [0.06, 0.03, w.d], '#A855F7', 2.2);
     for (const sz of [-1, 1]) kit.neon([0, 1.12, (sz * w.d) / 2], [0.05, 2.24, 0.05], '#A855F7', 2.4);
   });
-  kit.at(-10.6, 0); kit.add(new THREE.PlaneGeometry(7.0, 11.4), [0, 0.006, 0], '#1d1438', 'soft', [-Math.PI / 2, 0, 0]);
-  for (const sz of [-1, 1]) kit.neon([0, 0.012, sz * 5.65], [7.0, 0.012, 0.04], '#A855F7', 2.2);
+  G.side.forEach((w) => {
+    kit.at(w.c[0], w.c[1]); kit.add(new THREE.BoxGeometry(w.w, 2.2, 0.03), [0, 1.12, 0], '#ffffff', 'glass');
+    kit.neon([0, 2.24, 0], [w.w, 0.05, 0.05], '#A855F7', 2.6); kit.neon([0, 0.03, 0], [w.w, 0.03, 0.06], '#A855F7', 2.2);
+    for (const sx of [-1, 1]) kit.neon([(sx * w.w) / 2, 1.12, 0], [0.05, 2.24, 0.05], '#A855F7', 2.4);
+  });
+  const gw = G.x1 - G.wall.c[0] - 0.15, gx = (G.x1 + G.wall.c[0] + 0.15) / 2;
+  kit.at(gx, 0); kit.add(new THREE.PlaneGeometry(gw, G.zMax * 2), [0, 0.006, 0], '#1d1438', 'soft', [-Math.PI / 2, 0, 0]);
+  for (const sz of [-1, 1]) kit.neon([0, 0.012, sz * (G.zMax - 0.06)], [gw, 0.012, 0.04], '#A855F7', 2.2);
   // gamekasten
   G.arcadeZ.forEach((z, k) => {
     const A = ARCADE[k]; kit.at(G.arcadeX, z, Math.PI / 2);
@@ -279,6 +307,36 @@ function buildFloor() {
   kit.at(G.table.c[0], G.table.c[1]); kit.box([0, 0.22, 0], [G.table.w, 0.06, G.table.d], '#eef1f7', 'gloss'); for (const sx of [-0.45, 0.45]) kit.box([sx, 0.1, 0], [0.05, 0.2, G.table.d - 0.05], '#c9d1e0', 'gloss');
   kit.box([-0.2, 0.27, 0], [0.16, 0.04, 0.1], '#1c1f2e', 'gloss'); kit.box([0.15, 0.27, 0.05], [0.16, 0.04, 0.1], '#1c1f2e', 'gloss'); // controllers
   G.beans.forEach(([x, z], i) => { kit.at(x, z); kit.sph([0, 0.24, 0], 0.48, i ? '#20D9FF' : '#FF4DB8', 'soft', [1, 0.55, 1], undefined, 2); });
+  // airhockeytafel
+  { const { w, d } = G.hockey; kit.at(G.hockey.c[0], G.hockey.c[1]);
+    kit.box([0, 0.42, 0], [w - 0.12, 0.7, d - 0.12], '#151a33', 'gloss');
+    kit.box([0, 0.8, 0], [w, 0.1, d], '#eef3ff', 'gloss'); // speelveld
+    for (const sx of [-1, 1]) { kit.box([sx * (w / 2 - 0.03), 0.87, 0], [0.06, 0.06, d], '#20D9FF', 'gloss'); kit.neon([sx * (w / 2 + 0.005), 0.82, 0], [0.01, 0.03, d - 0.05], '#20D9FF', 2.4); }
+    for (const sz of [-1, 1]) {
+      for (const sx of [-1, 1]) kit.box([sx * (w / 4 + 0.08), 0.87, sz * (d / 2 - 0.03)], [w / 2 - 0.16, 0.06, 0.06], '#20D9FF', 'gloss');
+      kit.neon([0, 0.853, sz * (d / 2 - 0.02)], [0.34, 0.012, 0.03], '#FF4DB8', 2.6); // doel
+      kit.cyl([0.1 * sz, 0.885, sz * (d / 2 - 0.32)], 0.06, 0.05, sz > 0 ? '#FF3B4E' : '#398CFF', 'gloss', 18); // slagers
+      kit.cyl([0.1 * sz, 0.93, sz * (d / 2 - 0.32)], 0.022, 0.06, sz > 0 ? '#FF3B4E' : '#398CFF', 'gloss', 10);
+    }
+    kit.box([0, 0.856, 0], [w - 0.1, 0.003, 0.012], '#FF4DB8', 'std'); kit.tor([0, 0.856, 0], 0.16, 0.006, '#FF4DB8', 'std', [Math.PI / 2, 0, 0]);
+    kit.cyl([0.05, 0.86, 0.12], 0.035, 0.012, '#1c1f2e', 'gloss', 14); // puck
+    for (const [lx, lz] of [[-0.4, -0.85], [0.4, -0.85], [-0.4, 0.85], [0.4, 0.85]]) kit.box([lx, 0.1, lz], [0.08, 0.2, 0.08], '#0f1222', 'gloss');
+  }
+  // grijpmachine met knuffels (de cast als knuffeltjes)
+  { const { w, d } = G.claw; kit.at(G.claw.c[0], G.claw.c[1]);
+    kit.box([0, 0.45, 0], [w, 0.9, d], '#FF4DB8', 'gloss'); kit.box([0, 0.45, d / 2 + 0.005], [w - 0.12, 0.6, 0.01], '#2a1840', 'gloss');
+    kit.box([0.2, 0.25, d / 2 + 0.01], [0.22, 0.26, 0.02], '#11152a', 'gloss'); // uitgifte
+    kit.box([0, 0.93, 0.32], [w, 0.06, 0.24], '#ff7cc9', 'gloss'); kit.sph([-0.18, 0.99, 0.34], 0.035, '#FACC15', 'gloss'); kit.cyl([-0.18, 0.96, 0.34], 0.01, 0.06, '#c9d1e0', 'gloss', 6);
+    kit.cyl([0.1, 0.97, 0.34], 0.03, 0.02, '#4ADE80', 'neon', 10);
+    kit.add(new THREE.BoxGeometry(w - 0.04, 0.95, d - 0.04), [0, 1.42, 0], '#ffffff', 'glass');
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) kit.box([(sx * w) / 2, 1.42, (sz * d) / 2], [0.04, 0.95, 0.04], '#FF4DB8', 'gloss');
+    kit.box([0, 2.0, 0], [w, 0.2, d], '#FF4DB8', 'gloss'); kit.neon([0, 2.0, d / 2 + 0.005], [w - 0.1, 0.08, 0.01], '#FACC15', 2.6);
+    const plush = ['#FF7A24', '#20D9FF', '#4ADE80', '#FACC15', '#A855F7', '#FF3B4E', '#ffffff', '#398CFF'];
+    for (let i = 0; i < 11; i++) { const a = i * 2.39, r = 0.08 + (i % 4) * 0.07; kit.sph([Math.cos(a) * r, 0.98 + (i % 3) * 0.05, Math.sin(a) * r - 0.04], 0.075, plush[i % plush.length], 'soft', [1, 0.9, 1], undefined, 1); }
+    kit.box([0, 1.84, 0], [w - 0.1, 0.02, 0.02], '#c9d1e0', 'gloss'); kit.cyl([0.05, 1.7, 0], 0.008, 0.26, '#c9d1e0', 'gloss', 6); // rails en kabel
+    kit.cyl([0.05, 1.55, 0], 0.05, 0.05, '#c9d1e0', 'gloss', 12);
+    for (let i = 0; i < 3; i++) { const a = (i * Math.PI * 2) / 3; kit.box([0.05 + Math.cos(a) * 0.04, 1.47, Math.sin(a) * 0.04], [0.012, 0.12, 0.012], '#c9d1e0', 'gloss', [Math.sin(a) * 0.4, 0, -Math.cos(a) * 0.4]); }
+  }
 
   // ---- LOUNGE VOORAAN ----
   kit.at(L.pingpong.c[0], L.pingpong.c[1]);
@@ -366,13 +424,34 @@ function Level() {
   // ---- bewegende schermen: racespel (gedeeld) en vier gamekasten ----
   const race = useMemo(() => { const c = canvas(256, 144); return { ...c, t: tex(c.c) }; }, []);
   const arcade = useMemo(() => ARCADE.map(() => { const c = canvas(128, 160); return { ...c, t: tex(c.c) }; }), []);
+  const board = useMemo(() => { const c = canvas(256, 256); return { ...c, t: tex(c.c) }; }, []);
+  const best = usePlay((s) => s.best);
+  useEffect(() => { drawBoard(board.g, 256, 256); board.t.needsUpdate = true; }, [board, best]);
   const tvc = useMemo(() => { const c = canvas(256, 144); return { ...c, t: tex(c.c) }; }, []);
   const ball = useRef<THREE.Mesh>(null);
   const fish = useRef<THREE.Group>(null);
   const acc = useRef(0);
   const still = useMemo(() => reducedMotion(), []);
   useEffect(() => { drawRace(race.g, 256, 144, 0); race.t.needsUpdate = true; arcade.forEach((a, k) => { drawArcade(a.g, 128, 160, k, 0); a.t.needsUpdate = true; }); drawRace(tvc.g, 256, 144, 3); tvc.t.needsUpdate = true; }, [race, arcade, tvc]);
-  useFrame(({ clock }, dt) => {
+  const sensT = useRef(0); const dir = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({ clock, camera }, dt) => {
+    // welke machine staat er vlak voor je (rondlopen): E = spelen
+    sensT.current -= dt;
+    if (sensT.current <= 0) {
+      sensT.current = 0.15; const P = usePlay.getState();
+      if (!useWorld.getState().walk || useFloor.getState().floor !== 1) { if (P.near) P.setNear(null); }
+      else {
+        camera.getWorldDirection(dir); const fl = Math.hypot(dir.x, dir.z) || 1; let best: (typeof MACHINES)[number] | null = null; let bd = 99;
+        for (const m of MACHINES) {
+          const dx = m.c[0] - camera.position.x, dz = m.c[1] - camera.position.z;
+          const d = Math.hypot(Math.max(0, Math.abs(dx) - m.w / 2), Math.max(0, Math.abs(dz) - m.d / 2)); // afstand tot de rand
+          if (d > m.reach || d >= bd) continue;
+          if ((dx * dir.x + dz * dir.z) / (fl * (Math.hypot(dx, dz) || 1)) < 0.3) continue;
+          bd = d; best = m;
+        }
+        P.setNear(best ? { id: best.id, naam: best.naam, kleur: best.kleur, d: bd } : null);
+      }
+    }
     if (useFloor.getState().floor !== 1) return;
     const t = clock.elapsedTime;
     if (!still) {
@@ -404,7 +483,7 @@ function Level() {
       {(Object.keys(mats) as MatKey[]).map((k) => geos[k] && <mesh key={k} geometry={geos[k]!} material={mats[k]} renderOrder={k === 'glass' ? 2 : 0} />)}
       {/* bordjes */}
       <mesh position={[K.wall.c[0] - 0.12, 2.38, 0]} rotation={[0, -Math.PI / 2, 0]}><planeGeometry args={[3.2, 0.8]} /><meshBasicMaterial map={signs.kantine} transparent toneMapped={false} depthWrite={false} /></mesh>
-      <mesh position={[G.wall.c[0] + 0.12, 2.4, 2.4]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[3.6, 0.9]} /><meshBasicMaterial map={signs.game} transparent toneMapped={false} depthWrite={false} /></mesh>
+      <mesh position={[G.wall.c[0] + 0.12, 2.45, 2.6]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[3.2, 0.8]} /><meshBasicMaterial map={signs.game} transparent toneMapped={false} depthWrite={false} /></mesh>
       <mesh position={[G.glass[0].c[0] + 0.05, 2.62, 0]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[2.0, 0.5]} /><meshBasicMaterial map={signs.game} transparent toneMapped={false} depthWrite={false} /></mesh>
       <mesh position={[L.aquarium.c[0], 2.5, L.aquarium.c[1]]}><planeGeometry args={[2.4, 0.6]} /><meshBasicMaterial map={signs.lounge} transparent toneMapped={false} depthWrite={false} /></mesh>
       {/* schermen */}
@@ -413,6 +492,7 @@ function Level() {
       ))}
       {raceScreens.map(([x, z], i) => <mesh key={i} position={[x, 1.15, z]}><planeGeometry args={[1.02, 0.58]} /><meshBasicMaterial map={race.t} toneMapped={false} /></mesh>)}
       <mesh position={[G.tv.c[0], 1.32, G.tv.c[1] - 0.045]}><planeGeometry args={[2.2, 1.22]} /><meshBasicMaterial map={tvc.t} toneMapped={false} /></mesh>
+      <mesh position={[G.board.c[0], 1.55, G.board.c[1]]} rotation={[0, Math.PI / 2, 0]}><planeGeometry args={[1.2, 1.2]} /><meshBasicMaterial map={board.t} toneMapped={false} /></mesh>
       {L.vending.map((v, i) => (
         <mesh key={i} position={[v.c[0] + Math.sin(v.ry) * (v.d / 2 + 0.006), 1.0, v.c[1] + Math.cos(v.ry) * (v.d / 2 + 0.006)]} rotation={[0, v.ry, 0]}><planeGeometry args={[0.8, 1.6]} /><meshBasicMaterial map={vend[i]} toneMapped={false} /></mesh>
       ))}
@@ -427,11 +507,87 @@ function Level() {
       <pointLight position={[11.0, 2.6, 0]} color="#FFD9B0" intensity={18} distance={13} decay={1.5} />
       <pointLight position={[8.5, 2.4, 6.5]} color="#FFE6C8" intensity={9} distance={9} decay={1.6} />
       <pointLight position={[8.5, 2.4, -6.5]} color="#FFE6C8" intensity={9} distance={9} decay={1.6} />
-      <pointLight position={[-10.5, 2.4, -1]} color="#B57BFF" intensity={16} distance={12} decay={1.5} />
-      <pointLight position={[-10.5, 2.2, 4]} color="#20D9FF" intensity={8} distance={8} decay={1.6} />
+      <pointLight position={[-10.2, 2.4, -1.5]} color="#B57BFF" intensity={18} distance={13} decay={1.5} />
+      <pointLight position={[-10.5, 2.2, 4.2]} color="#20D9FF" intensity={9} distance={8} decay={1.6} />
       <pointLight position={[0, 2.6, 10]} color="#ffffff" intensity={10} distance={11} decay={1.6} />
       <pointLight position={[0.6, 2.2, -10.6]} color="#4aa8ff" intensity={8} distance={8} decay={1.6} />
     </group>
+  );
+}
+
+/* =================== plafond en dak tijdens het rondlopen =================== */
+/** niels 2026-11-09: "als ik in de rondloopmodus zit dan wordt mijn beeld zwart als ik naar boven kijk". Beneden zag je
+ *  daar de nachtlucht (de bovenverdieping is in het overzicht verborgen), boven was er geen dak. Nu: beneden een licht
+ *  plafond onder de vloerplaat (met gaten voor de vide en de trap), boven een dak met lichtpanelen, pilaren en een rond
+ *  daklicht rond de hologramzuil. Alleen tijdens het rondlopen; het overzicht van bovenaf blijft open. */
+const ROOF_H = 3.3;
+function ceilTex() {
+  const { c, g } = canvas(256, 256);
+  g.fillStyle = '#26305f'; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = '#2c376b'; g.fillRect(6, 6, 116, 116); g.fillRect(134, 134, 116, 116); g.fillStyle = '#29336a'; g.fillRect(134, 6, 116, 116); g.fillRect(6, 134, 116, 116);
+  g.strokeStyle = '#3d4a8a'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 253, 253); g.beginPath(); g.moveTo(128, 0); g.lineTo(128, 256); g.moveTo(0, 128); g.lineTo(256, 128); g.stroke();
+  const t = tex(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(0.8, 0.8); return t;
+}
+function ceilShape(stair: boolean) {
+  const shape = new THREE.Shape(); oct(UP_R).forEach(([x, z], i) => (i ? shape.lineTo(x, z) : shape.moveTo(x, z))); shape.closePath();
+  const vide = new THREE.Path(); vide.absarc(0, 0, VIDE_R, 0, Math.PI * 2, true); shape.holes.push(vide);
+  if (stair) { const h = new THREE.Path(); h.moveTo(HOLE.x0, HOLE.z0); h.lineTo(HOLE.x1, HOLE.z0); h.lineTo(HOLE.x1, HOLE.z1); h.lineTo(HOLE.x0, HOLE.z1); h.closePath(); shape.holes.push(h); }
+  const g = new THREE.ShapeGeometry(shape, 48); g.rotateX(Math.PI / 2); // naar beneden gericht
+  const pos = g.getAttribute('position'); const uv = new Float32Array(pos.count * 2);
+  for (let i = 0; i < pos.count; i++) { uv[i * 2] = pos.getX(i) / 2; uv[i * 2 + 1] = pos.getZ(i) / 2; }
+  g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); return g;
+}
+/** lichtpanelen in ringen (niet boven het trapgat of de vide) */
+function lightPanels(stair: boolean) {
+  const kit = new Kit();
+  [5.0, 8.4, 11.8].forEach((r, ri) => {
+    const n = [10, 16, 22][ri];
+    for (let i = 0; i < n; i++) {
+      const a = (i + (ri % 2) * 0.5) * ((Math.PI * 2) / n); const [x, z] = polar(r, a);
+      if (stair && x > HOLE.x0 - 0.9 && x < HOLE.x1 + 0.9 && z > HOLE.z0 - 0.9 && z < HOLE.z1 + 0.9) continue;
+      kit.at(x, z, a + Math.PI / 2);
+      kit.box([0, -0.02, 0], [1.5, 0.04, 0.34], '#1a2148', 'gloss'); kit.neon([0, -0.046, 0], [1.38, 0.012, 0.24], ri === 1 ? '#FFE9D2' : '#E4EEFF', 1.5);
+    }
+  });
+  kit.at(); kit.add(new THREE.TorusGeometry(VIDE_R + 0.06, 0.035, 6, 96), [0, -0.02, 0], '#FF7A24', 'neon', [Math.PI / 2, 0, 0], undefined, 2.4);
+  return kit.build();
+}
+export function Plafond() {
+  const walk = useWorld((s) => s.walk); const floor = useFloor((s) => s.floor);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => { if (walk) setSeen(true); }, [walk]);
+  if (!seen) return null;
+  return <PlafondIn walk={walk} floor={floor} />;
+}
+function PlafondIn({ walk, floor }: { walk: boolean; floor: number }) {
+  const t = useMemo(ceilTex, []);
+  const mat = useMemo(() => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: 0.55, roughness: 0.85, metalness: 0.05, side: THREE.DoubleSide }), [t]);
+  const g0 = useMemo(() => ceilShape(true), []); const g1 = useMemo(() => ceilShape(false), []);
+  const p0 = useMemo(() => lightPanels(true), []); const p1 = useMemo(() => lightPanels(false), []);
+  const neon = useMemo(() => new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }), []);
+  const gloss = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.4 }), []);
+  const pillars = useMemo(() => oct(UP_R - 0.55), []);
+  useEffect(() => () => { t.dispose(); mat.dispose(); g0.dispose(); g1.dispose(); [p0, p1].forEach((p) => Object.values(p).forEach((x) => x?.dispose())); neon.dispose(); gloss.dispose(); }, [t, mat, g0, g1, p0, p1, neon, gloss]);
+  return (
+    <>
+      {/* beneden: plafond onder de vloerplaat van de bovenverdieping */}
+      <group visible={walk && floor === 0} position={[0, Y1 - SLAB - 0.003, 0]}>
+        <mesh geometry={g0} material={mat} />
+        {p0.gloss && <mesh geometry={p0.gloss} material={gloss} />}
+        {p0.neon && <mesh geometry={p0.neon} material={neon} />}
+      </group>
+      {/* boven: dak met pilaren op de hoeken */}
+      <group visible={walk && floor === 1} position={[0, Y1, 0]}>
+        <mesh geometry={g1} material={mat} position={[0, ROOF_H, 0]} />
+        <group position={[0, ROOF_H, 0]}>
+          {p1.gloss && <mesh geometry={p1.gloss} material={gloss} />}
+          {p1.neon && <mesh geometry={p1.neon} material={neon} />}
+        </group>
+        <mesh position={[0, ROOF_H + 0.1, 0]}><cylinderGeometry args={[VIDE_R + 0.05, VIDE_R + 0.05, 0.2, 64, 1, true]} /><meshStandardMaterial color="#1b2347" metalness={0.5} roughness={0.4} side={THREE.DoubleSide} /></mesh>
+        {pillars.map(([x, z], i) => <mesh key={i} position={[x, ROOF_H / 2, z]}><cylinderGeometry args={[0.13, 0.13, ROOF_H, 14]} /><meshStandardMaterial color="#c9d1e0" metalness={0.6} roughness={0.3} /></mesh>)}
+        <OctRing r={UP_R - 0.02} y={ROOF_H + 0.02} col="#FF7A24" />
+      </group>
+    </>
   );
 }
 

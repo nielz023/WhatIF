@@ -33,7 +33,7 @@ import { setAmbience } from './sound';
 import { WalkController, lookAngles } from './Walk';
 import { selectRoom } from './select';
 import { City } from './city';
-import { Upstairs } from './Upstairs';
+import { Upstairs, Plafond } from './Upstairs';
 import { CastProps } from './castProps';
 import { useFloor, Y1 } from './floors';
 
@@ -718,6 +718,7 @@ function Scene({ mode }: { mode: WorldMode }) {
         onHoverRoom={(id) => setHover((id as RoomId) ?? null)} />
       {mode !== 'studio' && ground && <Pipeline videos={live.videos ?? []} onPick={(id) => select(roomById(id)!)} />}
       {mode !== 'studio' && <Upstairs />}
+      {mode !== 'studio' && <Plafond />}
       {mode !== 'studio' && <CastProps members={members} />}
       <City />
       <Drone />

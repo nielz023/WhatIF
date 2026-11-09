@@ -33,3 +33,6 @@ export const useWalk = create<WalkUi>((set) => ({
 
 /** Joystick van de schermlaag voor de camera (-1..1, jy = vooruit), zonder React-renders per beweging. */
 export const walkInput = { jx: 0, jy: 0 };
+
+/** praten of gamen staat open: lopen en rondkijken staan dan stil (en Esc stopt het rondlopen niet) */
+export const walkLock = { on: false };

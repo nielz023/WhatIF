@@ -35,16 +35,25 @@ export const K = {
   stoolsZ: [-1.25, 0, 1.25], stoolX: 10.22,
   tables: [[7.7, 4.7], [10.5, 7.2], [7.7, -4.7], [10.5, -7.2]] as V2[],
 };
-/* ---------- gamekamer (links) ---------- */
+/* ---------- gamekamer (links), sinds 9 nov groter: glas op x = -5,9 en zijwanden op z = ±6,6 ---------- */
 export const G = {
   wall: { c: [-14.3, 0] as V2, w: 0.2, d: 11.4 },
-  glass: [{ c: [-6.95, -3.15] as V2, w: 0.08, d: 4.3 }, { c: [-6.95, 3.35] as V2, w: 0.08, d: 4.5 }],
-  arcadeZ: [-3.4, -2.35, -1.3, -0.25], arcadeX: -13.55,
-  raceX: [-12.4, -10.6, -8.8], raceZ: 4.0, // midden van het frame; stoel op +0,45, scherm op -0,8
-  tv: { c: [-10.2, -5.55] as V2, w: 2.3, d: 0.35 },
-  sofa: { c: [-10.2, -3.55] as V2, w: 2.2, d: 0.9 },
-  table: { c: [-10.2, -4.55] as V2, w: 1.0, d: 0.45 },
-  beans: [[-12.25, -4.25], [-8.15, -4.25]] as V2[],
+  /** binnenkant van de kamer (glaswand met de ingang tussen z -1,0 en 1,1) */
+  x1: -5.9, zMax: 6.6,
+  glass: [{ c: [-5.9, -3.8] as V2, w: 0.08, d: 5.6 }, { c: [-5.9, 3.85] as V2, w: 0.08, d: 5.5 }],
+  /** zijwanden van glas, van de ingangswand tot de balustrade */
+  side: [{ c: [-9.79, -6.6] as V2, w: 7.78, d: 0.08 }, { c: [-9.79, 6.6] as V2, w: 7.78, d: 0.08 }],
+  arcadeZ: [-3.4, -2.35, -1.3, -0.25, 0.8, 1.85], arcadeX: -13.55,
+  raceX: [-12.4, -10.6, -8.8], raceZ: 4.3, // midden van het frame; stoel op +0,45, scherm op -0,8
+  tv: { c: [-10.2, -6.15] as V2, w: 2.3, d: 0.35 },
+  sofa: { c: [-10.2, -4.15] as V2, w: 2.2, d: 0.9 },
+  table: { c: [-10.2, -5.15] as V2, w: 1.0, d: 0.45 },
+  beans: [[-12.25, -4.85], [-8.15, -4.85]] as V2[],
+  /** airhockeytafel (lang in de z-richting) en grijpmachine (voorkant naar +z) */
+  hockey: { c: [-9.3, 0.3] as V2, w: 1.1, d: 2.0 },
+  claw: { c: [-6.75, -5.95] as V2, w: 0.86, d: 0.86 },
+  /** bord met de highscores aan de achterwand */
+  board: { c: [-14.15, -4.85] as V2 },
 };
 /* ---------- lounge vooraan en hoek achteraan ---------- */
 export const L = {
@@ -60,7 +69,7 @@ export const L = {
 /** planten: [x, z, grootte, soort] */
 export const PLANTS: [number, number, number, number][] = [
   [13.0, -5.45, 1.15, 0], [12.7, 5.3, 1.0, 1], [6.3, 7.2, 0.8, 2], [6.3, -7.2, 0.85, 1], [9.9, 9.9, 0.9, 0], [9.9, -9.9, 0.9, 2],
-  [-13.3, -5.3, 1.05, 1], [-7.6, -5.3, 0.8, 2], [-13.2, 5.4, 0.95, 0], [-7.6, 5.9, 0.8, 1],
+  [-13.3, -6.0, 1.05, 1], [-7.75, -6.15, 0.8, 2], [-13.2, 5.6, 0.95, 0], [-6.6, 5.9, 0.8, 1],
   [-2.6, 13.0, 1.0, 0], [2.6, 13.0, 1.0, 2], [-9.2, 9.6, 0.9, 1],
   [-2.4, -12.4, 0.9, 0], [3.5, -12.6, 0.85, 1], [-6.0, -10.6, 1.0, 2],
 ];
@@ -90,6 +99,8 @@ function buildSpots(): Spot[] {
   }));
   G.arcadeZ.forEach((z, i) => out.push({ id: `kast${i}`, zone: 'game', p: [G.arcadeX + 0.8, z], face: [G.arcadeX, z], pose: 'game', doing: 'speelt op een gamekast' }));
   G.raceX.forEach((x, i) => out.push({ id: `race${i}`, zone: 'game', p: [x + 0.7, G.raceZ + 1.15], sit: [x, G.raceZ + 0.5], seatH: 0.42, face: [x, G.raceZ - 0.8], pose: 'race', group: 'race', doing: 'racet in de racesimulator' }));
+  [-1, 1].forEach((sd, i) => out.push({ id: `hockey${i}`, zone: 'game', p: [G.hockey.c[0], G.hockey.c[1] + sd * (G.hockey.d / 2 + 0.42)], face: G.hockey.c, pose: 'paddle', group: 'hockey', doing: 'speelt airhockey' }));
+  out.push({ id: 'grijp', zone: 'game', p: [G.claw.c[0], G.claw.c[1] + 0.95], face: G.claw.c, pose: 'game', doing: 'probeert een knuffel te grijpen' });
   [-0.55, 0.55].forEach((dx, i) => out.push({ id: `bank${i}`, zone: 'game', p: [G.sofa.c[0] + dx, G.sofa.c[1] + 0.9], sit: [G.sofa.c[0] + dx, G.sofa.c[1] + 0.05], seatH: 0.45, face: [G.tv.c[0] + dx * 0.4, G.tv.c[1]], pose: 'tv', group: 'tv', doing: 'gamet op de bank' }));
   G.beans.forEach(([x, z], i) => out.push({ id: `zitzak${i}`, zone: 'game', p: [x + (x < G.sofa.c[0] ? 0.15 : -0.15), z + 0.85], sit: [x, z], seatH: 0.32, face: [G.tv.c[0], G.tv.c[1]], pose: 'tv', group: 'tv', doing: 'gamet op een zitzak' }));
   [-1, 1].forEach((sd, i) => out.push({ id: `pingpong${i}`, zone: 'lounge', p: [L.pingpong.c[0] + sd * 1.95, L.pingpong.c[1]], face: L.pingpong.c, pose: 'paddle', group: 'pingpong', doing: 'speelt pingpong' }));
@@ -108,7 +119,7 @@ function obstacles(): { rects: Rect[]; circles: Circle[] } {
     K.wall, K.counter, K.fridge, K.island,
     ...K.stoolsZ.map((z) => ({ c: [K.stoolX, z] as V2, w: 0.36, d: 0.36 })),
     ...K.tables.flatMap(([x, z]) => chairOff.map(([ox, oz]) => ({ c: [x + ox, z + oz] as V2, w: 0.46, d: 0.46 }))),
-    G.wall, ...G.glass,
+    G.wall, ...G.glass, ...G.side, G.hockey, G.claw,
     ...G.arcadeZ.map((z) => ({ c: [G.arcadeX, z] as V2, w: 0.78, d: 0.74 })),
     ...G.raceX.map((x) => ({ c: [x, G.raceZ] as V2, w: 0.82, d: 1.95 })),
     G.tv, G.sofa, G.table,

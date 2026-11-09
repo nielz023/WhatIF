@@ -30,7 +30,7 @@ import { roomAt } from './BakedOffice';
 import { ROOMS, R_IN, R_OUT, SPAN, type RoomId } from './rooms';
 import { useWorld, reducedMotion } from './useWorld';
 import { useGame } from '../store/useGame';
-import { useWalk, walkInput } from './walkState';
+import { useWalk, walkInput, walkLock } from './walkState';
 import type { WorldMode } from './NeonOffice';
 
 export const EYE = 1.6; // ooghoogte (de medewerkers zijn ~1,6 m)
@@ -240,7 +240,7 @@ export function WalkController({ mode }: { mode: WorldMode }) {
     const pdown = (e: PointerEvent) => {
       const touch = e.pointerType !== 'mouse';
       if (useWalk.getState().touch !== touch) useWalk.setState({ touch });
-      if (!touch && !locked() && !useWalk.getState().noLock && st.current.phase === 'on') {
+      if (!touch && !locked() && !useWalk.getState().noLock && st.current.phase === 'on' && !walkLock.on) {
         try { const r = el.requestPointerLock() as unknown; (r as Promise<void> | undefined)?.catch?.(refuse); } catch { refuse(); }
       }
       drag.set(e.pointerId, { x: e.clientX, y: e.clientY, touch });
@@ -266,7 +266,7 @@ export function WalkController({ mode }: { mode: WorldMode }) {
       if (on) { drag.clear(); fresh = true; return; }
       // Esc maakt eerst de muis los en de browser geeft die toets dan niet door: houdt de pagina de focus, dan stoppen we ook
       window.clearTimeout(quit);
-      quit = window.setTimeout(() => { if (useWorld.getState().walk && !locked() && document.hasFocus() && document.visibilityState === 'visible') useWorld.getState().setWalk(false); }, 150);
+      quit = window.setTimeout(() => { if (useWorld.getState().walk && !locked() && !walkLock.on && document.hasFocus() && document.visibilityState === 'visible') useWorld.getState().setWalk(false); }, 150);
     };
     const blur = () => { keys.current.clear(); drag.clear(); };
     const noMenu = (e: MouseEvent) => e.preventDefault();
@@ -297,6 +297,8 @@ export function WalkController({ mode }: { mode: WorldMode }) {
     if (n) fieldOf(s.fl);
     // kaart kwam later binnen, of je staat op een geblokkeerde plek: naar de dichtstbijzijnde vrije plek
     if (n && !s.stair && !isFree(n, s.x, s.z)) { const q = nearestFree(n, s.x, s.z); if (q) { s.x = q[0]; s.z = q[1]; } }
+    // praten of gamen: niet lopen en niet rondkijken
+    if (walkLock.on) { keys.current.clear(); look.current.x = look.current.y = 0; walkInput.jx = walkInput.jy = 0; }
     // ---- kijken ----
     s.yaw = angDiff(0, s.yaw - look.current.x); s.pitch = THREE.MathUtils.clamp(s.pitch - look.current.y, -MAXPITCH, MAXPITCH); look.current.x = look.current.y = 0;
     // ---- lopen (vooruit = waar je naartoe kijkt) ----
