@@ -471,9 +471,8 @@ def leunstoel(name="Leunstoel", loc=(0, 0, 0), rot_z=0.0, deken=False, kleur=(0.
     hout = _p("hout_poot_donker", (0.25, 0.14, 0.08), rough=0.5)
     p = [T.box(name + "_zitting", (0, -0.05, 0.25), (0.72, 0.62, 0.2), stof, bevel=0.06, ol=0),
          T.box(name + "_kussen", (0, -0.08, 0.45), (0.56, 0.55, 0.1), stof, bevel=0.05, ol=0),
-         T.box(name + "_rug", (0, 0.28, 0.25), (0.76, 0.18, 0.95), stof, bevel=0.07, ol=0),
-         T.box(name + "_oor_L", (-0.33, 0.12, 0.85), (0.12, 0.3, 0.32), stof, bevel=0.05, ol=0),
-         T.box(name + "_oor_R", (0.33, 0.12, 0.85), (0.12, 0.3, 0.32), stof, bevel=0.05, ol=0)]
+         T.box(name + "_rug", (0, 0.28, 0.25), (0.76, 0.18, 0.88), stof, bevel=0.07, ol=0),
+         T.sphere(name + "_rug_top", (0, 0.28, 1.06), 0.38, stof, scale=(1.0, 0.24, 0.85), seg=28, ol=0)]
     for s in (-1, 1):
         p.append(T.box(f"{name}_leuning{s}", (s * 0.34, -0.05, 0.25), (0.13, 0.62, 0.4), stof, bevel=0.05, ol=0))
         for y in (-0.3, 0.3):
@@ -534,7 +533,7 @@ def envelop_brief(name="Brief", loc=(0, 0, 0), rot_z=0.0, open_=True, regels=Non
         cu.materials.append(inkt)
         o = bpy.data.objects.new(f"{name}_regel_{i:02d}", cu)
         bpy.context.collection.objects.link(o)
-        o.location = (0.08 - 0.09, 0.125 - i * 0.0165, 0.0009)
+        o.location = (0.08 - 0.09, 0.125 - i * 0.0165, 0.0019)
         o.rotation_euler.z = math.radians(random.Random(i).uniform(-0.6, 0.6))
         objs.append(o)
     return _kids(root, objs)
@@ -564,9 +563,8 @@ def grafsteen(name="Grafsteen", loc=(0, 0, 0), rot_z=0.0, naam=None, nieuw=False
     root = _root(name, loc, rot_z)
     steen = _p("steen_graf_%s" % ("nieuw" if nieuw else "oud"), (0.45, 0.46, 0.48) if nieuw else (0.55, 0.55, 0.52), rough=0.6 if nieuw else 0.9)
     p = [T.box(name + "_steen", (0, 0, 0.12), (0.6, 0.12, 0.75), steen, bevel=0.03, ol=0),
-         T.cyl(name + "_top", (0, 0, 0.87), 0.3, 0.12, steen, rot=(90, 0, 0), seg=24, ol=0),
+         T.sphere(name + "_top", (0, 0, 0.87), 0.3, steen, scale=(1.0, 0.2, 1.0), seg=24, ol=0),
          T.box(name + "_voet", (0, 0, 0), (0.75, 0.3, 0.12), steen, bevel=0.02, ol=0)]
-    p[1].location.y = 0.06
     o = T.merge(name + "_steen", p, ol=0)
     objs = [o]
     if naam:

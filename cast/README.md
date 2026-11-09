@@ -107,3 +107,16 @@ Bruikbaar in elke scène via `anim/lib/glans.py`:
 - De glb's staan in `assets/cast_v4/`; de animatie gebruikt ze met `WHATIF_CAST=cast_v4`.
 - `render_nd_groepen.py --blend .../cast_never_die.blend --out map` rendert vijf groepsfoto's met de leeftijdsvarianten
   naast elkaar; `--only gezinsfoto` rendert de gezinsfoto die als prop op de oude foto staat.
+
+## Video 5: What If You Could See How Many Days Everyone Has Left? (`--cast dl`)
+
+    python3 cast/build_cast.py -- --cast dl --out /mnt/project-files/videos/dagen-over/cast --samples 32
+
+48 figuren (basisgezin + nieuwe varianten), glb's in `assets/cast_v5/` (animatie: `WHATIF_CAST=cast_v5`).
+Nieuw: hoofdpersonage met rugzak / ziekenhuishemd / zwart pak / pleister, opa_vissen (bucket hat + bodywarmer),
+opa_thuis (vest), opa_jong en oma_jong (1966, voor de oude foto's), rouwkleding gezin (`*_zwart`),
+beste_vriend_koptelefoon (koptelefoon, telefoon, rugzak), dokter (stethoscoop), wiskundeleraar,
+directeur_school, man_pak (koffiebeker), moeder_kinderwagen + baby, jongen_zwembad, oude_man_winkel,
+concierge (bezem), scooterrijder (witte helm), vrouw_hond, postbode, oude_dame_bus (tas), leerling_a-f.
+Nieuwe accessoires in de spec: `headphones`, `stethoscope`, `backpack`, `suspenders`, `plaster`, `hat="bucket"`,
+props `coffee`/`broom`/`bag`.

@@ -74,7 +74,8 @@ mood = {"props": dict(M["binnen"], bloom=0.5), "kruispunt_laat": LAAT, "kruispun
         "steiger_mist": MIST,
         "opa_avond": dict(M["avond"], ambient=(0.10, 0.09, 0.14), sun_strength=0.15, bloom=0.6),
         "opa_ochtend": dict(M["ochtend"], sun_color=(0.85, 0.90, 1.0), lit_tint=(0.90, 0.94, 1.0), sun_strength=0.7),
-        "begraafplaats": dict(REGEN, fog_start=20.0, fog_end=220.0), "schoolwc": BINNEN,
+        "begraafplaats": dict(REGEN, fog_start=20.0, fog_end=220.0),
+        "schoolwc": dict(BINNEN, ambient=(0.30, 0.32, 0.36), exposure=-0.7),
         "directeur": BINNEN, "ziekenhuis": dict(M["ochtend"], sun_strength=0.9), "zwembad": dict(M["dag"], sun_rot=(40, 0, 20)),
         "gymzaal": dict(BINNEN, sun_strength=0.3, sky_top=(0.30, 0.33, 0.37), sky_horizon=(0.50, 0.52, 0.55)),
         "schoolplein": dict(M["bewolkt"], sun_strength=0.6), "schoolplein_regen": REGEN}[VAR]
@@ -150,12 +151,12 @@ cams = []
 # ---------------------------------------------------------------------------
 if VAR == "props":
     room = I.room("Studio", 9, 7, 4, (0.16, 0.18, 0.24), (0.20, 0.22, 0.28), hide=(), skirting=False)
-    T.area_light("Studio_key", (2, -3, 3.5), (0, 0, 0.6), size=(3, 3), energy=700)
+    T.area_light("Studio_key", (2, -3, 3.5), (0, 0, 0.6), size=(3, 3), energy=320)
     T.area_light("Studio_fill", (-3, -2, 2.5), (0, 0, 0.5), size=(3, 3), color=(0.8, 0.85, 1.0), energy=250)
     tafel = T.box("Tafel_props", (0, 0.4, 0), (6.4, 2.6, 0.75), mt("tafel_studio", (0.55, 0.52, 0.5)), bevel=0.02, ol=0)
     z = 0.75
     cam_tgt = (0, 0.4, 1.0)
-    cam = T.camera("CAM_PROPS", (0, -5.2, 2.2), cam_tgt, lens=30)
+    cam = T.camera("CAM_PROPS", (0, -3.2, 2.0), cam_tgt, lens=24)
     # getallen in de drie kleuren
     for k, v in enumerate((25550, 34, 1, 0)):
         D.getal(f"Getal_voorbeeld_{k}", v, (-2.4 + k * 0.6, -0.6, 1.55), camera=cam)
@@ -180,7 +181,7 @@ if VAR == "props":
     D.scooter("Scooter", (3.4, -0.9, 0), rot_z=-150)
     D.leunstoel("Leunstoel", (-3.6, 1.8, 0), rot_z=-20, deken=True)
     cams = [cam, T.camera("CAM_PROPS_TAFEL", (0, -2.4, 1.9), (0, 0.4, 0.8), lens=26),
-            T.camera("CAM_PROPS_BRIEF", (1.42, -0.45, 1.25), (1.42, -0.33, z), lens=50)]
+            T.camera("CAM_PROPS_BRIEF", (1.42, -0.62, 1.15), (1.42, -0.33, z), lens=40)]
 
 # ---------------------------------------------------------------------------
 elif VAR.startswith("kruispunt"):
@@ -363,20 +364,24 @@ elif VAR.startswith("opa"):
     buiten_door_raam((-W / 2 - 2, 0), rz=90, afstand=4, stad=False)
     # open haard aan de achtermuur
     steen = T.pattern("baksteen_haard", (0.55, 0.28, 0.20), (0.50, 0.25, 0.18), grout=(0.75, 0.72, 0.66), size=(0.22, 0.07), offset=0.5)
-    T.box("Haard_mantel", (0.6, Dd / 2 - 0.25, 0), (1.6, 0.5, 1.15), steen, bevel=0.01, ol=0)
+    # open haard als echte opening: twee pilaren + latei, zwarte binnenkant, vuur zit ín de opening
+    for s_ in (-1, 1):
+        T.box(f"Haard_pilaar_{s_}", (0.6 + s_ * 0.65, Dd / 2 - 0.25, 0), (0.3, 0.5, 0.8), steen, bevel=0.0, ol=0)
+    T.box("Haard_latei", (0.6, Dd / 2 - 0.25, 0.8), (1.6, 0.5, 0.35), steen, bevel=0.0, ol=0)
+    T.box("Haard_binnen_achter", (0.6, Dd / 2 - 0.04, 0), (1.0, 0.06, 0.8), mt("roet_zwart", (0.03, 0.03, 0.03), rough=0.95, coat=0), bevel=0, ol=0)
+    T.box("Haard_haardplaat", (0.6, Dd / 2 - 0.45, 0), (1.9, 0.5, 0.06), mt("haardplaat_steen", (0.25, 0.24, 0.23), rough=0.8), bevel=0.01, ol=0)
     T.box("Haard_plank", (0.6, Dd / 2 - 0.27, 1.15), (1.8, 0.55, 0.07), mt("hout_schoorsteenmantel", (0.32, 0.20, 0.11)), bevel=0.01, ol=0)
-    T.box("Haard_gat", (0.6, Dd / 2 - 0.49, 0.12), (0.8, 0.05, 0.62), mt("roet_zwart", (0.03, 0.03, 0.03), rough=0.95, coat=0), bevel=0, ol=0)
     T.box("Haard_rookkanaal", (0.6, Dd / 2 - 0.2, 1.22), (1.1, 0.4, Hh - 1.22), steen, bevel=0, ol=0)
-    hout = [T.cyl(f"Haardhout_{k}", (0.6 + (k - 1) * 0.18, Dd / 2 - 0.35, 0.18), 0.05, 0.42, mt("haardhout", (0.30, 0.20, 0.12), rough=0.9),
+    hout = [T.cyl(f"Haardhout_{k}", (0.6 + (k - 1) * 0.18, Dd / 2 - 0.05, 0.1), 0.05, 0.42, mt("haardhout", (0.30, 0.20, 0.12), rough=0.9),
                   rot=(90, 0, (k - 1) * 18), seg=10, ol=0) for k in range(3)]
     T.merge("Haardhout", hout, ol=0)
     if avond:
         vuur = ND.pbr("vuur_haard", (1.0, 0.5, 0.1), emit=(1.0, 0.45, 0.08), strength=14.0)
         for k in range(5):
-            T.sphere(f"Vlam_{k}", (0.45 + k * 0.08, Dd / 2 - 0.35, 0.3 + (k % 2) * 0.05), 0.07, vuur, scale=(0.7, 0.5, 1.8), seg=10, ol=0)
+            T.sphere(f"Vlam_{k}", (0.44 + k * 0.08, Dd / 2 - 0.25, 0.28 + (k % 2) * 0.05), 0.07, vuur, scale=(0.7, 0.5, 1.8), seg=10, ol=0)
         T.point_light("Haardvuur_licht", (0.6, Dd / 2 - 0.8, 0.45), color=(1.0, 0.52, 0.2), energy=180, radius=0.25)
     else:
-        T.box("As_haard", (0.6, Dd / 2 - 0.35, 0.12), (0.5, 0.25, 0.04), mt("as_grijs", (0.55, 0.55, 0.53), rough=1.0, coat=0), bevel=0.02, ol=0)
+        T.box("As_haard", (0.6, Dd / 2 - 0.25, 0.06), (0.5, 0.25, 0.04), mt("as_grijs", (0.55, 0.55, 0.53), rough=1.0, coat=0), bevel=0.02, ol=0)
     for k, (x, kleur) in enumerate(((0.15, (0.85, 0.80, 0.70)), (0.55, (0.70, 0.75, 0.80)), (1.0, (0.80, 0.78, 0.65)))):
         ND.oude_foto(f"Foto_mantel_{k}", (x, Dd / 2 - 0.3, 1.19), rot=(80, 0, 0))
     # boekenkast tegen de rechtermuur
@@ -385,12 +390,12 @@ elif VAR.startswith("opa"):
     for k in range(5):
         T.box(f"Boekenkast_plank_{k}", (W / 2 - 0.42, 0.4, 0.15 + k * 0.45), (0.05, 1.7, 0.03), kast, bevel=0, ol=0)
         I.books(f"Boeken_{k}", (W / 2 - 0.22, 0.4 - 0.75, 0.18 + k * 0.45), n=12, rot=90, flat=False, seed=k)
-    D.leunstoel("Leunstoel_opa", (-0.6, 0.3, 0), rot_z=200, deken=not avond)
-    D.leunstoel("Stoel_held", (1.5, -0.5, 0), rot_z=150, kleur=(0.30, 0.34, 0.40))
+    D.leunstoel("Leunstoel_opa", (-1.2, 0.6, 0), rot_z=68, deken=not avond)
+    D.leunstoel("Stoel_held", (1.0, -0.3, 0), rot_z=248, kleur=(0.30, 0.34, 0.40))
     I.rug("Vloerkleed_opa", (0.3, 0.0, 0.005), (2.6, 1.8), (0.45, 0.15, 0.12))
-    T.box("Bijzettafel", (0.4, -0.6, 0), (0.45, 0.45, 0.5), mt("hout_bijzettafel", (0.36, 0.22, 0.12)), bevel=0.01, ol=0)
-    D.krant("Krant_bijzettafel", (0.4, -0.6, 0.5), rot_z=20)
-    T.cyl("Theekop", (0.5, -0.5, 0.5), 0.04, 0.07, mt("porselein", (0.95, 0.94, 0.9), coat=0.6), seg=20, ol=0)
+    T.box("Bijzettafel", (-0.9, -0.4, 0), (0.45, 0.45, 0.5), mt("hout_bijzettafel", (0.36, 0.22, 0.12)), bevel=0.01, ol=0)
+    D.krant("Krant_bijzettafel", (-0.9, -0.4, 0.5), rot_z=20)
+    T.cyl("Theekop", (-0.8, -0.3, 0.5), 0.04, 0.07, mt("porselein", (0.95, 0.94, 0.9), coat=0.6), seg=20, ol=0)
     # staande lamp
     T.cyl("Staande_lamp_voet", (-1.4, 1.2, 0), 0.16, 0.03, mt("messing", (0.75, 0.6, 0.3), metal=1, rough=0.3), seg=20, ol=0)
     T.cyl("Staande_lamp_stang", (-1.4, 1.2, 0), 0.014, 1.55, mt("messing", (0.75, 0.6, 0.3), metal=1, rough=0.3), seg=10, ol=0)
@@ -402,17 +407,17 @@ elif VAR.startswith("opa"):
     else:
         T.area_light("Ochtendlicht_raam", (-W / 2 - 0.5, 0, 1.6), (0, 0, 0.8), size=(2, 1.4), color=(0.85, 0.9, 1.0), energy=260)
     T.box("Wandklok_opa", (-1.0, Dd / 2 - 0.05, 1.7), (0.3, 0.08, 0.5), mt("hout_klok", (0.30, 0.18, 0.1)), bevel=0.02, ol=0)
-    D.plek("PLEK_opa", (-0.6, 0.25, 0.45), rot_z=200)
-    D.plek("PLEK_held", (1.5, -0.5, 0.45), rot_z=150)
+    D.plek("PLEK_opa", (-1.2, 0.6, 0.45), rot_z=68)
+    D.plek("PLEK_held", (1.0, -0.3, 0.45), rot_z=248)
     cams = [T.camera("CAM_16a_WIDE", (2.6, -2.2, 1.55), (-0.4, 0.6, 0.8), lens=24),
-            T.camera("CAM_16b_OPA", (0.9, -0.7, 1.15), (-0.6, 0.3, 1.1), lens=45, dof=2.8),
-            T.camera("CAM_16c_HELD", (-0.3, 0.0, 1.15), (1.5, -0.5, 1.05), lens=45, dof=2.8)]
+            T.camera("CAM_16b_OPA", (1.49, 0.1, 1.3), (-1.2, 0.6, 1.0), lens=40, dof=2.8),
+            T.camera("CAM_16c_HELD", (-1.27, 1.22, 1.3), (1.0, -0.3, 1.0), lens=40, dof=2.8)]
 
 # ---------------------------------------------------------------------------
 elif VAR == "begraafplaats":
     gras = mt("gras_begraafplaats", (0.24, 0.40, 0.18), rough=0.9, coat=0.05)
     P.ground("Grasveld", (3000, 3000), (0.24, 0.40, 0.18), z=0)
-    T.sphere("Grasheuvel", (0, 6, -14), 22, gras, scale=(1.4, 1.0, 0.75), seg=40, ol=0)
+    T.sphere("Grasheuvel", (0, 42, -14), 22, gras, scale=(1.4, 1.0, 0.75), seg=40, ol=0)
     for k in range(22):
         x = -12 + (k % 11) * 2.4 + rnd.uniform(-0.2, 0.2)
         y = -2 + (k // 11) * 4.5
@@ -422,7 +427,7 @@ elif VAR == "begraafplaats":
     D.grafsteen("Graf_opa", (0, -2, 0), nieuw=True)
     T.box("Graf_opa_aarde", (0, -3.2, 0), (0.9, 1.9, 0.08), mt("aarde_vers", (0.25, 0.17, 0.10), rough=1.0, coat=0), bevel=0.04, ol=0)
     for k in range(5):
-        ND.bloemen(f"Bloemen_graf_{k}", (-0.35 + k * 0.18, -2.5 - (k % 2) * 0.2, 0.08), rot_z=k * 30, seed=k)
+        ND.bloemen(f"Bloemen_graf_{k}", (-0.35 + k * 0.18, -2.5 - (k % 2) * 0.2, 0.08), rot_z=k * 30, seed=k).rotation_euler.x = 0
     P.railing("Hek_begraafplaats", [(-30, -14, 0), (30, -14, 0)], h=1.4, posts=2.5, color="zwart")
     for k in range(6):
         ND.eik(f"Eik_bp_{k}", (-24 + k * 9.5, 14 + rnd.uniform(-2, 2), 0), seizoen="zomer", schaal=0.9, seed=k)
@@ -438,8 +443,8 @@ elif VAR == "begraafplaats":
 # ---------------------------------------------------------------------------
 elif VAR == "schoolwc":
     W, Dd, Hh = 5.0, 4.0, 2.8
-    room = I.room("Schoolwc", W, Dd, Hh, (0.90, 0.92, 0.92), (0.55, 0.58, 0.60), hide=(), holes={"front": [(3.6, 4.5, 0, 2.05)]})
-    tegel = T.pattern("wandtegel_wc", (0.88, 0.93, 0.95), (0.84, 0.90, 0.93), grout=(0.7, 0.74, 0.76), size=(0.15, 0.15))
+    room = I.room("Schoolwc", W, Dd, Hh, (0.70, 0.74, 0.76), (0.45, 0.48, 0.52), hide=(), holes={"front": [(3.6, 4.5, 0, 2.05)]})
+    tegel = T.pattern("wandtegel_wc", (0.62, 0.78, 0.82), (0.58, 0.74, 0.78), grout=(0.7, 0.74, 0.76), size=(0.15, 0.15))
     for side, (loc, rz, L) in {"back": ((0, Dd / 2 - 0.01, 0), 0, W), "left": ((-W / 2 + 0.01, 0, 0), 90, Dd), "right": ((W / 2 - 0.01, 0, 0), 90, Dd)}.items():
         T.box(f"Tegels_{side}", loc, (L, 0.02, 1.6), tegel, rot=(0, 0, rz), bevel=0, ol=0)
     room["floor"].data.materials[0] = T.pattern("vloertegel_wc", (0.45, 0.48, 0.52), (0.40, 0.43, 0.47), grout=(0.3, 0.3, 0.32), size=(0.3, 0.3))
@@ -458,7 +463,7 @@ elif VAR == "schoolwc":
     for k in range(2):
         T.box(f"Tl_armatuur_{k}", (-0.8 + k * 1.8, 0, Hh - 0.06), (1.3, 0.2, 0.05), mt("tl_armatuur", (0.9, 0.9, 0.9)), bevel=0.01, ol=0)
         T.box(f"Tl_buis_{k}", (-0.8 + k * 1.8, 0, Hh - 0.09), (1.2, 0.08, 0.03), T.glow("tl_licht", (0.95, 0.98, 1.0), 6), bevel=0.01, ol=0)
-        T.area_light(f"Tl_licht_{k}", (-0.8 + k * 1.8, 0, Hh - 0.15), (-0.8 + k * 1.8, 0, 0), size=(1.2, 0.3), color=(0.92, 0.97, 1.0), energy=220)
+        T.area_light(f"Tl_licht_{k}", (-0.8 + k * 1.8, 0, Hh - 0.15), (-0.8 + k * 1.8, 0, 0), size=(1.2, 0.3), color=(0.92, 0.97, 1.0), energy=70)
     D.plek("PLEK_held", (-0.4, Dd / 2 - 0.85, 0), rot_z=0)
     cams = [T.camera("CAM_6a_SPIEGEL", (0.6, 0.3, 1.5), (-0.6, Dd / 2, 1.35), lens=32),
             T.camera("CAM_6b_DETAIL", (-0.4, 0.9, 1.5), (-0.4, Dd / 2, 1.45), lens=50)]
@@ -531,7 +536,6 @@ elif VAR == "ziekenhuis":
 elif VAR == "zwembad":
     tegel = T.pattern("tegel_zwembadrand", (0.88, 0.88, 0.85), (0.84, 0.84, 0.81), grout=(0.7, 0.7, 0.68), size=(0.3, 0.3))
     blauw = T.pattern("tegel_zwembad_blauw", (0.25, 0.60, 0.85), (0.22, 0.55, 0.80), grout=(0.85, 0.9, 0.95), size=(0.15, 0.15))
-    P.ground("Gras_zwembad", (3000, 3000), (0.30, 0.52, 0.22), z=0)
     T.box("Bad_rand", (0, 0, 0), (32, 20, 0.05), tegel, bevel=0, ol=0)
     # uitgehold bad: bodem en wanden blauw, water ervoor
     T.box("Bad_bodem", (0, 0, -1.8), (25, 12.5, 0.05), blauw, bevel=0, ol=0)
@@ -543,6 +547,10 @@ elif VAR == "zwembad":
     bpy.data.objects["Bad_rand"].modifiers["gat"].object = snij
     bpy.data.objects["Bad_rand"].modifiers["gat"].operation = "DIFFERENCE"
     T._apply_mods(bpy.data.objects["Bad_rand"])
+    gras = T.box("Gras_zwembad", (0, 0, -0.06), (3000, 3000, 0.05), mt("gras_zwembad", (0.30, 0.52, 0.22), rough=0.9, coat=0), bevel=0, ol=0)
+    g = gras.modifiers.new("gat", "BOOLEAN")
+    g.object, g.operation = snij, "DIFFERENCE"
+    T._apply_mods(gras)
     bpy.data.objects.remove(snij)
     zw = H.water("water_zwembad")
     wa = T.plane("Zwembadwater", (0, 0, -0.12), (24.9, 12.4), zw)
@@ -676,8 +684,12 @@ elif VAR.startswith("schoolplein"):
     # hekken, fietsenrek, bomen, klimrek
     P.railing("Hek_voor", [(-36, -24, 0), (36, -24, 0)], h=1.8, posts=2.5, color="donkergroen")
     S.klimrek("Klimrek", (-14, -6, 0), rot_z=20)
-    for k in range(8):
+    for k in range(5):
         P.tree(f"Pleinboom_{k}", (-26 + k * 6.5, -20, 0), h=8, r=2.8, seed=k)
+    for k in range(4):
+        T.box(f"Gymzaal_zijraam_{k}", (gx - gw / 2 - 0.16, gy - 5 + k * 3.4, 5.0), (0.05, 2.4, 1.6), raam, bevel=0, ol=0)
+    T.box("Gymzaal_zijdeur", (gx - gw / 2 - 0.17, gy + 5.5, 0), (0.06, 2.2, 2.4), mt("deur_school", (0.15, 0.35, 0.70)), bevel=0.02, ol=0)
+    T.box("Gymzaal_plint", (gx - gw / 2 - 0.16, gy, 0), (0.04, gd, 0.8), mt("baksteen_plint", (0.55, 0.30, 0.22), rough=0.9), bevel=0, ol=0)
     for k in range(10):
         ST.bicycle(f"Fiets_rek_{k}", (-24 + k * 0.8, 13.5, 0), rot=90, color=[(0.85, 0.15, 0.12), (0.15, 0.35, 0.85), (0.1, 0.1, 0.1)][k % 3])
     bomenring("Bomen_school", (0, 0), 50, 75, 40, seed=13)
