@@ -159,9 +159,10 @@ BRO_H = V(-0.92, -0.12, 0)
 S.teleport(bro, t_h, BRO_H, 120)
 bro.rig.location = (BRO_H.x, BRO_H.y, 0.0)
 bro.rig.keyframe_insert("location", frame=F(t_h))
-S.beat(bro, t_h, "staan", face="bang", face_amt=0.7, at=S.head(opa, t_h), body={"spine": (6, 0, -8)}, feet="keep")
-S.beat(bro, t_h + 0.4, "armen_over", amount=0.6, face="bang", face_amt=0.8, at=S.head(opa, t_h), body={"spine": (8, 0, -12), "head": (0, 0, -10)}, feet="keep")
-S.beat(bro, t_h + 2.6, "armen_over", amount=0.6, face="nerveus", face_amt=0.7, at=S.head(opa, t_h), body={"spine": (8, 0, -12), "head": (0, 0, -14)}, feet="keep")
+S.beat(bro, t_h - 0.04, "staan", face="nerveus", face_amt=0.5, at=CPOS, **sp_b)   # zit nog tot de knip
+S.beat(bro, t_h, "staan", face="bang", face_amt=0.7, at=S.head(opa, t_h), body={"spine": (6, 0, -8)})
+S.beat(bro, t_h + 0.4, "armen_over", amount=0.6, face="bang", face_amt=0.8, at=S.head(opa, t_h), body={"spine": (8, 0, -12), "head": (0, 0, -10)})
+S.beat(bro, t_h + 2.6, "armen_over", amount=0.6, face="nerveus", face_amt=0.7, at=S.head(opa, t_h), body={"spine": (8, 0, -12), "head": (0, 0, -14)})
 S.beat(opa, t_h, "staan", face="neutraal", face_amt=0.5, at=CPOS, **sp_o)
 S.beat(opa, t_h + 2.4, "staan", face="neutraal", face_amt=0.6, at=S.head(bro, t_h + 2.4), **sp_o)
 S.reach(opa, 0.0, "L", inf=0.0)
@@ -190,24 +191,25 @@ P_DOOR = V(-1.97, 1.22, 0)                                # kijkt naar -y, de de
 S.teleport(papa, t_j, P_DOOR, 0)
 papa.rig.location = (P_DOOR.x, P_DOOR.y, 0.0)
 papa.rig.keyframe_insert("location", frame=F(t_j))
-S.beat(papa, t_j, "staan", face="nerveus", face_amt=0.7, at=V(-2.2, -1.0, 1.5), body={"spine": (0, 0, 4)}, feet="keep")
+S.beat(papa, t_j - 0.04, "staan", face="nerveus", face_amt=0.5, at=CPOS, **sp_p)   # zit nog tot de knip
+S.beat(papa, t_j, "staan", face="nerveus", face_amt=0.7, at=V(-2.2, -1.0, 1.5), body={"spine": (0, 0, 4)})
 S.reach(papa, 0.0, "R", inf=0.0)
 S.reach(papa, t_j - 0.05, "R", inf=0.0)
 S.reach(papa, t_j, "R", V(-2.33, 1.3, 1.02))
 S.reach(papa, END, "R", V(-2.33, 1.3, 1.02))
-S.beat(papa, t_j + 1.0, "staan", face="bang", face_amt=0.6, at=V(-2.25, -1.0, 1.45), body={"spine": (0, 0, 4), "chest": (-3, 0, 0)}, feet="keep")
-S.beat(papa, t_j + 2.6, "staan", face="nerveus", face_amt=0.5, at=V(-2.1, -1.0, 1.4), body={"chest": (3, 0, 0)}, feet="keep")
+S.beat(papa, t_j + 1.0, "staan", face="bang", face_amt=0.6, at=V(-2.25, -1.0, 1.45), body={"spine": (0, 0, 4), "chest": (-3, 0, 0)})
+S.beat(papa, t_j + 2.6, "staan", face="nerveus", face_amt=0.5, at=V(-2.1, -1.0, 1.4), body={"chest": (3, 0, 0)})
 for ch in (held, mama, opa, bro):
     S.hold(ch, END)
 S.hold(papa, END)
 
 # ---------------------------------------------------------------- camera's
+S.wall(0.0, END + 1.0, "front")                          # alle camera's staan binnen de keuken: voormuur de hele scène dicht (wides 10d/10f/10k keken er anders langs de rand de nacht in)
 S.cam(0.0, ((2.25, -0.55, 2.0), (-0.6, -0.6, 0.85), 22), ((2.15, -0.58, 1.95), (-0.6, -0.6, 0.85), 24))
 PHH = PH["hoofdpersonage_kind"]
 S.cam(t_e, (PHH + V(0.0, -0.07, 0.22), PHH + V(0, 0.01, 0), 34), (PHH + V(0.0, -0.06, 0.19), PHH + V(0, 0.01, 0), 36))
 S.cam(t_f, ((2.2, -1.1, 1.85), (0.3, -0.9, 0.95), 24), ((2.12, -1.08, 1.82), (0.3, -0.9, 0.95), 26))
 HH = S.headpos(held, t_g + 1.0)
-S.wall(t_g, t_h, "front")                                  # tegenshot naar -y: voormuur dicht
 S.cam(t_g, (HH + V(0.35, 1.05, 0.05), HH + V(0, 0, -0.08), 26), (HH + V(0.3, 0.95, 0.05), HH + V(0, 0, -0.08), 28))
 HO = S.headpos(opa, t_h + 1.5)
 S.cam(t_h, (HO + V(1.45, 0.3, 0.05), HO + V(0.1, 0.2, -0.15), 32), (HO + V(1.35, 0.28, 0.05), HO + V(0.1, 0.2, -0.15), 34))
