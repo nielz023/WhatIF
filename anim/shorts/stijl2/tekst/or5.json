@@ -1,0 +1,873 @@
+{
+ "code": "or5",
+ "length": 18.92331065759637,
+ "picture_end": 18.92331065759637,
+ "voice": [
+  [
+   "OR5/OR5-01_Verteller.mp3",
+   0.03
+  ],
+  [
+   "OR5/OR5-02_Verteller.mp3",
+   1.760997732426304
+  ],
+  [
+   "OR5/OR5-03_Verteller.mp3",
+   4.134988662131519
+  ],
+  [
+   "OR5/OR5-04_Verteller.mp3",
+   7.518979591836735
+  ],
+  [
+   "OR5/OR5-05_Verteller.mp3",
+   10.830975056689343
+  ],
+  [
+   "OR5/OR5-06_Verteller.mp3",
+   12.810975056689342
+  ],
+  [
+   "OR5/OR5-07_Verteller.mp3",
+   15.018979591836734
+  ]
+ ],
+ "sounds": [
+  {
+   "file": "sfx/sfx_glitch",
+   "t": 0.5,
+   "vol": 0.3,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_glitch",
+   "t": 0.95,
+   "vol": 0.3,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_visioen",
+   "t": 3.018997732426304,
+   "vol": 0.3,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 1.760997732426304,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "muziek/m_spanning_puls",
+   "t": 0.0,
+   "vol": 0.22,
+   "cut": [
+    0.0,
+    null
+   ],
+   "keys": null,
+   "loop_to": 18.92331065759637,
+   "duck": true,
+   "fade_in": 0.6,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_binnen_sfeer",
+   "t": 0.0,
+   "vol": 0.05,
+   "cut": null,
+   "keys": null,
+   "loop_to": 4.03498866213152,
+   "duck": true,
+   "fade_in": 0.5,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_stad_dag",
+   "t": 4.134988662131519,
+   "vol": 0.12,
+   "cut": null,
+   "keys": null,
+   "loop_to": 7.518979591836735,
+   "duck": true,
+   "fade_in": 0.5,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_menigte_mompel",
+   "t": 4.134988662131519,
+   "vol": 0.2,
+   "cut": 7.518979591836735,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_kluisje",
+   "t": 7.718979591836735,
+   "vol": 0.3,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_diamant",
+   "t": 9.705979591836735,
+   "vol": 0.25,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_stroom_thunk",
+   "t": 12.489975056689344,
+   "vol": 0.35,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hartslag",
+   "t": 12.489975056689344,
+   "vol": 0.3,
+   "cut": 18.92331065759637,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hologram",
+   "t": 13.216975056689343,
+   "vol": 0.3,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 4.134988662131519,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 7.518979591836735,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_whoosh_titel",
+   "t": 17.623310657596374,
+   "vol": 0.4,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  }
+ ],
+ "texts": [
+  {
+   "body": "SECOND 1",
+   "t0": 1.760997732426304,
+   "t1": 4.03498866213152,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "WHAT IF YOU",
+   "t0": 0.0,
+   "t1": 18.92331065759637,
+   "loc": [
+    0.5,
+    0.925
+   ],
+   "size": 84,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "TURNED INVISIBLE?",
+   "t0": 0.0,
+   "t1": 18.92331065759637,
+   "loc": [
+    0.5,
+    0.885
+   ],
+   "size": 84,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "WHAT IF YOU",
+   "t0": -0.010000000000000002,
+   "t1": 0.489,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "TURNED",
+   "t0": 0.48900000000000005,
+   "t1": 0.826,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "INVISIBLE?",
+   "t0": 0.826,
+   "t1": 1.801,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "SECOND ONE.",
+   "t0": 1.8409977324263038,
+   "t1": 2.7699977324263036,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOUR HANDS FADE",
+   "t0": 2.7699977324263036,
+   "t1": 3.443997732426304,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "AWAY.",
+   "t0": 3.443997732426304,
+   "t1": 4.174997732426304,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "MINUTE 1",
+   "t0": 4.134988662131519,
+   "t1": 7.488979591836735,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "HOUR 1",
+   "t0": 7.518979591836735,
+   "t1": 10.530975056689343,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "MINUTE ONE.",
+   "t0": 4.214988662131519,
+   "t1": 5.1089886621315195,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOU WALK THROUGH",
+   "t0": 5.1089886621315195,
+   "t1": 5.724988662131519,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "A CROWD.",
+   "t0": 5.724988662131519,
+   "t1": 6.35198866213152,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "NOBODY SEES YOU.",
+   "t0": 6.351988662131519,
+   "t1": 7.558988662131519,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "HOUR ONE.",
+   "t0": 7.598979591836735,
+   "t1": 8.620979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOU STROLL RIGHT",
+   "t0": 8.620979591836736,
+   "t1": 9.375979591836735,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "INTO THE BANK",
+   "t0": 9.375979591836735,
+   "t1": 9.932979591836736,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "VAULT.",
+   "t0": 9.932979591836736,
+   "t1": 10.687979591836735,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THEN...",
+   "t0": 10.882975056689345,
+   "t1": 11.685975056689344,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "EVERYTHING GOES",
+   "t0": 11.685975056689344,
+   "t1": 12.299975056689343,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "BLACK.",
+   "t0": 12.299975056689345,
+   "t1": 12.950975056689344,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "BECAUSE LIGHT",
+   "t0": 12.851975056689342,
+   "t1": 13.397975056689342,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "PASSES THROUGH",
+   "t0": 13.397975056689344,
+   "t1": 13.931975056689343,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOUR EYES TOO.",
+   "t0": 13.931975056689343,
+   "t1": 14.987975056689342,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOU'RE",
+   "t0": 15.060979591836736,
+   "t1": 15.268979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "INVISIBLE.",
+   "t0": 15.268979591836734,
+   "t1": 16.047979591836736,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "AND COMPLETELY",
+   "t0": 16.047979591836736,
+   "t1": 16.813979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "BLIND.",
+   "t0": 16.813979591836734,
+   "t1": 17.671979591836735,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  }
+ ],
+ "cards": [
+  {
+   "body": "",
+   "t0": 12.489975056689344,
+   "t1": 12.790975056689343,
+   "size": 110,
+   "dim": 1.0,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "sub": null,
+   "bg": [
+    0,
+    0,
+    0
+   ],
+   "fin": 1,
+   "fout": 1
+  },
+  {
+   "body": "SUBSCRIBE",
+   "t0": 17.773310657596372,
+   "t1": 18.92331065759637,
+   "size": 170,
+   "dim": 0.55,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "sub": "FOR MORE WHAT IFS",
+   "bg": null,
+   "fin": 5,
+   "fout": 1,
+   "sub_scale": 0.5
+  }
+ ],
+ "title": null,
+ "fps": 30
+}

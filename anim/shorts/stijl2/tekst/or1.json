@@ -1,0 +1,841 @@
+{
+ "code": "or1",
+ "length": 20.20532879818594,
+ "picture_end": 20.20532879818594,
+ "voice": [
+  [
+   "OR1/OR1-01_Verteller.mp3",
+   0.15
+  ],
+  [
+   "OR1/OR1-02_Verteller.mp3",
+   2.472993197278911
+  ],
+  [
+   "OR1/OR1-03_Verteller.mp3",
+   5.926099773242631
+  ],
+  [
+   "OR1/OR1-04_Verteller.mp3",
+   8.857097505668934
+  ],
+  [
+   "OR1/OR1-05_Verteller.mp3",
+   11.742086167800453
+  ],
+  [
+   "OR1/OR1-06_Verteller.mp3",
+   15.880090702947845
+  ]
+ ],
+ "sounds": [
+  {
+   "file": "sfx/sfx_krijt",
+   "t": 13.641086167800452,
+   "vol": 0.25,
+   "cut": 14.676086167800454,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_brass_hit",
+   "t": 15.187086167800453,
+   "vol": 0.4,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_vloer_kraak",
+   "t": 17.282090702947844,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_deurklink",
+   "t": 17.032090702947844,
+   "vol": 0.35,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_lantaarn_flikker",
+   "t": 9.237097505668933,
+   "vol": 0.3,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 2.502993197278911,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 5.956099773242631,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 8.887097505668933,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 11.772086167800452,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_binnen_sfeer",
+   "t": 0.0,
+   "vol": 0.05,
+   "cut": null,
+   "keys": null,
+   "loop_to": 20.20532879818594,
+   "duck": true,
+   "fade_in": 0.5,
+   "fade_out": 0.8
+  },
+  {
+   "file": "muziek/m_nacht_angst",
+   "t": 0.0,
+   "vol": 0.26,
+   "cut": [
+    0.0,
+    null
+   ],
+   "keys": null,
+   "loop_to": 20.20532879818594,
+   "duck": true,
+   "fade_in": 0.6,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_hartslag",
+   "t": 11.772086167800452,
+   "vol": 0.25,
+   "cut": 20.20532879818594,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_whoosh_titel",
+   "t": 18.90532879818594,
+   "vol": 0.4,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  }
+ ],
+ "texts": [
+  {
+   "body": "DAY 1",
+   "t0": 2.502993197278911,
+   "t1": 5.89609977324263,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "DAY 2",
+   "t0": 5.956099773242631,
+   "t1": 8.827097505668934,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "DAY 3",
+   "t0": 8.887097505668933,
+   "t1": 11.712086167800454,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "DAY 4",
+   "t0": 11.772086167800452,
+   "t1": 15.850090702947846,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.25,
+    0.2,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "WHAT IF YOUR REFLECTION",
+   "t0": 0.0,
+   "t1": 20.20532879818594,
+   "loc": [
+    0.5,
+    0.925
+   ],
+   "size": 84,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "STOPPED COPYING YOU?",
+   "t0": 0.0,
+   "t1": 20.20532879818594,
+   "loc": [
+    0.5,
+    0.885
+   ],
+   "size": 84,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "WHAT IF YOUR",
+   "t0": 0.10999999999999999,
+   "t1": 0.609,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "REFLECTION",
+   "t0": 0.609,
+   "t1": 1.132,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "STOPPED COPYING",
+   "t0": 1.132,
+   "t1": 1.9329999999999998,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOU?",
+   "t0": 1.9329999999999998,
+   "t1": 2.513,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DAY ONE.",
+   "t0": 2.5529931972789113,
+   "t1": 3.492993197278911,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "IT BLINKS...",
+   "t0": 3.492993197278911,
+   "t1": 4.572993197278912,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "A SECOND TOO",
+   "t0": 4.572993197278911,
+   "t1": 5.292993197278911,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "LATE.",
+   "t0": 5.2929931972789115,
+   "t1": 5.965993197278911,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DAY TWO.",
+   "t0": 6.006099773242631,
+   "t1": 6.87709977324263,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "IT SMILES.",
+   "t0": 6.87709977324263,
+   "t1": 7.98009977324263,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOU DIDN'T.",
+   "t0": 7.980099773242631,
+   "t1": 8.89709977324263,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DAY THREE.",
+   "t0": 8.937097505668934,
+   "t1": 9.820097505668933,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "IT PRESSES A",
+   "t0": 9.820097505668935,
+   "t1": 10.482097505668934,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "FINGER TO ITS",
+   "t0": 10.482097505668936,
+   "t1": 11.085097505668934,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "LIPS.",
+   "t0": 11.085097505668934,
+   "t1": 11.816097505668933,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DAY FOUR.",
+   "t0": 11.822086167800453,
+   "t1": 12.971086167800452,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "IT WRITES ONE",
+   "t0": 12.971086167800454,
+   "t1": 13.784086167800453,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "WORD ON THE",
+   "t0": 13.784086167800453,
+   "t1": 14.236086167800453,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "GLASS.",
+   "t0": 14.236086167800455,
+   "t1": 15.177086167800454,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "RUN.",
+   "t0": 15.177086167800454,
+   "t1": 15.920086167800452,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "AND BEHIND",
+   "t0": 15.960090702947845,
+   "t1": 16.691090702947847,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOU...",
+   "t0": 16.691090702947847,
+   "t1": 17.342090702947846,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THE DOOR IS",
+   "t0": 17.342090702947846,
+   "t1": 17.783090702947845,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "ALREADY OPENING.",
+   "t0": 17.783090702947845,
+   "t1": 18.955090702947846,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  }
+ ],
+ "cards": [
+  {
+   "body": "SUBSCRIBE",
+   "t0": 19.05532879818594,
+   "t1": 20.20532879818594,
+   "size": 170,
+   "dim": 0.55,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "sub": "FOR MORE WHAT IFS",
+   "bg": null,
+   "fin": 5,
+   "fout": 1,
+   "sub_scale": 0.5
+  }
+ ],
+ "title": null,
+ "fps": 30
+}

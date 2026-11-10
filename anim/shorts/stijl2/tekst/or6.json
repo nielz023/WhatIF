@@ -1,0 +1,863 @@
+{
+ "code": "or6",
+ "length": 21.073877551020406,
+ "picture_end": 21.073877551020406,
+ "voice": [
+  [
+   "OR6/OR6-01_Verteller.mp3",
+   0.03
+  ],
+  [
+   "OR6/OR6-02_Verteller.mp3",
+   2.2369841269841264
+  ],
+  [
+   "OR6/OR6-03_Verteller.mp3",
+   6.258979591836734
+  ],
+  [
+   "OR6/OR6-04_Verteller.mp3",
+   8.968979591836733
+  ],
+  [
+   "OR6/OR6-05_Verteller.mp3",
+   11.83596371882086
+  ],
+  [
+   "OR6/OR6-06_Verteller.mp3",
+   15.26097505668934
+  ],
+  [
+   "OR6/OR6-07_Verteller.mp3",
+   16.973968253968252
+  ]
+ ],
+ "sounds": [
+  {
+   "file": "sfx/sfx_papier_vouwen",
+   "t": 6.4589795918367345,
+   "vol": 0.25,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_stift",
+   "t": 10.144979591836734,
+   "vol": 0.2,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_stift",
+   "t": 10.394979591836734,
+   "vol": 0.2,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_stift",
+   "t": 10.644979591836734,
+   "vol": 0.2,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 2.2369841269841264,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 6.258979591836734,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 8.968979591836733,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 11.83596371882086,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "muziek/m_nacht_angst",
+   "t": 0.0,
+   "vol": 0.24,
+   "cut": [
+    0.0,
+    null
+   ],
+   "keys": null,
+   "loop_to": 21.073877551020406,
+   "duck": true,
+   "fade_in": 0.6,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_krekels_nacht",
+   "t": 0.0,
+   "vol": 0.05,
+   "cut": null,
+   "keys": null,
+   "loop_to": 21.073877551020406,
+   "duck": true,
+   "fade_in": 0.5,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_klok_tik",
+   "t": 0.0,
+   "vol": 0.2,
+   "cut": 2.2069841269841266,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_vloer_kraak",
+   "t": 13.75096371882086,
+   "vol": 0.45,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hartslag",
+   "t": 15.26097505668934,
+   "vol": 0.3,
+   "cut": 21.073877551020406,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_brass_hit",
+   "t": 17.473968253968252,
+   "vol": 0.35,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_whoosh_titel",
+   "t": 19.77387755102041,
+   "vol": 0.4,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  }
+ ],
+ "texts": [
+  {
+   "body": "NIGHT 1",
+   "t0": 2.2369841269841264,
+   "t1": 6.228979591836734,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "WEEK 1",
+   "t0": 6.258979591836734,
+   "t1": 8.938979591836734,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "MONTH 1",
+   "t0": 8.968979591836733,
+   "t1": 11.58596371882086,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "MONTH 6",
+   "t0": 11.83596371882086,
+   "t1": 15.23097505668934,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.25,
+    0.2,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "03:00",
+   "t0": 0.2,
+   "t1": 2.2069841269841266,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.3,
+    0.2,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "WHAT IF YOU NEVER",
+   "t0": 0.0,
+   "t1": 21.073877551020406,
+   "loc": [
+    0.5,
+    0.925
+   ],
+   "size": 84,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "NEEDED SLEEP AGAIN?",
+   "t0": 0.0,
+   "t1": 21.073877551020406,
+   "loc": [
+    0.5,
+    0.885
+   ],
+   "size": 84,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "WHAT IF YOU",
+   "t0": -0.010000000000000002,
+   "t1": 0.547,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "NEVER NEEDED",
+   "t0": 0.547,
+   "t1": 1.174,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "SLEEP AGAIN?",
+   "t0": 1.174,
+   "t1": 2.2769999999999997,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "NIGHT ONE.",
+   "t0": 2.3169841269841265,
+   "t1": 3.4319841269841262,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "EIGHT EXTRA",
+   "t0": 3.4319841269841262,
+   "t1": 4.232984126984126,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "HOURS,",
+   "t0": 4.232984126984126,
+   "t1": 4.940984126984127,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "EVERY SINGLE",
+   "t0": 4.940984126984127,
+   "t1": 5.625984126984126,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "NIGHT.",
+   "t0": 5.625984126984126,
+   "t1": 6.298984126984125,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "WEEK ONE.",
+   "t0": 6.338979591836734,
+   "t1": 7.197979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "FIFTY BOOKS,",
+   "t0": 7.197979591836734,
+   "t1": 8.149979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "FINISHED.",
+   "t0": 8.149979591836736,
+   "t1": 9.008979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "MONTH ONE.",
+   "t0": 9.048979591836734,
+   "t1": 10.104979591836733,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THREE NEW",
+   "t0": 10.104979591836734,
+   "t1": 10.708979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "LANGUAGES.",
+   "t0": 10.708979591836734,
+   "t1": 11.765979591836734,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "MONTH SIX.",
+   "t0": 11.864963718820862,
+   "t1": 13.33896371882086,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "SOMETHING MOVES",
+   "t0": 13.33896371882086,
+   "t1": 13.95496371882086,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "IN THE CORNER OF",
+   "t0": 13.95496371882086,
+   "t1": 14.53496371882086,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THE ROOM.",
+   "t0": 14.534963718820862,
+   "t1": 15.30096371882086,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOUR BRAIN NEEDS",
+   "t0": 15.34097505668934,
+   "t1": 16.11797505668934,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DREAMS.",
+   "t0": 16.11797505668934,
+   "t1": 16.965975056689338,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "AND NOW...",
+   "t0": 16.991968253968253,
+   "t1": 17.87396825396825,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THEY COME WHILE",
+   "t0": 17.873968253968254,
+   "t1": 18.721968253968253,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOU'RE AWAKE.",
+   "t0": 18.721968253968253,
+   "t1": 19.823968253968253,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  }
+ ],
+ "cards": [
+  {
+   "body": "SUBSCRIBE",
+   "t0": 19.923877551020407,
+   "t1": 21.073877551020406,
+   "size": 170,
+   "dim": 0.55,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "sub": "FOR MORE WHAT IFS",
+   "bg": null,
+   "fin": 5,
+   "fout": 1,
+   "sub_scale": 0.5
+  }
+ ],
+ "title": null,
+ "fps": 30
+}

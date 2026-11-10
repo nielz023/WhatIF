@@ -1,0 +1,849 @@
+{
+ "code": "or2",
+ "length": 18.622630385487525,
+ "picture_end": 18.622630385487525,
+ "voice": [
+  [
+   "OR2/OR2-01_Verteller.mp3",
+   0.03
+  ],
+  [
+   "OR2/OR2-02_Verteller.mp3",
+   3.0029705215419495
+  ],
+  [
+   "OR2/OR2-03_Verteller.mp3",
+   6.403832199546485
+  ],
+  [
+   "OR2/OR2-04_Verteller.mp3",
+   9.0378231292517
+  ],
+  [
+   "OR2/OR2-05_Verteller.mp3",
+   11.224807256235826
+  ],
+  [
+   "OR2/OR2-06_Verteller.mp3",
+   14.679954648526074
+  ]
+ ],
+ "sounds": [
+  {
+   "file": "sfx/sfx_whoosh",
+   "t": 1.1569999999999998,
+   "vol": 0.35,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_konvooi",
+   "t": 3.0029705215419495,
+   "vol": 0.12,
+   "cut": 6.603832199546485,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 3.0029705215419495,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 6.403832199546485,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_stad_nacht_wind",
+   "t": 0.0,
+   "vol": 0.12,
+   "cut": null,
+   "keys": null,
+   "loop_to": 8.9378231292517,
+   "duck": true,
+   "fade_in": 0.5,
+   "fade_out": 0.8
+  },
+  {
+   "file": "muziek/m_nacht_angst",
+   "t": 0.0,
+   "vol": 0.24,
+   "cut": [
+    0.0,
+    null
+   ],
+   "keys": null,
+   "loop_to": 18.622630385487525,
+   "duck": true,
+   "fade_in": 0.6,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.1178231292517,
+   "vol": 0.18,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.1798231292517,
+   "vol": 0.21,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.241823129251701,
+   "vol": 0.24,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.3038231292517,
+   "vol": 0.27,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.3658231292517,
+   "vol": 0.3,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.427823129251701,
+   "vol": 0.32999999999999996,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.4898231292517,
+   "vol": 0.36,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_dreun",
+   "t": 10.7398231292517,
+   "vol": 0.39,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_stroom_thunk",
+   "t": 10.7398231292517,
+   "vol": 0.35,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 9.0378231292517,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_hud_tik",
+   "t": 11.224807256235826,
+   "vol": 0.5,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_radio_ruis",
+   "t": 11.624807256235826,
+   "vol": 0.22,
+   "cut": 13.432807256235826,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_cliffhanger",
+   "t": 16.015954648526073,
+   "vol": 0.35,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  },
+  {
+   "file": "sfx/sfx_krekels_nacht",
+   "t": 11.124807256235826,
+   "vol": 0.05,
+   "cut": null,
+   "keys": null,
+   "loop_to": 18.622630385487525,
+   "duck": true,
+   "fade_in": 0.5,
+   "fade_out": 0.8
+  },
+  {
+   "file": "sfx/sfx_whoosh_titel",
+   "t": 17.32263038548753,
+   "vol": 0.4,
+   "cut": null,
+   "keys": null,
+   "loop_to": null,
+   "duck": false
+  }
+ ],
+ "texts": [
+  {
+   "body": "HOUR 1",
+   "t0": 3.0029705215419495,
+   "t1": 6.373832199546484,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "DAY 1",
+   "t0": 6.403832199546485,
+   "t1": 8.7378231292517,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "WHAT IF EVERYONE",
+   "t0": 0.0,
+   "t1": 18.622630385487525,
+   "loc": [
+    0.5,
+    0.925
+   ],
+   "size": 84,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DISAPPEARED EXCEPT YOU?",
+   "t0": 0.0,
+   "t1": 18.622630385487525,
+   "loc": [
+    0.5,
+    0.885
+   ],
+   "size": 84,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "WHAT IF YOU WOKE",
+   "t0": -0.010000000000000002,
+   "t1": 0.768,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "UP...",
+   "t0": 0.768,
+   "t1": 1.267,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "AND EVERYONE ON",
+   "t0": 1.267,
+   "t1": 1.906,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "EARTH WAS GONE?",
+   "t0": 1.906,
+   "t1": 3.0429999999999997,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "HOUR ONE.",
+   "t0": 3.0829705215419496,
+   "t1": 3.9529705215419497,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "CARS STAND IN",
+   "t0": 3.9529705215419497,
+   "t1": 4.591970521541949,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THE STREET,",
+   "t0": 4.59197052154195,
+   "t1": 5.21897052154195,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "ENGINES STILL",
+   "t0": 5.218970521541949,
+   "t1": 5.83397052154195,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "RUNNING.",
+   "t0": 5.833970521541949,
+   "t1": 6.55397052154195,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DAY ONE.",
+   "t0": 6.433832199546485,
+   "t1": 7.129832199546485,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THE WHOLE CITY",
+   "t0": 7.129832199546485,
+   "t1": 7.849832199546484,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "IS YOURS.",
+   "t0": 7.849832199546484,
+   "t1": 8.812832199546484,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DAY 3",
+   "t0": 9.0378231292517,
+   "t1": 11.394807256235826,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "DAY THREE.",
+   "t0": 9.1178231292517,
+   "t1": 9.9648231292517,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "THE POWER GOES",
+   "t0": 9.964823129251702,
+   "t1": 10.6498231292517,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "OUT.",
+   "t0": 10.6498231292517,
+   "t1": 11.2648231292517,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "DAY 7",
+   "t0": 11.224807256235826,
+   "t1": 14.229954648526075,
+   "loc": [
+    0.5,
+    0.79
+   ],
+   "size": 150,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": true,
+   "box": true
+  },
+  {
+   "body": "DAY SEVEN.",
+   "t0": 11.304807256235826,
+   "t1": 12.546807256235827,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "FINALLY,",
+   "t0": 12.546807256235827,
+   "t1": 12.999807256235826,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "A VOICE ON THE",
+   "t0": 12.999807256235826,
+   "t1": 13.579807256235826,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "RADIO.",
+   "t0": 13.579807256235826,
+   "t1": 14.299807256235827,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "AND IT'S...",
+   "t0": 14.759954648526074,
+   "t1": 16.025954648526074,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  },
+  {
+   "body": "YOUR VOICE.",
+   "t0": 16.025954648526074,
+   "t1": 17.371954648526074,
+   "loc": [
+    0.5,
+    0.3
+   ],
+   "size": 125,
+   "color": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "anchor": [
+    "CENTER",
+    "CENTER"
+   ],
+   "pop": false,
+   "box": true
+  }
+ ],
+ "cards": [
+  {
+   "body": "SUBSCRIBE",
+   "t0": 17.472630385487527,
+   "t1": 18.622630385487525,
+   "size": 170,
+   "dim": 0.55,
+   "color": [
+    1.0,
+    0.86,
+    0.15,
+    1
+   ],
+   "sub": "FOR MORE WHAT IFS",
+   "bg": null,
+   "fin": 5,
+   "fout": 1,
+   "sub_scale": 0.5
+  }
+ ],
+ "title": null,
+ "fps": 30
+}
