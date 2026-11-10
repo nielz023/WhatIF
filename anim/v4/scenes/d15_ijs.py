@@ -89,11 +89,11 @@ G0 = ground(0.6, -1.0)
 held = S.actor("hoofdpersonage_ijs", (-1.4, 4.0, ground(-1.4, 4.0)), 160)
 show(held.rig, t_c)
 STOPP = V(0.6, -1.0, G0)
-S.walk(held, t_c, t_d - 0.3, [V(-1.4, 4.0, ground(-1.4, 4.0)), V(-0.3, 1.2, ground(-0.3, 1.2)), STOPP], stride=0.32, end_rot=20)
+S.walk(held, t_c, t_d - 0.3, [V(-1.4, 4.0, ground(-1.4, 4.0)), V(-0.3, 1.2, ground(-0.3, 1.2)), STOPP], stride=0.32, end_rot=20, arms=0.0)   # armen recht langs het lijf
 COLD = arms(arm("L", (0.30, 0.45, -0.80), (-0.60, 0.70, 0.10)), arm("R", (0.30, 0.45, -0.80), (-0.60, 0.70, 0.10)))   # armen om zich heen
-for k, t in enumerate(frange(t_c, t_d, 0.22)):
-    S.beat(held, t, "staan", arms=COLD, face="nerveus", face_amt=0.8, look=(0.0, -0.3),
-           body={"spine": (18, 0, 0), "chest": (8, 0, 0), "head": (6, 0, 3 if k % 2 else -3)})                      # rilt
+for k, t in enumerate(frange(t_c, t_d, 0.7)):
+    S.beat(held, t, "staan", face="nerveus", face_amt=0.8, look=(0.0, -0.3),   # armen via de loopcyclus (COLD om de 0,22 s liet ze haperen)
+           body={"spine": (18, 0, 0), "chest": (8, 0, 0), "head": (6, 0, 2 if k % 2 else -2)})                      # rilt
 HD = S.headpos(held, t_d + 0.5)
 FW = V(math.sin(math.radians(20)), -math.cos(math.radians(20)), 0)    # zijn kijkrichting (rot 20)
 SD = V(FW.y, -FW.x, 0)                                                   # zijn rechterkant

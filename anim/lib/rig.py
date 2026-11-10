@@ -463,7 +463,7 @@ def _bone_for(pn, o, J, segs):
         return "upper_arm." + s
     if pn.startswith(("onderarm", "elleboog", "manchet")):
         return "forearm." + s
-    if pn.startswith(("hand_", "duim", "vingers")):
+    if pn.startswith(("hand_", "duim", "vingers", "want_")):   # wanten (ijs) horen aan de hand, niet aan de romp
         return "hand." + s
     if pn == "nek":
         return "neck"
