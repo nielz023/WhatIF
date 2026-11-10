@@ -4,7 +4,7 @@
  * Bij een nieuwe versie: VERSIE ophogen en bovenaan NIEUW een blok toevoegen. Het venster
  * "Wat is nieuw" verschijnt dan één keer per browser (onthouden in localStorage).
  */
-export const VERSIE = 'v45';
+export const VERSIE = 'v46';
 
 export interface Nieuw { versie: string; datum?: string; punten: string[] }
 

@@ -25,7 +25,7 @@ export function vinyl(src: THREE.Material): THREE.MeshPhysicalMaterial {
   const s = src as THREE.MeshStandardMaterial;
   return new THREE.MeshPhysicalMaterial({
     map: s.map ?? null, color: s.color ? s.color.clone() : new THREE.Color('#ffffff'), vertexColors: s.vertexColors,
-    roughness: 0.42, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.1, sheen: 0.25, sheenRoughness: 0.6, envMapIntensity: 1.1,
+    roughness: 0.42, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.1, envMapIntensity: 1.1,
     transparent: s.transparent, opacity: s.opacity ?? 1, side: s.side,
   });
 }

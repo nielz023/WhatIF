@@ -11,6 +11,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Billboard, Environment, Lightformer, MeshReflectorMaterial, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
+import { Effect, EffectPass } from 'postprocessing';
 import * as THREE from 'three';
 import type { OrbitControls as OC } from 'three-stdlib';
 import { useShallow } from 'zustand/react/shallow';
@@ -293,8 +294,31 @@ function CameraRig({ mode }: { mode: WorldMode }) {
   );
 }
 
+/** diagnose: hoeveel meshes zichtbaar zijn (hele boom) */
+function zichtbaar(scene: THREE.Object3D) { let n = 0, z = 0; scene.traverse((o) => { if ((o as THREE.Mesh).isMesh) { n++; let v = true; for (let p: THREE.Object3D | null = o; p; p = p.parent) if (!p.visible) { v = false; break; } if (v) z++; } }); return `${z}/${n} meshes`; }
+/** diagnose: welke dekkende HTML-lagen over het 3D-beeld liggen (midden, links, rechts) */
+function bovenop(cv: HTMLCanvasElement): string[] {
+  const W = window.innerWidth, H = window.innerHeight; const pts: [string, number, number][] = [['midden', W / 2, H / 2], ['links', W * 0.15, H / 2], ['rechts', W * 0.85, H / 2]];
+  const naam = (e: Element) => `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}.${String((e as HTMLElement).className || '').split(' ').filter(Boolean).slice(0, 4).join('.')}`.slice(0, 70);
+  const out: string[] = [];
+  const all = Array.from(document.body.querySelectorAll('*')) as HTMLElement[];
+  for (const [l, x, y] of pts) {
+    const hits: string[] = [];
+    for (const e of all) {
+      if (e === cv || e.id === 'dm-diag' || e.contains(cv)) continue;
+      const r = e.getBoundingClientRect(); if (r.width < W * 0.3 || r.height < H * 0.3 || x < r.left || x > r.right || y < r.top || y > r.bottom) continue;
+      const cs = getComputedStyle(e); if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) < 0.05) continue;
+      const bg = cs.backgroundColor; const dek = (bg && bg !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(bg)) || cs.backgroundImage !== 'none' || cs.backdropFilter !== 'none';
+      if (dek) hits.push(`${naam(e)} [${bg} ${cs.backgroundImage !== 'none' ? 'beeld ' : ''}${cs.backdropFilter !== 'none' ? 'blur ' : ''}op ${cs.opacity} z ${cs.zIndex}]`);
+    }
+    const top = document.elementFromPoint(x, y);
+    out.push(`${l}: bovenste ${top ? naam(top) : '-'}`);
+    for (const h of hits.slice(0, 4)) out.push(`   dekt: ${h}`);
+  }
+  return out;
+}
 /** Telt beelden per seconde en zet ze in de bovenbalk (#dm-fps). */
-function FpsProbe() {
+function FpsProbe({ mode }: { mode: WorldMode }) {
   const acc = useRef({ n: 0, t: 0, slow: 0, since: performance.now() });
   const quality = useWorld((s) => s.quality); const setQuality = useWorld((s) => s.setQuality);
   useEffect(() => { acc.current.slow = 0; acc.current.since = performance.now(); }, [quality]);
@@ -310,7 +334,8 @@ function FpsProbe() {
         dg.textContent = [`${Math.round(fps)} fps · dpr ${st.viewport.dpr.toFixed(2)} · kwaliteit ${quality}`,
           `canvas ${Math.round(r.width)}x${Math.round(r.height)} op ${Math.round(r.left)},${Math.round(r.top)} · buffer ${cv.width}x${cv.height} · r3f ${Math.round(st.size.width)}x${Math.round(st.size.height)}`,
           `camera ${f(c.position.x)} ${f(c.position.y)} ${f(c.position.z)} · fov ${f(c.fov)} near ${f(c.near)} far ${f(c.far)}${ctl?.target ? ` · doel ${f(ctl.target.x)} ${f(ctl.target.y)} ${f(ctl.target.z)}` : ''}`,
-          `tekenopdrachten ${st.gl.info.render.calls} · driehoeken ${st.gl.info.render.triangles} · objecten ${st.scene.children.length} · walk ${useWorld.getState().walk ? 'ja' : 'nee'}`].join('\n');
+          `zichtbaar ${zichtbaar(st.scene)} · objecten ${st.scene.children.length} · modus ${mode} · walk ${useWorld.getState().walk ? 'ja' : 'nee'}`,
+          ...bovenop(cv)].join('\n');
       }
       // 4K hapert (onder de 24 fps, 6 seconden lang): automatisch terug naar Auto
       if (quality === '4k' && performance.now() - a.since > 8000 && document.visibilityState === 'visible') {
@@ -648,6 +673,26 @@ function GlansLicht() {
     </>
   );
 }
+/* ================= beveiliging tegen zwart beeld =================
+ * Eén pixel met een ongeldige waarde (NaN of oneindig, bv. uit glanzende lak op een rand) werd door de gloed (bloom)
+ * over het hele scherm uitgesmeerd: zodra het kantoor in beeld kwam werd alles zwart. Deze stap maakt zulke pixels
+ * gewoon zwart vóór de gloed, en houdt extreem felle pixels binnen de perken. */
+class NanGuard extends Effect {
+  constructor() {
+    super('NanGuard', `
+      void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+        vec4 c = inputColor;
+        bool slecht = any(isnan(c)) || any(isinf(c)) || !(c.r < 1e6 && c.r > -1e6 && c.g < 1e6 && c.g > -1e6 && c.b < 1e6 && c.b > -1e6);
+        outputColor = slecht ? vec4(0.0, 0.0, 0.0, 1.0) : vec4(clamp(c.rgb, 0.0, 32.0), c.a);
+      }`);
+  }
+}
+function NanGuardPass() {
+  const camera = useThree((s) => s.camera);
+  const pass = useMemo(() => new EffectPass(camera, new NanGuard()), [camera]);
+  useEffect(() => () => pass.dispose(), [pass]);
+  return <primitive object={pass} />;
+}
 /* ================= de scène ================= */
 function Scene({ mode }: { mode: WorldMode }) {
   const live = useLive((s) => s.data);
@@ -704,7 +749,7 @@ function Scene({ mode }: { mode: WorldMode }) {
       <PerspectiveCamera makeDefault fov={FOV} near={0.5} far={400} position={[0, 60, 45]} />
       <CameraRig mode={mode} />
       <WalkController mode={mode} />
-      <FpsProbe />
+      <FpsProbe mode={mode} />
       <Environment resolution={128} frames={1}>
         <Lightformer form="ring" intensity={2} color="#FF7A24" scale={14} position={[-18, 8, -10]} />
         <Lightformer form="ring" intensity={2} color="#20D9FF" scale={14} position={[18, 8, -10]} />
@@ -754,6 +799,7 @@ function Scene({ mode }: { mode: WorldMode }) {
       <Snow />
       <Disco />
       <EffectComposer multisampling={quality === 'snel' ? 0 : 4}>
+        <NanGuardPass />
         {/* zachtere neon (punt 33): minder gloed, pas boven een hogere drempel */}
         <Bloom intensity={office ? 0.22 : 0.34} luminanceThreshold={office ? 1.25 : 1.0} luminanceSmoothing={0.2} radius={0.4} mipmapBlur />
         <Vignette eskil={false} offset={0.4} darkness={0.22} />
