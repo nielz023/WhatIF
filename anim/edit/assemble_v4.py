@@ -35,7 +35,7 @@ AUDIO = os.path.join(os.environ.get("WHATIF_ASSETS", os.path.join(REPO, "assets"
 LOGO = os.path.join(REPO, "assets", "branding", "driftmark_logo.png")
 FPS = 30
 TARGET_LUFS = -14.0
-PEAK_MAX = -1.0
+PEAK_MAX = -2.0   # sample-peak; AAC-encoding voegt ~0,7 dB toe (true peak moet <= -1 dBTP)
 
 VOICE_DB, SFX_DB, MUSIC_DB = -18.0, -26.0, -31.0
 BED_VOL = 0.22          # muziekbed iets onder het niveau van scènemuziek (0.3)
@@ -227,7 +227,8 @@ class Timeline:
     def frames(self, byno, src0, dur):
         """Stuk uit losse frames (zonder HUD). Geeft False als er frames ontbreken."""
         n = int(round(dur * FPS))
-        a = int(round(src0 * FPS)) + 1
+        # de renders beginnen bij frame 2 (OUT_OFF), niet bij 1: tel vanaf het eerste bestaande frame
+        a = int(round(src0 * FPS)) + min(byno)
         part = [byno.get(k) for k in range(a, a + n)]
         if not all(part):
             return False

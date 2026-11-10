@@ -105,7 +105,7 @@ S.beat(held, T_STUB + 0.30, "staan", arms=KNEE, face="schreeuw", face_amt=1.0, c
        feet=((0, 0.16, 0.30), (0, 0.0, 0.0)))
 # hinken op het rechterbeen: kleine sprongetjes, rondje om de as
 HOP0 = V(-0.86, -0.02, 0.0)
-hop_t = list(frange(T_STUB + 0.35, END + 0.01, 0.32))
+hop_t = [t for t in frange(T_STUB + 0.35, END + 0.01, 0.32) if t < t_3b - 0.05]
 for k, t in enumerate(hop_t):
     p = HOP0 + V(0.10 * math.sin(k * 0.9), -0.08 * k, 0.0)
     up = (k % 2 == 0)
@@ -157,7 +157,7 @@ FT = held.rig.matrix_world @ held.pb["foot.L"].tail
 S.cam(t_3a, (FT + V(0.80, -1.00, 0.50), FT + V(0, 0, 0.10), 42), (FT + V(0.74, -0.93, 0.46), FT + V(0, 0, 0.10), 45))   # hoger en verder: zijn been komt anders voor de lens
 # 3b CLOSE: zijn gezicht, hij kijkt omlaag (camera laag)
 HB = S.headpos(held, t_3b + 1.5)
-S.cam(t_3b, (HB + V(0.9, -2.5, -0.30), HB + V(0, 0, -0.10), 32), (HB + V(0.85, -2.35, -0.28), HB + V(0, 0, -0.10), 33))   # verder weg: hij buigt naar voren
+S.cam(t_3b, (HB + V(0.25, -1.12, -0.62), HB + V(0, 0, -0.12), 26), (HB + V(0.22, -1.06, -0.60), HB + V(0, 0, -0.12), 27))   # verder weg: hij buigt naar voren
 
 # ---------------------------------------------------------------- HUD, stem en geluid
 S.year(2026, t0=0.6)
