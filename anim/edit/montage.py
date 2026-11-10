@@ -171,7 +171,7 @@ def text(sed, body, t0, t1, loc, size, color, channel, anchor=("LEFT", "TOP")):
     font = _font()
     if font:
         s.font = font
-    s.color = color
+    s.color = tuple(color) + (1.0,) * (4 - len(color))   # RGB uit montage.json aanvullen tot RGBA
     s.location = loc
     if hasattr(s, "use_bold"):
         s.use_bold = True
